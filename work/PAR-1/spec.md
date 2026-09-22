@@ -162,7 +162,7 @@ This is the core. It is pure TypeScript with no I/O, so it is easy to test.
 
 ### AI design
 
-- **Model.** One model through OpenRouter, chosen by the eval suite in the Plan phase. We look for fast first-token time, reliable tool calls and low cost.
+- **Model.** `openai/gpt-6-luna` through OpenRouter, chosen by the owner. It supports tool calls and structured output and has a 1.05M-token context. It costs $0.10/M input, $0.50/M output and $0.01/M cached input (OpenRouter list, 2026-09-22). The model ID lives in one config value. The eval suite checks that it meets the bar below. If it misses, we bring that back to the owner and don't swap the model on our own.
 - **Prompt.** The system prompt holds the catalog and the active document's field list, with its current values. The long, stable part is written so the provider can cache it.
 - **Tools.** The server checks every tool input with Zod.
   - `chooseDocument({ documentId, reason })`
