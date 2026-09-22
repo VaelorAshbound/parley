@@ -11,9 +11,39 @@ It is a portfolio piece. Two audiences must say "wow" without any explanation:
 - **Client (Fiverr/Upwork):** opens the live link and has a finished NDA in about 2 minutes, with no sign-up.
 - **Engineer/recruiter:** opens the repo and finds it typed end to end, tested, documented and cheap to run.
 
+### Layout (like the Claude app)
+
+Three panes on desktop:
+
+```
+┌──────────────┬──────────────────────────┬──────────────────────────┐
+│ ◧ Parley     │ Draft title ▾         ◫  │ Mutual NDA ▾  Share ⤓ ⤢ ✕│
+│ 🔍 Search    │                          │                          │
+│ ＋ New draft │        chat              │     live document        │
+│              │                          │                          │
+│ Today        │                          │                          │
+│  Acme NDA    │                          │                          │
+│ Last 7 days  │                          │                          │
+│  Pilot w/ Bo │                          │                          │
+│ View all     │ ┌──────────────────────┐ │                          │
+│ (A) Ana·Free▾│ │ Reply…             ⏎ │ │                          │
+└──────────────┴──────────────────────────┴──────────────────────────┘
+```
+
+- **Left sidebar.** It can be collapsed. It holds:
+  - search, over draft titles, document types and party names;
+  - a **New draft** button;
+  - the draft history, grouped as Today / Yesterday / Last 7 days / Older, with a "View all" link;
+  - the account menu at the bottom: name, plan badge, settings, billing (Polar portal), sign out.
+
+  Guests see their one draft and a "Sign in to save" button there.
+- **Middle: chat.** The draft title sits at the top. Its menu has rename, duplicate and delete. The reply box sits at the bottom, with the "not legal advice" line under it.
+- **Right: live document panel.** Its header has the document type, **Share**, **Download** (PDF/DOCX), expand to full width, and close. You can resize the panel. When it is closed, a card in the chat opens it again.
+- **Phone.** The sidebar becomes a drawer. Chat and document become two tabs, and the document tab shows a badge when it changes.
+
 ### The wow moment
 
-Chat on the left, the live document on the right. As you talk:
+Chat in the middle, the live document on the right. As you talk:
 
 - the field that changed shimmers in the document, and the page scrolls to it smoothly;
 - choices (such as "1 year" vs "until terminated") swap in the document with smooth motion;
@@ -30,11 +60,11 @@ Everything else must be flawless around this moment.
 4. As a user, I can **click any field in the document and edit it myself**. The AI sees my edit.
 5. As a user, I can **undo** any change the AI made.
 6. As a guest, when I want to save or export, I **sign in and keep my draft and chat**, with nothing lost.
-7. As a signed-in user, I see **my drafts** on a dashboard and can reopen, duplicate, rename or delete them.
+7. As a signed-in user, I see **my drafts** in the sidebar, can **search** them, and can reopen, duplicate, rename or delete them.
 8. As a user, I can **download a PDF or DOCX** that looks like a real, professional contract.
 9. As a user, I can make a **read-only share link** and turn it off later.
 10. As a free user, I can finish **3 documents a month**. After that I can **upgrade to Pro** (Polar sandbox) for unlimited documents and DOCX.
-11. On a **phone**, I can do all of this. Chat and document become two tabs, and the document tab shows a badge when it changes.
+11. On a **phone**, I can do all of this: the sidebar is a drawer, and chat and document are two tabs.
 
 ### The 12 documents
 
@@ -188,7 +218,7 @@ parley/
 ├─ apps/web/                  TanStack Start app + the Worker
 │  ├─ src/server.ts           Worker entry: /api → Hono, rest → Start, scheduled()
 │  ├─ src/server/             Hono app, oRPC routers, AI chat, export, auth, polar
-│  ├─ src/routes/             TanStack Router file routes (/, /d/$id, /s/$token, /dashboard, /pricing)
+│  ├─ src/routes/             TanStack Router file routes (/, /d/$id, /drafts, /s/$token, /settings, /pricing)
 │  ├─ src/components/         UI (shadcn in components/ui)
 │  ├─ src/features/           chat/, document-preview/, drafts/, billing/
 │  ├─ e2e/                    Playwright tests
