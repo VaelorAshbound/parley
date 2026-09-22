@@ -1,0 +1,33 @@
+LICENSE: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Full legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Everything in this "templates" directory is licensed under CC BY 4.0.
+
+Attribution
+-----------
+These legal agreement templates are the Common Paper standard agreements,
+created by Common Paper, Inc. (https://commonpaper.com) and published at
+https://github.com/CommonPaper. They are free to use and modify under CC BY 4.0.
+
+The files are unmodified copies taken from the repositories and commits below:
+
+  AI-Addendum.md                  https://github.com/CommonPaper/AI-Addendum/blob/6d9b044df73a2477c177e5989fca7f8d27df9387/AI-Addendum.md
+  BAA.md                          https://github.com/CommonPaper/BAA/blob/5f1fd992df1d0c78bf69997e1881e4107fa75695/BAA.md
+  CSA.md                          https://github.com/CommonPaper/CSA/blob/002966564f9d128de3cdf683b4586d3fd00bf1a5/CSA.md
+  DPA.md                          https://github.com/CommonPaper/DPA/blob/9f1c40d3fb0bb900397a919d058a9c0870f6b0f0/DPA.md
+  design-partner-agreement.md     https://github.com/CommonPaper/Design-Partner-Agreement/blob/94a1cf8f326bc623b8122dc3b7ffbbcea0d010ca/design-partner-agreement.md
+  Mutual-NDA.md                   https://github.com/CommonPaper/Mutual-NDA/blob/2a3068b6c0ab6015c440f541d5b215bc3ac2f4cb/Mutual-NDA.md
+  Mutual-NDA-coverpage.md         https://github.com/CommonPaper/Mutual-NDA/blob/2a3068b6c0ab6015c440f541d5b215bc3ac2f4cb/Mutual-NDA-coverpage.md
+  Partnership-Agreement.md        https://github.com/CommonPaper/Partnership-Agreement/blob/6edeb5a285206893cfd0ac482267db44d90f317c/Partnership-Agreement.md
+  Pilot-Agreement.md              https://github.com/CommonPaper/Pilot-Agreement/blob/5e7cdd4678cd9d6b3178872cce4a01d632f41f14/Pilot-Agreement.md
+  psa.md                          https://github.com/CommonPaper/PSA/blob/3fb650a72d229f6d6e6d64abebae5e83c6699535/psa.md
+  sla.md                          https://github.com/CommonPaper/SLA/blob/5b0e6336f058a66c4976d70ecabf1f5fb9ef3af4/sla.md
+  Software-License-Agreement.md   https://github.com/CommonPaper/Software-License-Agreement/blob/8ea7de38148a8a0c235b7aaf31487028c2e519ca/Software-License-Agreement.md
+
+Retrieved: 2026-09-22
+
+No changes were made. If you modify these templates, you must say so
+when you share them, as required by CC BY 4.0 Section 3(a)(1)(B).
+
+No warranties are given. These templates are not legal advice.
