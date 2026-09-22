@@ -2,7 +2,7 @@
 
 Confirmed with the owner on 2026-09-22 (interview-me).
 
-- **Outcome:** Parley, a real AI SaaS where you chat to find and fill the right legal agreement. The real document fills in live next to the chat: fields glow as they are set, clauses switch with smooth motion, and the AI explains each choice in plain words.
+- **Outcome:** Parley, a real AI SaaS where you chat to find and fill the right legal agreement. The real document fills in live next to the chat: fields shimmer as they are set, clauses switch with smooth motion, and the AI explains each choice in plain words.
 - **Users:** Fiverr/Upwork clients clicking the live link, and recruiters or engineers reading the repo. Both carry equal weight.
 - **Scope:** All 12 Common Paper templates on one typed engine. Guest mode lets anyone start drafting with no sign-up (protected by Turnstile and rate limits). Sign-in adds save, history and a dashboard. Also PDF/DOCX download, read-only share links, and a Polar sandbox paywall.
 - **Wow moment:** the live document updating as you chat. Everything around it must be flawless.

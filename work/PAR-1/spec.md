@@ -15,7 +15,7 @@ It is a portfolio piece. Two audiences must say "wow" without any explanation:
 
 Chat on the left, the live document on the right. As you talk:
 
-- the field that changed glows in the document, and the page scrolls to it smoothly;
+- the field that changed shimmers in the document, and the page scrolls to it smoothly;
 - choices (such as "1 year" vs "until terminated") swap in the document with smooth motion;
 - the AI explains each choice in plain words ("Perpetual means the secret never expires…");
 - every change the AI makes shows as a small chip in the chat ("Term → 2 years · Undo").
