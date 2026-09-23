@@ -52,6 +52,64 @@ everything ─► Phase 7 depth (T32–T36) ─► Phase 8 launch (T37–T40)
 
 Checkpoints come after each phase (see todo.md). At the checkpoints after Phases 0, 2 and 6, I stop and ask for your review.
 
+## Skills per task
+
+Loaded skills are binding workflows (CLAUDE.md). At the start of each task, **load every skill in its row**, follow them, and name them in the task's commit/log. **Process** skills come from `agent-skills`, and **domain** skills are routed by `using-stack-skills`.
+
+**Always on, for every task:**
+- process: `incremental-implementation`, `test-driven-development`, `source-driven-development` (check APIs in the docs before coding), `git-workflow-and-versioning` (every commit);
+- `observability-and-instrumentation` whenever logs or metrics are touched;
+- `doubt-driven-development` for decisions that are hard to reverse (schema, auth, billing, money paths);
+- before each checkpoint: `code-review-and-quality` → `code-simplification` (`/review`, `/code-simplify`).
+
+| Task | Process skills | Domain skills |
+|---|---|---|
+| T1 Scaffold | `context-engineering` | `shadcn` (monorepo init), `cloudflare:wrangler`, `cloudflare:workers-best-practices`, `cloudflare:cloudflare` |
+| T2 PDF/DOCX spike | `debugging-and-error-recovery` if it fails | `cloudflare:wrangler`, `cloudflare:cloudflare` (Browser Run), `anthropic-skills:pdf`, `anthropic-skills:docx` (to check the output files) |
+| T3 CI spike | `ci-cd-and-automation`, `browser-testing-with-devtools` | `cloudflare:wrangler`, `neon:neon-postgres-branches` |
+| T4 Brand | `frontend-ui-engineering` | `emil-design-eng`, `apple-design`, `shadcn` (theme/preset), `web-design-guidelines`, `animation-vocabulary` |
+| T5–T7 Parser, fields, NDA | `api-and-interface-design` | — (pure TS) |
+| T8–T11 Cover pages | `doubt-driven-development` (legal wording) | `firecrawl:firecrawl-scrape` / `firecrawl:firecrawl-search` (Common Paper's public docs) |
+| T12 HTML + DOCX output | — | `anthropic-skills:docx`, `anthropic-skills:pdf`, `cloudflare:workers-best-practices` |
+| T13 DB | `api-and-interface-design` | `neon:neon`, `neon:neon-postgres`, `neon:neon-postgres-branches`, `cloudflare:wrangler` (Hyperdrive) |
+| T14 Worker API + guest auth | `api-and-interface-design`, `security-and-hardening` | `cloudflare:workers-best-practices`, `better-auth-best-practices`, `create-auth` |
+| T15 App shell | `frontend-ui-engineering` | `shadcn`, `vercel-composition-patterns`, `vercel-react-best-practices`, `web-design-guidelines`, `apple-design` |
+| T16 Live preview + field editor | `frontend-ui-engineering` | `shadcn` (Field, ToggleGroup, Combobox), `vercel-composition-patterns`, `vercel-react-best-practices` |
+| T17 AI chat | `api-and-interface-design` | `ai-sdk`, `shadcn` (chat primitives, `@shadcn/helpers/ai-sdk`), `cloudflare:workers-best-practices` |
+| T18 Wow motion | `frontend-ui-engineering` | `emil-design-eng`, `apple-design`, `find-animation-opportunities`, `animation-vocabulary`, `review-animations`, `shadcn` (shimmer, Marker) |
+| T19 Questionnaire + guardrails | `security-and-hardening` (prompt injection) | `ai-sdk`, `shadcn` (Questionnaire) |
+| T20 Evals v1 | — | `ai-sdk`, `dataviz` (eval report charts) |
+| T21 Sign up/in + linking | `security-and-hardening` | `better-auth-best-practices`, `create-auth`, `email-and-password-best-practices`, `better-auth-security-best-practices`, `cloudflare:turnstile-spin`, `resend:resend`, `resend:react-email`, `resend:email-best-practices` |
+| T22 Sidebar history + search | `performance-optimization` | `neon:neon-postgres`, `shadcn` (Sidebar, Command), `vercel-react-best-practices` |
+| T23 Settings + account flows | `security-and-hardening` | `better-auth-best-practices`, `email-and-password-best-practices`, `better-auth-security-best-practices`, `resend:react-email`, `shadcn` |
+| T23b Two-factor | `security-and-hardening` | `two-factor-authentication-best-practices`, `better-auth-security-best-practices`, `shadcn` (InputOTP) |
+| T24 Export + quota | `doubt-driven-development` (money path) | `cloudflare:cloudflare` (Browser Run), `anthropic-skills:pdf`, `anthropic-skills:docx` |
+| T25 Share links | `security-and-hardening` | `cloudflare:workers-best-practices`, `shadcn` |
+| T26 Polar | `doubt-driven-development` (billing) | `better-auth-best-practices` (Polar plugin), `resend:resend` (receipts, if any) |
+| T27 Limits | `security-and-hardening` | `cloudflare:turnstile-spin`, `cloudflare:workers-best-practices`, `better-auth-security-best-practices` |
+| T28 Cron | — | `cloudflare:wrangler`, `cloudflare:workers-best-practices`, `neon:neon-postgres-egress-optimizer` |
+| T29 Observability | `observability-and-instrumentation` | `cloudflare:cloudflare` (Workers Observability/Traces) |
+| T30 AI for all 12 | — | `ai-sdk`, `dataviz` |
+| T31 Real export of all 12 | `browser-testing-with-devtools` | `anthropic-skills:pdf`, `anthropic-skills:docx` |
+| T32 Full e2e + a11y | `browser-testing-with-devtools` | `agent-browser`, `web-design-guidelines` |
+| T33 Real-service + nightly | `ci-cd-and-automation` | `neon:neon-postgres-branches`, `cloudflare:wrangler`, `resend:resend-cli` |
+| T34 Coverage + mutation | `code-review-and-quality` | — |
+| T35 Performance | `performance-optimization` | `cloudflare:web-perf`, `vercel-react-best-practices`, `neon:neon-postgres`, `neon:neon-postgres-egress-optimizer`, `improve-animations` |
+| T36 Exploratory QA | `browser-testing-with-devtools`, `debugging-and-error-recovery` | `agent-browser`, `anthropic-skills:chrome-browser` (Claude in Chrome), `web-design-guidelines`, `review-animations` |
+| T37 Empty-state polish | `frontend-ui-engineering` | `emil-design-eng`, `apple-design`, `shadcn` (Empty), `find-animation-opportunities` |
+| T38 Production | `shipping-and-launch`, `security-and-hardening` | `cloudflare:wrangler`, `cloudflare:cloudflare` (custom domain, WAF), `neon:neon`, `resend:email-best-practices` (SPF/DKIM/DMARC) |
+| T39 README + ADRs | `documentation-and-adrs` | `dataviz` (charts), `artifact-diagramming` (architecture diagram) |
+| T40 Ship | `shipping-and-launch` (`/ship`) | — |
+
+Skills that aren't used, and why:
+- `organization-best-practices`: teams are out of scope.
+- `cloudflare:durable-objects`, `cloudflare:agents-sdk`, `cloudflare:sandbox-sdk`, `cloudflare:cloudflare-one*` and `cloudflare:cloudflare-email-service`: Resend is our email service.
+- `neon:neon-auth`: we use Better Auth.
+- `neon:neon-ai-gateway`: we use OpenRouter.
+- `neon:neon-functions` and `neon:neon-object-storage`: not needed.
+- `resend:agent-email-inbox`: there is no inbound email.
+- `pick-ui-library` / `prototype`: only when you ask for them.
+
 ## What you need to do (owner actions)
 
 | When | What |

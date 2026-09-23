@@ -5,6 +5,7 @@
 > Each task follows TDD: failing test → code → green → `pnpm check && pnpm test` → commit `<type>(PAR-1): <why>`.
 > Definition of Done for every task: tests pass, no regressions, behavior checked at runtime, docs updated.
 > Size: S = 1–2 files · M = 3–5 files. There are no L/XL tasks.
+> **Skills:** before starting a task, load every skill in its row of [plan.md → Skills per task](plan.md#skills-per-task). The `Skills:` lines below are only the highlights.
 
 ---
 
