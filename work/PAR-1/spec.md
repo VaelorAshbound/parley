@@ -201,7 +201,12 @@ pnpm dev                     # vp dev: app + Worker locally (wrangler via @cloud
 pnpm check                   # vp check: format + lint + type-check (type-aware)
 pnpm test                    # vp test: all unit and integration tests
 pnpm test:e2e                # playwright test (local, or PREVIEW_URL=... for a preview)
-pnpm evals                   # AI eval suite (calls OpenRouter; not run on every commit)
+pnpm test:coverage           # all tests + coverage gates
+pnpm test:workers            # Worker runtime tests in workerd
+pnpm test:real               # real-service suite (OpenRouter, Browser Run, Polar, Resend); costs a little
+pnpm test:mutation           # Stryker mutation tests
+pnpm test:perf               # Lighthouse CI against a URL (PREVIEW_URL=...)
+pnpm evals                   # AI eval suite (real gpt-6-luna)
 pnpm build                   # vp run -r build
 pnpm db:generate             # drizzle-kit generate
 pnpm db:migrate              # drizzle-kit migrate
