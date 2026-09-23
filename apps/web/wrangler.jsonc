@@ -12,6 +12,14 @@
     "binding": "BROWSER",
     "remote": true,
   },
+  // Worker Previews (one per branch) get their own binding list; wrangler
+  // preview refuses to run without it.
+  // https://developers.cloudflare.com/workers/previews/configuration/
+  "previews": {
+    "browser": {
+      "binding": "BROWSER",
+    },
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
