@@ -332,6 +332,17 @@ Rules:
 - **Security.** Route guards are for UX only. The TanStack docs say "a route guard is not a data authorization boundary". Every oRPC procedure checks the session and ownership itself (see the auth matrix in §6).
 - Splat and optional path params (`$`, `{-$param}`) are not needed for Parley.
 
+### Forms (TanStack Form, the owner's rules + docs checked 2026-09-23)
+
+Parley's forms are the inline field editor (one per field type), sign-in (email → code), rename draft, settings, and delete account.
+
+- **One app form kit.** `src/lib/form.ts` uses `createFormHookContexts()` + `createFormHook({ fieldComponents, formComponents })` and exports `useAppForm`, `withForm` and `withFieldGroup`. No feature calls `useForm` directly.
+- **Reusable field components.** There is one per document field type: `TextField`, `LongTextField`, `DateField`, `DurationField`, `MoneyField`, `ChoiceField` and `JurisdictionField`. They are built from shadcn `Field`, `FieldLabel`, `FieldDescription`, `FieldError` and `FieldGroup`, with `data-invalid`/`aria-invalid` for accessibility. The label and help text come from the field's Zod `.meta()`, so they are never repeated.
+- **Field groups.** `party` (name, title, company, address, email) is a `withFieldGroup`, used for Party 1 and Party 2 in every document. The same goes for `jurisdiction` (state + courts). `withForm` splits larger forms, such as settings.
+- **Form validation over field validation.** The form's validator is the document's Zod schema (Standard Schema, no adapter), and `.refine()` checks the rules that cross fields. Validation uses `onDynamic` with `validationLogic: revalidateLogic()`, so errors don't show while you type the first time. They show on submit and then update live.
+- **Linked fields** use `onChangeListenTo`. For example, "Other" text is only required when `choice = other`, the confidentiality term can't be shorter than required, and the court must match the governing-law state.
+- **Submitting.** Forms submit through oRPC, which checks the same Zod schema on the server. Server errors are mapped back onto the fields. We skip `@tanstack/react-form-start` `createServerValidate` because oRPC is our one typed API layer, so we keep a single path.
+
 ## 6. Testing strategy
 
 Testing is part of the showpiece. It is thorough, it covers a lot, and it tests the **real services** as well as mocks, even when that costs a little money.

@@ -142,10 +142,10 @@
 - [ ] **T16: Live document preview + manual field editing** (M)
   - Accept:
     - The panel renders the `RenderedDocument`. Placeholders are clear, and a linked term shows its value on hover.
-    - Clicking a field opens an inline editor (made by TanStack Form from the field's Zod schema). Saving calls `drafts.updateFields` with an optimistic update.
+    - Clicking a field opens an inline editor built from the spec §5 Forms kit (`useAppForm`, field components per type, a `withFieldGroup` for `party`/`jurisdiction`, `onDynamic` + `revalidateLogic()`, linked fields). Saving calls `drafts.updateFields` with an optimistic update, and server errors show on the field.
     - A user can fill a whole NDA by hand, and the values survive a reload.
   - Verify: component tests + an e2e test that fills the NDA by hand.
-  - Files: `apps/web/src/features/document-preview/*`, `src/features/field-editor/*`
+  - Files: `apps/web/src/lib/form.ts`, `src/features/document-preview/*`, `src/features/field-editor/{fields/*,groups/*}`
   - Deps: T15, T7
 
 - [ ] **T17: AI chat streaming with tools** (M)
