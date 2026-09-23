@@ -4,7 +4,7 @@ test("the home page renders the app name", async ({ page }) => {
   await page.goto("/")
 
   await expect(
-    page.getByRole("heading", { level: 1, name: "Parley" })
+    page.getByRole("heading", { level: 1, name: "Parley on purpose broken" })
   ).toBeVisible()
 })
 
