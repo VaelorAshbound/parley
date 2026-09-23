@@ -21,3 +21,6 @@ OpenRouter keys added: app ($10 total cap) + test ($5 total cap), both verified 
 
 ### 2026-09-23T17:31:01Z
 Resend key added; mail.runtimedrift.dev verified (eu-west-1, sending). Next owner step: Google + GitHub OAuth apps.
+
+### 2026-09-23T17:49:30Z
+OAuth ready: Google client (prod+localhost:3000), GitHub prod+dev apps; GitHub creds validated via API.

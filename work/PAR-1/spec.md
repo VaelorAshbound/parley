@@ -409,7 +409,7 @@ Rules:
 - **Methods.**
   - `emailAndPassword` with `minPasswordLength: 10`, `maxPasswordLength: 128`, `resetPasswordTokenExpiresIn: 30 min` and `revokeSessionsOnPasswordReset: true`.
   - `emailVerification` with `sendOnSignUp` and `autoSignInAfterVerification`.
-  - Google + GitHub, with account linking for the same verified email.
+  - Google + GitHub, with account linking for the same verified email. One Google client serves production + `http://localhost:3000`. GitHub has two apps (`GITHUB_CLIENT_ID` for production, `GITHUB_CLIENT_ID_DEV` for local), because GitHub allows only one callback URL per app. OAuth isn't available on PR preview URLs (their origin changes each time), so previews test email + password.
 - **Email verification rule.** Signing up gives a session right away, so the guest's draft links at once, even if the verify link is opened on another device. But **export, share and upgrade need a verified email**, which stops fake-email abuse of the quota.
 - **Account management.**
   - `user.changeEmail.enabled`: it confirms with the current email first.
