@@ -249,6 +249,12 @@ parley/
   - `create<T>()(...)` is typed in the curried form.
   - Selectors pick the smallest value they need. `useShallow` is used when a selector returns an object or an array.
   - Server data (drafts, messages) lives in TanStack Query, never copied into Zustand.
+- **Zod rules** (from zod.dev, checked 2026-09-23):
+  - Use `zod@^4.6.4` or later. 4.5 cut memory per schema by 5–10x, which matters inside the 128 MB Worker isolate. 4.6 fixed a memory leak in recursive schemas.
+  - Set `z.config({ jitless: true })` in the Worker and in the browser. Workers and our strict CSP block `new Function`. Never use `z.compile()` / `zod/compile`.
+  - Use full Zod everywhere, not Zod Mini. Zod's author recommends full Zod unless the bundle budget is very tight. We would only switch if T35 finds the per-route JS budget missed.
+  - Field labels and help text go in `.meta({ label, help })`. From there, one source feeds the form, the AI tool JSON Schema (`z.toJSONSchema`) and oRPC.
+  - Draft values use `.exactPartial()` (a draft is a partly filled document). The strict schema only runs at `markComplete` and on export.
 - Names:
   - files are kebab-case;
   - components are PascalCase;

@@ -66,7 +66,7 @@
 
 - [ ] **T6: Field system, `defineDocument` and the render model** (M)
   - Accept:
-    - Field builders (`text`, `longText`, `party`, `date`, `duration`, `money`, `choice`, `jurisdiction`), each with a Zod schema, a label, help text and an optional default.
+    - Field builders (`text`, `longText`, `party`, `date`, `duration`, `money`, `choice`, `jurisdiction`). Each holds a Zod schema with its label and help text in `.meta()`, plus an optional default. There is a draft schema (`.exactPartial()`) and a complete schema. A test checks that `z.toJSONSchema` keeps the label and help text for the AI tools.
     - `render(definition, values) → RenderedDocument`. A missing value renders as a placeholder, and a linked term renders the value of its field.
     - `applyFieldChanges(values, changes) → {values, applied, rejected, inverse}` validates the changes and returns their inverse for undo. Property tests with fast-check.
   - Verify: `pnpm --filter documents test:coverage` shows 100% lines and branches.
