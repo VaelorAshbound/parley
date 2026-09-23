@@ -114,7 +114,7 @@ This is the standard stack from CLAUDE.md. The versions below were checked on 20
 | AI | **AI SDK v7** (`streamText` + tools, `useChat`) over oRPC (`streamToEventIterator` / `eventIteratorToUnproxiedDataStream`) and **OpenRouter** (`@openrouter/ai-sdk-provider`) |
 | Auth | **Better-Auth**: `anonymous()` for guests, with `onLinkAccount` moving the guest's drafts to the new account. Sign-in by email OTP (Resend), Google and GitHub. |
 | Payments | **Polar sandbox** through `@polar-sh/better-auth`: `checkout`, `portal` and `webhooks` |
-| DB | **Neon Postgres** through Hyperdrive, **Drizzle** ORM. Local Postgres for dev. |
+| DB | **Neon Postgres** through Hyperdrive (**query caching off**), `pg` (node-postgres) + **Drizzle** ORM. Local Postgres for dev. See §5 Database. |
 | Export | **DOCX**: `docx` (`Packer.toArrayBuffer`). **PDF**: Cloudflare **Browser Run** `quickAction("pdf", { html })`, using the same HTML as the preview. |
 | Abuse and cost | Turnstile before a guest's first message. Workers Rate Limiting binding. A per-user daily AI budget kept in Postgres. A hard monthly credit limit on the OpenRouter key. |
 | Dates | Temporal through `temporal-polyfill`. Workers and Safari don't have it natively yet. |
@@ -355,6 +355,30 @@ Rules:
 | Sign-in code | `InputOTP` |
 | Draft search (⌘K) | `Command` inside a `Dialog` |
 | Empty states, loading, notes | `Empty`, `Skeleton`, `Alert`, toasts |
+
+### Database (Neon + Hyperdrive, the owner's notes + docs checked 2026-09-23)
+
+- **Hyperdrive query caching is OFF.** This is the important one. Hyperdrive caches SELECTs for 60 s by default and **does not clear the cache when you write**. For Parley that would mean:
+  - a stale draft after an edit;
+  - a revoked share link that still works for a minute;
+  - old session, quota and plan state.
+
+  Nearly every read in Parley must be fresh, so we use one Hyperdrive config created with `--caching-disabled`. The Cloudflare docs advise exactly this when most reads must be fresh; you still keep the pooling and fast connection setup. A test checks read-after-write through Hyperdrive on the preview.
+- **Driver.** Neon's Cloudflare guide says to use `pg` (node-postgres) with Hyperdrive, via `drizzle-orm/node-postgres`. The client is created inside the request, never at module scope. Hyperdrive pools in transaction mode, so we use no session state (`SET`, `LISTEN`).
+- **Migrations** run with drizzle-kit over the **direct, unpooled** Neon URL (`DATABASE_URL_UNPOOLED`), never through the pooler or Hyperdrive. Each migration is tested on a Neon branch first.
+- **Local dev.** Hyperdrive's `localConnectionString` points at local Postgres. Its `sslmode=disable` is expected.
+- **Placement.** One chat turn runs several queries (session, draft, write, usage), so `placement.region` matches the Neon region (`aws-us-east-1`). T35 measures the time to first token with and without it, and we keep the faster one.
+- **Cost.** Scale-to-zero stays on (5 min). The cold start is a few hundred ms on the first request after idle, which is fine for a portfolio. Autoscaling is capped at 0.25–1 CU, so a traffic spike can't cause bill shock.
+- **Branches.** CI makes a Neon branch per PR with the Neon CLI, each with an **expiry time**, so forgotten branches clean themselves up. The branch is deleted when the PR closes.
+- **Indexes** (from Neon's index guide):
+  - B-tree `draft(user_id, updated_at desc)` for the sidebar;
+  - a generated `tsvector` column (title + document type + party names) with a **GIN** index for search, using prefix matching (`acme:*`) for search as you type;
+  - B-tree on `share(token)`, `message(draft_id, created_at)` and `ai_usage(user_id, day)`.
+
+  Lakebase BM25 search is too much for searching one user's own drafts.
+- **Checks.** T35 runs `neon inspect db` (`outliers`, `seq-scans`, `unused-indexes`) and `EXPLAIN (ANALYZE, BUFFERS)` on the sidebar and search queries.
+- **Recovery.** Neon's instant restore (a branch from a point in time) is the backup story, documented in the README.
+- Read replicas aren't needed at this scale.
 
 ### Hono (the owner's notes + docs checked 2026-09-23)
 

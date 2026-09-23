@@ -115,7 +115,7 @@
 - [ ] **T13: DB package: schema, migrations and connection** (M)
   - Accept:
     - Drizzle schema: the Better-Auth tables, `draft`, `message`, `share` and `aiUsage`, with indexes for the sidebar queries and search.
-    - `pnpm db:generate` / `db:migrate` work on local Postgres and on a Neon branch. There is a Hyperdrive config.
+    - `pnpm db:generate` / `db:migrate` (direct unpooled URL) work on local Postgres and on a Neon branch. A Hyperdrive config is created with `--caching-disabled`, with `localConnectionString` for dev. `pg` + `drizzle-orm/node-postgres`, and the client is made per request. The indexes follow spec §5 Database.
     - Integration tests: migrations up on an empty DB, and typed queries for draft CRUD.
   - Verify: `pnpm --filter db test` against local PG.
   - Files: `packages/db/src/{schema.ts,client.ts,queries/drafts.ts}`, `drizzle.config.ts`, `test/*.test.ts`
@@ -211,7 +211,7 @@
 - [ ] **T22: Sidebar history + search + draft actions** (M)
   - Accept:
     - The sidebar lists drafts grouped as Today / Yesterday / Last 7 days / Older (Temporal, in the user's time zone). "View all" leads to `/drafts`.
-    - Search runs over titles, document types and party names, with debounce and Postgres full-text search.
+    - Search runs over titles, document types and party names, using the generated `tsvector` + GIN index with prefix matching, and debounce. `EXPLAIN` shows an index scan.
     - Rename, duplicate and delete (with an undo toast) work from the sidebar and from the title menu.
   - Verify: integration tests for the queries + component tests + e2e.
   - Files: `packages/db/src/queries/drafts.ts`, `apps/web/src/server/rpc/drafts.ts`, `src/features/sidebar/*`, `src/routes/_app/_authed/drafts.tsx` (`validateSearch`: `q`, `type` with `.catch()`)
@@ -352,6 +352,7 @@
 
 - [ ] **T35: Performance budgets + load test** (S)
   - Accept:
+    - `neon inspect db` (outliers, seq-scans, unused-indexes) is clean. Time to first token is measured with and without `placement.region`.
     - Lighthouse CI on the preview: LCP under 2.0 s, CLS under 0.05, and all categories 95 or more. Time to first AI token p50 under 1.5 s. JS budget per route.
     - A k6 burst of 50 concurrent chats: the limits hold and there are no 5xx errors.
     - The TanStack devtools are not in the production bundle (tested).
