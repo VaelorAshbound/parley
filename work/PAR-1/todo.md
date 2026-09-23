@@ -88,7 +88,7 @@
     - `applyFieldChanges(values, changes) → {values, applied, rejected, inverse}` validates the changes and returns their inverse for undo. Property tests with fast-check.
   - Verify: `pnpm --filter documents test:coverage` shows 100% lines and branches.
   - Files: `packages/documents/src/{fields.ts,define.ts,render.ts,changes.ts}`, `test/*.test.ts`
-  - Deps: T5 · Also: ADR-001 (the Worker entry), ADR-002 (the document engine)
+  - Deps: T5 · Also: ADR-0002 (the Worker entry), ADR-0003 (the document engine). ADR-0001 is the browser-test decision from T3.
 
 - [ ] **T7: Mutual NDA definition (official cover page)** (S)
   - Accept:

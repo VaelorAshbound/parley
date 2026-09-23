@@ -1,0 +1,108 @@
+# Browser tests against the Worker Preview that Workers Builds makes for each
+# branch. Workers Builds has no root and no GUI libraries, so browsers can't run
+# there (work/PAR-1/spikes.md, docs/adr/0001). Kept lean to save Actions minutes:
+# Chromium only on PRs, all browsers nightly, and setup overlaps the Preview build.
+name: E2E
+
+on:
+  pull_request:
+    paths-ignore: ["work/**", "docs/**", "**/*.md"]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Worker Previews live at https://<branch-slug>-parley.<account>.workers.dev
+  WORKER: parley
+  ACCOUNT_SUBDOMAIN: vaelorashbound
+  # Values from the event go through env, never straight into scripts.
+  EVENT: ${{ github.event_name }}
+  HEAD_REF: ${{ github.head_ref }}
+  NIGHTLY_URL: ${{ vars.NIGHTLY_URL }}
+
+jobs:
+  e2e:
+    # Nightly needs a live URL; until production exists (T38) it doesn't start,
+    # so it costs no minutes.
+    if: github.event_name != 'schedule' || vars.NIGHTLY_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      # Only the web app's packages, and no postinstall (workerd, wrangler types):
+      # Playwright needs none of it.
+      - run: pnpm install --frozen-lockfile --filter web --ignore-scripts
+
+      - name: Install browsers
+        working-directory: apps/web
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            pnpm exec playwright install --with-deps --only-shell chromium
+          else
+            pnpm exec playwright install --with-deps chromium firefox webkit
+          fi
+
+      - name: Wait for the Workers Builds Preview of this commit
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 8
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          while true; do
+            result="$(gh api "repos/$REPO/commits/$SHA/check-runs" \
+              --jq ".check_runs[] | select(.name == \"Workers Builds: $WORKER\") | \"\\(.status) \\(.conclusion)\"")"
+            echo "Workers Builds: ${result:-not started}"
+            case "$result" in
+              "completed success") break ;;
+              completed*) echo "::error::The Workers Builds run failed, so there's no Preview to test"; exit 1 ;;
+            esac
+            sleep 10
+          done
+
+      - name: Pick the URL
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            slug="$(printf '%s' "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-')"
+            url="https://${slug}-${WORKER}.${ACCOUNT_SUBDOMAIN}.workers.dev"
+          else
+            url="$NIGHTLY_URL"
+          fi
+          echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
+          echo "Testing $url"
+          curl --fail --silent --show-error --retry 5 --retry-all-errors "$url/api/health"
+
+      - name: Playwright
+        working-directory: apps/web
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            pnpm exec playwright test --project=chromium
+          else
+            pnpm exec playwright test
+          fi
+
+      - name: Keep traces of failures
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-${{ github.run_id }}
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

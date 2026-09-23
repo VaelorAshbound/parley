@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Workers Builds "Preview command" for non-production branches: create the
-# Worker Preview, then run the Playwright suite against its URL.
+# Worker Preview and print its URL. Browser tests run in GitHub Actions
+# (.github/workflows/e2e.yml), because this image can't start browsers.
 # https://developers.cloudflare.com/workers/previews/examples/
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../apps/web"
@@ -24,15 +25,3 @@ preview_url="$(printf '%s' "$output" | node -e '
   console.log(url)
 ')"
 echo "==> Preview URL: $preview_url"
-
-# No root in Workers Builds, so no --with-deps: the browsers must run on the
-# image's own libraries. Report what's missing instead of failing blind.
-echo "==> Installing Playwright browsers"
-pnpm exec playwright install chromium firefox webkit
-for browser in chromium firefox webkit; do
-  echo "==> Missing libraries for $browser:"
-  pnpm exec playwright install-deps --dry-run "$browser" 2>&1 | tail -n 3 || true
-done
-
-echo "==> Running Playwright against the Preview"
-PREVIEW_URL="$preview_url" pnpm exec playwright test
