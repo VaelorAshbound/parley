@@ -118,7 +118,7 @@ This is the standard stack from CLAUDE.md. The versions below were checked on 20
 | Abuse and cost | Turnstile before a guest's first message. Workers Rate Limiting binding. A per-user daily AI budget kept in Postgres. A hard monthly credit limit on the OpenRouter key. |
 | Dates | Temporal through `temporal-polyfill`. Workers and Safari don't have it natively yet. |
 | Email | Resend + React Email for sign-in codes |
-| Hosting | One Cloudflare Worker. CI with Workers Builds, and a Workers Preview for every PR. |
+| Hosting | One Cloudflare Worker on `parley.runtimedrift.dev`. CI with Workers Builds, and a Workers Preview for every PR. |
 | Tests | Vitest (unit and integration), Playwright (e2e), AI evals on Vitest |
 
 ### Architecture
@@ -344,8 +344,14 @@ Every bug fix starts with a failing test.
 - [ ] The AI spend can't go past the OpenRouter key limit, whatever the traffic.
 - [ ] Cost per finished NDA is measured and shown in the README (goal: under $0.02).
 
-## 9. Open questions
+## 9. Decisions and open questions
 
-1. **Domain.** Use `parley.<your-domain>`, or the free `*.workers.dev` for now?
-2. **Name and brand.** Is "Parley" the final name? Do you have a logo or colors, or should I design them in the build phase?
-3. **The PDF test** (Browser Run) and **the DOCX test** (`docx` has not been checked on Workers yet) are the first tasks in the plan. If either fails, we come back here before building on it.
+**Decided**
+
+- **Domain:** `parley.runtimedrift.dev`. It is a Custom Domain on the Worker, and the cert and DNS are handled by Cloudflare.
+- **Name:** Parley.
+- **Brand (colors, logo, type):** designed as its own step after the plan is approved and before the build starts.
+
+**Open**
+
+1. **The PDF test** (Browser Run) and **the DOCX test** (`docx` has not been checked on Workers yet) are the first tasks in the plan. If either fails, we come back here before building on it.
