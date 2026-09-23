@@ -356,6 +356,22 @@ Rules:
 | Draft search (⌘K) | `Command` inside a `Dialog` |
 | Empty states, loading, notes | `Empty`, `Skeleton`, `Alert`, toasts |
 
+### Hono (the owner's notes + docs checked 2026-09-23)
+
+Hono is a thin `/api` layer. oRPC does the real API work.
+
+- **Structure.** `new Hono<{ Bindings: Env; Variables: AppVariables }>()`, split into sub-apps in their own files and joined with `app.route()`: `/api/auth` (Better Auth), `/api/rpc` (oRPC) and `/api/health`. The handlers are written right after the path. No Rails-style controllers, so the types stay inferred.
+- **Mounting oRPC.** It is mounted as middleware: `app.use("/api/rpc/*", …)` → `handler.handle(c.req.raw, …)` → `c.newResponse(response.body, response)`. **No Hono middleware may read the body before oRPC**, or you get "Body already used".
+- **Built-in middleware only**, in this order:
+  - `requestId()`, which gives the ID in every log line;
+  - `contextStorage()`, so the logger can read it without passing it around;
+  - `timing()`, which adds `Server-Timing` headers on preview builds for DevTools (off in production);
+  - `secureHeaders()` for the `/api` responses.
+
+  Page responses come from Start, not Hono, so `src/server.ts` applies the same security-header policy to them (T38).
+- **HEAD.** `GET /api/health` also answers HEAD for uptime checks. Hono handles that on its own, so there is no separate HEAD handler.
+- The Zod validator middleware isn't needed: every input route is oRPC (checked with Zod) or Better Auth.
+
 ### API (oRPC, the owner's notes + docs checked 2026-09-23)
 
 - **Version.** Pin oRPC **v1 stable** (1.15.x). The docs site already shows some `@beta` (v2) packages, and we don't ship on betas.

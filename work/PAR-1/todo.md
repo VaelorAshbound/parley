@@ -125,6 +125,7 @@
   - Accept:
     - Better-Auth is mounted at `/api/auth/*` with the `anonymous()` plugin. The first visit that needs a session creates a guest.
     - oRPC `drafts.create`, `drafts.get` and `drafts.updateFields` (through `applyFieldChanges`) enforce ownership.
+    - Hono follows spec §5 Hono: `app.route()` sub-apps, typed Bindings/Variables, oRPC mounted as middleware, and `requestId` + `contextStorage` + `secureHeaders` (+ `timing` on preview).
     - The oRPC bases are `pub`, `authed` and `draftOwner`, using RequestHeaders/ResponseHeaders plugins and typed `.errors()`. `enable_request_signal` is set. SSR uses an in-process `createRouterClient` (no self-HTTP).
     - An auth-matrix test harness exists (no session, guest, other user, owner), with the first rows written. It calls procedures through server-side clients.
   - Verify: `pnpm test:workers`
@@ -384,7 +385,7 @@
 - [ ] **T38: Production environment on `parley.runtimedrift.dev`** (M)
   - Accept:
     - A Custom Domain on the Worker, the production Neon branch and Hyperdrive, all secrets set, the Polar sandbox production config, and a Resend sending domain.
-    - Security headers: CSP, HSTS, frame-ancestors, referrer policy. The auth trusted origins are set.
+    - Security headers (CSP, HSTS, frame-ancestors, referrer policy): Hono `secureHeaders()` on `/api`, and the same policy on the SSR responses in `src/server.ts`. The auth trusted origins are set.
     - The post-deploy smoke test is green on the live domain.
   - Verify: The smoke test + securityheaders.com at A or better.
   - Files: `apps/web/wrangler.jsonc`, `src/server/headers.ts`
