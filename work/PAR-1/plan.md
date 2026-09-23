@@ -119,7 +119,7 @@ Skills that aren't used, and why:
 | T4 | The brand session: approve the colors, logo and type. |
 | Before T13 | A Neon project (free tier). |
 | Before T17 | ✅ Done: `OPENROUTER_API_KEY` (app, hard limit $10) and `OPENROUTER_API_KEY_TEST` (test, hard limit $5), both total caps with no reset. |
-| Before T21 | A Resend account with the domain `runtimedrift.dev` verified. Google and GitHub OAuth apps. |
+| Before T21 | ✅ Resend: `mail.runtimedrift.dev` verified, `RESEND_API_KEY` in `.env` (full access; make a sending-only key for production in T38). ⏳ Google and GitHub OAuth apps. |
 | Before T26 | Polar sandbox org + access token. |
 | Before T38 | Confirm `runtimedrift.dev` is a zone on this Cloudflare account. |
 

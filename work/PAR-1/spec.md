@@ -428,6 +428,7 @@ Rules:
 - **Security.** `trustedOrigins`: the production domain + the preview URL pattern. Secure cookies. CSRF and origin checks stay on. `BETTER_AUTH_SECRET` is at least 32 characters, from `npx @better-auth/cli secret`. `databaseHooks` write **audit logs** for session create/revoke, email change and account link (IDs only).
 - **Schema.** `npx @better-auth/cli generate` writes the Drizzle auth schema (re-run it after plugin changes). We add the indexes Better Auth recommends (`user.email`, `account.userId`, `session.userId` + `token`, `verification.identifier`, `twoFactor.secret`). `npx @better-auth/cli info` is used when debugging.
 - **Emails** (Resend + React Email): verify email, reset password, confirm email change. They are sent in the background.
+- **Sender.** The Resend domain `mail.runtimedrift.dev` is verified (region eu-west-1, sending only). The from address is `Parley <no-reply@mail.runtimedrift.dev>`. Every send has an idempotency key (`<event>/<id>`) and checks `{ error }` (the SDK doesn't throw). Tests send to `delivered@resend.dev`. The production Worker uses a **sending-only** key limited to that domain. The full-access `RESEND_API_KEY` stays local for admin work.
 
 ### Hono (the owner's notes + docs checked 2026-09-23)
 

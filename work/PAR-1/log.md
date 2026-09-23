@@ -18,3 +18,6 @@ Owner created Neon project parley (aws-eu-central-1, db neondb, owner-set scalin
 
 ### 2026-09-23T17:27:11Z
 OpenRouter keys added: app ($10 total cap) + test ($5 total cap), both verified active, no reset.
+
+### 2026-09-23T17:31:01Z
+Resend key added; mail.runtimedrift.dev verified (eu-west-1, sending). Next owner step: Google + GitHub OAuth apps.
