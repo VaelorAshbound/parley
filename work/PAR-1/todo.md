@@ -198,14 +198,13 @@
 
 ## Phase 3: Accounts
 
-- [ ] **T21: Sign-in + guest → account linking** (M)
+- [ ] **T21: Sign up / sign in / sign out + guest → account linking** (M)
   - Accept:
-    - The code entry uses `InputOTP`.
-    - Email OTP (Resend + React Email), Google and GitHub. The sign-in dialog opens from any gated action (save, export, share).
-    - `onLinkAccount` moves the guest's drafts and messages to the new user in one transaction. The draft stays open, with nothing lost.
-    - Auth-matrix rows are added. Integration tests cover the link path.
-  - Verify: `pnpm test:workers` + an e2e run: guest → draft → sign in with email OTP (Resend test inbox) → same draft.
-  - Files: `apps/web/src/server/auth.ts`, `src/routes/{sign-in.tsx,_app/_authed.tsx}`, `src/features/auth/*`, `emails/sign-in-code.tsx`, `test/link.test.ts`
+    - Following spec §5 Auth: `better-auth/minimal`, email + password with a verification email, Google and GitHub, `lastLoginMethod` ("Last used" badge), `captcha` with Turnstile on sign-up and sign-in, the DB rate limiter with `cf-connecting-ip`, `backgroundTasks` → `waitUntil`, and `tanstackStartCookies` last. The session is fetched on the server through a `createServerFn` in the `_app` `beforeLoad`.
+    - `onLinkAccount` moves the guest's drafts and messages to the new user in one transaction, and the draft stays open. Export, share and upgrade return `EMAIL_NOT_VERIFIED` until the email is verified.
+    - Auth-matrix rows are added. Integration tests cover the link path, the verification gate and the rate limits.
+  - Verify: `pnpm test:workers` + e2e: guest → draft → sign up → same draft → verify the email (Resend test inbox) → export unlocked. Also a Google sign-in on the preview.
+  - Files: `apps/web/src/server/auth.ts`, `src/routes/{_auth.tsx,_auth/sign-in.tsx,_auth/sign-up.tsx,_auth/verify-email.tsx,_app/_authed.tsx}`, `src/features/auth/*`, `emails/verify-email.tsx`, `test/link.test.ts`
   - Deps: T14 · Owner: Resend domain, OAuth apps · Skills: `create-auth`, `better-auth-security-best-practices`, `resend:resend`, `resend:react-email`
 
 - [ ] **T22: Sidebar history + search + draft actions** (M)
@@ -217,14 +216,24 @@
   - Files: `packages/db/src/queries/drafts.ts`, `apps/web/src/server/rpc/drafts.ts`, `src/features/sidebar/*`, `src/routes/_app/_authed/drafts.tsx` (`validateSearch`: `q`, `type` with `.catch()`)
   - Deps: T21
 
-- [ ] **T23: Account menu + settings** (S)
+- [ ] **T23: Account menu, settings and password/email flows** (M)
   - Accept:
     - The account menu has your name, a plan badge, settings, billing (a placeholder until T26), and sign out.
-    - `/settings` lets you change your name, see sessions, and delete your account (with a confirm, and all data removed).
-    - Deleting an account is covered by an integration test.
+    - Forgot/reset password (a 30-min single-use token, other sessions revoked). Change password (optionally revoke other sessions). Set a password for OAuth-only users. Change email (confirm with the current email first). Change name. A session list with revoke. Delete account (fresh session + confirm, all data removed).
+    - Integration tests for each flow + audit log entries (IDs only). The emails are React Email templates.
+  - Files: `apps/web/src/features/account/*`, `src/routes/{_app/_authed/settings.tsx,_auth/forgot-password.tsx,_auth/reset-password.tsx}`, `emails/{reset-password,change-email}.tsx`
   - Verify: tests + e2e.
   - Files: `apps/web/src/features/account/*`, `src/routes/_app/_authed/settings.tsx`, `src/server/rpc/account.ts`
   - Deps: T21
+
+- [ ] **T23b: Two-factor authentication** (S)
+  - Accept:
+    - `twoFactor` plugin: enable with a password → QR code + 10 backup codes (shown once, with copy and download) → turned on only after the first TOTP check succeeds. Disable with a password.
+    - Sign-in with 2FA: `twoFactorRedirect` → `/two-factor` (`InputOTP` for the TOTP or a backup code, "Trust this device for 30 days").
+    - Tests: enable → sign out → sign in needs a code → a backup code works once → disable.
+  - Verify: integration tests + e2e with a TOTP made in the test from the secret.
+  - Files: `apps/web/src/server/auth.ts`, `src/routes/_auth/two-factor.tsx`, `src/features/account/two-factor/*`
+  - Deps: T23 · Skills: `two-factor-authentication-best-practices`
 
 ### Checkpoint 3
 - [ ] A guest's work survives sign-in. History, search and settings work on desktop and on a phone.
@@ -269,11 +278,11 @@
 
 - [ ] **T27: Turnstile, rate limits, AI budgets** (M)
   - Accept:
-    - Turnstile runs before a guest's first message, with the server doing siteverify. The Rate Limiting binding allows 10 requests per 10 s on the AI routes, through `CloudflareRateLimiter` + the oRPC rate-limit middleware and headers plugin. The typed `RATE_LIMITED` / `DAILY_LIMIT` errors drive the UI.
+    - Turnstile runs before a guest's first message through Better Auth's `captcha` plugin on `/sign-in/anonymous` (no separate siteverify code). The Rate Limiting binding allows 10 requests per 10 s on the AI routes, through `CloudflareRateLimiter` + the oRPC rate-limit middleware and headers plugin. The typed `RATE_LIMITED` / `DAILY_LIMIT` errors drive the UI.
     - Per-user daily message limits (guest 20, free 100, Pro 500) and cost tracking in `aiUsage`. Friendly messages when a limit is hit.
     - Worker tests cover each limit at its edge.
   - Verify: `pnpm test:workers` + a manual burst test on the preview.
-  - Files: `apps/web/src/server/{limits.ts,turnstile.ts}`, `wrangler.jsonc`, `src/features/chat/limit-banner.tsx`
+  - Files: `apps/web/src/server/limits.ts`, `wrangler.jsonc`, `src/features/chat/limit-banner.tsx`
   - Deps: T17, T21 · Skills: `cloudflare:turnstile-spin`, `security-and-hardening`
 
 - [ ] **T28: Cron: purge old guest data** (S)

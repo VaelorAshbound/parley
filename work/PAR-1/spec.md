@@ -60,7 +60,9 @@ Everything else must be flawless around this moment.
 3. As a user, I can **answer the AI's questions in an inline questionnaire**: pick from the choices (with keyboard shortcuts), type my own answer, or skip the optional ones. Several related questions come as one short set of steps.
 4. As a user, I can **click any field in the document and edit it myself**. The AI sees my edit.
 5. As a user, I can **undo** any change the AI made.
-6. As a guest, when I want to save or export, I **sign in and keep my draft and chat**, with nothing lost.
+6. As a guest, when I want to save or export, I **sign up or sign in and keep my draft and chat**, with nothing lost.
+6a. As a user, I can **sign up, sign in and sign out** with email + password, Google or GitHub. I can **verify my email**, **reset a forgotten password**, **change my password and email**, and see which method I **used last**.
+6b. As a user, I can turn on **two-factor authentication** (an authenticator app + backup codes) and trust a device for 30 days.
 7. As a signed-in user, I see **my drafts** in the sidebar, can **search** them, and can reopen, duplicate, rename or delete them.
 8. As a user, I can **download a PDF or DOCX** that looks like a real, professional contract.
 9. As a user, I can make a **read-only share link** and turn it off later.
@@ -112,7 +114,7 @@ This is the standard stack from CLAUDE.md. The versions below were checked on 20
 | Client state | Zustand, used only for UI state: the highlighted field, the undo stack and the panel size. State that belongs in a link (open draft, phone tab, panel open) lives in **typed TanStack Router search params**, not in Zustand. |
 | API | **Hono** + **oRPC**, typed from the DB to the UI, with Zod at every edge |
 | AI | **AI SDK v7** (`streamText` + tools, `useChat`) over oRPC (`streamToEventIterator` / `eventIteratorToUnproxiedDataStream`) and **OpenRouter** (`@openrouter/ai-sdk-provider`) |
-| Auth | **Better-Auth**: `anonymous()` for guests, with `onLinkAccount` moving the guest's drafts to the new account. Sign-in by email OTP (Resend), Google and GitHub. |
+| Auth | **Better Auth** (`better-auth/minimal` + Drizzle adapter): email + password (verification, reset, change), Google, GitHub, `anonymous()` guests with `onLinkAccount`, `twoFactor`, `captcha` (Turnstile), `lastLoginMethod`, Polar, `tanstackStartCookies`. See §5 Auth. |
 | Payments | **Polar sandbox** through `@polar-sh/better-auth`: `checkout`, `portal` and `webhooks` |
 | DB | **Neon Postgres** through Hyperdrive (**query caching off**), `pg` (node-postgres) + **Drizzle** ORM. Local Postgres for dev. See §5 Database. |
 | Export | **DOCX**: `docx` (`Packer.toArrayBuffer`). **PDF**: Cloudflare **Browser Run** `quickAction("pdf", { html })`, using the same HTML as the preview. |
@@ -187,7 +189,8 @@ This is the core. It is pure TypeScript with no I/O, so it is easy to test.
 
 | Who | Limit |
 |---|---|
-| Guest | Turnstile once. 20 AI messages a day. 1 draft. Must sign in to save, export or share. |
+| Guest | Turnstile once (the captcha plugin on `/sign-in/anonymous`). 20 AI messages a day. 1 draft. Must sign in to save, export or share. |
+| Signed up, email not verified | Can draft and save. **Export, share and upgrade need a verified email** (typed `EMAIL_NOT_VERIFIED`). |
 | Free | 100 AI messages a day. 3 counted documents a month. PDF only. |
 | Pro | 500 AI messages a day. Unlimited documents. PDF + DOCX. |
 | Everyone | 10 requests per 10 s per user or IP on AI routes. Hard monthly credit limit on the OpenRouter key. |
@@ -310,7 +313,13 @@ src/routes/
 ├─ _app/_authed.tsx            pathless guard: guests get redirect({ to: "/sign-in", search: { redirect } })
 ├─ _app/_authed/drafts.tsx     /drafts           view all + search
 ├─ _app/_authed/settings.tsx   /settings
-├─ sign-in.tsx                 /sign-in          outside the shell
+├─ _auth.tsx                   pathless layout for the auth pages, outside the shell (signed-in users are redirected away)
+├─ _auth/sign-in.tsx           /sign-in          (last-used method badge)
+├─ _auth/sign-up.tsx           /sign-up
+├─ _auth/forgot-password.tsx   /forgot-password
+├─ _auth/reset-password.tsx    /reset-password?token=
+├─ _auth/verify-email.tsx      /verify-email     (check your inbox / resend)
+├─ _auth/two-factor.tsx        /two-factor       (TOTP or backup code, trust this device)
 ├─ pricing.tsx                 /pricing          outside the shell
 ├─ s.$token.tsx                /s/:token         public share page, outside the shell
 └─ -components/, -lib/         colocated code, left out of the route tree ("-" prefix)
@@ -390,6 +399,34 @@ Rules:
 - **Not used, and why:**
   - **Prepared statements** (`.prepare()` + `sql.placeholder()`): Drizzle's serverless guide says edge runtimes get "little to no" benefit, and our client is made per request, so the prepared statement doesn't outlive the request.
   - **Row-Level Security**: a real second lock, but for us it needs a second DB role, a second Hyperdrive binding (for the cron and the guest → account link), share-token policies, and a transaction + `set_config` on every query. Drizzle's `crudPolicy` / `authUid` helpers assume Neon's JWT auth, not Better Auth. For v1, ownership lives in the single `draftOwner` oRPC middleware, and the auth matrix tests every procedure. PAR-3 tracks RLS as later hardening.
+
+### Auth (Better Auth, the owner's rules + docs checked 2026-09-23)
+
+- **Server-side sessions with cookies.** The `session_token` cookie is the server-side session id. The session is **fetched on the server**, in the `_app` `beforeLoad`, through a `createServerFn` `getSession` (the official TanStack Start pattern), put in the router context, and used as the client's initial value, so no signed-in/signed-out flash. `tanstackStartCookies()` is the **last** plugin, so cookies set during SSR/server functions reach the browser.
+- **Mounting.** Hono `app.all("/api/auth/*", c => auth.handler(c.req.raw))`, registered before any catch-all. The `nodejs_compat` flag is on (Better Auth uses `AsyncLocalStorage`). The auth instance is built per request (the DB client is per request), with `advanced.backgroundTasks.handler = ctx.waitUntil`, so emails and cleanup run after the response.
+- **Bundle.** Import `betterAuth` from **`better-auth/minimal`** (we use the Drizzle adapter, so Kysely isn't needed). Plugins come from their own paths for tree-shaking.
+- **Methods.**
+  - `emailAndPassword` with `minPasswordLength: 10`, `maxPasswordLength: 128`, `resetPasswordTokenExpiresIn: 30 min` and `revokeSessionsOnPasswordReset: true`.
+  - `emailVerification` with `sendOnSignUp` and `autoSignInAfterVerification`.
+  - Google + GitHub, with account linking for the same verified email.
+- **Email verification rule.** Signing up gives a session right away, so the guest's draft links at once, even if the verify link is opened on another device. But **export, share and upgrade need a verified email**, which stops fake-email abuse of the quota.
+- **Account management.**
+  - `user.changeEmail.enabled`: it confirms with the current email first.
+  - `changePassword` with `revokeOtherSessions`, and setting a password for OAuth-only users.
+  - A session list with revoke.
+  - `user.deleteUser.enabled`, which needs a fresh session and removes all data.
+- **Plugins:**
+  - `anonymous({ onLinkAccount })`;
+  - `twoFactor({ issuer: "Parley" })`: TOTP with a QR code + 10 encrypted backup codes + trusted device for 30 days; only credential accounts can use it;
+  - `captcha({ provider: "cloudflare-turnstile", endpoints: [sign-up, sign-in, forgot-password, /sign-in/anonymous] })`;
+  - `lastLoginMethod()` (cookie only), which shows "Last used" on the sign-in buttons;
+  - Polar;
+  - `tanstackStartCookies()` last.
+- **Rate limit.** Better Auth's own limiter with `storage: "database"` (memory resets per isolate on Workers) and `ipAddressHeaders: ["cf-connecting-ip"]`. It uses the stricter built-in rules on sign-in, sign-up, change-password and change-email, plus 2FA's 3 requests per 10 s.
+- **Session cache.** `session.cookieCache` (`compact`, 5 min) saves a DB read on most requests. A revoke can take up to 5 min to reach other devices; bump `cookieCache.version` to force it everywhere.
+- **Security.** `trustedOrigins`: the production domain + the preview URL pattern. Secure cookies. CSRF and origin checks stay on. `BETTER_AUTH_SECRET` is at least 32 characters, from `npx @better-auth/cli secret`. `databaseHooks` write **audit logs** for session create/revoke, email change and account link (IDs only).
+- **Schema.** `npx @better-auth/cli generate` writes the Drizzle auth schema (re-run it after plugin changes). We add the indexes Better Auth recommends (`user.email`, `account.userId`, `session.userId` + `token`, `verification.identifier`, `twoFactor.secret`). `npx @better-auth/cli info` is used when debugging.
+- **Emails** (Resend + React Email): verify email, reset password, confirm email change. They are sent in the background.
 
 ### Hono (the owner's notes + docs checked 2026-09-23)
 
