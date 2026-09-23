@@ -44,6 +44,7 @@
   - Deps: T1 · Owner: Workers Paid
 
 - [ ] **T3: Spike: the full test stack in Workers Builds** (M)
+  - Progress 2026-09-23: the repo is connected to Workers Builds. There are two triggers: `main` → `ci-build.sh` + `wrangler deploy`; other branches → `ci-build.sh` + `ci-preview.sh`. Root `apps/web`, `PNPM_VERSION=12.4.2`. Playwright smoke test added. Locally, the Playwright browser download times out (the CDN redirect stalls on this network), so the first real run is in CI.
   - Accept:
     - The repo is on GitHub and connected to Workers Builds. The PR build runs `vp check`, the Vitest suites, and 1 Playwright test (Chromium + WebKit + Firefox) against the Workers Preview.
     - Playwright traces and screenshots from failed runs get uploaded to R2, and the build log shows their URLs.
