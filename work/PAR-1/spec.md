@@ -356,6 +356,19 @@ Rules:
 | Draft search (⌘K) | `Command` inside a `Dialog` |
 | Empty states, loading, notes | `Empty`, `Skeleton`, `Alert`, toasts |
 
+### API (oRPC, the owner's notes + docs checked 2026-09-23)
+
+- **Version.** Pin oRPC **v1 stable** (1.15.x). The docs site already shows some `@beta` (v2) packages, and we don't ship on betas.
+- **Workers flag.** `wrangler.jsonc` sets `compatibility_flags: ["enable_request_signal"]`, so `request.signal` aborts when the client leaves. oRPC passes it to each procedure, and the chat passes it on as `streamText({ abortSignal })`. **Closing the tab stops the LLM, and the spend with it.** A Worker test checks this. We use a compatibility date of 2026-03-03 or later, so the `unhandled_rejection_after_microtask_checkpoint` flag isn't needed.
+- **Auth.** `RequestHeadersHandlerPlugin` + a `requireSession` middleware (Better Auth `auth.api.getSession`) → a `authed` base, and on top of it a `draftOwner` middleware. `ResponseHeadersHandlerPlugin` forwards refreshed session cookies. Every procedure is built from `pub`, `authed` or `draftOwner`.
+- **Typed errors.** Procedures declare `.errors({ NOT_FOUND, QUOTA_EXCEEDED, DAILY_LIMIT, RATE_LIMITED, PRO_REQUIRED })`. The client checks them with `isDefinedError`, so every limit or paywall state has typed UI, not string matching.
+- **SSR without self-HTTP.** During SSR, loaders call the router in the same process through a server-side client (`createRouterClient`, loaded behind an `import.meta.env.SSR` guard so server code never reaches the browser bundle). The browser uses `RPCLink`. This follows oRPC's "Optimizing SSR" recipe.
+- **AI tools from procedures.** The `updateFields` AI tool is made from the same `drafts.updateFields` procedure with `@orpc/ai-sdk` `createToolFactory`. So the manual edit and the AI edit share one schema, one ownership check and one `applyFieldChanges`.
+- **Rate limit.** `CloudflareRateLimiter` from `@orpc/cloudflare` (stable) wraps the Workers binding and is used through oRPC's rate-limit middleware and headers plugin. The daily AI budget stays our own Postgres counter.
+- **TanStack Query.** Use `@orpc/tanstack-query` (`orpc.x.queryOptions()`, `mutationOptions()`, keys).
+- **Tests.** Procedures are called directly with server-side clients plus a test context (the auth matrix). The client is mocked with oRPC's `implement` where needed.
+- **Later.** oRPC Cloudflare Traces (`CloudflareTracer`) is v2-beta only. Until v2 is stable, we use Workers' automatic tracing + our structured logs.
+
 ### Forms (TanStack Form, the owner's rules + docs checked 2026-09-23)
 
 Parley's forms are the inline field editor (one per field type), sign-in (email → code), rename draft, settings, and delete account.

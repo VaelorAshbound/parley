@@ -125,7 +125,8 @@
   - Accept:
     - Better-Auth is mounted at `/api/auth/*` with the `anonymous()` plugin. The first visit that needs a session creates a guest.
     - oRPC `drafts.create`, `drafts.get` and `drafts.updateFields` (through `applyFieldChanges`) enforce ownership.
-    - An auth-matrix test harness exists (no session, guest, other user, owner), with the first rows written.
+    - The oRPC bases are `pub`, `authed` and `draftOwner`, using RequestHeaders/ResponseHeaders plugins and typed `.errors()`. `enable_request_signal` is set. SSR uses an in-process `createRouterClient` (no self-HTTP).
+    - An auth-matrix test harness exists (no session, guest, other user, owner), with the first rows written. It calls procedures through server-side clients.
   - Verify: `pnpm test:workers`
   - Files: `apps/web/src/server/{app.ts,auth.ts,rpc/router.ts,rpc/drafts.ts}`, `test/auth-matrix.test.ts`
   - Deps: T13, T6 · Skills: `better-auth-best-practices`, `cloudflare:workers-best-practices`, `api-and-interface-design`
@@ -154,7 +155,7 @@
   - Accept:
     - The chat uses `MessageScroller`, `Message`, `Bubble` and `Marker`, and assistant text uses `typeset-chat`. Component tests use `@shadcn/helpers/ai-sdk` `createChat()` scripts, including tool parts.
     - `chat.send` streams AI SDK v7 `streamText` over oRPC (`streamToEventIterator`). The client uses `useChat` with an oRPC transport (`eventIteratorToUnproxiedDataStream`). Messages are saved.
-    - Tools `chooseDocument` and `updateFields` run on the server through `applyFieldChanges`. The preview updates from the tool results.
+    - Tools `chooseDocument` and `updateFields` run on the server. `updateFields` is made from the `drafts.updateFields` procedure with `@orpc/ai-sdk` `createToolFactory`, so it shares the schema, the owner check and `applyFieldChanges`. The preview updates from the tool results. `streamText` gets `abortSignal: request.signal`, and a Worker test aborts halfway and checks the model stream stops.
     - The fake LLM runs Worker tests of a whole scripted NDA conversation.
   - Verify: `pnpm test:workers` + one manual chat with the real `gpt-6-luna` through the test key.
   - Files: `apps/web/src/server/ai/{chat.ts,tools.ts,prompt.ts,model.ts}`, `src/features/chat/*`, `test/chat.test.ts`
@@ -267,7 +268,7 @@
 
 - [ ] **T27: Turnstile, rate limits, AI budgets** (M)
   - Accept:
-    - Turnstile runs before a guest's first message, with the server doing siteverify. The Rate Limiting binding allows 10 requests per 10 s on the AI routes.
+    - Turnstile runs before a guest's first message, with the server doing siteverify. The Rate Limiting binding allows 10 requests per 10 s on the AI routes, through `CloudflareRateLimiter` + the oRPC rate-limit middleware and headers plugin. The typed `RATE_LIMITED` / `DAILY_LIMIT` errors drive the UI.
     - Per-user daily message limits (guest 20, free 100, Pro 500) and cost tracking in `aiUsage`. Friendly messages when a limit is hit.
     - Worker tests cover each limit at its edge.
   - Verify: `pnpm test:workers` + a manual burst test on the preview.
