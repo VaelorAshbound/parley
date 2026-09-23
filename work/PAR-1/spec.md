@@ -107,7 +107,7 @@ This is the standard stack from CLAUDE.md. The versions below were checked on 20
 |---|---|
 | Monorepo | pnpm workspaces + **Vite+** (`vp`, v1.0 RC): Rolldown, Vitest, oxlint, oxfmt |
 | App | **TanStack Start** (React 19 + React Compiler), TanStack Router / Query / Form |
-| UI | Tailwind CSS, shadcn/ui, Motion |
+| UI | Tailwind CSS, **shadcn/ui** (CLI, `packages/ui` via monorepo support), Motion. See §5 UI rules. |
 | Client state | Zustand, used only for UI state: the highlighted field, the undo stack and the panel size. State that belongs in a link (open draft, phone tab, panel open) lives in **typed TanStack Router search params**, not in Zustand. |
 | API | **Hono** + **oRPC**, typed from the DB to the UI, with Zod at every edge |
 | AI | **AI SDK v7** (`streamText` + tools, `useChat`) over oRPC (`streamToEventIterator` / `eventIteratorToUnproxiedDataStream`) and **OpenRouter** (`@openrouter/ai-sdk-provider`) |
@@ -231,6 +231,7 @@ parley/
 ├─ packages/documents/        Document engine: definitions, render model, DOCX/HTML builders
 │  ├─ src/definitions/        One file per document (12)
 │  └─ generated/              Parsed template JSON (build output, not committed)
+├─ packages/ui/               shadcn/ui components, installed by the CLI's monorepo support (`init --monorepo`)
 ├─ packages/db/               Drizzle schema, migrations, typed queries
 ├─ evals/                     AI eval conversations + runner
 ├─ templates/                 Common Paper originals (unchanged) + LICENSE.txt
@@ -332,6 +333,26 @@ Rules:
 - **Security.** Route guards are for UX only. The TanStack docs say "a route guard is not a data authorization boundary". Every oRPC procedure checks the session and ownership itself (see the auth matrix in §6).
 - Splat and optional path params (`$`, `{-$param}`) are not needed for Parley.
 
+### UI (shadcn/ui, the owner's rules + docs checked 2026-09-23)
+
+- **Never build a component by hand when shadcn has one.** Check first with `shadcn search` / `shadcn docs`, and always add components with the CLI (the `shadcn` skill). The shadcn skill's rules apply: semantic tokens, `gap-*`, `data-icon`, and Items inside their Groups.
+- **Setup:** `shadcn init --template start --monorepo` puts the shared components in `packages/ui`, and the CLI fixes the import paths.
+- **Dark mode:** light, dark or system, using shadcn's TanStack Start theme provider. It uses `ScriptOnce`, so the theme is set before hydration and never flashes.
+- **Which component for which part of Parley:**
+
+| Parley part | shadcn piece |
+|---|---|
+| Three-pane shell | `Sidebar` (collapsible, and a sheet on phones) + `Resizable` for the document panel |
+| Chat | `MessageScroller` (follows the stream, anchors turns, jump-to-latest), `Message`, `Bubble`, and `Marker` for notes like "Document: Mutual NDA". No hand-made bubbles or scroll code. |
+| Assistant text + the document preview | **Typeset**: one CSS file for rendered text. It gets a `typeset-chat` preset and a `typeset-contract` preset for the live document. |
+| **The shimmer** | The built-in `shimmer` utility (from `shadcn/tailwind.css`), tuned to the brand. It is used for the changed field and for the "thinking…" state. |
+| Long scroll areas | The `scroll-fade` utility on the chat, the document panel and the sidebar list |
+| Choice fields (2–7 options) and quick replies | `ToggleGroup` |
+| State / court picker | `Combobox` |
+| Sign-in code | `InputOTP` |
+| Draft search (⌘K) | `Command` inside a `Dialog` |
+| Empty states, loading, notes | `Empty`, `Skeleton`, `Alert`, toasts |
+
 ### Forms (TanStack Form, the owner's rules + docs checked 2026-09-23)
 
 Parley's forms are the inline field editor (one per field type), sign-in (email → code), rename draft, settings, and delete account.
@@ -370,7 +391,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 | Worker runtime | `@cloudflare/vitest-plugin` (`cloudflareTest()`), in its own package `apps/web-worker-tests` on **Vitest 4.1**, see the note below | Server entry routing (`/api` vs SSR), Hono middleware, oRPC procedures, rate-limit binding, the `scheduled()` cleanup. All of it runs in real `workerd`. |
 | Integration (DB) | Vitest + Postgres (local in dev, a Neon branch in CI) | Drizzle queries and migrations up and down. Guest → user linking moves drafts and chat. Quota counts on first export only. Share revoke. Polar webhook handling with real sandbox payloads. |
 | Auth matrix | Vitest | Every procedure × {no session, guest, other user, owner, Pro}. Each gets exactly the allowed result. There is no path to another user's draft. |
-| Component | Vitest browser mode (Playwright provider) | Chat, quick replies, the field shimmer, the inline field editor, undo chips, sidebar search, the panel resize. They run in real Chromium, Firefox and WebKit. |
+| Component | Vitest browser mode (Playwright provider) + `@shadcn/helpers/ai-sdk` `createChat()` scripted conversations streamed through the real `useChat` (tool parts and waiting for user input included) | Chat, quick replies, the field shimmer, the inline field editor, undo chips, sidebar search, the panel resize. They run in real Chromium, Firefox and WebKit. |
 | Snapshot + visual | Vitest + Playwright screenshots | DOCX XML and PDF HTML for a fully filled example of each document (12). PDF pages turned into images and compared pixel by pixel. Screenshots of key screens in light and dark mode, on desktop and phone. |
 | E2E (fast) | Playwright | All user stories on desktop and a phone viewport, in Chromium, Firefox and WebKit. It uses a scripted fake LLM, so it is fast and gives the same result every run. Runs on every PR against the Workers Preview. |
 | E2E (real) | Playwright + real services | See "Real-service tests" below. |

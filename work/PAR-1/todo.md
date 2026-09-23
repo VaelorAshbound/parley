@@ -12,6 +12,7 @@
 
 - [ ] **T1: Monorepo scaffold that runs on Workers** (M)
   - Accept:
+    - `shadcn init --template start --monorepo` → `packages/ui`, plus the dark-mode theme provider (`ScriptOnce`, no flash). Check that the shadcn CLI and Vite+ work together (`vp dev`/`vp build`).
     - pnpm workspace with `apps/web`, `packages/documents` and `packages/db`, using Vite+ at a pinned version.
     - TanStack Start + `@cloudflare/vite-plugin`, with a custom `src/server.ts` (`/api/health` served by Hono, everything else by Start).
     - `pnpm dev`, `pnpm check` and `pnpm test` all work, using Vitest `test.projects` in `vite.config.ts`, with 1 sample test and 1 `*.test-d.ts` type test. `apps/web-worker-tests` (Vitest 4.1 + `@cloudflare/vitest-plugin`) runs 1 test in workerd through `pnpm test:workers`.
@@ -131,6 +132,7 @@
 
 - [ ] **T15: App shell: three panes, responsive** (M)
   - Accept:
+    - The shell is built from shadcn `Sidebar` + `Resizable` (spec §5 UI). No hand-built layout parts.
     - The Claude-style layout: a collapsible sidebar, the chat column, and a resizable document panel that you can close. On a phone, a drawer and two tabs.
     - The routes follow spec §5 Routing: the `_app` pathless shell, `/` and `/d/$draftId`, router context (`queryClient`, `orpc`, `session`), loaders using `ensureQueryData` + `useSuspenseQuery`, typed `panel`/`tab`/`field` search params, pending/error/not-found components, `autoCodeSplitting` and intent preload. Built with shadcn on the brand tokens.
     - There is no layout shift on load (CLS 0 in a DevTools trace), and it works with the keyboard.
@@ -150,6 +152,7 @@
 
 - [ ] **T17: AI chat streaming with tools** (M)
   - Accept:
+    - The chat uses `MessageScroller`, `Message`, `Bubble` and `Marker`, and assistant text uses `typeset-chat`. Component tests use `@shadcn/helpers/ai-sdk` `createChat()` scripts, including tool parts.
     - `chat.send` streams AI SDK v7 `streamText` over oRPC (`streamToEventIterator`). The client uses `useChat` with an oRPC transport (`eventIteratorToUnproxiedDataStream`). Messages are saved.
     - Tools `chooseDocument` and `updateFields` run on the server through `applyFieldChanges`. The preview updates from the tool results.
     - The fake LLM runs Worker tests of a whole scripted NDA conversation.
@@ -159,6 +162,7 @@
 
 - [ ] **T18: Wow motion: shimmer, scroll-to-field, clause swap, undo chips** (M)
   - Accept:
+    - The field shimmer is the shadcn `shimmer` utility tuned to the brand. `scroll-fade` is on the chat, the document and the sidebar.
     - A changed field shimmers (to the brand spec), the panel scrolls smoothly to it, and a choice swaps with a layout animation. There is no jank during streaming.
     - Each AI change shows as a chip ("Term → 2 years · Undo"). Undo applies the inverse change set on the server.
     - Reduced-motion mode: the change is shown with no movement.
@@ -194,6 +198,7 @@
 
 - [ ] **T21: Sign-in + guest → account linking** (M)
   - Accept:
+    - The code entry uses `InputOTP`.
     - Email OTP (Resend + React Email), Google and GitHub. The sign-in dialog opens from any gated action (save, export, share).
     - `onLinkAccount` moves the guest's drafts and messages to the new user in one transaction. The draft stays open, with nothing lost.
     - Auth-matrix rows are added. Integration tests cover the link path.

@@ -11,7 +11,11 @@ We build Parley in thin vertical slices. The riskiest unknowns come first: PDF a
 1. **One Worker.** `src/server.ts` sends `/api/*` to Hono (Better-Auth + oRPC) and everything else to TanStack Start SSR. It also runs `scheduled()` for the cron jobs. An ADR is written in T6.
 2. **The document engine is pure and built first.** Templates are parsed at build time. One `RenderedDocument` model feeds the React preview, the PDF HTML and the DOCX. Nothing in the UI can go ahead of the engine.
 3. **The server owns the draft state.** The AI's tool calls and your manual edits both go through one `applyFieldChanges` function, which checks them with Zod, saves them, and returns the change set. The client only mirrors that state. The undo stack stores the inverse change sets.
-4. **The fake LLM is shared by tests.** It is a scripted `MockLanguageModel`, used by the Worker tests, component tests and fast e2e, so those are fast and give the same result every run. The real `openai/gpt-6-luna` runs in evals, `test:real` and nightly.
+4. **Scripted AI for tests, at two layers.**
+   - **Server:** AI SDK `MockLanguageModel` in the Worker tests and the fast e2e.
+   - **Client:** `@shadcn/helpers/ai-sdk` `createChat()` swapped in as the `useChat` transport for component tests and dev states. It streams through the real `useChat` lifecycle, with no network.
+
+   Both are fast and give the same result every run. The real `openai/gpt-6-luna` runs in evals, `test:real` and nightly.
 5. **Cover pages are written from the template, not guessed.** The fields of each of the 11 cover pages come from the terms linked in its template, together with that template's definitions section. A coverage test makes sure every linked term is filled by a field.
 6. **Where files go.** Plan artifacts live in `work/PAR-1/`, as CLAUDE.md says, not in `tasks/`. `/build` reads this plan and `todo.md` from here.
 
