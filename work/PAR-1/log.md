@@ -9,3 +9,6 @@ Spec approved (work/PAR-1/spec.md). Next: /plan, with Phase 0 spikes for PDF/DOC
 
 ### 2026-09-23T17:11:01Z
 Owner setup: Workers Paid confirmed via API; account token active; private repo github.com/VaelorAshbound/parley created, main + PAR-1-parley pushed. Workers Builds connection waits for T1 (needs a Worker). Plan awaiting approval.
+
+### 2026-09-23T17:12:46Z
+Confirmed zone runtimedrift.dev is active on this Cloudflare account (Free plan); parley.runtimedrift.dev custom domain ready for T38.
