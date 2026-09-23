@@ -48,7 +48,8 @@ Chat in the middle, the live document on the right. As you talk:
 - the field that changed shimmers in the document, and the page scrolls to it smoothly;
 - choices (such as "1 year" vs "until terminated") swap in the document with smooth motion;
 - the AI explains each choice in plain words ("Perpetual means the secret never expires…");
-- every change the AI makes shows as a small chip in the chat ("Term → 2 years · Undo").
+- every change the AI makes shows as a small marker in the chat ("Term → 2 years · Undo").
+- when the AI needs answers, a **questionnaire** appears in the chat: one card with steps, a progress bar, letter shortcuts, and an "Other…" box.
 
 Everything else must be flawless around this moment.
 
@@ -56,7 +57,7 @@ Everything else must be flawless around this moment.
 
 1. As a **guest**, I can start chatting at once, with no sign-up, and see a draft fill in live.
 2. As a user who **doesn't know which document** they need, I describe my situation and the AI suggests one, with a one-line reason. It can also mention related ones (for example: "a CSA usually comes with an SLA and a DPA").
-3. As a user, I can **answer with quick-reply buttons** when the question has fixed options.
+3. As a user, I can **answer the AI's questions in an inline questionnaire**: pick from the choices (with keyboard shortcuts), type my own answer, or skip the optional ones. Several related questions come as one short set of steps.
 4. As a user, I can **click any field in the document and edit it myself**. The AI sees my edit.
 5. As a user, I can **undo** any change the AI made.
 6. As a guest, when I want to save or export, I **sign in and keep my draft and chat**, with nothing lost.
@@ -167,7 +168,7 @@ This is the core. It is pure TypeScript with no I/O, so it is easy to test.
 - **Tools.** The server checks every tool input with Zod.
   - `chooseDocument({ documentId, reason })`
   - `updateFields({ changes: [{ key, value, explanation }] })`. Invalid values go back to the model as errors, never into the draft.
-  - `askChoice({ question, options[] })` shows quick-reply buttons in the chat.
+  - `askQuestions({ questions: [{ name, prompt, description, required, choices[{ value, label, description }], allowOther, multiple }] })` is a **client-side, human-in-the-loop tool** (no server `execute`). It renders the shadcn `Questionnaire` in the chat. The answers go back through `addToolOutput`, the server checks them with Zod, and then the AI applies them with `updateFields`. The answers are saved in the tool part, so a reload picks up where you left off (the Questionnaire's Resume).
   - `markComplete()` runs when all required fields are valid, and suggests export.
 - **Guardrails.** The AI stays on drafting these documents. It says in plain words that it gives no legal advice. Off-topic requests get a short redirect. The chat has a server-side limit on message length and history length.
 - **Evals** (`pnpm evals`). About 30 scripted conversations, for example: "we're about to share our roadmap with a vendor" → Mutual NDA. They check the chosen document, the field values, and that no invalid values were set. They run in CI on prompt or model changes, and the score is shown in the README.
@@ -343,11 +344,13 @@ Rules:
 | Parley part | shadcn piece |
 |---|---|
 | Three-pane shell | `Sidebar` (collapsible, and a sheet on phones) + `Resizable` for the document panel |
-| Chat | `MessageScroller` (follows the stream, anchors turns, jump-to-latest), `Message`, `Bubble`, and `Marker` for notes like "Document: Mutual NDA". No hand-made bubbles or scroll code. |
+| Chat | `MessageScroller` (follows the stream, anchors turns, jump-to-latest), `Message` and `Bubble`. No hand-made bubbles or scroll code. |
+| AI questions | **`Questionnaire`** inline in the chat: several steps with `QuestionnaireProgress`, `shortcuts="letters"`, `QuestionnaireInput` for "Other…", `QuestionnaireSkip` for optional questions, conditional items, and animated items |
+| Chat notes and changes | **`Marker`**: a `separator` for "Mutual NDA selected"; `role="status"` + `Spinner` / `shimmer` for "Updating the document…" and "Thinking…"; each AI change as a marker ("Term → 2 years") with an Undo button |
 | Assistant text + the document preview | **Typeset**: one CSS file for rendered text. It gets a `typeset-chat` preset and a `typeset-contract` preset for the live document. |
 | **The shimmer** | The built-in `shimmer` utility (from `shadcn/tailwind.css`), tuned to the brand. It is used for the changed field and for the "thinking…" state. |
 | Long scroll areas | The `scroll-fade` utility on the chat, the document panel and the sidebar list |
-| Choice fields (2–7 options) and quick replies | `ToggleGroup` |
+| Choice fields (2–7 options) in the field editor | `ToggleGroup` |
 | State / court picker | `Combobox` |
 | Sign-in code | `InputOTP` |
 | Draft search (⌘K) | `Command` inside a `Dialog` |
@@ -391,7 +394,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 | Worker runtime | `@cloudflare/vitest-plugin` (`cloudflareTest()`), in its own package `apps/web-worker-tests` on **Vitest 4.1**, see the note below | Server entry routing (`/api` vs SSR), Hono middleware, oRPC procedures, rate-limit binding, the `scheduled()` cleanup. All of it runs in real `workerd`. |
 | Integration (DB) | Vitest + Postgres (local in dev, a Neon branch in CI) | Drizzle queries and migrations up and down. Guest → user linking moves drafts and chat. Quota counts on first export only. Share revoke. Polar webhook handling with real sandbox payloads. |
 | Auth matrix | Vitest | Every procedure × {no session, guest, other user, owner, Pro}. Each gets exactly the allowed result. There is no path to another user's draft. |
-| Component | Vitest browser mode (Playwright provider) + `@shadcn/helpers/ai-sdk` `createChat()` scripted conversations streamed through the real `useChat` (tool parts and waiting for user input included) | Chat, quick replies, the field shimmer, the inline field editor, undo chips, sidebar search, the panel resize. They run in real Chromium, Firefox and WebKit. |
+| Component | Vitest browser mode (Playwright provider) + `@shadcn/helpers/ai-sdk` `createChat()` scripted conversations streamed through the real `useChat` (tool parts and waiting for user input included) | Chat, the questionnaire (keyboard shortcuts, Other, skip, resume after reload), the field shimmer, the inline field editor, the change markers with undo, sidebar search, the panel resize. They run in real Chromium, Firefox and WebKit. |
 | Snapshot + visual | Vitest + Playwright screenshots | DOCX XML and PDF HTML for a fully filled example of each document (12). PDF pages turned into images and compared pixel by pixel. Screenshots of key screens in light and dark mode, on desktop and phone. |
 | E2E (fast) | Playwright | All user stories on desktop and a phone viewport, in Chromium, Firefox and WebKit. It uses a scripted fake LLM, so it is fast and gives the same result every run. Runs on every PR against the Workers Preview. |
 | E2E (real) | Playwright + real services | See "Real-service tests" below. |

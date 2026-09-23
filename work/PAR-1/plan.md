@@ -28,7 +28,7 @@ T1 scaffold ──┬─ T2 PDF/DOCX spike ────────────�
                                                           └─► T12 HTML+DOCX builders ◄┘
 T4 brand (owner) ─────────────────────────────► T15 app shell
 T1 ─► T13 DB ─► T14 worker+auth(guest)+oRPC ─► T15 shell ─► T16 live preview + manual edit
-                                               └────────────► T17 AI chat ─► T18 wow motion ─► T19 quick replies/guardrails ─► T20 evals v1
+                                               └────────────► T17 AI chat ─► T18 wow motion ─► T19 questionnaire/guardrails ─► T20 evals v1
 T14 ─► T21 sign-in+link ─► T22 sidebar history ─► T23 settings
 T12+T21 ─► T24 export ─► T25 share ─► T26 Polar
 T17 ─► T27 limits · T13 ─► T28 cron · T14 ─► T29 observability

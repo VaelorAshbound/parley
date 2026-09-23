@@ -160,23 +160,23 @@
   - Files: `apps/web/src/server/ai/{chat.ts,tools.ts,prompt.ts,model.ts}`, `src/features/chat/*`, `test/chat.test.ts`
   - Deps: T16 · Owner: OpenRouter keys · Skills: `ai-sdk`
 
-- [ ] **T18: Wow motion: shimmer, scroll-to-field, clause swap, undo chips** (M)
+- [ ] **T18: Wow motion: shimmer, scroll-to-field, clause swap, undo markers** (M)
   - Accept:
     - The field shimmer is the shadcn `shimmer` utility tuned to the brand. `scroll-fade` is on the chat, the document and the sidebar.
     - A changed field shimmers (to the brand spec), the panel scrolls smoothly to it, and a choice swaps with a layout animation. There is no jank during streaming.
-    - Each AI change shows as a chip ("Term → 2 years · Undo"). Undo applies the inverse change set on the server.
+    - Each AI change shows as a shadcn `Marker` ("Term → 2 years") with an Undo button, and the status markers use `role="status"` + `shimmer`. Undo applies the inverse change set on the server.
     - Reduced-motion mode: the change is shown with no movement.
   - Verify: component tests + a DevTools performance trace (no long tasks over 50 ms while streaming) + a Claude in Chrome feel check.
-  - Files: `apps/web/src/features/document-preview/motion.tsx`, `src/features/chat/change-chip.tsx`, `src/stores/ui.ts`
+  - Files: `apps/web/src/features/document-preview/motion.tsx`, `src/features/chat/change-marker.tsx`, `src/stores/ui.ts`
   - Deps: T17 · Skills: `emil-design-eng`, `find-animation-opportunities`, `review-animations`
 
-- [ ] **T19: Quick replies, completion and guardrails** (S)
+- [ ] **T19: AI questionnaire, completion and guardrails** (M)
   - Accept:
-    - The `askChoice` tool shows buttons in the chat, and clicking one sends that answer. `markComplete` shows an "Export" card.
+    - `askQuestions` is a client-side human-in-the-loop tool that renders the shadcn `Questionnaire` inline (steps, letter shortcuts, Other, skip, conditional items). The answers go back through `addToolOutput`, are checked with Zod on the server, and survive a reload. `markComplete` shows an "Export" card.
     - The system prompt has the guardrails: on topic only, "not legal advice", and a short redirect for off-topic requests. The stable prefix is cached by the provider. There are server limits on message and history length.
     - Worker tests cover an off-topic request, a prompt injection attempt, and a message that is too long.
   - Verify: `pnpm test:workers`
-  - Files: `apps/web/src/server/ai/{prompt.ts,tools.ts}`, `src/features/chat/quick-replies.tsx`
+  - Files: `apps/web/src/server/ai/{prompt.ts,tools.ts}`, `src/features/chat/ai-questionnaire.tsx`
   - Deps: T17
 
 - [ ] **T20: AI evals v1 (NDA + choosing a document)** (S)
@@ -189,7 +189,7 @@
   - Deps: T19
 
 ### Checkpoint 2: **stop for owner review (demo)**
-- [ ] On a local run, a guest drafts a complete NDA by chat and sees the live shimmer, the undo, and the quick replies.
+- [ ] On a local run, a guest drafts a complete NDA by chat and sees the live shimmer, the undo markers, and the inline questionnaire.
 - [ ] `pnpm check`, all tests and the evals are green. You have tried it yourself.
 
 ---
