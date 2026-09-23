@@ -198,7 +198,7 @@
     - `onLinkAccount` moves the guest's drafts and messages to the new user in one transaction. The draft stays open, with nothing lost.
     - Auth-matrix rows are added. Integration tests cover the link path.
   - Verify: `pnpm test:workers` + an e2e run: guest → draft → sign in with email OTP (Resend test inbox) → same draft.
-  - Files: `apps/web/src/server/auth.ts`, `src/features/auth/*`, `emails/sign-in-code.tsx`, `test/link.test.ts`
+  - Files: `apps/web/src/server/auth.ts`, `src/routes/{sign-in.tsx,_app/_authed.tsx}`, `src/features/auth/*`, `emails/sign-in-code.tsx`, `test/link.test.ts`
   - Deps: T14 · Owner: Resend domain, OAuth apps · Skills: `create-auth`, `better-auth-security-best-practices`, `resend:resend`, `resend:react-email`
 
 - [ ] **T22: Sidebar history + search + draft actions** (M)
@@ -216,7 +216,7 @@
     - `/settings` lets you change your name, see sessions, and delete your account (with a confirm, and all data removed).
     - Deleting an account is covered by an integration test.
   - Verify: tests + e2e.
-  - Files: `apps/web/src/features/account/*`, `src/routes/{_app/_authed.tsx,_app/_authed/settings.tsx,sign-in.tsx}`, `src/server/rpc/account.ts`
+  - Files: `apps/web/src/features/account/*`, `src/routes/_app/_authed/settings.tsx`, `src/server/rpc/account.ts`
   - Deps: T21
 
 ### Checkpoint 3
