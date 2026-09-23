@@ -72,6 +72,7 @@ Checkpoints come after each phase (see todo.md). At the checkpoints after Phases
 | `gpt-6-luna` misses the eval bar | Med | Tune the prompts and tool descriptions first. If it still misses, bring it to you (don't swap the model silently). |
 | Prompt injection that burns budget | Med | Guardrails + evals + per-user budget + the hard key limit. |
 | The live-document motion causes jank on long documents | Med | Virtualize the preview if needed. Budget: no long tasks over 50 ms while streaming (DevTools trace in T35). |
+| The Cloudflare Workers test plugin doesn't support Vitest 5 yet (Vite+ ships 5.0.1) | Med | The Worker tests go in their own package on Vitest 4.1 (T1). A `wi` item tracks moving them back once cloudflare/workers-sdk#15500 ships. |
 | The 20-minute Workers Builds timeout | Low | Split the suites into shards, and keep the heavy runs nightly. |
 
 ## Open questions

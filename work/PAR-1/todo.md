@@ -14,7 +14,7 @@
   - Accept:
     - pnpm workspace with `apps/web`, `packages/documents` and `packages/db`, using Vite+ at a pinned version.
     - TanStack Start + `@cloudflare/vite-plugin`, with a custom `src/server.ts` (`/api/health` served by Hono, everything else by Start).
-    - `pnpm dev`, `pnpm check` and `pnpm test` all work. There is one sample test.
+    - `pnpm dev`, `pnpm check` and `pnpm test` all work, using Vitest `test.projects` in `vite.config.ts`, with 1 sample test and 1 `*.test-d.ts` type test. `apps/web-worker-tests` (Vitest 4.1 + `@cloudflare/vitest-plugin`) runs 1 test in workerd through `pnpm test:workers`.
   - Verify: `pnpm check && pnpm test && pnpm build`. `curl localhost:5173/api/health` returns `{ok:true}`, and `/` renders through SSR.
   - Files: `pnpm-workspace.yaml`, `vite.config.ts`, `apps/web/{vite.config.ts,wrangler.jsonc,src/server.ts,src/routes/index.tsx}`, `package.json`
   - Deps: none
@@ -22,7 +22,7 @@
 - [ ] **T2: Spike: PDF (Browser Run) and DOCX (`docx`) in workerd** (S)
   - Accept:
     - `/api/spike/pdf` returns a valid PDF made from an HTML string by `env.BROWSER.quickAction("pdf")`.
-    - `/api/spike/docx` returns a DOCX from `Packer.toArrayBuffer`. It works in `vitest-pool-workers` and when deployed.
+    - `/api/spike/docx` returns a DOCX from `Packer.toArrayBuffer`. It works in `@cloudflare/vitest-plugin` (Vitest 4.1 package) and when deployed.
     - The results are written to `work/PAR-1/spikes.md`: timings, size, cost per PDF, and go/no-go.
   - Verify: A Worker test parses both files back. A manual download opens in a PDF viewer and in Word/LibreOffice.
   - Files: `apps/web/src/server/spike.ts`, `apps/web/test/spike.test.ts`, `work/PAR-1/spikes.md`
@@ -340,7 +340,7 @@
     - The Vitest coverage thresholds from the spec are enforced in CI.
     - Stryker on `packages/documents`, quota and auth reaches a score of 85% or more. Surviving mutants are fixed or documented.
   - Verify: `pnpm test:coverage && pnpm test:mutation`
-  - Files: `vitest.workspace.ts`, `stryker.config.mjs`
+  - Files: `vite.config.ts` (`test.projects` coverage thresholds), `apps/web-worker-tests/vitest.config.ts` (Istanbul), `stryker.config.mjs`
   - Deps: T32
 
 - [ ] **T35: Performance budgets + load test** (S)
