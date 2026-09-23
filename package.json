@@ -11,7 +11,8 @@
     "test": "vp test run",
     "test:workers": "vp run --filter web-worker-tests test",
     "deploy": "vp run --filter web deploy",
-    "test:workers:real": "vp run --filter web-worker-tests test:real"
+    "test:workers:real": "vp run --filter web-worker-tests test:real",
+    "test:e2e": "vp run --filter web test:e2e"
   },
   "devDependencies": {
     "typescript": "catalog:",
