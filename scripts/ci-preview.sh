@@ -25,8 +25,14 @@ preview_url="$(printf '%s' "$output" | node -e '
 ')"
 echo "==> Preview URL: $preview_url"
 
+# No root in Workers Builds, so no --with-deps: the browsers must run on the
+# image's own libraries. Report what's missing instead of failing blind.
 echo "==> Installing Playwright browsers"
-pnpm exec playwright install --with-deps chromium firefox webkit
+pnpm exec playwright install chromium firefox webkit
+for browser in chromium firefox webkit; do
+  echo "==> Missing libraries for $browser:"
+  pnpm exec playwright install-deps --dry-run "$browser" 2>&1 | tail -n 3 || true
+done
 
 echo "==> Running Playwright against the Preview"
 PREVIEW_URL="$preview_url" pnpm exec playwright test
