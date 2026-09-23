@@ -12,3 +12,6 @@ Owner setup: Workers Paid confirmed via API; account token active; private repo 
 
 ### 2026-09-23T17:12:46Z
 Confirmed zone runtimedrift.dev is active on this Cloudflare account (Free plan); parley.runtimedrift.dev custom domain ready for T38.
+
+### 2026-09-23T17:19:32Z
+Owner created Neon project parley (aws-eu-central-1, db neondb, owner-set scaling: do not change). .env: DATABASE_URL=direct, DATABASE_URL_POOLED=pooled. Spec updated.

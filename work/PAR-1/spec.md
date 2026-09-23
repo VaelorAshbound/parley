@@ -373,11 +373,12 @@ Rules:
   - old session, quota and plan state.
 
   Nearly every read in Parley must be fresh, so we use one Hyperdrive config created with `--caching-disabled`. The Cloudflare docs advise exactly this when most reads must be fresh; you still keep the pooling and fast connection setup. A test checks read-after-write through Hyperdrive on the preview.
+- **Project** (created by the owner 2026-09-23): Neon project `parley`, region `aws-eu-central-1`, database `neondb`. In `.env`: `DATABASE_URL` is the direct URL and `DATABASE_URL_POOLED` is the pooled one.
 - **Driver.** Neon's Cloudflare guide says to use `pg` (node-postgres) with Hyperdrive, via `drizzle-orm/node-postgres`. The client is created inside the request, never at module scope. Hyperdrive pools in transaction mode, so we use no session state (`SET`, `LISTEN`).
-- **Migrations** run with drizzle-kit over the **direct, unpooled** Neon URL (`DATABASE_URL_UNPOOLED`), never through the pooler or Hyperdrive. Each migration is tested on a Neon branch first.
+- **Migrations** run with drizzle-kit over the **direct, unpooled** Neon URL (`DATABASE_URL`), never through the pooler (`DATABASE_URL_POOLED`) or Hyperdrive. Hyperdrive is also created from the direct URL, because it does its own pooling. Each migration is tested on a Neon branch first.
 - **Local dev.** Hyperdrive's `localConnectionString` points at local Postgres. Its `sslmode=disable` is expected.
-- **Placement.** One chat turn runs several queries (session, draft, write, usage), so `placement.region` matches the Neon region (`aws-us-east-1`). T35 measures the time to first token with and without it, and we keep the faster one.
-- **Cost.** Scale-to-zero stays on (5 min). The cold start is a few hundred ms on the first request after idle, which is fine for a portfolio. Autoscaling is capped at 0.25–1 CU, so a traffic spike can't cause bill shock.
+- **Placement.** One chat turn runs several queries (session, draft, write, usage), so `placement.region` matches the Neon region: **AWS eu-central-1 (Frankfurt)**, so `"placement": { "region": "aws:eu-central-1" }`. T35 measures the time to first token with and without it, and we keep the faster one.
+- **Cost.** Scale-to-zero stays on (5 min). The cold start is a few hundred ms on the first request after idle, which is fine for a portfolio. Autoscaling and scale-to-zero use **the owner's settings on the Neon project. Don't change them.**
 - **Branches.** CI makes a Neon branch per PR with the Neon CLI, each with an **expiry time**, so forgotten branches clean themselves up. The branch is deleted when the PR closes.
 - **Indexes** (from Neon's index guide):
   - B-tree `draft(user_id, updated_at desc)` for the sidebar;
