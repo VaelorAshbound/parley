@@ -56,7 +56,7 @@ Checkpoints come after each phase (see todo.md). At the checkpoints after Phases
 
 | When | What |
 |---|---|
-| Before T3 | Create the GitHub repo, or let me create it with `gh`, **public or private?** Connect it to Workers Builds in the Cloudflare dashboard. |
+| Before T3 | Create the **private** GitHub repo, or let me create it with `gh`. Connect it to Workers Builds in the Cloudflare dashboard. |
 | Before T2 | Cloudflare account on Workers Paid ($5/mo, needed for Browser Run). |
 | T4 | The brand session: approve the colors, logo and type. |
 | Before T13 | A Neon project (free tier). |
@@ -81,4 +81,6 @@ Checkpoints come after each phase (see todo.md). At the checkpoints after Phases
 
 ## Open questions
 
-1. **The GitHub repo: public from day one?** I recommend public. Recruiters see the real commit history, and the history is part of the showpiece.
+None.
+
+**Decided:** the GitHub repo is **private** (owner, 2026-09-23). It can be made public later, and the commit history comes along.
