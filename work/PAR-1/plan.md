@@ -118,7 +118,7 @@ Skills that aren't used, and why:
 | Before T2 | Cloudflare account on Workers Paid ($5/mo, needed for Browser Run). |
 | T4 | The brand session: approve the colors, logo and type. |
 | Before T13 | A Neon project (free tier). |
-| Before T17 | Two OpenRouter keys with hard limits: **app** ($20/mo) and **test** ($10/mo). |
+| Before T17 | ✅ Done: `OPENROUTER_API_KEY` (app, hard limit $10) and `OPENROUTER_API_KEY_TEST` (test, hard limit $5), both total caps with no reset. |
 | Before T21 | A Resend account with the domain `runtimedrift.dev` verified. Google and GitHub OAuth apps. |
 | Before T26 | Polar sandbox org + access token. |
 | Before T38 | Confirm `runtimedrift.dev` is a zone on this Cloudflare account. |

@@ -15,3 +15,6 @@ Confirmed zone runtimedrift.dev is active on this Cloudflare account (Free plan)
 
 ### 2026-09-23T17:19:32Z
 Owner created Neon project parley (aws-eu-central-1, db neondb, owner-set scaling: do not change). .env: DATABASE_URL=direct, DATABASE_URL_POOLED=pooled. Spec updated.
+
+### 2026-09-23T17:27:11Z
+OpenRouter keys added: app ($10 total cap) + test ($5 total cap), both verified active, no reset.

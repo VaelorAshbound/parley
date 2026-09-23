@@ -525,7 +525,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 
 ### Real-service tests (they cost a little, and they are worth it)
 
-These use a separate test OpenRouter key with its own hard monthly limit ($10), a Neon branch for each PR, and sandbox or test modes everywhere else.
+These use a separate test OpenRouter key with its own hard limit ($5, `OPENROUTER_API_KEY_TEST`), a Neon branch for each PR, and sandbox or test modes everywhere else.
 
 | Real service | What we check |
 |---|---|
