@@ -59,4 +59,39 @@ The live files check out the same way: a 3-page tagged PDF, and a DOCX with 12 p
 
 ## T3: the full test stack in Workers Builds
 
-Not started. It needs the repo pushed and connected to Workers Builds (owner steps).
+**Verdict: GO for checks, tests and Previews. NO-GO for browser tests** (2026-09-23, builds `74accee0` … `39ef5a03`).
+
+### What works in Workers Builds
+
+| Step | Result | Time |
+|---|---|---|
+| `pnpm install --frozen-lockfile` (pnpm 12.4.2 via `PNPM_VERSION`, Node 24.18.0 via `.node-version`) | ✅ passes the supply-chain policy | ~7 s |
+| `vp check` (format, lint, types) | ✅ | ~3 s |
+| `vp test` (Vitest 5, with type tests) | ✅ | ~3 s |
+| `pnpm test:workers` (Vitest 4.1 in workerd) | ✅ | ~2.5 s |
+| `vp build` | ✅ | ~1 s |
+| `wrangler preview --json` → Worker Preview per branch | ✅ `https://par-1-parley-parley.vaelorashbound.workers.dev`. Health and SSR checked. | ~5 s |
+
+The whole gate, from install to preview, takes **about 30 s**, well inside the 20-minute limit.
+
+What it took to get there:
+- a `previews` block in `wrangler.jsonc` (Previews only get the bindings listed there);
+- `preview_urls: true`, because the Worker the dashboard made had Preview URLs off;
+- parsing wrangler's JSON only after its config banner.
+
+### What does not work: Playwright browsers
+
+- `playwright install --with-deps` needs root. The build image has none (`su: Authentication failure`).
+- Without `--with-deps` all three browsers download fine (~5 s each), but they can't start, because the image lacks GUI libraries:
+  - **Chromium and Firefox:** `libatk`, `libgtk-3`, `libxrandr2`, `libxcomposite1`, `libxdamage1`, `libxfixes3`, `libxi6`, `libxcursor1`, `libasound2`;
+  - **WebKit:** about 45 libraries (GStreamer, GTK 4, Vulkan, …).
+- The API test (Playwright's `request`, no browser) passes against the Preview in all three projects.
+
+So the plan's fallback applies: **browser tests move to GitHub Actions**, and deploys stay on Workers Builds. The owner decides (see below).
+
+### Still open
+
+- [ ] Owner decision on the browser-test fallback.
+- [ ] A red check on purpose, then green (T3 verify step).
+- [ ] Nightly run.
+- [ ] Failure traces (R2, or GitHub artifacts if we move to Actions).
