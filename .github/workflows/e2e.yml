@@ -33,7 +33,8 @@ jobs:
     # Nightly needs a live URL; until production exists (T38) it doesn't start,
     # so it costs no minutes.
     if: github.event_name != 'schedule' || vars.NIGHTLY_URL != ''
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to 26 on 2026-10-19, and Playwright deps lag new releases.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
