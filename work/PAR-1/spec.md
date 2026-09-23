@@ -30,6 +30,7 @@ Three panes on desktop:
 └──────────────┴──────────────────────────┴──────────────────────────┘
 ```
 
+- **Home (`/`).** The empty state is the landing page: the headline, the reply box, example prompts that start a draft, and the list of all eleven agreements. A guest with no drafts sees the sidebar collapsed to a slim rail.
 - **Left sidebar.** It can be collapsed. It holds:
   - search, over draft titles, document types and party names;
   - a **New draft** button;
@@ -71,7 +72,7 @@ Everything else must be flawless around this moment.
 
 ### The 12 documents
 
-All 12 from `catalog.json` ship at launch.
+All 12 from `catalog.json` ship at launch. That is 11 agreements plus the official NDA cover page, so the site says "eleven agreements" (decided 2026-09-23).
 
 - The **standard terms stay unchanged**, word for word.
 - The **NDA** uses its official Common Paper cover page.
@@ -619,7 +620,7 @@ These use a separate test OpenRouter key with its own hard limit ($5, `OPENROUTE
 
 - **Domain:** `parley.runtimedrift.dev`. It is a Custom Domain on the Worker, and the cert and DNS are handled by Cloudflare.
 - **Name:** Parley.
-- **Brand (colors, logo, type):** designed as its own step after the plan is approved and before the build starts.
+- **Brand (colors, logo, type, motion):** "Paper & Ink", approved 2026-09-23. See [brand.md](brand.md).
 
 **Open**
 

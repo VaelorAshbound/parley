@@ -56,6 +56,7 @@
   - Files: `work/PAR-1/brand.md`, `apps/web/src/styles/tokens.css`, `apps/web/public/logo.svg`, `apps/web/src/routes/dev.brand.tsx` (`beforeLoad` throws `notFound()` outside dev)
   - Deps: T1 · Skills: `emil-design-eng`, `apple-design` · Owner: approve
   - Can run in parallel with T5–T12.
+  - Progress: `brand.md` approved 2026-09-23. The code half (tokens, logo file, preview page) waits for T1.
 
 - [ ] **T5: Template parser: markdown → typed tree** (M)
   - Accept:
