@@ -4,7 +4,7 @@
 
 ## T2: PDF (Browser Run) and DOCX (`docx`) on Workers
 
-**Verdict: GO for both, from local tests and real Browser Run.** The deployed check is still to do: it needs the owner's OK to deploy (see "Still open").
+**Verdict: GO for both.** Checked locally, against real Browser Run, and deployed on `parley.vaelorashbound.workers.dev` (2026-09-23; the Worker was deleted afterwards, as agreed).
 
 ### What was built
 
@@ -28,6 +28,17 @@
 | Browser time (`X-Browser-Ms-Used`, uncached, 6 runs) | 143–313 ms, median ≈ 195 ms | none |
 | Cost | ≈ $0.000005 per PDF (0.2 s × $0.09/h). The 10 included hours ≈ 180,000 PDFs/month. | Only Worker CPU |
 
+### Deployed (workers.dev, 2026-09-23)
+
+| | PDF (6 runs) | DOCX (4 runs) |
+|---|---|---|
+| Worker time (Server-Timing) | 294–848 ms | shows 0 ms: Workers freeze `Date.now()` during CPU-only work, so only I/O moves the clock |
+| Browser time (`X-Browser-Ms-Used`) | 128–329 ms | none |
+| Total from this machine | 1.31–1.81 s | 0.88–0.90 s. That's about the same as `/api/health` (≈ 0.9–1.1 s round trip from here), so building the DOCX adds almost nothing. |
+| Upload / startup | 377 KiB gzip, 22 ms startup (`docx` adds about 170 KiB) | |
+
+The live files check out the same way: a 3-page tagged PDF, and a DOCX with 12 paragraphs.
+
 ### The files, checked with real tools
 
 - **PDF** (pypdf): 3 pages, 612 × 792 pt (US Letter), **tagged** (`/StructTreeRoot`), with a title in the metadata. The text extracts cleanly with curly quotes. In Chromium's PDF viewer it looks right: a bold title, bold clause numbers, even margins.
@@ -42,8 +53,9 @@
 
 ### Still open
 
-- [ ] **Deployed check**: deploy the Worker, fetch both files from the live URL, and time them without the dev-machine hop. This needs the owner's OK (deploys are "ask first").
+- [x] Deployed check (see above).
 - [ ] The spike routes are public and not rate-limited. They must be removed before launch (T12 replaces them). They are safe until then because the Worker is not deployed.
+- Note: the script is `pnpm run deploy`. Plain `pnpm deploy` is a built-in pnpm command (spec §3 fixed).
 
 ## T3: the full test stack in Workers Builds
 

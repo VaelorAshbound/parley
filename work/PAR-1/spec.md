@@ -216,7 +216,7 @@ pnpm build                   # vp run -r build
 pnpm db:generate             # drizzle-kit generate
 pnpm db:migrate              # drizzle-kit migrate
 pnpm documents:build         # parse templates/*.md into typed JSON + run the coverage checks
-pnpm deploy                  # wrangler deploy (normally done by Workers Builds)
+pnpm run deploy              # build + wrangler deploy (normally done by Workers Builds); plain `pnpm deploy` is a pnpm built-in
 ```
 
 Vite+ is at release candidate (RC), not GA, so there is a risk it changes. If it blocks us, we fall back to plain Vite + Vitest + oxlint + oxfmt, and we record the reason.
