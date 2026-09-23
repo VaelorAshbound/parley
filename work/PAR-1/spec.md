@@ -108,7 +108,7 @@ This is the standard stack from CLAUDE.md. The versions below were checked on 20
 | Monorepo | pnpm workspaces + **Vite+** (`vp`, v1.0 RC): Rolldown, Vitest, oxlint, oxfmt |
 | App | **TanStack Start** (React 19 + React Compiler), TanStack Router / Query / Form |
 | UI | Tailwind CSS, shadcn/ui, Motion |
-| Client state | Zustand, used only for UI state: active tab, highlighted field, and the undo stack |
+| Client state | Zustand, used only for UI state: the highlighted field, the undo stack and the panel size. State that belongs in a link (open draft, phone tab, panel open) lives in **typed TanStack Router search params**, not in Zustand. |
 | API | **Hono** + **oRPC**, typed from the DB to the UI, with Zod at every edge |
 | AI | **AI SDK v7** (`streamText` + tools, `useChat`) over oRPC (`streamToEventIterator` / `eventIteratorToUnproxiedDataStream`) and **OpenRouter** (`@openrouter/ai-sdk-provider`) |
 | Auth | **Better-Auth**: `anonymous()` for guests, with `onLinkAccount` moving the guest's drafts to the new account. Sign-in by email OTP (Resend), Google and GitHub. |
@@ -243,6 +243,12 @@ parley/
 
 - TypeScript `strict`. No `any` and no `as` casts outside tests.
 - Zod schemas are the source of the types (`z.infer`).
+- **Zustand rules** (from the official guides):
+  - **No module-level store.** The store is made with `createStore` and passed through a React context provider, one per app instance. On Workers, one isolate serves many users, so a global store could leak one user's undo stack to another during SSR.
+  - One store, split into slices, with the actions next to the state. Updates only go through `set`.
+  - `create<T>()(...)` is typed in the curried form.
+  - Selectors pick the smallest value they need. `useShallow` is used when a selector returns an object or an array.
+  - Server data (drafts, messages) lives in TanStack Query, never copied into Zustand.
 - Names:
   - files are kebab-case;
   - components are PascalCase;

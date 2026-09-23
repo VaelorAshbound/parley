@@ -134,6 +134,7 @@
     - The Claude-style layout: a collapsible sidebar, the chat column, and a resizable document panel that you can close. On a phone, a drawer and two tabs.
     - Routes `/` (new draft) and `/d/$id`, built with shadcn components on the brand tokens.
     - There is no layout shift on load (CLS 0 in a DevTools trace), and it works with the keyboard.
+    - The UI store follows the spec's Zustand rules: a store per request made with `createStore` + context, and URL state in search params. A Worker test renders two requests at once and checks that no state leaks between them.
   - Verify: component tests (Vitest browser mode) + a Playwright screenshot at 1440/1024/375 px.
   - Files: `apps/web/src/routes/{__root.tsx,index.tsx,d.$id.tsx}`, `src/features/shell/*`
   - Deps: T4, T14 · Skills: `shadcn`, `frontend-ui-engineering`
