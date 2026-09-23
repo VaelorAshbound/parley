@@ -5,6 +5,10 @@
   // A custom entry also gives us scheduled() for the cron jobs (T28).
   "main": "src/server.ts",
   "compatibility_date": "2026-09-23",
+  // Production lives on the custom domain (T38), not workers.dev. Previews
+  // still get workers.dev URLs so each branch can be tested (T3).
+  "workers_dev": false,
+  "preview_urls": true,
   "compatibility_flags": ["nodejs_compat"],
   // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
   // uses the real service (10 browser hours/month are in Workers Paid).

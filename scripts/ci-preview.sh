@@ -14,9 +14,12 @@ fi
 printf '%s\n' "$output"
 
 # The build image has no jq; Node reads the same fields the docs use.
+# Wrangler prints a config banner before the JSON, so parse from the first "{".
 preview_url="$(printf '%s' "$output" | node -e '
-  const out = JSON.parse(require("node:fs").readFileSync(0, "utf8"))
-  const url = out.preview_urls?.[0] ?? out.preview?.urls?.[0]
+  const text = require("node:fs").readFileSync(0, "utf8")
+  const out = JSON.parse(text.slice(text.search(/^\{/m)))
+  const url =
+    out.preview_urls?.[0] ?? out.preview?.urls?.[0] ?? out.deployment?.urls?.[0]
   if (!url) throw new Error("wrangler preview returned no URL")
   console.log(url)
 ')"
