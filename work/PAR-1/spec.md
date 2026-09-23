@@ -380,6 +380,17 @@ Rules:
 - **Recovery.** Neon's instant restore (a branch from a point in time) is the backup story, documented in the README.
 - Read replicas aren't needed at this scale.
 
+**Drizzle (the owner's notes + docs checked 2026-09-23)**
+
+- **Version.** Pin **stable `drizzle-orm` 0.45.x + `drizzle-kit`**. v1 is still RC (1.0.0-rc.4), and the docs site mostly shows v1 now. Like oRPC, we don't ship on pre-releases. PAR-4 tracks the upgrade when v1 goes GA (`defineRelations`, `drizzle-orm/zod`, `withRLS`, `drizzle-kit up`).
+- **Zod.** `drizzle-zod` (0.8, works with Zod 4) with `createSelectSchema` / `createInsertSchema` / `createUpdateSchema` for **row** shapes, for example the title in rename. `draft.fields` is `jsonb().$type<DraftValues>()`, and it is always checked by the document's own Zod schema, not by drizzle-zod.
+- **Driver.** `drizzle-orm/node-postgres` over Hyperdrive (see above). Not the `neon-http` / `neon-websockets` drivers: Neon's own Cloudflare guide says `pg` + Hyperdrive, and neon-http has no interactive transactions (which the DB tests need).
+- **Search column.** A custom `tsvector` type with `.generatedAlwaysAs(sql\`to_tsvector('simple', …)\`)` (STORED) and `index().using("gin", t.search)`.
+- **Migrations.** `drizzle-kit generate` → review the SQL → `migrate` over the direct URL. `drizzle-kit check` runs in CI and catches migration conflicts between branches.
+- **Not used, and why:**
+  - **Prepared statements** (`.prepare()` + `sql.placeholder()`): Drizzle's serverless guide says edge runtimes get "little to no" benefit, and our client is made per request, so the prepared statement doesn't outlive the request.
+  - **Row-Level Security**: a real second lock, but for us it needs a second DB role, a second Hyperdrive binding (for the cron and the guest → account link), share-token policies, and a transaction + `set_config` on every query. Drizzle's `crudPolicy` / `authUid` helpers assume Neon's JWT auth, not Better Auth. For v1, ownership lives in the single `draftOwner` oRPC middleware, and the auth matrix tests every procedure. PAR-3 tracks RLS as later hardening.
+
 ### Hono (the owner's notes + docs checked 2026-09-23)
 
 Hono is a thin `/api` layer. oRPC does the real API work.
