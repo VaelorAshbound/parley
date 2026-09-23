@@ -223,7 +223,7 @@ parley/
 ├─ apps/web/                  TanStack Start app + the Worker
 │  ├─ src/server.ts           Worker entry: /api → Hono, rest → Start, scheduled()
 │  ├─ src/server/             Hono app, oRPC routers, AI chat, export, auth, polar
-│  ├─ src/routes/             TanStack Router file routes (/, /d/$id, /drafts, /s/$token, /settings, /pricing)
+│  ├─ src/routes/             TanStack Router file routes (tree in §5 Routing)
 │  ├─ src/components/         UI (shadcn in components/ui)
 │  ├─ src/features/           chat/, document-preview/, drafts/, billing/
 │  ├─ e2e/                    Playwright tests
@@ -294,6 +294,43 @@ export const mutualNda = defineDocument({
   linkedTerms: { Purpose: "purpose", "MNDA Term": "mndaTerm", "Governing Law": "governingLaw.state" /* … */ },
 });
 ```
+
+### Routing (TanStack Router, the owner's rules + docs checked 2026-09-23)
+
+Route tree (file-based, nested where the UI nests):
+
+```
+src/routes/
+├─ __root.tsx                  html shell, head/meta, root ErrorComponent + NotFoundComponent
+├─ _app.tsx                    pathless layout: the three-pane shell (sidebar). beforeLoad makes sure a session exists (a guest if needed)
+├─ _app/index.tsx              /                 new draft (empty state)
+├─ _app/d.$draftId.tsx         /d/:draftId       chat + live document
+├─ _app/_authed.tsx            pathless guard: guests get redirect({ to: "/sign-in", search: { redirect } })
+├─ _app/_authed/drafts.tsx     /drafts           view all + search
+├─ _app/_authed/settings.tsx   /settings
+├─ sign-in.tsx                 /sign-in          outside the shell
+├─ pricing.tsx                 /pricing          outside the shell
+├─ s.$token.tsx                /s/:token         public share page, outside the shell
+└─ -components/, -lib/         colocated code, left out of the route tree ("-" prefix)
+```
+
+Rules:
+
+- **Router context.** `createRouter({ context: { queryClient, orpc, session } })` is set at the root. Loaders and components read from the context and never import clients directly.
+- **Data.** Loaders call `queryClient.ensureQueryData(orpc.….queryOptions())`, and components read with `useSuspenseQuery`, using the official TanStack Query integration. Caching belongs to Query, so the router's `defaultPreloadStaleTime` is `0`. Independent loads run in parallel. Slow data that isn't critical is streamed with React 19 `use()`, not `<Await>`.
+- **Typed URL state.** Search params are checked with Zod v4 schemas passed straight to `validateSearch`, with `.catch()` for fallbacks. With Zod v4, the docs say no `@tanstack/zod-adapter` and no `fallback()` are needed, and the types stay intact. Examples:
+  - `/d/$draftId?panel=open|closed&tab=chat|document&field=governingLaw`
+  - `/drafts?q=&type=`
+
+  Updates use the function form (`search: (prev) => ({ ...prev, q })`).
+- **Navigation.** `<Link>` everywhere. `useNavigate` only when a Link can't work, for example after "New draft" creates a draft. `<Navigate>` for redirects on render. `useMatchRoute` shows a pending state on the sidebar item you clicked.
+- **Loading and errors.**
+  - Each route has a `pendingComponent` skeleton that matches the final layout, so nothing jumps. The default `pendingMs` of 1 s is kept, so fast loads show no flash.
+  - Each route has an `errorComponent` and a `notFoundComponent`, for example a friendly 404 for a draft that doesn't exist or isn't yours.
+  - A `CatchBoundary` wraps the chat stream, with `getResetKey` set to the draft id, so a stream error never breaks the whole page.
+- **Speed.** `autoCodeSplitting` is on (a Vite plugin with file routes). `defaultPreload: "intent"` preloads a draft when you hover a sidebar link.
+- **Security.** Route guards are for UX only. The TanStack docs say "a route guard is not a data authorization boundary". Every oRPC procedure checks the session and ownership itself (see the auth matrix in §6).
+- Splat and optional path params (`$`, `{-$param}`) are not needed for Parley.
 
 ## 6. Testing strategy
 

@@ -51,7 +51,7 @@
     - Tailwind theme tokens and shadcn theme from the brand, plus a small preview page showing them.
     - You approve it.
   - Verify: All text pairs pass WCAG AA contrast (automated check). You sign off.
-  - Files: `work/PAR-1/brand.md`, `apps/web/src/styles/tokens.css`, `apps/web/public/logo.svg`, `apps/web/src/routes/_dev/brand.tsx`
+  - Files: `work/PAR-1/brand.md`, `apps/web/src/styles/tokens.css`, `apps/web/public/logo.svg`, `apps/web/src/routes/dev.brand.tsx` (`beforeLoad` throws `notFound()` outside dev)
   - Deps: T1 · Skills: `emil-design-eng`, `apple-design` · Owner: approve
   - Can run in parallel with T5–T12.
 
@@ -132,11 +132,11 @@
 - [ ] **T15: App shell: three panes, responsive** (M)
   - Accept:
     - The Claude-style layout: a collapsible sidebar, the chat column, and a resizable document panel that you can close. On a phone, a drawer and two tabs.
-    - Routes `/` (new draft) and `/d/$id`, built with shadcn components on the brand tokens.
+    - The routes follow spec §5 Routing: the `_app` pathless shell, `/` and `/d/$draftId`, router context (`queryClient`, `orpc`, `session`), loaders using `ensureQueryData` + `useSuspenseQuery`, typed `panel`/`tab`/`field` search params, pending/error/not-found components, `autoCodeSplitting` and intent preload. Built with shadcn on the brand tokens.
     - There is no layout shift on load (CLS 0 in a DevTools trace), and it works with the keyboard.
     - The UI store follows the spec's Zustand rules: a store per request made with `createStore` + context, and URL state in search params. A Worker test renders two requests at once and checks that no state leaks between them.
   - Verify: component tests (Vitest browser mode) + a Playwright screenshot at 1440/1024/375 px.
-  - Files: `apps/web/src/routes/{__root.tsx,index.tsx,d.$id.tsx}`, `src/features/shell/*`
+  - Files: `apps/web/src/routes/{__root.tsx,_app.tsx,_app/index.tsx,_app/d.$draftId.tsx}`, `src/routes/-components/shell/*`
   - Deps: T4, T14 · Skills: `shadcn`, `frontend-ui-engineering`
 
 - [ ] **T16: Live document preview + manual field editing** (M)
@@ -207,7 +207,7 @@
     - Search runs over titles, document types and party names, with debounce and Postgres full-text search.
     - Rename, duplicate and delete (with an undo toast) work from the sidebar and from the title menu.
   - Verify: integration tests for the queries + component tests + e2e.
-  - Files: `packages/db/src/queries/drafts.ts`, `apps/web/src/server/rpc/drafts.ts`, `src/features/sidebar/*`, `src/routes/drafts.tsx`
+  - Files: `packages/db/src/queries/drafts.ts`, `apps/web/src/server/rpc/drafts.ts`, `src/features/sidebar/*`, `src/routes/_app/_authed/drafts.tsx` (`validateSearch`: `q`, `type` with `.catch()`)
   - Deps: T21
 
 - [ ] **T23: Account menu + settings** (S)
@@ -216,7 +216,7 @@
     - `/settings` lets you change your name, see sessions, and delete your account (with a confirm, and all data removed).
     - Deleting an account is covered by an integration test.
   - Verify: tests + e2e.
-  - Files: `apps/web/src/features/account/*`, `src/routes/settings.tsx`, `src/server/rpc/account.ts`
+  - Files: `apps/web/src/features/account/*`, `src/routes/{_app/_authed.tsx,_app/_authed/settings.tsx,sign-in.tsx}`, `src/server/rpc/account.ts`
   - Deps: T21
 
 ### Checkpoint 3
