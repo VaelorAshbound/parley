@@ -1,6 +1,6 @@
 # Spec: Parley
 
-> Status: draft for review · Work item: PAR-1 · Intent: [intent.md](intent.md)
+> Status: approved 2026-09-23 · Work item: PAR-1 · Intent: [intent.md](intent.md)
 
 ## 1. Objective
 
