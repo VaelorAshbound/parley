@@ -24,3 +24,6 @@ Resend key added; mail.runtimedrift.dev verified (eu-west-1, sending). Next owne
 
 ### 2026-09-23T17:49:30Z
 OAuth ready: Google client (prod+localhost:3000), GitHub prod+dev apps; GitHub creds validated via API.
+
+### 2026-09-23T17:59:35Z
+Polar sandbox ready: org parley-legal, product Parley Pro $5/mo, token verified. All owner setup done except webhook endpoint (T26).

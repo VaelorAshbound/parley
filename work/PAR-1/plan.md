@@ -120,7 +120,7 @@ Skills that aren't used, and why:
 | Before T13 | A Neon project (free tier). |
 | Before T17 | ✅ Done: `OPENROUTER_API_KEY` (app, hard limit $10) and `OPENROUTER_API_KEY_TEST` (test, hard limit $5), both total caps with no reset. |
 | Before T21 | ✅ Resend: `mail.runtimedrift.dev` verified, `RESEND_API_KEY` in `.env` (full access; make a sending-only key for production in T38). ✅ Google OAuth client (prod + localhost:3000) and GitHub OAuth apps "Parley" + "Parley (dev)", credentials checked. |
-| Before T26 | Polar sandbox org + access token. |
+| Before T26 | ✅ Polar sandbox org `parley-legal`, product "Parley Pro" ($5/month recurring), `POLAR_ACCESS_TOKEN` + `POLAR_PRO_PRODUCT_ID` in `.env`, checked through the API. The webhook endpoint gets added in T26 (`polar listen` locally, then the live URL). |
 | Before T38 | Confirm `runtimedrift.dev` is a zone on this Cloudflare account. |
 
 ## Risks and mitigations
