@@ -1,6 +1,6 @@
 # Implementation Plan: Parley
 
-> Status: draft for review · Work item: PAR-1 · Spec: [spec.md](spec.md) · Tasks: [todo.md](todo.md)
+> Status: approved 2026-09-23 · Work item: PAR-1 · Spec: [spec.md](spec.md) · Tasks: [todo.md](todo.md)
 
 ## Overview
 
