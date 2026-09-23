@@ -34,6 +34,7 @@
   - Deps: none
 
 - [ ] **T2: Spike: PDF (Browser Run) and DOCX (`docx`) in workerd** (S)
+  - Progress 2026-09-23: **GO for both** from the local and real-service tests (see [spikes.md](spikes.md)). The DOCX test passes in workerd offline. The PDF test passes in workerd against real Browser Run (`pnpm test:workers:real`). The files were checked with pypdf, python-docx and the OOXML schema. **Still open:** the deployed check (needs your OK to deploy).
   - Accept:
     - `/api/spike/pdf` returns a valid PDF made from an HTML string by `env.BROWSER.quickAction("pdf")`.
     - `/api/spike/docx` returns a DOCX from `Packer.toArrayBuffer`. It works in `@cloudflare/vitest-plugin` (Vitest 4.1 package) and when deployed.

@@ -10,7 +10,8 @@
     "check": "vp check",
     "test": "vp test run",
     "test:workers": "vp run --filter web-worker-tests test",
-    "deploy": "vp run --filter web deploy"
+    "deploy": "vp run --filter web deploy",
+    "test:workers:real": "vp run --filter web-worker-tests test:real"
   },
   "devDependencies": {
     "typescript": "catalog:",

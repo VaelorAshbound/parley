@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:real": "vitest run --config vitest.real.config.ts"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.2.0",
+    "jszip": "^3.10.1",
     "typescript": "catalog:",
     "vitest": "~4.1.11",
     "web": "workspace:*"
