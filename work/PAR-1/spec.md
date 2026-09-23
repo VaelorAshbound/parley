@@ -308,7 +308,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 | Unit | Vitest | Document engine: every definition covers every linked term, the render model, field schemas, placeholders. Also quota math, Temporal date logic, limits and prompt building. |
 | Property-based | Vitest + fast-check | Random valid and invalid field values for all 12 documents. The render model never crashes. Invalid values never pass Zod. DOCX/HTML output always contains the standard terms byte-for-byte. |
 | Worker runtime | `@cloudflare/vitest-pool-workers` | Server entry routing (`/api` vs SSR), Hono middleware, oRPC procedures, rate-limit binding, the `scheduled()` cleanup. All of it runs in real `workerd`. |
-| Integration (DB) | Vitest + local Postgres (Docker) | Drizzle queries and migrations up and down. Guest → user linking moves drafts and chat. Quota counts on first export only. Share revoke. Polar webhook handling with real sandbox payloads. |
+| Integration (DB) | Vitest + Postgres (local in dev, a Neon branch in CI) | Drizzle queries and migrations up and down. Guest → user linking moves drafts and chat. Quota counts on first export only. Share revoke. Polar webhook handling with real sandbox payloads. |
 | Auth matrix | Vitest | Every procedure × {no session, guest, other user, owner, Pro}. Each gets exactly the allowed result. There is no path to another user's draft. |
 | Component | Vitest browser mode (Playwright provider) | Chat, quick replies, the field shimmer, the inline field editor, undo chips, sidebar search, the panel resize. They run in real Chromium, Firefox and WebKit. |
 | Snapshot + visual | Vitest + Playwright screenshots | DOCX XML and PDF HTML for a fully filled example of each document (12). PDF pages turned into images and compared pixel by pixel. Screenshots of key screens in light and dark mode, on desktop and phone. |
@@ -418,5 +418,12 @@ These use a separate test OpenRouter key with its own hard monthly limit ($10), 
 
 **Open**
 
-1. **Where the tests run.** CLAUDE.md says CI is Workers Builds. Workers Builds is a build-and-deploy runner, and it may not fit browser suites, Docker Postgres or nightly jobs. The plan will check this with the `ci-cd-and-automation` skill. If it doesn't fit, it will suggest Workers Builds for deploy + GitHub Actions for tests, and bring that choice to you.
+1. **Where the tests run.** The plan starts with a **CI test task** that proves the full suite runs in Workers Builds, as CLAUDE.md asks. These were checked in the Cloudflare docs on 2026-09-23:
+   - **Limits:** 20-minute build timeout, 8 GB RAM, 4 vCPU (Paid), 6,000 build minutes a month and then $0.005 a minute.
+   - **Nightly runs work.** A Deploy Hook called from a Cron Trigger (added April 2026) can do it.
+   - **Browsers are not preinstalled.** Playwright can download them, but the docs don't say whether its system packages can be installed. This is not verified.
+   - **Docker is not in the build image list.** We don't need it: CI uses a Neon branch instead of Docker Postgres.
+   - **Test artifacts:** I found no documented storage for Playwright traces or screenshots. If there is none, we upload them to R2.
+
+   We only propose adding GitHub Actions if the CI test task fails, and we bring that to you first.
 2. **The PDF test** (Browser Run) and **the DOCX test** (`docx` has not been checked on Workers yet) are the first tasks in the plan. If either fails, we come back here before building on it.
