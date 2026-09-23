@@ -1,0 +1,23 @@
+{
+  "name": "parley",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "vp config",
+    "dev": "vp -C apps/web dev",
+    "build": "vp run -r build",
+    "check": "vp check",
+    "test": "vp test run",
+    "test:workers": "vp run --filter web-worker-tests test",
+    "deploy": "vp run --filter web deploy"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": "^24.11.0"
+  }
+}

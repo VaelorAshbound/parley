@@ -11,7 +11,19 @@
 
 ## Phase 0: Prove the risky bits
 
-- [ ] **T1: Monorepo scaffold that runs on Workers** (M)
+- [x] **T1: Monorepo scaffold that runs on Workers** (M)
+  - Done 2026-09-23. Checked: `pnpm check`, `pnpm test` (3 tests + 1 type test), `pnpm test:workers` (1 test in workerd, Vitest 4.1.11), `pnpm build`, `wrangler deploy --dry-run` (207 KiB gzip). `curl localhost:3000/api/health` → `{"ok":true}` (HEAD 200, unknown `/api/*` 404). `/` renders through SSR. In Chromium: no console errors, and the theme follows the system with no flash.
+  - Decisions:
+    - **Port 3000, not 5173**, because the dev OAuth apps redirect to `localhost:3000`.
+    - **shadcn `nova` preset on Base UI** (shadcn's default; the spec names no base). The brand colors replace it in T4.
+    - **The shadcn template's Turbo, ESLint and Prettier replaced by Vite+** (`vp migrate`, then cleanup).
+    - **React Compiler through `@rolldown/plugin-babel`**, because plugin-react's Rust compiler is still experimental.
+    - **TypeScript 6.0.3 kept.** TS 7 is out, but the template and the tools are on 6.
+    - **`exactOptionalPropertyTypes` off**, because it clashes with library types (`lazyPlugins`).
+    - **The theme provider reads storage with `useSyncExternalStore`**, not setState in an effect, so the React Compiler can optimize it.
+    - **`worker-configuration.d.ts` is generated on install (`prepare`) and not committed** (600 KB).
+    - **The workerd test imports the Hono app**, not `src/server.ts`, because the Start server entry is a virtual module that only the Start plugin resolves. Routing in `src/server.ts` was checked with curl.
+    - **The TanStack devtools from the template were dropped** (not in the spec).
   - Accept:
     - `shadcn init --template start --monorepo` → `packages/ui`, plus the dark-mode theme provider (`ScriptOnce`, no flash). Check that the shadcn CLI and Vite+ work together (`vp dev`/`vp build`).
     - pnpm workspace with `apps/web`, `packages/documents` and `packages/db`, using Vite+ at a pinned version.

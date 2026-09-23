@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "parley",
+  // src/server.ts: /api/* goes to Hono, everything else to TanStack Start.
+  // A custom entry also gives us scheduled() for the cron jobs (T28).
+  "main": "src/server.ts",
+  "compatibility_date": "2026-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "upload_source_maps": true,
+}
