@@ -177,6 +177,18 @@ describe("toPrintHtml", () => {
     )
   })
 
+  it("can't be broken out of its style block by a document name", () => {
+    const html = toPrintHtml({
+      ...filled,
+      name: 'Deal</style><script>x()</script>"',
+    })
+
+    expect(html).not.toContain("</style><script>")
+    expect(html).toContain(
+      'content: "Deal\\3C /style>\\3C script>x()\\3C /script>\\""'
+    )
+  })
+
   it("labels a cover page Parley wrote, and only that one", () => {
     const label = "Cover page by Parley, not by Common Paper"
     const parley = {

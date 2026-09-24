@@ -49,7 +49,8 @@ const definition = z.object({
 
 const link = z.object({
   type: z.literal("link"),
-  href: z.url(),
+  // Links in a contract: https only, never javascript: or data:.
+  href: z.url({ protocol: /^https$/ }),
   get children(): z.ZodArray<typeof inline> {
     return z.array(inline)
   },

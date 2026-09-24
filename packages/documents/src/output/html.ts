@@ -17,7 +17,8 @@ export type PrintOptions = {
   /**
    * `@font-face` rules for Newsreader and Instrument Sans. Browser Run has
    * neither (T2), and a local dev server can't serve them to it, so the caller
-   * embeds them (data URLs) rather than linking.
+   * embeds them (data URLs) rather than linking. Inserted as is: it must
+   * come from our own font files, never from anything a user typed.
    */
   fontCss?: string
 }
@@ -94,22 +95,27 @@ function paragraph(nodes: RenderedInline[]) {
 }
 
 function inline(nodes: RenderedInline[]): string {
-  return nodes
-    .map((node) => {
-      switch (node.type) {
-        case "text":
-          return escape(node.value)
-        case "hint":
-          return `<span class="hint">${escape(node.value)}</span>`
-        case "linkedTerm":
-          return `<span class="term">${escape(node.text)}</span>`
-        case "link":
-          return `<a href="${escape(node.href)}">${inline(node.children)}</a>`
-        default:
-          return `<strong>${inline(node.children)}</strong>`
-      }
-    })
-    .join("")
+  return (
+    nodes
+      // The declared return type makes the switch exhaustive: a new node type
+      // is a compile error here, never printed as something else.
+      .map((node): string => {
+        switch (node.type) {
+          case "text":
+            return escape(node.value)
+          case "hint":
+            return `<span class="hint">${escape(node.value)}</span>`
+          case "linkedTerm":
+            return `<span class="term">${escape(node.text)}</span>`
+          case "link":
+            return `<a href="${escape(node.href)}">${inline(node.children)}</a>`
+          case "strong":
+          case "definition":
+            return `<strong>${inline(node.children)}</strong>`
+        }
+      })
+      .join("")
+  )
 }
 
 function value({ text, placeholder }: RenderedValue) {
@@ -188,7 +194,11 @@ function escape(text: string) {
 
 /** A CSS string literal, for the page margin boxes. */
 function cssString(text: string) {
-  return `"${text.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`
+  // "<" as a CSS escape: a name with "</style>" can't close the style block.
+  return `"${text
+    .replaceAll("\\", "\\\\")
+    .replaceAll('"', '\\"')
+    .replaceAll("<", "\\3C ")}"`
 }
 
 function styles(name: string, pageSize: "Letter" | "A4") {

@@ -198,6 +198,8 @@ function inline(
   nodes: RenderedInline[],
   options: IRunOptions = {}
 ): ParagraphChild[] {
+  // The declared return type makes the switch exhaustive: a new node type
+  // is a compile error here, never printed as something else.
   return nodes.flatMap((node): ParagraphChild[] => {
     switch (node.type) {
       case "text":
@@ -221,7 +223,8 @@ function inline(
             }).filter((child) => child instanceof TextRun),
           }),
         ]
-      default:
+      case "strong":
+      case "definition":
         return inline(node.children, { ...options, bold: true })
     }
   })
