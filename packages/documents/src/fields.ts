@@ -1,4 +1,4 @@
-import { z } from "./zod.ts"
+import { typed, z } from "./zod.ts"
 
 // The field kinds a document is filled with (spec §2 → Document engine).
 // Each field carries three schemas:
@@ -293,16 +293,6 @@ export type ChoiceDraft<O extends ChoiceOptions, Allow> =
         : { option: K }
     }[OptionKey<O>]
   | Other<Allow>
-
-/**
- * The engine's one type assertion. A choice's schema is built at runtime from
- * its options, so TypeScript can't follow its output type. `ChoiceValue` and
- * `ChoiceDraft` describe the same shape; fields.test-d.ts and fields.test.ts
- * check the two agree.
- */
-function typed<T>(schema: z.ZodType): z.ZodType<T> {
-  return schema as z.ZodType<T>
-}
 
 /** Not generic, so TypeScript can narrow on `option`. */
 function formatChoice(
