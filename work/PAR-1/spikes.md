@@ -87,11 +87,27 @@ What it took to get there:
   - **WebKit:** about 45 libraries (GStreamer, GTK 4, Vulkan, …).
 - The API test (Playwright's `request`, no browser) passes against the Preview in all three projects.
 
-So the plan's fallback applies: **browser tests move to GitHub Actions**, and deploys stay on Workers Builds. The owner decides (see below).
+### Decision and result (ADR-0001)
+
+The owner chose the plan's fallback: **browser tests run on GitHub Actions** (`.github/workflows/e2e.yml`). Workers Builds keeps every other gate, the deploys and the Previews. The owner asked to keep Actions minutes low, so:
+- the job runs on PRs only, not docs-only ones, and cancels superseded runs;
+- PRs test Chromium only, and the nightly run covers all three browsers once `NIGHTLY_URL` exists;
+- Playwright installs while Workers Builds builds the Preview, then the job waits for that commit's check;
+- no Cloudflare secret goes into GitHub.
+
+The first run was blocked by GitHub billing: the `pipelines` repo had used up September's free minutes. The owner made the repo **public** (free Actions), after a scan found no secrets or personal emails anywhere in the history.
+
+| Check | Result |
+|---|---|
+| E2E on PR #1 (`44ac470`) | ✅ green in 50 s (about 1 Actions minute) |
+| A test broken on purpose (PR #2, `0dfca05`) | ✅ **red** for the right reason ("element not found"), traces + screenshots uploaded (861 KB artifact) |
+| After the fix (`4c7d387`) | ✅ **green**. PR #2 closed without merging, its branch and Preview deleted. |
+
+Learned on the way:
+- If a PR's diff becomes empty (for example after a pure revert), `paths-ignore` skips the workflow. That's GitHub's documented behaviour, and harmless, since an empty diff has nothing to test.
+- `ubuntu-latest` becomes Ubuntu 26 on 2026-10-19, so the job is pinned to `ubuntu-24.04`.
 
 ### Still open
 
-- [ ] Owner decision on the browser-test fallback.
-- [ ] A red check on purpose, then green (T3 verify step).
-- [ ] Nightly run.
-- [ ] Failure traces (R2, or GitHub artifacts if we move to Actions).
+- [ ] Nightly: the schedule exists but stays off (0 minutes) until `NIGHTLY_URL` points at production (T38).
+- [ ] Optional: make `E2E` and `Workers Builds: parley` required checks on `main` (branch protection), once `main` has the app.
