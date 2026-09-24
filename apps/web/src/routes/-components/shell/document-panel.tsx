@@ -3,6 +3,7 @@ import { definitionOf, render, type DocumentId } from "@workspace/documents"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { FileTextIcon, XIcon } from "lucide-react"
+import { useIsMutating } from "@tanstack/react-query"
 import { useEffect, useRef } from "react"
 
 import { DocumentView } from "@/features/document-preview/document-view"
@@ -86,6 +87,7 @@ export function DocumentPanel({
         <h2 className="min-w-0 flex-1 truncate text-sm font-semibold">
           {name}
         </h2>
+        <SaveStatus />
         <Link
           to="."
           search={(prev) => ({ ...prev, panel: "closed" })}
@@ -131,5 +133,27 @@ export function DocumentPanel({
         </div>
       </div>
     </section>
+  )
+}
+
+/**
+ * "Saving…" while edits are on their way. Leaving the page then asks first,
+ * so a reload can't drop a save still waiting its turn.
+ */
+function SaveStatus() {
+  const { orpc } = useRouteContext({ from: "/_app/d/$draftId" })
+  const saving =
+    useIsMutating({ mutationKey: orpc.drafts.updateFields.mutationKey() }) > 0
+  useEffect(() => {
+    if (!saving) return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [saving])
+  return (
+    // <output> is a live status region: screen readers hear "Saving…".
+    <output className="shimmer text-xs text-muted-foreground">
+      {saving ? "Saving…" : ""}
+    </output>
   )
 }

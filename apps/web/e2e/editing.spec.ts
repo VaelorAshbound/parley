@@ -83,6 +83,10 @@ test("a whole NDA can be filled by hand, and it survives a reload", async ({
     ).toBeVisible()
   }
   await filled()
+  // Saves go one after another; reload once the last has landed.
+  await expect(
+    page.getByRole("status").filter({ hasText: "Saving" })
+  ).toHaveCount(0, { timeout: 15_000 })
 
   await page.reload()
   await page.locator("html[data-hydrated]").waitFor({ state: "attached" })

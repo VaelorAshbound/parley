@@ -12,6 +12,10 @@
   // enable_request_signal: request.signal aborts when the client leaves, so
   // oRPC can stop the work (and the LLM spend) with it (spec §5 API).
   "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  // Run next to Neon (AWS eu-central-1): a save is about 7 database round
+  // trips, which took 0.8 s from a US edge on the Preview (T16). T35 measures
+  // it against the default. https://developers.cloudflare.com/workers/configuration/placement/
+  "placement": { "region": "aws:eu-central-1" },
   // Declared so `wrangler types` works without .dev.vars (CI), and deploys
   // fail when one is missing. Previews get theirs from the Previews base
   // config (`wrangler preview base-config secret put`).

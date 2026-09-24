@@ -46,19 +46,8 @@ export function useSaveField(orpc: Orpc, draftId: string) {
         changes: [{ key: fieldKey, value: change }],
       }),
     // One draft's saves run in order, so a later edit never lands first.
+    // A save waiting its turn is already on screen (see below).
     scope: { id: `draft-${draftId}` },
-    onMutate: async ({ fieldKey, change }) => {
-      await queryClient.cancelQueries({ queryKey: draftKey })
-      const draft = queryClient.getQueryData(draftKey)
-      if (!draft) return
-      const definition = definitionOf(draft.documentId)
-      const { values } = applyFieldChanges(
-        definition,
-        definition.draftSchema.parse(draft.fields),
-        [{ key: fieldKey, value: change }]
-      )
-      queryClient.setQueryData(draftKey, { ...draft, fields: values })
-    },
     onSuccess: (result, save) => {
       const [refused] = result.rejected
       // Saves still waiting would be undone by this older copy; the last
@@ -75,5 +64,20 @@ export function useSaveField(orpc: Orpc, draftId: string) {
       queryClient.invalidateQueries({ queryKey: orpc.drafts.list.key() }),
   })
 
-  return (save: Save) => mutation.mutate(save)
+  return (save: Save) => {
+    // The edit shows at once. Not in onMutate: a save queued behind a slow
+    // one only runs its onMutate when its turn comes.
+    void queryClient.cancelQueries({ queryKey: draftKey })
+    const draft = queryClient.getQueryData(draftKey)
+    if (draft) {
+      const definition = definitionOf(draft.documentId)
+      const { values } = applyFieldChanges(
+        definition,
+        definition.draftSchema.parse(draft.fields),
+        [{ key: save.fieldKey, value: save.change }]
+      )
+      queryClient.setQueryData(draftKey, { ...draft, fields: values })
+    }
+    mutation.mutate(save)
+  }
 }
