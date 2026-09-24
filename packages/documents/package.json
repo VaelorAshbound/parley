@@ -16,6 +16,7 @@
   "devDependencies": {
     "@types/hast": "^3.0.5",
     "@types/node": "^24.13.6",
+    "fast-check": "^4.10.2",
     "hast-util-to-string": "^3.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",

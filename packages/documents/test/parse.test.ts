@@ -254,12 +254,69 @@ describe("parseStandardTerms rejects what it does not understand", () => {
       '# T\n\n1. <span class="mystery_link">X</span>\n',
     ],
     ["a missing title", "1. One\n"],
+    ["an empty file", ""],
+    ["a first item that is not 1, a or i", "# T\n\n2. Two\n"],
+    ["an indented line that is not an item", "# T\n\n1. One\n    loose\n"],
+    [
+      "a section heading with text after it",
+      '# T\n\n1. <span class="header_2" id="1">S</span> words\n',
+    ],
+    ["an item that is not one line of text", "# T\n\n1. > quoted\n"],
+    ["an HTML comment", "# T\n\n1. One <!-- note -->\n"],
+    ["a link with no href", "# T\n\n1. <a>here</a>\n"],
+    ["emphasis the engine has no node for", "# T\n\n1. *soft*\n"],
+    [
+      "a span with two classes",
+      '# T\n\n1. <span class="coverpage_link x">X</span>\n',
+    ],
+    [
+      "a linked term holding markup",
+      '# T\n\n1. <span class="coverpage_link">**X**</span>\n',
+    ],
   ])("%s", (_name, markdown) => {
     expect(() => parseStandardTerms(markdown)).toThrow(TemplateParseError)
+  })
+
+  it("names the line of the problem", () => {
+    expect(() => parseStandardTerms("# T\n\n1. One\n3. Three\n")).toThrow(
+      'Line 4: Expected item "2", found "3"'
+    )
+  })
+})
+
+describe("parseStandardTerms reads bold text that holds other nodes", () => {
+  it("keeps linked terms and links inside bold text", () => {
+    const tree = parseStandardTerms(
+      '# T\n\n1. **<span class="coverpage_link">Customer</span> and [site](https://example.com)**\n'
+    )
+
+    expect(tree.children[0]).toMatchObject({
+      type: "clause",
+      content: [
+        {
+          type: "strong",
+          children: [
+            { type: "linkedTerm", term: "Customer" },
+            { type: "text", value: " and " },
+            { type: "link", href: "https://example.com" },
+          ],
+        },
+      ],
+    })
   })
 })
 
 // --- The official NDA cover page ---
+
+describe("parseCoverPage rejects what it does not understand", () => {
+  it.each([
+    ["a quote block", "> quoted\n"],
+    ["a list item with no checkbox", "- plain\n"],
+    ["an HTML comment between blocks", "# T\n\n<!-- note -->\n"],
+  ])("%s", (_name, markdown) => {
+    expect(() => parseCoverPage(markdown)).toThrow(TemplateParseError)
+  })
+})
 
 describe("parseCoverPage", () => {
   const cover = parseCoverPage(read(COVER_PAGE_FILE))

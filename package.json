@@ -10,12 +10,14 @@
     "documents:build": "vp run --filter @workspace/documents build",
     "check": "vp check",
     "test": "vp test run",
+    "test:coverage": "vp test run --coverage",
     "test:workers": "vp run --filter web-worker-tests test",
     "deploy": "vp run --filter web deploy",
     "test:workers:real": "vp run --filter web-worker-tests test:real",
     "test:e2e": "vp run --filter web test:e2e"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "5.0.1",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },

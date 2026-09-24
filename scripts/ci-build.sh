@@ -7,6 +7,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 pnpm check
 # `prepare` builds it on install too; this makes the gate not depend on that.
 pnpm documents:build
-pnpm test
+pnpm test:coverage
 pnpm test:workers
 pnpm build

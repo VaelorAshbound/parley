@@ -57,6 +57,19 @@ export default defineConfig({
     ],
   },
   test: {
+    coverage: {
+      provider: "v8",
+      include: ["packages/documents/src/**"],
+      // spec §6: the document engine is fully covered. T34 adds the rest.
+      thresholds: {
+        "packages/documents/src/**": {
+          lines: 100,
+          branches: 100,
+          functions: 100,
+          statements: 100,
+        },
+      },
+    },
     projects: [
       {
         resolve: { tsconfigPaths: true },
