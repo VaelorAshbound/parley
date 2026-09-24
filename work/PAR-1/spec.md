@@ -182,7 +182,7 @@ This is the core. It is pure TypeScript with no I/O, so it is easy to test.
 - `draft`: `id`, `userId`, `documentId`, `title`, `fields` (jsonb, checked against the document's Zod schema), `status` (`drafting` | `complete`), `createdAt`, `updatedAt`, `firstExportedAt`.
 - `message`: `id`, `draftId`, `role`, `parts` (jsonb, the AI SDK `UIMessage` parts), `createdAt`.
 - `share`: `token` (random, 128-bit), `draftId`, `createdAt`, `revokedAt`.
-- `aiUsage`: `userId`, `day`, `inputTokens`, `outputTokens`, `costUsd`, used for the daily budget.
+- `aiUsage`: `userId`, `day` (UTC, the primary key with `userId`), `messages`, `inputTokens`, `outputTokens`, `costMicroUsd`, used for the daily limits and budget. `messages` counts toward the daily message limits; the cost is in millionths of a dollar (an exact integer, no float or numeric strings). (T13)
 
 **Quota.** A document "counts" on its first export (`firstExportedAt`). Free users get 3 counted documents per calendar month (UTC). Pro users (an active Polar subscription) have no limit. Re-exporting a document that was already counted is always free.
 
@@ -213,8 +213,11 @@ pnpm test:mutation           # Stryker mutation tests
 pnpm test:perf               # Lighthouse CI against a URL (PREVIEW_URL=...)
 pnpm evals                   # AI eval suite (real gpt-6-luna)
 pnpm build                   # vp run -r build
+pnpm db:dev                  # local Postgres 18 on :54320, migrated (ADR-0004)
 pnpm db:generate             # drizzle-kit generate
-pnpm db:migrate              # drizzle-kit migrate
+pnpm db:migrate              # drizzle-kit migrate; needs DATABASE_URL=<direct url>, no default
+pnpm db:check                # CI: migrations are consistent and match the schema
+pnpm db:auth-schema          # Better Auth CLI → packages/db/src/auth-schema.ts
 pnpm documents:build         # parse templates/*.md into typed JSON + run the coverage checks
 pnpm run deploy              # build + wrangler deploy (normally done by Workers Builds); plain `pnpm deploy` is a pnpm built-in
 ```
@@ -374,16 +377,17 @@ Rules:
   - old session, quota and plan state.
 
   Nearly every read in Parley must be fresh, so we use one Hyperdrive config created with `--caching-disabled`. The Cloudflare docs advise exactly this when most reads must be fresh; you still keep the pooling and fast connection setup. A test checks read-after-write through Hyperdrive on the preview.
-- **Project** (created by the owner 2026-09-23): Neon project `parley`, region `aws-eu-central-1`, database `neondb`. In `.env`: `DATABASE_URL` is the direct URL and `DATABASE_URL_POOLED` is the pooled one.
+- **Project** (created by the owner 2026-09-23): Neon project `parley` (`divine-voice-93231622`), region `aws-eu-central-1`, database `neondb`, Postgres 18. Its default branch is `production`. In `.env`: `DATABASE_URL` is the direct URL of `production` and `DATABASE_URL_POOLED` is the pooled one.
+- **Hyperdrive configs** (T13, both caching off, both on the direct host): `parley` → `production`, bound as `HYPERDRIVE`; `parley-preview` → the Neon branch `preview`, bound in `previews.hyperdrive`, so Worker Previews never touch production data. T33 replaces the shared `preview` branch with one branch per PR.
 - **Driver.** Neon's Cloudflare guide says to use `pg` (node-postgres) with Hyperdrive, via `drizzle-orm/node-postgres`. The client is created inside the request, never at module scope. Hyperdrive pools in transaction mode, so we use no session state (`SET`, `LISTEN`).
 - **Migrations** run with drizzle-kit over the **direct, unpooled** Neon URL (`DATABASE_URL`), never through the pooler (`DATABASE_URL_POOLED`) or Hyperdrive. Hyperdrive is also created from the direct URL, because it does its own pooling. Each migration is tested on a Neon branch first.
-- **Local dev.** Hyperdrive's `localConnectionString` points at local Postgres. Its `sslmode=disable` is expected.
+- **Local dev.** `pnpm db:dev` runs Postgres 18 from npm (`embedded-postgres`, ADR-0004) on port 54320, with its data in `packages/db/.data/`, and applies the migrations. Hyperdrive's `localConnectionString` points there. The DB tests use the same package, in a child process.
 - **Placement.** One chat turn runs several queries (session, draft, write, usage), so `placement.region` matches the Neon region: **AWS eu-central-1 (Frankfurt)**, so `"placement": { "region": "aws:eu-central-1" }`. T35 measures the time to first token with and without it, and we keep the faster one.
 - **Cost.** Scale-to-zero stays on (5 min). The cold start is a few hundred ms on the first request after idle, which is fine for a portfolio. Autoscaling and scale-to-zero use **the owner's settings on the Neon project. Don't change them.**
 - **Branches.** CI makes a Neon branch per PR with the Neon CLI, each with an **expiry time**, so forgotten branches clean themselves up. The branch is deleted when the PR closes.
 - **Indexes** (from Neon's index guide):
-  - B-tree `draft(user_id, updated_at desc)` for the sidebar;
-  - a generated `tsvector` column (title + document type + party names) with a **GIN** index for search, using prefix matching (`acme:*`) for search as you type;
+  - B-tree `draft(user_id, updated_at desc nulls first)` for the sidebar. NULLS FIRST matches a plain `ORDER BY updated_at DESC`; Drizzle's default NULLS LAST would make Postgres sort (a test checks the plan);
+  - a generated `tsvector` column (title + document type + every party's company and name, found with the JSON path `$.**.company` / `$.**.name`, so it works for every document) with a **GIN** index for search, using prefix matching (`acme:*`) for search as you type;
   - B-tree on `share(token)`, `message(draft_id, created_at)` and `ai_usage(user_id, day)`.
 
   Lakebase BM25 search is too much for searching one user's own drafts.
@@ -427,7 +431,7 @@ Rules:
 - **Rate limit.** Better Auth's own limiter with `storage: "database"` (memory resets per isolate on Workers) and `ipAddressHeaders: ["cf-connecting-ip"]`. It uses the stricter built-in rules on sign-in, sign-up, change-password and change-email, plus 2FA's 3 requests per 10 s.
 - **Session cache.** `session.cookieCache` (`compact`, 5 min) saves a DB read on most requests. A revoke can take up to 5 min to reach other devices; bump `cookieCache.version` to force it everywhere.
 - **Security.** `trustedOrigins`: the production domain + the preview URL pattern. Secure cookies. CSRF and origin checks stay on. `BETTER_AUTH_SECRET` is at least 32 characters, from `npx @better-auth/cli secret`. `databaseHooks` write **audit logs** for session create/revoke, email change and account link (IDs only).
-- **Schema.** `npx @better-auth/cli generate` writes the Drizzle auth schema (re-run it after plugin changes). We add the indexes Better Auth recommends (`user.email`, `account.userId`, `session.userId` + `token`, `verification.identifier`, `twoFactor.secret`). `npx @better-auth/cli info` is used when debugging.
+- **Schema.** `pnpm db:auth-schema` runs the Better Auth CLI (`auth generate`; the old `@better-auth/cli` is deprecated since Better Auth 1.5) and writes `packages/db/src/auth-schema.ts` (re-run it after plugin changes). T13 generated it from a config that lists the schema-changing options (`anonymous`, `twoFactor`, `rateLimit.storage: "database"`); T14's real config must produce the same file. Better Auth is pinned to 1.7.5, because pnpm's release-age check refused 1.7.6 (published the same day). We add the indexes Better Auth recommends (`user.email`, `account.userId`, `session.userId` + `token`, `verification.identifier`, `twoFactor.secret`). `npx @better-auth/cli info` is used when debugging.
 - **Emails** (Resend + React Email): verify email, reset password, confirm email change. They are sent in the background.
 - **Sender.** The Resend domain `mail.runtimedrift.dev` is verified (region eu-west-1, sending only). The from address is `Parley <no-reply@mail.runtimedrift.dev>`. Every send has an idempotency key (`<event>/<id>`) and checks `{ error }` (the SDK doesn't throw). Tests send to `delivered@resend.dev`. The production Worker uses a **sending-only** key limited to that domain. The full-access `RESEND_API_KEY` stays local for admin work.
 
@@ -496,7 +500,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 | Unit | Vitest | Document engine: every definition covers every linked term, the render model, field schemas, placeholders. Also quota math, Temporal date logic, limits and prompt building. |
 | Property-based | Vitest + fast-check | Random valid and invalid field values for all 12 documents. The render model never crashes. Invalid values never pass Zod. DOCX/HTML output always contains the standard terms byte-for-byte. |
 | Worker runtime | `@cloudflare/vitest-plugin` (`cloudflareTest()`), in its own package `apps/web-worker-tests` on **Vitest 4.1**, see the note below | Server entry routing (`/api` vs SSR), Hono middleware, oRPC procedures, rate-limit binding, the `scheduled()` cleanup. All of it runs in real `workerd`. |
-| Integration (DB) | Vitest + Postgres (local in dev, a Neon branch in CI) | Drizzle queries and migrations up and down. Guest → user linking moves drafts and chat. Quota counts on first export only. Share revoke. Polar webhook handling with real sandbox payloads. |
+| Integration (DB) | Vitest + real Postgres 18 (embedded-postgres, ADR-0004), plus a Neon branch per PR (T33) | Drizzle queries and migrations up (Drizzle has no down migrations: a bad migration is fixed by a new one, or by Neon's instant restore). `pnpm db:check` fails CI when the schema changed without a migration. Guest → user linking moves drafts and chat. Quota counts on first export only. Share revoke. Polar webhook handling with real sandbox payloads. |
 | Auth matrix | Vitest | Every procedure × {no session, guest, other user, owner, Pro}. Each gets exactly the allowed result. There is no path to another user's draft. |
 | Component | Vitest browser mode (Playwright provider) + `@shadcn/helpers/ai-sdk` `createChat()` scripted conversations streamed through the real `useChat` (tool parts and waiting for user input included) | Chat, the questionnaire (keyboard shortcuts, Other, skip, resume after reload), the field shimmer, the inline field editor, the change markers with undo, sidebar search, the panel resize. They run in real Chromium, Firefox and WebKit. |
 | Snapshot + visual | Vitest + Playwright screenshots | DOCX XML and PDF HTML for a fully filled example of each document (12). PDF pages turned into images and compared pixel by pixel. Screenshots of key screens in light and dark mode, on desktop and phone. |
@@ -512,7 +516,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 - **Worker tests on Vitest 4.1.** Vite+ ships Vitest 5.0.1, but Cloudflare's Workers test plugin only supports `vitest ^4.1` so far (Vitest 5 support is in open PR cloudflare/workers-sdk#15500). So the Worker tests live in their own package, `apps/web-worker-tests`. It has its own `vitest@4.1` and is run by `pnpm test:workers`. Everything else runs on Vite+ Vitest 5. When the PR ships, we move them back (tracked in `wi`). Cloudflare also says v8 coverage doesn't work in workerd, so this package uses **Istanbul** coverage.
 - **Projects.** All other tests are Vitest `test.projects` in the `test` key of `vite.config.ts`. There is no `vitest.workspace.ts` (deprecated) and no `vitest.config.ts` (Vite+ says so). Imports come from `vite-plus/test`.
   - `documents` (unit): `isolate: false`, checked with `--shuffle`.
-  - `db` (integration): `fileParallelism: false`. Each test runs in a transaction that rolls back (`test.aroundEach` + `tx.rollback()`, with a driver that supports transactions).
+  - `db` (integration): `fileParallelism: false`. A `globalSetup` starts one real Postgres 18 per run (ADR-0004). Each test gets a `db` fixture that is a transaction, rolled back after the test (`test.extend` + `tx.rollback()`).
   - `ui`: browser mode on Chromium, Firefox and WebKit, with domain locators (`locators.extend`), for example `page.getByField("governingLaw")`.
 - **Type tests.** `*.test-d.ts` files with `expectTypeOf`, and `test.typecheck.enabled`. They prove the types stay intact end to end: the oRPC client input and output, the `z.infer` of each document, and the tool input types.
 - **House style for tests:**

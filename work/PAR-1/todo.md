@@ -220,7 +220,22 @@
 
 ## Phase 2: The wow path (a guest drafts an NDA by chat)
 
-- [ ] **T13: DB package: schema, migrations and connection** (M)
+- [x] **T13: DB package: schema, migrations and connection** (M)
+  - Done 2026-09-24. Skills: incremental-implementation, test-driven-development, source-driven-development, git-workflow-and-versioning, documentation-and-adrs; neon-postgres, neon-postgres-branches, wrangler, better-auth-best-practices. Checked:
+    - `scripts/ci-build.sh` end to end: 619 tests, `packages/db/src` fully covered, `pnpm db:check` green.
+    - 21 DB tests on real Postgres 18: CRUD with ownership on every call, cascades, uuid v7 order, the search column (title, type, party names), and the sidebar query plan (index order, no sort).
+    - `pnpm db:dev` starts, migrates and stops cleanly.
+    - Neon: branch `preview` created and migrated first, then `production` (10 tables, `uuidv7()` works). Hyperdrive `parley` and `parley-preview` created with caching off on the direct hosts. `wrangler deploy --dry-run` builds with the binding.
+  - Decisions:
+    - **Real Postgres from npm (`embedded-postgres`) for tests and dev** (owner approved; ADR-0004). It runs in a child process: its exit hook made a red Vitest run exit 0, which would have let CI pass failing tests. Proven fixed both ways.
+    - **Coverage thresholds now really fail the build.** Checked by setting a threshold out of reach (exit 1).
+    - **Auth schema from the new `auth` CLI** (`pnpm db:auth-schema`), Better Auth pinned to 1.7.5 (pnpm refused the same-day 1.7.6). Generated files (migrations, auth schema) are not formatted, so a re-run shows only real changes.
+    - **`draft.id` is `uuidv7()`** (Postgres 18): time-ordered, so inserts stay at the end of the index.
+    - **The sidebar index is `DESC NULLS FIRST`** to match `ORDER BY updated_at DESC`; a plan test fails with Drizzle's default.
+    - **`aiUsage` has `messages` and `costMicroUsd`** (the limits count messages; money as an exact integer). Spec updated.
+    - **Every foreign key cascades** (tested), so account delete and the guest purge remove all data.
+    - **No module-level client.** `connect()` makes one `pg` Client per request, as in Cloudflare's Hyperdrive + Drizzle guide.
+  - Moved to T14: the read-after-write check through Hyperdrive on a Preview (it needs the first route that uses the DB), and running the Worker tests against a local Postgres.
   - Accept:
     - Drizzle schema: the Better-Auth tables, `draft`, `message`, `share` and `aiUsage`, with indexes for the sidebar queries and search.
     - `pnpm db:generate` / `db:migrate` (direct unpooled URL) work on local Postgres and on a Neon branch. A Hyperdrive config is created with `--caching-disabled`, with `localConnectionString` for dev. `pg` + `drizzle-orm/node-postgres`, and the client is made per request. The indexes follow spec §5 Database.
