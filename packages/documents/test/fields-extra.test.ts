@@ -316,3 +316,124 @@ describe("courts anywhere", () => {
     )
   })
 })
+
+describe("choice options with several blanks", () => {
+  const cap = field.choice({
+    label: "General cap amount",
+    help: "The most either side pays.",
+    options: {
+      multiple: {
+        label:
+          "{value}x the fees paid or payable in the 12 months before the claim",
+        with: field.number({
+          label: "Multiple",
+          help: "Times the fees.",
+          decimals: 2,
+          min: 1,
+        }),
+      },
+      greater: {
+        label:
+          "The greater of {amount} or {multiple}x the fees paid or payable in the 12 months before the claim",
+        blanks: {
+          amount: field.money({ label: "Amount", help: "A fixed floor." }),
+          multiple: field.number({
+            label: "Multiple",
+            help: "Times the fees.",
+            decimals: 2,
+            min: 1,
+          }),
+        },
+      },
+    },
+  })
+
+  it("fills each blank, or shows its placeholder", () => {
+    expect(
+      cap.format({
+        option: "greater",
+        value: { amount: { amount: 100000, currency: "USD" }, multiple: 2 },
+      })
+    ).toBe(
+      "The greater of $100,000.00 or 2x the fees paid or payable in the 12 months before the claim"
+    )
+    expect(cap.format({ option: "greater", value: { multiple: 2 } })).toBe(
+      "The greater of [Amount] or 2x the fees paid or payable in the 12 months before the claim"
+    )
+  })
+
+  it("needs every blank once complete, and any of them while drafting", () => {
+    expect(
+      cap.schema.safeParse({ option: "greater", value: { multiple: 2 } })
+        .success
+    ).toBe(false)
+    expect(
+      cap.draftSchema.safeParse({ option: "greater", value: { multiple: 2 } })
+        .success
+    ).toBe(true)
+  })
+
+  it("stores an option with no blanks filled as the option alone", () => {
+    expect(cap.merge(undefined, { option: "greater", value: {} })).toEqual({
+      option: "greater",
+    })
+  })
+
+  it.each([
+    [
+      "a blank with no field",
+      { label: "Pay {amount}", blanks: {} },
+      "blank {amount} in its label has no field",
+    ],
+    [
+      "a field with no blank",
+      {
+        label: "Pay now",
+        blanks: { amount: field.money({ label: "A", help: "A." }) },
+      },
+      "blank {amount} is missing from its label",
+    ],
+    [
+      "{value} with no field",
+      { label: "Pay {value}" },
+      "blank {value} in its label has no field",
+    ],
+    [
+      "a blank used twice",
+      {
+        label: "Pay {value} and {value}",
+        with: field.number({ label: "N", help: "N." }),
+      },
+      "blank {value} appears twice in its label",
+    ],
+    [
+      "both kinds of blanks",
+      {
+        label: "Pay {value}",
+        with: field.number({ label: "N", help: "N." }),
+        blanks: { amount: field.money({ label: "A", help: "A." }) },
+      },
+      "use with or blanks, not both",
+    ],
+  ])("refuses an option with %s", (_name, option, message) => {
+    expect(() =>
+      field.choice({ label: "Bad", help: "Bad.", options: { pay: option } })
+    ).toThrow(`Choice "Bad", option "pay": ${message}.`)
+  })
+
+  it("takes a draft default that picks an option and leaves its blank empty", () => {
+    const term = field.choice({
+      label: "SOW term",
+      help: "How long the SOW lasts.",
+      options: {
+        fixed: {
+          label: "{value} from the SOW Effective Date",
+          with: field.duration({ label: "Length", help: "How long." }),
+        },
+      },
+      default: { option: "fixed" },
+    })
+
+    expect(term.default).toEqual({ option: "fixed" })
+  })
+})

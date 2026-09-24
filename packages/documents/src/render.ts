@@ -1,5 +1,6 @@
 import type { DocumentDefinition, DraftValues, Fields } from "./define.ts"
 import type { AnyField } from "./fields.ts"
+import { blankText, optionPieces } from "./fields/choice.ts"
 import type { Clause, Inline, LinkKind, StandardTerms } from "./parse/schema.ts"
 
 // One render model feeds all three outputs: the React preview, the print
@@ -215,36 +216,35 @@ function fieldLines(
   const lines: RenderedLine[] = Object.entries(field.options).map(
     ([key, option]) => {
       const checked = chosen?.option === key
-      const nested = option.with
-      const [before = "", after] = option.label.split("{value}")
-      if (after === undefined || !nested)
-        return { checked, parts: [{ type: "text", text: option.label }] }
-
-      const text =
-        checked && chosen && "value" in chosen && chosen.value !== undefined
-          ? nested.format(chosen.value)
-          : null
-      const parts: Part[] = [
-        { type: "text", text: before },
+      const parts = optionPieces(option).map((piece): Part => {
+        if (piece.type === "text") return { type: "text", text: piece.text }
+        const { label } = piece.field
+        return {
+          type: "value",
+          field: path,
+          label,
+          // Only the chosen option shows its values; the others stay blank.
+          text: checked ? blankText(option, piece.name, chosen?.value) : null,
+          placeholder: `[${label}]`,
+        }
+      })
+      return { checked, parts }
+    }
+  )
+  // Common Paper's pages always print the Other line, filled in or not.
+  if (field.allowOther)
+    lines.push({
+      checked: isOther(value),
+      parts: [
+        { type: "text", text: "Other: " },
         {
           type: "value",
           field: path,
-          label: nested.label,
-          text,
-          placeholder: `[${nested.label}]`,
+          label: "Other",
+          text: isOther(value) ? value.text : null,
+          placeholder: "[Other]",
         },
-        { type: "text", text: after },
-      ]
-      return {
-        checked,
-        parts: parts.filter((part) => part.type !== "text" || part.text),
-      }
-    }
-  )
-  if (chosen?.option === "other")
-    lines.push({
-      checked: true,
-      parts: [{ type: "value", ...show(path) }],
+      ],
     })
   return lines
 }
@@ -253,6 +253,10 @@ function isChoice(
   value: unknown
 ): value is { option: string; value?: unknown } {
   return typeof value === "object" && value !== null && "option" in value
+}
+
+function isOther(value: unknown): value is { option: "other"; text: string } {
+  return isChoice(value) && value.option === "other" && "text" in value
 }
 
 const SIGNATURE_ROWS = [

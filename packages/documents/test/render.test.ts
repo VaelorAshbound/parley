@@ -263,16 +263,84 @@ describe("render: edge cases", () => {
       },
     })
 
-    const [section] = render(payment, {
-      payment: { option: "other", text: "Quarterly" },
-    }).coverPage.sections
+    const lines = (
+      values: Parameters<typeof render<typeof payment.fields>>[1]
+    ) => render(payment, values).coverPage.sections[0]?.lines
 
-    expect(section?.lines).toEqual([
+    expect(lines({ payment: { option: "other", text: "Quarterly" } })).toEqual([
       { checked: false, parts: [{ type: "text", text: "Monthly" }] },
       {
         checked: true,
-        parts: [expect.objectContaining({ type: "value", text: "Quarterly" })],
+        parts: [
+          { type: "text", text: "Other: " },
+          expect.objectContaining({ type: "value", text: "Quarterly" }),
+        ],
       },
+    ])
+    // Common Paper's pages print the Other line even when nobody used it.
+    expect(lines({ payment: { option: "monthly" } })?.at(-1)).toEqual({
+      checked: false,
+      parts: [
+        { type: "text", text: "Other: " },
+        expect.objectContaining({ text: null, placeholder: "[Other]" }),
+      ],
+    })
+  })
+
+  it("fills each named blank of the chosen option", () => {
+    const cap = defineDocument({
+      id: "cap",
+      version: 1,
+      name: "Cap",
+      template,
+      fields: {
+        cap: field.choice({
+          label: "Cap",
+          help: "The cap.",
+          options: {
+            greater: {
+              label: "The greater of {amount} or {multiple}x the fees",
+              blanks: {
+                amount: field.money({ label: "Amount", help: "A floor." }),
+                multiple: field.number({ label: "Multiple", help: "Times." }),
+              },
+            },
+          },
+        }),
+      },
+      linkedTerms: {},
+      coverPage: {
+        source: "parley",
+        title: "Cap",
+        intro: [],
+        sections: [{ heading: "Cap", field: "cap" }],
+        closing: [],
+        signatures: [],
+        footer: [],
+      },
+    })
+
+    const [line] =
+      render(cap, { cap: { option: "greater", value: { multiple: 2 } } })
+        .coverPage.sections[0]?.lines ?? []
+
+    const [unfilled] =
+      render(cap, { cap: { option: "greater" } }).coverPage.sections[0]
+        ?.lines ?? []
+    expect(unfilled?.parts.filter((part) => part.type === "value")).toEqual([
+      expect.objectContaining({ placeholder: "[Amount]", text: null }),
+      expect.objectContaining({ placeholder: "[Multiple]", text: null }),
+    ])
+    expect(line?.parts).toEqual([
+      { type: "text", text: "The greater of " },
+      expect.objectContaining({
+        label: "Amount",
+        text: null,
+        placeholder: "[Amount]",
+      }),
+      { type: "text", text: " or " },
+      expect.objectContaining({ label: "Multiple", text: "2" }),
+      { type: "text", text: "x the fees" },
     ])
   })
 

@@ -34,8 +34,11 @@ export interface Field<
   readonly help: string
   /** An optional field may stay empty in a complete document. */
   readonly optional: boolean
-  /** Seeded into a new draft (see `initialValues`). */
-  readonly default: Value | undefined
+  /**
+   * Seeded into a new draft (see `initialValues`). Draft-shaped, so a choice
+   * can pick an option and leave its blank empty, as Common Paper's pages do.
+   */
+  readonly default: Draft | undefined
   readonly schema: z.ZodType<Value>
   readonly draftSchema: z.ZodType<Draft>
   readonly changeSchema: z.ZodType<Change>
