@@ -54,3 +54,6 @@ Checkpoint 0 approved by owner. Decision: PR #1 stays draft, merge to main after
 
 ### 2026-09-24T02:55:50Z
 T7 (Mutual NDA, ba8ef9d) and T12 (print HTML + DOCX, spike removed, 1d6e02b) done; CI gate green, real Browser Run PDF passes. T8-T11 research saved in work/PAR-1/cover-research/. Blocked on owner decisions: official cover pages exist for all 10 docs, CSA template is unpublished v3, new field kinds needed.
+
+### 2026-09-24T03:24:56Z
+T7b done (field kinds + layout for official cover pages, 01df863..e73ac55). CSA switched to published v2.1 (c4e7643). Next: T8-T11 definitions mirroring Common Paper's official cover pages.
