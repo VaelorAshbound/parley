@@ -470,6 +470,60 @@ export const examples = {
       restoration: "Daily backups are kept for 30 days and restored in tests.",
     },
   },
+  baa: {
+    agreement:
+      "Cloud Service Agreement between Cedar Care Records, Inc. and Maple Valley Clinic, P.C., dated October 1, 2026",
+    providerRole: { option: "businessAssociate" },
+    companyRole: { option: "coveredEntity" },
+    breachNotificationPeriod: { amount: 5, unit: "businessDays" },
+    designatedRecordSet: { option: "doesNotMaintain" },
+    subcontracting: {
+      option: "unless",
+      value: {
+        selected: [
+          {
+            option: "notice",
+            value:
+              "30 days' written notice before a new subcontractor gets PHI.",
+          },
+        ],
+      },
+    },
+    offshoring: { option: "never" },
+    deidentification: {
+      option: "unless",
+      value: {
+        selected: [
+          {
+            option: "purpose",
+            value: "improving the accuracy of the Service's scheduling models",
+          },
+          {
+            option: "requirements",
+            value:
+              "Expert determination under 45 CFR §164.514(b)(1), renewed every year.",
+          },
+        ],
+      },
+    },
+    aggregation: { option: "noLimitation" },
+    effectiveDate: { option: "custom", value: "2026-10-01" },
+    modifications:
+      "Section 4.3 reimbursement is capped at the fees paid in the prior 12 months.",
+    provider: {
+      company: "Cedar Care Records, Inc.",
+      name: "Priya Raman",
+      title: "Chief Privacy Officer",
+      email: "privacy@cedarcare.test",
+    },
+    company: {
+      company: "Maple Valley Clinic, P.C.",
+      name: "Dr. Sam Okafor",
+      title: "Medical Director",
+      email: "compliance@maplevalley.test",
+      address: "22 Elm St, Portland, OR 97204",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
