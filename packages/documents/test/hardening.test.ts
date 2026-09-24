@@ -99,3 +99,20 @@ describe("a missing required field", () => {
     )
   })
 })
+
+describe("a value of the wrong type", () => {
+  it.each([
+    ["a word", "twelve"],
+    ["not a number", Number.NaN],
+  ])("says to use a number for %s, not 'expected number'", (_name, amount) => {
+    const percent = field.percent({ label: "Uptime", help: "Promised." })
+    const term = field.duration({ label: "Term", help: "How long." })
+
+    expect(percent.schema.safeParse(amount).error?.issues[0]?.message).toBe(
+      "Use a number, like 12."
+    )
+    expect(
+      term.schema.safeParse({ amount, unit: "years" }).error?.issues[0]?.message
+    ).toBe("Use a number, like 12.")
+  })
+})

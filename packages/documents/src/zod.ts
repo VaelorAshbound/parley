@@ -7,8 +7,13 @@ z.config({
   jitless: true,
   // A required value that is simply missing: say what to do, in plain words,
   // instead of "Invalid input: expected object, received undefined".
-  customError: (issue) =>
-    issue.input === undefined ? "Fill this in." : undefined,
+  customError: (issue) => {
+    if (issue.input === undefined) return "Fill this in."
+    // A form's number box or the AI sent text (or NaN) where a number goes.
+    if (issue.code === "invalid_type" && issue.expected === "number")
+      return "Use a number, like 12."
+    return undefined
+  },
 })
 
 export { z }
