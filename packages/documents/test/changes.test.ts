@@ -40,6 +40,61 @@ describe("applyFieldChanges", () => {
     ])
   })
 
+  it("undoes an edit, but not once the field has changed again", () => {
+    const edit = applyFieldChanges(definition, { purpose: "Hiring." }, [
+      { key: "purpose", value: "Selling." },
+    ])
+    expect(edit.inverse).toEqual([
+      { key: "purpose", value: "Hiring.", expected: "Selling." },
+    ])
+
+    const undo = applyFieldChanges(definition, edit.values, edit.inverse)
+    expect(undo.values).toEqual({ purpose: "Hiring." })
+    expect(undo.rejected).toEqual([])
+
+    const later = applyFieldChanges(
+      definition,
+      { purpose: "Leasing." },
+      edit.inverse
+    )
+    expect(later.values).toEqual({ purpose: "Leasing." })
+    expect(later.rejected).toEqual([
+      {
+        key: "purpose",
+        value: "Hiring.",
+        issues: ["This field changed after that edit, so it was not undone."],
+      },
+    ])
+  })
+
+  it("won't undo into a field that was cleared since", () => {
+    const edit = applyFieldChanges(definition, {}, [
+      { key: "purpose", value: "Selling." },
+    ])
+    const undo = applyFieldChanges(definition, {}, edit.inverse)
+    expect(undo.applied).toEqual([])
+    expect(undo.rejected).toHaveLength(1)
+  })
+
+  it("undoes an object field that was empty, or that was cleared", () => {
+    const set = applyFieldChanges(definition, {}, [
+      { key: "party1", value: { company: "Acme" } },
+    ])
+    expect(set.inverse).toEqual([
+      { key: "party1", value: null, expected: { company: "Acme" } },
+    ])
+
+    const cleared = applyFieldChanges(definition, set.values, [
+      { key: "party1", value: null },
+    ])
+    expect(cleared.inverse).toEqual([
+      { key: "party1", value: { company: "Acme" }, expected: null },
+    ])
+    expect(
+      applyFieldChanges(definition, cleared.values, cleared.inverse).values
+    ).toEqual(set.values)
+  })
+
   it("merges parts of an object field, and null removes a part", () => {
     const { values } = applyFieldChanges(
       definition,

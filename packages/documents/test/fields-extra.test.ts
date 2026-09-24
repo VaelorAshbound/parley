@@ -206,6 +206,14 @@ describe("jurisdiction outside the US", () => {
     })
   })
 
+  it("keeps the place when a change names only the courts, and null clears it", () => {
+    expect(law.merge(ontario, { courtLocation: "Ottawa" })).toEqual({
+      region: "Ontario, Canada",
+      courtLocation: "Ottawa",
+    })
+    expect(law.merge(ontario, null)).toBeUndefined()
+  })
+
   it("stays US-only where the terms say 'the State of'", () => {
     const usOnly = field.jurisdiction({
       label: "Governing law",
