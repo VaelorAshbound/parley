@@ -195,6 +195,43 @@ export const examples = {
     otherChanges:
       "Notices must also be sent by email to both notice addresses.",
   },
+  "pilot-agreement": {
+    product:
+      "Forecast Cloud, Acme's demand forecasting web app, with its reporting API",
+    effectiveDate: { option: "custom", value: "2026-10-01" },
+    pilotPeriod: { amount: 3, unit: "months" },
+    fees: { option: "paid", value: "$5,000 for the Pilot Period" },
+    paymentProcess: {
+      option: "invoice",
+      value: { days: 30, start: { option: "receipt" } },
+    },
+    governingLaw: {
+      state: "CA",
+      courtLocation: "San Francisco County, California",
+    },
+    generalCap: {
+      option: "greater",
+      value: { amount: { amount: 50_000, currency: "USD" }, multiple: 2 },
+    },
+    dpa: "Acme's Data Processing Agreement at https://acme.test/dpa",
+    technicalSupport:
+      "Email support@acme.test on business days; Acme replies within one business day.",
+    modifications:
+      "Customer may share pilot results with its board under Section 6.",
+    provider: {
+      company: "Acme Analytics, Inc.",
+      name: "Ana Diaz",
+      title: "CEO",
+      email: "legal@acme.test",
+    },
+    customer: {
+      company: "Bolt Retail LLC",
+      name: "Bo Chen",
+      title: "VP of Operations",
+      email: "contracts@bolt.test",
+      address: "100 Market St, San Francisco, CA 94105",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
