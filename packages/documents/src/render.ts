@@ -1,6 +1,6 @@
 import type { DocumentDefinition, DraftValues, Fields } from "./define.ts"
 import type { AnyField } from "./fields.ts"
-import { blankText, optionPieces } from "./fields/choice.ts"
+import { blankText, isRecord, optionPieces } from "./fields/choice.ts"
 import type { Clause, Inline, LinkKind, StandardTerms } from "./parse/schema.ts"
 
 // One render model feeds all three outputs: the React preview, the print
@@ -202,20 +202,24 @@ function renderBlocks(
   })
 }
 
-/** A choice is one checkbox line per option; any other field is one line. */
+/**
+ * A choice or a multi-select is one checkbox line per option (plus the Other
+ * line when it takes one); any other field is one line.
+ */
 function fieldLines(
   field: AnyField | undefined,
   path: string,
   value: unknown,
   show: (path: string) => RenderedValue
 ): RenderedLine[] {
-  if (field?.kind !== "choice" || !field.options)
+  if ((field?.kind !== "choice" && field?.kind !== "choices") || !field.options)
     return [{ parts: [{ type: "value", ...show(path) }] }]
 
-  const chosen = isChoice(value) ? value : undefined
+  const picks = picked(value)
+  const other = otherOf(value)
   const lines: RenderedLine[] = Object.entries(field.options).map(
     ([key, option]) => {
-      const checked = chosen?.option === key
+      const pick = picks.find((each) => each.option === key)
       const parts = optionPieces(option).map((piece): Part => {
         if (piece.type === "text") return { type: "text", text: piece.text }
         const { label } = piece.field
@@ -223,25 +227,25 @@ function fieldLines(
           type: "value",
           field: path,
           label,
-          // Only the chosen option shows its values; the others stay blank.
-          text: checked ? blankText(option, piece.name, chosen?.value) : null,
+          // Only picked options show their values; the others stay blank.
+          text: pick ? blankText(option, piece.name, pick.value) : null,
           placeholder: `[${label}]`,
         }
       })
-      return { checked, parts }
+      return { checked: pick !== undefined, parts }
     }
   )
   // Common Paper's pages always print the Other line, filled in or not.
   if (field.allowOther)
     lines.push({
-      checked: isOther(value),
+      checked: other !== null,
       parts: [
         { type: "text", text: "Other: " },
         {
           type: "value",
           field: path,
           label: "Other",
-          text: isOther(value) ? value.text : null,
+          text: other,
           placeholder: "[Other]",
         },
       ],
@@ -249,14 +253,26 @@ function fieldLines(
   return lines
 }
 
-function isChoice(
-  value: unknown
-): value is { option: string; value?: unknown } {
-  return typeof value === "object" && value !== null && "option" in value
+type Pick = { option: string; value?: unknown }
+
+/** The picked options: one for a choice, any number for a multi-select. */
+function picked(value: unknown): Pick[] {
+  if (isPick(value)) return [value]
+  if (isRecord(value) && Array.isArray(value.selected))
+    return value.selected.filter(isPick)
+  return []
 }
 
-function isOther(value: unknown): value is { option: "other"; text: string } {
-  return isChoice(value) && value.option === "other" && "text" in value
+/** The Other answer of a choice (`text`) or a multi-select (`other`). */
+function otherOf(value: unknown): string | null {
+  if (!isRecord(value)) return null
+  if (value.option === "other" && typeof value.text === "string")
+    return value.text
+  return typeof value.other === "string" ? value.other : null
+}
+
+function isPick(value: unknown): value is Pick {
+  return isRecord(value) && typeof value.option === "string"
 }
 
 const SIGNATURE_ROWS = [

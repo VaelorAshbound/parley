@@ -11,11 +11,13 @@ import {
   url,
 } from "./fields/basic.ts"
 import { choice } from "./fields/choice.ts"
+import { choices } from "./fields/choices.ts"
 import { jurisdiction } from "./fields/jurisdiction.ts"
 import { party } from "./fields/party.ts"
 
 export { EU_MEMBER_STATES, type Duration, type Money } from "./fields/basic.ts"
 export type { ChoiceDraft, ChoiceValue } from "./fields/choice.ts"
+export type { ChoicesDraft, ChoicesValue } from "./fields/choices.ts"
 export type {
   AnyField,
   Field,
@@ -36,6 +38,7 @@ export const field = {
   select,
   url,
   choice,
+  choices,
   jurisdiction,
   party,
 }

@@ -59,7 +59,7 @@ export type ChoiceDraft<O extends ChoiceOptions, Allow> =
   | Other<Allow>
 
 /** Every blank in the label has a field, and every field has one blank. */
-function checkOption(choice: string, key: string, option: ChoiceOption) {
+export function checkOption(choice: string, key: string, option: ChoiceOption) {
   const fail = (message: string) => {
     throw new Error(`Choice "${choice}", option "${key}": ${message}.`)
   }
@@ -124,12 +124,12 @@ export function blankText(option: ChoiceOption, name: string, value: unknown) {
   return filled !== undefined && blank ? blank.format(filled) : null
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
 
 /** Not generic, so TypeScript can narrow on `option`. */
-function formatChoice(
+export function formatChoice(
   options: ChoiceOptions,
   choice: { option: string; text: string } | { option: string; value?: unknown }
 ) {
@@ -149,7 +149,7 @@ function formatChoice(
 }
 
 /** One stored shape per meaning: an option with no blanks filled has none. */
-function tidy(value: unknown) {
+export function tidy(value: unknown) {
   if (!isRecord(value) || !("value" in value)) return value
   const empty =
     value.value === undefined ||
@@ -157,6 +157,14 @@ function tidy(value: unknown) {
   if (!empty) return value
   const { value: _empty, ...rest } = value
   return rest
+}
+
+/** One `{ option, value? }` schema per option. */
+export function optionSchemas(options: ChoiceOptions, draft: boolean) {
+  return Object.entries(options).map(([key, option]) => {
+    const value = blankSchema(option, draft)
+    return z.strictObject({ option: z.literal(key), ...(value && { value }) })
+  })
 }
 
 export function choice<
@@ -175,13 +183,7 @@ export function choice<
   })
   const union = (draft: boolean) =>
     z.union([
-      ...entries.map(([key, option]) => {
-        const value = blankSchema(option, draft)
-        return z.strictObject({
-          option: z.literal(key),
-          ...(value && { value }),
-        })
-      }),
+      ...optionSchemas(config.options, draft),
       ...(config.allowOther ? [otherText] : []),
     ])
 

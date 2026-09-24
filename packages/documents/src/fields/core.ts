@@ -17,6 +17,7 @@ export type FieldKind =
   | "money"
   | "percent"
   | "choice"
+  | "choices"
   | "jurisdiction"
   | "party"
   | "number"

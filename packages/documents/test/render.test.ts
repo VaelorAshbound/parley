@@ -344,6 +344,67 @@ describe("render: edge cases", () => {
     ])
   })
 
+  it("prints a multi-select as one checkbox line per option", () => {
+    const claims = defineDocument({
+      id: "claims",
+      version: 1,
+      name: "Claims",
+      template,
+      fields: {
+        claims: field.choices({
+          label: "Increased claims",
+          help: "Claims with a higher cap.",
+          options: {
+            confidentiality: { label: "Breach of confidentiality" },
+            data: {
+              label: "Breach of {value}",
+              with: field.text({ label: "Obligations", help: "Which ones." }),
+            },
+          },
+          allowOther: true,
+        }),
+      },
+      linkedTerms: {},
+      coverPage: {
+        source: "parley",
+        title: "Claims",
+        intro: [],
+        sections: [{ heading: "Increased Claims", field: "claims" }],
+        closing: [],
+        signatures: [],
+        footer: [],
+      },
+    })
+
+    const lines = render(claims, {
+      claims: {
+        selected: [{ option: "data", value: "data protection duties" }],
+        other: "Misuse of API keys",
+      },
+    }).coverPage.sections[0]?.lines
+
+    expect(lines).toEqual([
+      {
+        checked: false,
+        parts: [{ type: "text", text: "Breach of confidentiality" }],
+      },
+      {
+        checked: true,
+        parts: [
+          { type: "text", text: "Breach of " },
+          expect.objectContaining({ text: "data protection duties" }),
+        ],
+      },
+      {
+        checked: true,
+        parts: [
+          { type: "text", text: "Other: " },
+          expect.objectContaining({ text: "Misuse of API keys" }),
+        ],
+      },
+    ])
+  })
+
   it("shows placeholders, not an error, for a field the document lacks", () => {
     // A definition edited by hand, with no types to catch the mistake.
     const broken = {
