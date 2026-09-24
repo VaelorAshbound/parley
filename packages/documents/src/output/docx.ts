@@ -297,6 +297,7 @@ function coverTable({ coverPage }: RenderedDocument, width: number) {
                     heading: HeadingLevel.HEADING_2,
                     text: section.heading,
                   }),
+                  ...(section.hint ? [small(section.hint)] : []),
                 ],
               }),
             ],

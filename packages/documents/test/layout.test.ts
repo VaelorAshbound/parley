@@ -1,3 +1,4 @@
+import JSZip from "jszip"
 import { describe, expect, it } from "vite-plus/test"
 
 import { coverage, defineDocument } from "../src/define.ts"
@@ -42,7 +43,11 @@ function dpa() {
       title: "Layout",
       intro: [],
       sections: [
-        { heading: "Key Terms", part: true },
+        {
+          heading: "Key Terms",
+          hint: "The legal terms both sides agree to.",
+          part: true,
+        },
         { heading: "Special Category Data", field: "specialData" },
         {
           heading: "Safeguards",
@@ -54,6 +59,7 @@ function dpa() {
           field: "rejection",
           template: "{value} from notice of rejection",
         },
+        { heading: "Contacts", part: true },
         {
           heading: "Notices",
           lines: [
@@ -144,9 +150,17 @@ describe("cover page layout", () => {
   it("prints part headings in the PDF and the DOCX", async () => {
     const rendered = render(dpa(), {})
 
-    expect(toPrintHtml(rendered)).toContain('<h2 class="part">Key Terms</h2>')
-    const docx = new TextDecoder().decode(await toDocx(rendered))
-    expect(docx.length).toBeGreaterThan(0)
+    expect(toPrintHtml(rendered)).toContain(
+      '<h2 class="part">Key Terms</h2><p class="hint">The legal terms both sides agree to.</p>'
+    )
+    const zip = await JSZip.loadAsync(await toDocx(rendered))
+    const xml = (await zip.file("word/document.xml")?.async("string")) ?? ""
+    expect(toPrintHtml(rendered)).toContain(
+      '<h2 class="part">Contacts</h2><section'
+    )
+    expect(xml).toMatch(
+      /<w:pStyle w:val="Heading2"\/>.*?Key Terms<\/w:t>.*?The legal terms both sides agree to\./
+    )
   })
 })
 

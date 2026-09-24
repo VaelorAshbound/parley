@@ -40,7 +40,9 @@ export function toPrintHtml(
     ...coverPage.intro.map(paragraph),
     ...coverPage.sections.map((section) =>
       section.part
-        ? `<h2 class="part">${escape(section.heading)}</h2>`
+        ? `<h2 class="part">${escape(section.heading)}</h2>${
+            section.hint ? `<p class="hint">${escape(section.hint)}</p>` : ""
+          }`
         : `<section class="field"><h3>${escape(section.heading)}</h3>${
             section.hint ? `<p class="hint">${escape(section.hint)}</p>` : ""
           }${section.lines.map(line).join("")}${

@@ -3,6 +3,7 @@ import { expectTypeOf, test } from "vite-plus/test"
 import {
   defineDocument,
   type CoverPageLayout,
+  type DocumentDefinition,
   type DraftValues,
   type FieldChange,
   type FieldPath,
@@ -101,4 +102,21 @@ test("a draft and a change are typed per field", () => {
   expectTypeOf<{ key: "purpose"; value: { title: null } }>().not.toExtend<
     FieldChange<Fields>
   >()
+})
+
+test("any definition fits the general type, for loops over the registry", () => {
+  const definition = defineDocument({
+    id: "t",
+    version: 1,
+    name: "T",
+    template,
+    fields,
+    linkedTerms: {},
+    coverPage: { ...layout, sections: [], signatures: ["party1"] },
+    rules: (values, issue) => {
+      if (values.purpose === "x") issue("purpose", "Not x.")
+    },
+  })
+
+  expectTypeOf(definition).toExtend<DocumentDefinition>()
 })

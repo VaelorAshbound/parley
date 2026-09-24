@@ -6,10 +6,10 @@ import { definitions } from "../src/definitions/index.ts"
 import type { AnyField } from "../src/fields.ts"
 import type { CoverBlock, Inline } from "../src/parse/schema.ts"
 import { render, type Part } from "../src/render.ts"
-import { examples } from "./examples.ts"
+import { registered } from "./examples.ts"
 
-describe.each(Object.entries(definitions))("%s", (id, definition) => {
-  const example = definition.schema.parse(examples[id as keyof typeof examples])
+describe.each(registered)("$id", ({ id, definition, example: values }) => {
+  const example = definition.schema.parse(values)
 
   it("is the catalog's document", () => {
     expect(definition.id).toBe(id)

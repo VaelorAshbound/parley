@@ -437,3 +437,32 @@ describe("choice options with several blanks", () => {
     expect(term.default).toEqual({ option: "fixed" })
   })
 })
+
+describe("a pick list inside a blank", () => {
+  it("fills a blank, like the period in 'Fees per [month | year]'", () => {
+    const fees = field.choice({
+      label: "Fees",
+      help: "What the design partner pays.",
+      options: {
+        paid: {
+          label: "{amount} per {period}",
+          blanks: {
+            amount: field.money({ label: "Amount", help: "How much." }),
+            period: field.select({
+              label: "Period",
+              help: "How often.",
+              options: { month: "month", quarter: "quarter", year: "year" },
+            }),
+          },
+        },
+      },
+    })
+
+    expect(
+      fees.format({
+        option: "paid",
+        value: { amount: { amount: 500, currency: "USD" }, period: "quarter" },
+      })
+    ).toBe("$500.00 per quarter")
+  })
+})

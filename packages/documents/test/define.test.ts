@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test"
 
-import { coverage, initialValues } from "../src/define.ts"
+import { coverage, defineDocument, initialValues } from "../src/define.ts"
 import { z } from "../src/zod.ts"
 import { complete, nda } from "./fixtures.ts"
 
@@ -124,5 +124,29 @@ describe("coverage", () => {
       unknownTerms: ["Purposes "],
       unusedFields: ["modifications"],
     })
+  })
+})
+
+describe("rules with a phase", () => {
+  it("can require a field only once the document is complete", () => {
+    const base = nda()
+    const definition = defineDocument({
+      ...base,
+      rules: (values, issue, phase) => {
+        if (phase === "complete" && values.modifications === undefined)
+          issue(
+            "modifications",
+            "Say which modifications apply, or write None."
+          )
+      },
+    })
+
+    expect(definition.draftSchema.safeParse({}).success).toBe(true)
+    expect(definition.schema.safeParse(complete).error?.issues).toEqual([
+      expect.objectContaining({
+        path: ["modifications"],
+        message: "Say which modifications apply, or write None.",
+      }),
+    ])
   })
 })

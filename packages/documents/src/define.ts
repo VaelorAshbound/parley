@@ -17,8 +17,17 @@ type PartsOf<T> = T extends { subfields: infer S; derived: infer D }
 export type FieldPath<F extends Fields> = {
   [K in Key<F>]: K | `${K}.${PartsOf<F[K]>}`
 }[Key<F>]
+/**
+ * The party fields. Written as `"party" extends Kind` so that the general
+ * `Fields` (whose kind is any kind) keeps every key, which lets any
+ * definition be used as a `DocumentDefinition`.
+ */
 type PartyKey<F> = {
-  [K in Key<F>]: F[K] extends { kind: "party" } ? K : never
+  [K in Key<F>]: F[K] extends { kind: infer Kind }
+    ? "party" extends Kind
+      ? K
+      : never
+    : never
 }[Key<F>]
 
 /** What a draft holds: any subset of the fields, each possibly partial. */
@@ -82,11 +91,18 @@ type Config<F extends Fields> = {
   /** The field (or fields, like each party's notice address) a term reads. */
   linkedTerms: Record<string, FieldPath<F> | FieldPath<F>[]>
   coverPage: CoverPageLayout<F>
-  /** Cross-field rules. They run on drafts too, so they skip missing values. */
-  rules?: (
+  /**
+   * Cross-field rules. They run on drafts ("draft": skip missing values, so a
+   * half-filled document isn't blocked) and on complete documents
+   * ("complete": may require a field only when another holds some value).
+   * Method syntax on purpose: it keeps any definition assignable to
+   * `DocumentDefinition`, so the registry can be looped over.
+   */
+  rules?(
     values: DraftValues<F>,
-    issue: (field: Key<F>, message: string) => void
-  ) => void
+    issue: (field: Key<F>, message: string) => void,
+    phase: "draft" | "complete"
+  ): void
 }
 
 export type DocumentDefinition<F extends Fields = Fields> = Config<F> & {
@@ -103,7 +119,7 @@ export function defineDocument<const F extends Fields>(
 ): DocumentDefinition<F> {
   checkLayout(config.fields, config.coverPage.sections)
   const entries = Object.entries(config.fields)
-  const draftSchema = typed<DraftValues<F>>(
+  const draftBase = typed<DraftValues<F>>(
     z
       .strictObject(
         Object.fromEntries(
@@ -111,11 +127,17 @@ export function defineDocument<const F extends Fields>(
         )
       )
       .exactPartial()
-  ).superRefine((values, ctx) =>
-    config.rules?.(values, (field, message) =>
-      ctx.addIssue({ code: "custom", path: [field], message })
-    )
   )
+  const rules =
+    (phase: "draft" | "complete") =>
+    (values: DraftValues<F>, ctx: z.RefinementCtx) =>
+      config.rules?.(
+        values,
+        (field, message) =>
+          ctx.addIssue({ code: "custom", path: [field], message }),
+        phase
+      )
+  const draftSchema = draftBase.superRefine(rules("draft"))
 
   return {
     ...config,
@@ -128,16 +150,11 @@ export function defineDocument<const F extends Fields>(
           ])
         )
       )
-    ).superRefine((values, ctx) => {
-      // The cross-field rules live on the draft schema, and a complete value
-      // is also a valid draft, so the draft schema reports only rule issues.
-      for (const issue of draftSchema.safeParse(values).error?.issues ?? [])
-        ctx.addIssue({
-          code: "custom",
-          path: issue.path,
-          message: issue.message,
-        })
-    }),
+    ).superRefine((values, ctx) =>
+      // A complete value is also a valid draft; reading it through the draft
+      // schema gives the rules their draft-typed view of it.
+      rules("complete")(draftBase.parse(values), ctx)
+    ),
     draftSchema,
     changesSchema: typed<FieldChange<F>[]>(
       z

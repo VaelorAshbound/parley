@@ -1,3 +1,6 @@
+import type { DocumentDefinition } from "../src/define.ts"
+import { definitions } from "../src/definitions/index.ts"
+
 // A fully filled example of each document: the definition tests render them,
 // and the output tests (T12) snapshot them.
 export const examples = {
@@ -26,3 +29,16 @@ export const examples = {
     },
   },
 } as const
+
+const byId: Readonly<Record<string, unknown>> = examples
+
+/** Every registered document with its example, for loops over all of them. */
+export const registered: {
+  id: string
+  definition: DocumentDefinition
+  example: unknown
+}[] = Object.entries(definitions).map(([id, definition]) => ({
+  id,
+  definition,
+  example: byId[id],
+}))

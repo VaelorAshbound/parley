@@ -5,7 +5,7 @@ import { readTemplate } from "../src/parse/catalog.ts"
 import { parseStandardTerms } from "../src/parse/parse.ts"
 import { toPrintHtml } from "../src/output/html.ts"
 import { render } from "../src/render.ts"
-import { examples } from "./examples.ts"
+import { examples, registered } from "./examples.ts"
 import { annexDocument } from "./fixtures.ts"
 
 const nda = definitions["mutual-nda"]
@@ -208,14 +208,11 @@ describe("toPrintHtml", () => {
   })
 })
 
-describe.each(Object.keys(definitions))("%s print HTML", (id) => {
+describe.each(registered)("$id print HTML", ({ id, definition, example }) => {
   it("matches the reviewed snapshot", async () => {
-    const definition = definitions[id as keyof typeof definitions]
-    const example = definition.schema.parse(
-      examples[id as keyof typeof examples]
-    )
+    const values = definition.schema.parse(example)
 
-    await expect(toPrintHtml(render(definition, example))).toMatchFileSnapshot(
+    await expect(toPrintHtml(render(definition, values))).toMatchFileSnapshot(
       `__outputs__/${id}.html`
     )
   })

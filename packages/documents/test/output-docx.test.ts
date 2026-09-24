@@ -6,7 +6,7 @@ import { readTemplate } from "../src/parse/catalog.ts"
 import { parseStandardTerms } from "../src/parse/parse.ts"
 import { toDocx } from "../src/output/docx.ts"
 import { render } from "../src/render.ts"
-import { examples } from "./examples.ts"
+import { examples, registered } from "./examples.ts"
 import { annexDocument } from "./fixtures.ts"
 
 const nda = definitions["mutual-nda"]
@@ -181,13 +181,10 @@ describe("toDocx", () => {
   })
 })
 
-describe.each(Object.keys(definitions))("%s DOCX", (id) => {
+describe.each(registered)("$id DOCX", ({ id, definition, example }) => {
   it("matches the reviewed snapshot of its text", async () => {
-    const definition = definitions[id as keyof typeof definitions]
-    const example = definition.schema.parse(
-      examples[id as keyof typeof examples]
-    )
-    const { document } = await unzip(await toDocx(render(definition, example)))
+    const values = definition.schema.parse(example)
+    const { document } = await unzip(await toDocx(render(definition, values)))
 
     await expect(textOf(document)).toMatchFileSnapshot(
       `__outputs__/${id}.docx.txt`
