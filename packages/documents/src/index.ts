@@ -27,6 +27,10 @@ export type {
   Money,
   StateCode,
 } from "./fields.ts"
+export { toDocx } from "./output/docx.ts"
+export type { DocxOptions } from "./output/docx.ts"
+export { toPrintHtml } from "./output/html.ts"
+export type { PrintOptions } from "./output/html.ts"
 export { render } from "./render.ts"
 export type {
   Part,
