@@ -229,7 +229,7 @@ describe("parseStandardTerms", () => {
       )
     )
 
-    expect(usageData?.id).toBe("13.31")
+    expect(usageData?.id).toBe("13.32")
   })
 
   it("marks a definition whose quotes sit outside the bold", () => {

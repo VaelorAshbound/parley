@@ -76,7 +76,7 @@ All 12 from `catalog.json` ship at launch. That is 11 agreements plus the offici
 
 - The **standard terms stay unchanged**, word for word.
 - The **NDA** uses its official Common Paper cover page.
-- The **other 11** get a cover page that **we write**. Each one lists the variables its template refers to (the `coverpage_link`, `keyterms_link`, `orderform_link`, `sow_link` and `businessterms_link` spans), in the NDA cover page's style.
+- The **other 11** get a cover page that **mirrors Common Paper's official one** (decided 2026-09-24, after research found official cover pages for all of them). We copy its rows, order, hints and option wording, adapted to Parley's field kinds, and add the rows the contract needs even when no span links to them (the product, the fees, the services, the DPA's Annex I parties). It still lists every variable its template refers to (the `coverpage_link`, `keyterms_link`, `orderform_link`, `sow_link` and `businessterms_link` spans). Common Paper's FAQ allows changing the cover page as long as the license line and the link to the Standard Terms stay. Research and sources: `work/PAR-1/cover-research/`.
 - Every cover page we wrote is labeled "Cover page by Parley, not by Common Paper". This keeps us inside CC BY 4.0.
 
 | Document | Linked terms to cover |
@@ -621,6 +621,9 @@ These use a separate test OpenRouter key with its own hard limit ($5, `OPENROUTE
 - **Domain:** `parley.runtimedrift.dev`. It is a Custom Domain on the Worker, and the cert and DNS are handled by Cloudflare.
 - **Name:** Parley.
 - **Brand (colors, logo, type, motion):** "Paper & Ink", approved 2026-09-23. See [brand.md](brand.md).
+- **Cover pages mirror Common Paper's official ones** (owner, 2026-09-24). See §1 "The 12 documents".
+- **The CSA is v2.1, the published version** (owner, 2026-09-24). The repo had v3 from Common Paper's GitHub `main`, but v3 isn't published: its "posted at …/3.0/" link returns 404, and the only official cover page is v2.1. `templates/CSA.md` is now the `2.1` tag of CommonPaper/CSA.
+- **Full-fidelity field kinds** (owner, 2026-09-24): multi-select, numbers, options with several blanks, select lists (EU member states), non-US jurisdictions, lists of records (subprocessors) and groups of text answers (the DPA's security measures). Task T7b.
 
 **Open**
 

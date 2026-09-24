@@ -138,6 +138,15 @@
   - Files: `packages/documents/src/definitions/{mutual-nda.ts,index.ts}`, `test/{definitions.test.ts,examples.ts}`, `scripts/build.ts` (catalog)
   - Deps: T6
 
+- [ ] **T7b: Field kinds for the official cover pages** (M) *(added 2026-09-24, owner: full fidelity)*
+  - Accept:
+    - `choice` options can hold several named blanks (`"the greater of {amount} or {multiplier}× the fees…"`).
+    - New kinds: `choices` (multi-select, with an exclusive "None", "Other", and per-option blanks), `number`, `select` (a named list rendered as one value, like the EU member states), `list` (records like subprocessors: name, country, task), and `group` (named text answers, like the DPA's security measures).
+    - `jurisdiction` takes a US state or a non-US region (province, country), and the courts still sit in the same place by construction. Durations add minutes and quarters; percent allows 3 decimals (99.999%).
+    - A party's "notice" part reads its email or postal address, for "Notice Address".
+    - Same bar as T6: three schemas with meta, merge + undo properties, render + print HTML + DOCX, 100% coverage, an adversarial design review first.
+  - Deps: T6, T12
+
 - [ ] **T8: Cover pages: CSA, SLA, AI Addendum** (M)
 - [ ] **T9: Cover pages: DPA, BAA** (M)
 - [ ] **T10: Cover pages: Pilot, Design Partner, Partnership** (M)
@@ -148,7 +157,7 @@
     - A review note per document in `work/PAR-1/cover-pages.md` records the sources checked (the template and Common Paper's public docs) and any judgment calls.
   - Verify: `pnpm --filter documents test`. A fully filled example of each document renders cleanly.
   - Files: `packages/documents/src/definitions/<doc>.ts` (×2–3), `work/PAR-1/cover-pages.md`
-  - Deps: T7 · The four tasks can run in parallel.
+  - Deps: T7, T7b · The four tasks can run in parallel. Each mirrors Common Paper's official cover page (spec §1, owner 2026-09-24); the research per group is in `work/PAR-1/cover-research/`.
 
 - [x] **T12: Output builders: print HTML + DOCX** (M)
   - Done 2026-09-24 (built before T8–T11, which only add definitions). Checked:
