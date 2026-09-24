@@ -74,6 +74,12 @@ export interface AnyField {
   readonly changeSchema: z.ZodType
   merge(current: unknown, change: unknown): unknown
   format(value: unknown): string | null
+  /** Object kinds: the name of each part, and one part's display text. */
+  readonly subfields?: Readonly<Record<string, string>>
+  formatPath?(value: unknown, part: string): string | null
+  /** Choice: its options, and whether it takes an Other answer. */
+  readonly options?: Readonly<Record<string, ChoiceOption>>
+  readonly allowOther?: boolean
 }
 
 type Common<Value> = {

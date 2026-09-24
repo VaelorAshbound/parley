@@ -97,13 +97,29 @@
   - Files: `packages/documents/src/parse/{parse.ts,schema.ts,catalog.ts}`, `scripts/build.ts`, `test/{parse,generated}.test.ts`, `test/generated.test-d.ts`, `test/__outlines__/*`
   - Deps: T1
 
-- [ ] **T6: Field system, `defineDocument` and the render model** (M)
+- [x] **T6: Field system, `defineDocument` and the render model** (M)
+  - Done 2026-09-24. Checked: `pnpm check`, `pnpm test:coverage` (300 tests + type tests; `packages/documents/src` at 100% lines, branches, functions and statements, enforced in CI). fast-check properties: random edits keep the draft valid, every change set can be undone, and render never throws.
+  - Decisions (after an adversarial design review; details in ADR-0003):
+    - **Three schemas per field** (complete, draft, change), each with `.meta({ title, description })`. Meta doesn't carry over to derived schemas, and the AI tools read it.
+    - **Object fields take partial changes; `null` removes a part.** The merged value is what gets checked, so an undo can clear parts an AI change filled.
+    - **Undo is compare-and-set.** Each inverse change carries the value it expects, so an undo never overwrites a newer manual edit. No-op changes are skipped (no empty Undo in chat).
+    - **Cross-field rules sit on the draft schema, after `exactPartial`.** Zod throws when `exactPartial` meets a refined object. The complete schema reuses them.
+    - **Courts are a location inside the governing-law state**, so "court must match the state" holds by construction.
+    - **Party = company, name, title, email, address**, as in the spec. A complete party needs an email or a postal address (the NDA's "Notice Address").
+    - **A linked term may read several fields** ("Notice Address" → each party's email). The standard terms keep their words; the rendered linked term carries the values for the hover.
+    - **Money decimals are checked per currency** (from `Intl`), capped at 1e12. **Percent** and hours/weeks/business-day durations were added for the SLA and BAA terms.
+    - **Dates are formatted by hand**, not with `Date`/`Intl`, so no time zone shifts a day and the Worker matches the browser.
+    - **`src/zod.ts` sets `jitless` before any schema is built.** A lint rule bans importing `"zod"` directly in the package.
+    - **One type assertion, `typed()`**, for schemas built at runtime from options and fields. The type tests prove the stated types match.
+    - **Definitions carry a `version`** so T13 can store it and migrate old drafts.
+    - **Deferred: multi-select choice.** The spec lists "single or multiple". No template needs multiple yet; T8–T11 add it if one does.
+    - **`dequal/lite`** (300 B) for value equality, instead of a hand-rolled one.
   - Accept:
     - Field builders (`text`, `longText`, `party`, `date`, `duration`, `money`, `choice`, `jurisdiction`). Each holds a Zod schema with its label and help text in `.meta()`, plus an optional default. There is a draft schema (`.exactPartial()`) and a complete schema. A test checks that `z.toJSONSchema` keeps the label and help text for the AI tools.
     - `render(definition, values) → RenderedDocument`. A missing value renders as a placeholder, and a linked term renders the value of its field.
     - `applyFieldChanges(values, changes) → {values, applied, rejected, inverse}` validates the changes and returns their inverse for undo. Property tests with fast-check.
   - Verify: `pnpm --filter documents test:coverage` shows 100% lines and branches.
-  - Files: `packages/documents/src/{fields.ts,define.ts,render.ts,changes.ts}`, `test/*.test.ts`
+  - Files: `packages/documents/src/{fields.ts,define.ts,render.ts,changes.ts,tree.ts,zod.ts,index.ts}`, `test/*.test.ts`, `test/*.test-d.ts`, `docs/adr/0002-*.md`, `docs/adr/0003-*.md`
   - Deps: T5 · Also: ADR-0002 (the Worker entry), ADR-0003 (the document engine). ADR-0001 is the browser-test decision from T3.
 
 - [ ] **T7: Mutual NDA definition (official cover page)** (S)
