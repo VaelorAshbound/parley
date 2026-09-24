@@ -71,3 +71,29 @@ Before this was built, a fresh-context reviewer attacked the design (doubt-drive
 - Changing a field's shape needs a definition `version` bump and a migration of stored drafts (T13 stores the version).
 - A new field kind (for example EU member states for the DPA) is an addition to `fields.ts`, with its own tests.
 - Placeholders are plain strings in the model; each output (React, HTML, DOCX) escapes its own text (T12).
+
+## Update: field kinds for the official cover pages (T7b, 2026-09-24)
+
+Research found that Common Paper publishes an official cover page for every document (`work/PAR-1/cover-research/`), and the owner chose to mirror them with full fidelity. That needed more field kinds.
+
+- **New kinds:**
+  - `number`
+  - `select` (EU member states)
+  - `url`
+  - `choices` (multi-select)
+  - `list` (records, printed as a table)
+  - `group` (named answers, printed as a checklist)
+- **Choice options can hold several named blanks.**
+- **Jurisdictions take a US state or a region,** with courts in the same place or named in full.
+- **The cover page layout gains part headings, value templates, a declarative `when`, and signature rows per document.**
+
+A second fresh-context review, of the T7b design, found 19 issues before the rest was built. The ones that changed the engine:
+
+- each field declares whether a change merges parts or replaces the value (undo no longer guesses from its shape);
+- derived parts (a party's `notice`) sit apart from stored parts;
+- every value has one canonical stored shape, so no-op edits are skipped;
+- blanks in a label are checked against their fields when a document is defined;
+- conditions are data, not functions, so rendering can't throw;
+- decimals are counted exactly.
+
+Lists are replaced whole on change: they are short, and undo stays compare-and-set.

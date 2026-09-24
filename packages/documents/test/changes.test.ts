@@ -2,7 +2,7 @@ import fc from "fast-check"
 import { describe, expect, it } from "vite-plus/test"
 
 import { applyFieldChanges } from "../src/changes.ts"
-import { nda } from "./fixtures.ts"
+import { annexDocument, nda } from "./fixtures.ts"
 
 const definition = nda()
 
@@ -246,6 +246,47 @@ describe("applyFieldChanges, for any edits", () => {
             result.values,
             result.inverse
           )
+
+          expect(undone.values).toEqual(start)
+          expect(undone.rejected).toEqual([])
+        }
+      )
+    )
+  })
+})
+
+describe("undo, for lists and groups", () => {
+  const annex = annexDocument()
+  const text = fc.option(fc.constantFrom("AWS", "EU", "", "AES-256."))
+  const edit = fc.oneof(
+    fc.record({
+      key: fc.constant("subprocessors"),
+      value: fc.option(
+        fc.array(
+          fc.record({ name: text, country: text }, { requiredKeys: [] }),
+          {
+            maxLength: 3,
+          }
+        )
+      ),
+    }),
+    fc.record({
+      key: fc.constant("measures"),
+      value: fc.option(
+        fc.record({ encryption: text, access: text }, { requiredKeys: [] })
+      ),
+    })
+  )
+
+  it("restores the values before any edits", () => {
+    fc.assert(
+      fc.property(
+        fc.array(edit, { maxLength: 5 }),
+        fc.array(edit, { maxLength: 5 }),
+        (setup, edits) => {
+          const start = applyFieldChanges(annex, {}, setup).values
+          const result = applyFieldChanges(annex, start, edits)
+          const undone = applyFieldChanges(annex, result.values, result.inverse)
 
           expect(undone.values).toEqual(start)
           expect(undone.rejected).toEqual([])

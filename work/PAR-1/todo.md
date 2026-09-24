@@ -138,7 +138,24 @@
   - Files: `packages/documents/src/definitions/{mutual-nda.ts,index.ts}`, `test/{definitions.test.ts,examples.ts}`, `scripts/build.ts` (catalog)
   - Deps: T6
 
-- [ ] **T7b: Field kinds for the official cover pages** (M) *(added 2026-09-24, owner: full fidelity)*
+- [x] **T7b: Field kinds for the official cover pages** (M) *(added 2026-09-24, owner: full fidelity)*
+  - Done 2026-09-24. Checked: `pnpm test:coverage` (434 tests, 100%), fast-check undo properties now also over lists and groups. A second adversarial review (of the T7b design) found 19 issues; 17 fixed, 1 accepted as a trade-off, 1 dropped from the design (ADR-0003, "Update").
+  - Added:
+    - **Kinds:** `number`, `select` (the EU member states), `url`, `choices` (multi-select, exclusive "None", Other), `list` (records, printed as a table), `group` (named answers, printed as a checklist).
+    - **Choice:** named `blanks` beside `{value}`, checked against the label when defined; draft-shaped defaults; the Other line always prints.
+    - **Existing kinds:**
+      - jurisdiction: US state or region; `usOnly` for "the State of"; `courts: "anywhere"`;
+      - duration: minutes, quarters, calendar days, and per-field units;
+      - percent: set decimals;
+      - party: derived `notice`.
+    - **Layout:** part headings, value templates, a declarative `when`, and per-document signature rows.
+  - Decisions:
+    - **Every field says how a change applies** (`merges: "whole" | "parts"`), and derived parts sit apart from stored ones, so undo and forms never guess.
+    - **One canonical stored shape per meaning** (choices sorted, empty items dropped, empty means not filled), so no-op edits never make an Undo.
+    - **Lists are replaced whole** (accepted trade-off): they're short, and undo stays compare-and-set.
+    - **No hover hiding for empty optional fields:** placeholders always show, since rules can make an optional field required.
+    - **`src/fields.ts` split into `src/fields/*`** once it passed ~800 lines.
+    - **No version bump:** nothing is stored yet, so the NDA stays version 1. Versions count from launch.
   - Accept:
     - `choice` options can hold several named blanks (`"the greater of {amount} or {multiplier}× the fees…"`).
     - New kinds: `choices` (multi-select, with an exclusive "None", "Other", and per-option blanks), `number`, `select` (a named list rendered as one value, like the EU member states), `list` (records like subprocessors: name, country, task), and `group` (named text answers, like the DPA's security measures).
