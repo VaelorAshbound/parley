@@ -25,9 +25,17 @@ describe.each(Object.entries(definitions))("%s", (id, definition) => {
 
   it("renders a full example with no placeholder left", () => {
     const rendered = render(definition, example)
-    const parts = rendered.coverPage.sections.flatMap((section) =>
-      section.lines.flatMap((line) => line.parts)
-    )
+    // Unpicked options and an unused Other line keep their blanks, as on
+    // Common Paper's forms; everything that is shown as chosen must be filled.
+    const parts = rendered.coverPage.sections.flatMap((section) => [
+      ...section.lines
+        .filter((line) => line.checked !== false)
+        .flatMap((line) => line.parts),
+      ...(section.table?.rows.flat() ?? []).map((cell): Part => ({
+        type: "value",
+        ...cell,
+      })),
+    ])
     const signed = rendered.coverPage.signatures.flatMap((block) =>
       block.rows.flatMap((row) => (row.value ? [row.value] : []))
     )
