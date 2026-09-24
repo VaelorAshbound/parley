@@ -86,16 +86,17 @@ export function DraftWorkspace({
           if (meta.isUserInteraction && next.document !== 0)
             writeCookie(layoutCookie, JSON.stringify(next))
         }}
-        className="min-h-0 flex-1"
+        // On a phone only the open tab's panel shows, at full width. These
+        // rules sit on the group because a Panel's className lands on its
+        // inner div, not on the flex item that holds its size (v4).
+        className={cn(
+          "min-h-0 flex-1 max-md:*:data-panel:!flex-[1_1_0%]",
+          tab === "document"
+            ? "max-md:[&>#chat]:!hidden"
+            : "max-md:[&>#document]:!hidden"
+        )}
       >
-        <ResizablePanel
-          id="chat"
-          minSize={isMobile ? undefined : 360}
-          className={cn(
-            "max-md:!flex-[1_1_0%]",
-            tab === "document" && "max-md:hidden"
-          )}
-        >
+        <ResizablePanel id="chat" minSize={isMobile ? undefined : 360}>
           <ChatColumn title={title} panelOpen={panelOpen} />
         </ResizablePanel>
         <ResizableHandle className="max-md:hidden" />
@@ -113,10 +114,6 @@ export function DraftWorkspace({
                 search: (prev) => ({ ...prev, panel: "closed" }),
               })
           }}
-          className={cn(
-            "max-md:!flex-[1_1_0%]",
-            tab === "chat" && "max-md:hidden"
-          )}
         >
           <DocumentPanel name={documentName} />
         </ResizablePanel>

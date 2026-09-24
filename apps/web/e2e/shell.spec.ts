@@ -111,6 +111,10 @@ test("on a phone, chat and document are two tabs", async ({ page }) => {
   await expect(document).toBeVisible()
   await expect(chat).toBeHidden()
   await expect(page).toHaveURL(/tab=document/)
+  // Each tab uses the whole width (the hidden pane's panel took 45%, T16).
+  expect((await document.boundingBox())?.width).toBe(375)
+  await page.getByRole("button", { name: "Chat" }).click()
+  expect((await chat.boundingBox())?.width).toBe(375)
 })
 
 test("loading a draft doesn't shift the layout", async ({ page }) => {
