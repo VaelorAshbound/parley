@@ -117,6 +117,84 @@ export const examples = {
     publicityRights: { selected: [{ option: "nonPublic" }] },
     otherChanges: "Notices by email must copy notices@harborhealth.test.",
   },
+  "software-license-agreement": {
+    provider: {
+      company: "Quill Robotics, Inc.",
+      name: "Quinn Adeyemi",
+      title: "Chief Revenue Officer",
+      email: "legal@quill.test",
+    },
+    customer: {
+      company: "Meridian Foods GmbH",
+      name: "Mara Vogel",
+      title: "Head of Plant Operations",
+      email: "einkauf@meridian.test",
+      address: "Hafenstrasse 12, 20457 Hamburg, Germany",
+    },
+    software:
+      "Quill Vision 4, the on-premises inspection software for packing lines, with its Documentation",
+    orderDate: { option: "custom", value: "2026-11-01" },
+    subscriptionPeriod: { amount: 12, unit: "months" },
+    fees: "EUR 48,000 per Subscription Period for up to 6 packing lines, plus EUR 6,000 per extra line.",
+    feeTerms: {
+      selected: [
+        { option: "increaseUpTo", value: 5 },
+        { option: "includeTaxes" },
+      ],
+    },
+    paymentProcess: {
+      option: "invoice",
+      value: {
+        frequency: { option: "annually" },
+        days: { amount: 30, unit: "days" },
+        from: { option: "receipt" },
+      },
+    },
+    autoRenewal: { option: "notice", value: { amount: 60, unit: "days" } },
+    permittedUses: { option: "withAffiliates" },
+    additionalPermittedUses:
+      "Running the Software on inspection cameras that Meridian's contract packers operate for Meridian.",
+    licenseLimits: "Up to 6 packing lines in the European Union.",
+    warrantyPeriod: {
+      option: "fromUpdates",
+      value: { amount: 90, unit: "days" },
+    },
+    deletionProcedure: {
+      selected: [
+        { option: "disableKeys" },
+        { option: "uninstall" },
+        { option: "certify" },
+      ],
+      other: "Customer will delete all local model files within 30 days.",
+    },
+    complianceVerification: { option: "standard" },
+    services:
+      "Email support on business days, 9:00 to 17:00 CET, and quarterly on-site tuning.",
+    orderFormChanges: "Section 1.6 applies to major versions too.",
+    effectiveDate: { option: "lastSignature" },
+    governingLaw: {
+      region: "Ontario, Canada",
+      courtLocation: "Toronto, Ontario",
+    },
+    providerCoveredClaims: { option: "standard" },
+    customerCoveredClaims: { option: "standard" },
+    generalCapAmount: { option: "multiple", value: 1 },
+    increasedClaims: { selected: [{ option: "confidentiality" }] },
+    increasedCapAmount: {
+      option: "greater",
+      value: { amount: { amount: 500000, currency: "EUR" }, multiple: 3 },
+    },
+    unlimitedClaims: {
+      selected: [{ option: "indemnification" }, { option: "licenseBreach" }],
+    },
+    providerWarranties:
+      "The Software does not contain any code that sends Customer data outside Customer's network.",
+    customerWarranties:
+      "Customer will run the Software only on hardware that meets the Documentation.",
+    dpa: "Not needed: the Software processes no personal data.",
+    otherChanges:
+      "Notices must also be sent by email to both notice addresses.",
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
