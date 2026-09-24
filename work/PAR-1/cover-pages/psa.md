@@ -47,8 +47,10 @@ One closing and one signature table cover both parts.
    said out loud (brief rule). "Drafts and Acceptance" only shows when there
    are Deliverables; the two periods only show when acceptance applies.
 4. **Time of Assignment is required**, even when there are no Deliverables.
-   Left empty, §2.1 would never pass ownership to Customer. The engine can't
-   require it only when Deliverables exist, so it is always asked; with no
+   Left empty, §2.1 would never pass ownership to Customer. A "complete"-phase
+   rule could now require it only when there are Deliverables, but the
+   official page always shows this row, and an empty one would print as a
+   placeholder on a signed SOW. So it stays always required; with no
    Deliverables it simply has no effect.
 5. **Third-Party Materials:** the official radio plus two checkboxes became
    five radio options built only from official sentences. Required, since
@@ -75,7 +77,14 @@ One closing and one signature table cover both parts.
 12. **Payment Period and Invoice Period** are free text on the official page.
     Here they are choices built from its examples ("30 days from Customer's
     receipt of invoice"; "month, quarter, upon acceptance, after each
-    milestone") plus Other, so any official answer still fits.
+    milestone") plus Other, so any official answer still fits. They stay
+    choices, not `field.select`: a select has no Other, and the official
+    blank is free text.
+13. **Required when (checked on a complete document only).** Rejection Period
+    and Resubmission Period are required once "subject to the acceptance
+    process" is picked; Increased Cap Amount is required once there is any
+    Increased Claim (Other counts). The rules run only in the "complete"
+    phase, so a draft can be filled in any order.
 
 ## Deviations from the official page
 
@@ -97,19 +106,18 @@ One closing and one signature table cover both parts.
 - The signature table starts with a Company row, since the official header
   "PROVIDER: [official company name]" has no place in the engine.
 
-## Engine gaps (reported, not changed)
+## Engine gaps
 
-1. **No "required only when…"**: rules also run on drafts, so Rejection and
-   Resubmission Period (when acceptance applies) and Increased Cap Amount (when
-   there are Increased Claims) are optional. An empty one still prints its
-   placeholder, so it is visible, but `markComplete` won't catch it.
-2. **A section holds one field**, so a value line and its checkboxes can't
+Fixed in the engine (8b78a29 and earlier), and used here:
+
+- **"Required only when…":** rules know their phase. See judgment call 13.
+- **Part hints print** in the HTML and DOCX output.
+- **Any definition is a `DocumentDefinition`:** the tests loop over the
+  registry with no cast.
+
+Still open:
+
+1. **A section holds one field**, so a value line and its checkboxes can't
    share a heading (Deliverables, Security Policy, Insurance).
-3. **Part hints don't print** in the HTML or DOCX output ("The key business
-   terms of this SOW are as follows:"). They are kept in the definition.
-4. **No prose between parts**: the "USING THIS AGREEMENT" paragraph sits in the
+2. **No prose between parts**: the "USING THIS AGREEMENT" paragraph sits in the
    intro, before the SOW, not between the SOW and the Key Terms.
-5. **No type for "any definition"**: `DocumentDefinition<Fields>` can't hold a
-   real definition (its party keys become `never`), so a loop over two or more
-   definitions fits no generic call. The tests now use one widened list,
-   `registered` in `test/examples.ts`.

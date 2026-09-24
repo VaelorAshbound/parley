@@ -177,6 +177,7 @@ export const psa = defineDocument({
         },
       },
     }),
+    // Both periods are required once acceptance applies (see the rules).
     rejectionPeriod: field.duration({
       label: "Rejection period",
       help: "How long Customer has to reject a submitted Deliverable.",
@@ -189,8 +190,8 @@ export const psa = defineDocument({
       optional: true,
       units: ["days", "businessDays", "weeks", "months"],
     }),
-    // Required even with no Deliverables: left empty, Customer would never
-    // own the Deliverables, and the engine can't require it only sometimes.
+    // Always required, not only with Deliverables: the official page always
+    // shows this row, and a blank would print as a placeholder.
     timeOfAssignment: field.choice({
       label: "Time of assignment",
       help: "When Customer becomes the owner of the Deliverables.",
@@ -688,7 +689,7 @@ export const psa = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const provider = company(values.provider?.company)
     if (
@@ -710,6 +711,28 @@ export const psa = defineDocument({
       issue(
         "unlimitedClaims",
         "A claim can be an Increased Claim or an Unlimited Claim, not both."
+      )
+
+    // "Required when" rules wait for a complete document, so a draft can be
+    // filled in any order.
+    if (phase === "draft") return
+    const acceptance = values.deliverableTerms?.selected.some(
+      (pick) => pick.option === "acceptance"
+    )
+    if (acceptance && !values.rejectionPeriod)
+      issue(
+        "rejectionPeriod",
+        "Acceptance applies, so set the Rejection Period."
+      )
+    if (acceptance && !values.resubmissionPeriod)
+      issue(
+        "resubmissionPeriod",
+        "Acceptance applies, so set the Resubmission Period."
+      )
+    if (values.increasedClaims && !values.increasedCapAmount)
+      issue(
+        "increasedCapAmount",
+        "There are Increased Claims, so set their Increased Cap Amount."
       )
   },
 })
