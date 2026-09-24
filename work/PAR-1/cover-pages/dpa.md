@@ -57,7 +57,26 @@ Optional:
 - **UK Transfers:** a blank falls back to the UK Addendum's own default
   (England and Wales).
 - **The subprocessor table, the safeguards, and the described measures:**
-  they only show when their option is picked. See engine gap 2.
+  they only show when their option is picked, and are required then (see
+  "Required when" below).
+
+## Required when (checked on a complete document only)
+
+These rules run in the "complete" phase, so a draft can be filled in any
+order. `markComplete` and export catch the blank.
+
+- **Special Category Data Restrictions or Safeguards** when Special Category
+  Data is Yes. The official drafting note: "If “Yes” is selected above,
+  identify the safeguards…". GDPR needs them.
+- **The subprocessor table** when "The Subprocessors listed below" is picked.
+  Otherwise Annex III would be empty.
+- **Described Security Measures** (at least one of the 17) when "The measures
+  described below" is picked.
+- **Each party's postal address.** SCC Annex I(A) asks for it, and the
+  official page has an "Address" line for both. A draft still needs only an
+  email or an address, like every party.
+- **DPA Covered Claim** when there is a DPA Liability Cap: the cap is for "DPA
+  Covered Claims", so with "None" it caps nothing (was judgment call 8).
 
 ## Judgment calls (a lawyer should look)
 
@@ -84,11 +103,17 @@ Optional:
    committee wording ("(1) Provider's breach…"). The engine can't set a
    default for one option alone without picking that option. The example uses
    the committee wording.
-8. **DPA Liability Cap without a DPA Covered Claim** means nothing. There's no
-   rule for it, because a rule would block editing the fields in either order.
+8. **A DPA Liability Cap needs a DPA Covered Claim.** A complete DPA with a
+   cap and "None" as the covered claim is rejected: the cap would cap nothing.
 
 ## Deviations from the official page
 
+- **Pick lists become selects.** Three official rows are one fill-in pick,
+  printed as the name picked: "EEA Transfers: [ Select an EU Member State ]",
+  "UK Transfers: [ Select Laws of England and Wales; Scotland; or Northern
+  Ireland ]" and "Role: [ Pick one: Controller | Processor ]". So they are
+  `field.select`. Special Category Data stays a choice: the page shows two
+  radio buttons, "( ) Yes ( ) No", as its own row.
 - **Checkboxes become one choice or several.** The official page uses
   checkboxes. Rows that allow several picks use `field.choices`: Security
   Policy, the categories, Frequency, Nature, the safeguards, and Annex II.
@@ -125,30 +150,19 @@ Optional:
 
 ## Engine gaps (for the lead)
 
-1. **`field.select` can't be used in a definition.** Its `options` are strings,
-   but `AnyField.options` expects choice options, so TypeScript rejects it.
-   Workaround: `field.choice`. The Member State options are built from
-   `EU_MEMBER_STATES`, and in a `lines` row a choice still prints on one line.
-   Also used for Customer's role and UK Transfers. Fix: rename select's
-   `options`, or widen `AnyField`. Then switch these three back.
-2. **No "required when".** Rules also run on drafts, and a rule issue rejects
-   the edit. So "safeguards are required when Special Category Data is Yes"
-   would block picking Yes before the safeguards are written. The same holds
-   for the subprocessor table (when "listed") and the described measures (when
-   "described"). These stay optional. The preview shows their placeholders, but
-   markComplete won't catch a blank. GDPR needs the safeguards when Yes. Fix:
-   rules that run only on complete documents, or `requiredWhen` on a field.
-3. **A party's postal address can't be required.** Annex I(A) needs one, but
-   the party kind needs only an email or an address. Same cause as gap 2.
-4. **The registry can't be iterated generically.** With two or more
-   definitions, `render`, `coverage` and `initialValues` can't infer `F` from
-   the union. `DocumentDefinition<F>` doesn't widen to `DocumentDefinition`:
-   `PartyKey<Fields>` is `never`, and `rules` is contravariant. The app will
-   hit this too (render a document by id). Workaround, test-only:
-   `test/each-definition.ts` visits each definition with its own types. A
-   mapped type over `DocumentId` makes a new document fail to compile until it
-   is listed there. Fix in `define.ts`, for example a covariant
-   `AnyDocumentDefinition`.
+Fixed in the engine (8b78a29 and earlier), and now used here:
+
+1. **`field.select` works in a definition.** The Governing Member State
+   (`EU_MEMBER_STATES`), UK Transfers and Customer's role are selects now.
+2. **Rules know their phase.** The "required when" rules above run only on a
+   complete document, so they don't block a half-filled draft.
+3. **A party's postal address can be required** by the same kind of rule
+   (Annex I(A)).
+4. **Any definition is a `DocumentDefinition`.** Tests loop over the registry
+   with no cast.
+
+Still open:
+
 5. **Hidden values stay stored.** A value on a hidden row (like safeguards
    after switching to "No") stays in the draft and shows on the linked term's
    hover.

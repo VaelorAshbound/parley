@@ -413,8 +413,8 @@ export const examples = {
     },
     governingLaw: { option: "none" },
     serviceProviderRelationship: { option: "serviceProvider" },
-    governingMemberState: { option: "IE" },
-    ukTransfers: { option: "englandWales" },
+    governingMemberState: "IE",
+    ukTransfers: "englandWales",
     customer: {
       company: "Lumen Clinics GmbH",
       name: "Lena Vogel",
@@ -422,7 +422,7 @@ export const examples = {
       email: "privacy@lumen.test",
       address: "Torstraße 12, 10119 Berlin, Germany",
     },
-    customerRole: { option: "controller" },
+    customerRole: "controller",
     provider: {
       company: "Northwind Health Analytics, Inc.",
       name: "Omar Haddad",

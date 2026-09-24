@@ -203,26 +203,21 @@ export const dpa = defineDocument({
     }),
 
     // --- Restricted Transfers ---
-    // A choice, not `field.select`: a select's string options don't fit
-    // `AnyField`, so no definition can hold one yet (engine gap, see notes).
-    governingMemberState: field.choice({
+    // Each line on the official page is one fill-in pick ("[ Select an EU
+    // Member State ]"), so a select, printed as the name picked.
+    governingMemberState: field.select({
       label: "Governing member state",
       help: "The EU country whose law and courts govern the EU transfer clauses.",
-      options: Object.fromEntries(
-        Object.entries(EU_MEMBER_STATES).map(([code, name]) => [
-          code,
-          { label: name },
-        ])
-      ),
+      options: EU_MEMBER_STATES,
     }),
-    ukTransfers: field.choice({
+    ukTransfers: field.select({
       label: "UK transfers",
       help: "The UK law and courts for the UK transfer addendum.",
       optional: true,
       options: {
-        englandWales: { label: "Laws of England and Wales" },
-        scotland: { label: "Laws of Scotland" },
-        northernIreland: { label: "Laws of Northern Ireland" },
+        englandWales: "Laws of England and Wales",
+        scotland: "Laws of Scotland",
+        northernIreland: "Laws of Northern Ireland",
       },
     }),
 
@@ -231,13 +226,11 @@ export const dpa = defineDocument({
       label: "Customer",
       help: "The data exporter: the company whose personal data Provider processes.",
     }),
-    customerRole: field.choice({
+    // "Role: [ Pick one: Controller | Processor ]": one pick in a blank.
+    customerRole: field.select({
       label: "Customer's role",
       help: "Controller if Customer owns the data; Processor if it handles it for another.",
-      options: {
-        controller: { label: "Controller" },
-        processor: { label: "Processor" },
-      },
+      options: { controller: "Controller", processor: "Processor" },
     }),
     provider: field.party({
       label: "Provider",
@@ -628,10 +621,49 @@ export const dpa = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const first = company(values.provider?.company)
     if (first !== undefined && first === company(values.customer?.company))
       issue("customer", "The two parties must be different companies.")
+
+    // "Required when" rules wait for a complete document, so a draft can be
+    // filled in any order.
+    if (phase === "draft") return
+    if (
+      values.specialCategoryData?.option === "yes" &&
+      !values.specialCategorySafeguards
+    )
+      issue(
+        "specialCategorySafeguards",
+        "Special category data is processed, so name its safeguards."
+      )
+    if (
+      values.approvedSubprocessors?.option === "listed" &&
+      !values.subprocessors
+    )
+      issue(
+        "subprocessors",
+        "List each Approved Subprocessor, or link to a list."
+      )
+    const described = values.securityMeasures?.selected.some(
+      (pick) => pick.option === "described"
+    )
+    if (
+      described &&
+      !Object.values(values.securityMeasureDetails ?? {}).some(Boolean)
+    )
+      issue("securityMeasureDetails", "Describe at least one security measure.")
+    // SCC Annex I(A) asks for each party's address.
+    if (!values.customer?.address)
+      issue("customer", "Add Customer's postal address for Annex I(A).")
+    if (!values.provider?.address)
+      issue("provider", "Add Provider's postal address for Annex I(A).")
+    // The cap is for DPA Covered Claims; with none, it caps nothing.
+    if (
+      values.liabilityCap?.option !== "none" &&
+      values.coveredClaim?.option === "none"
+    )
+      issue("liabilityCap", "A DPA liability cap needs a DPA covered claim.")
   },
 })
