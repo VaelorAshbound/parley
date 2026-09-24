@@ -1,3 +1,4 @@
+import type { ChangeIssue } from "@workspace/documents"
 import { createContext, useContext, useState } from "react"
 import { createStore, useStore, type StoreApi } from "zustand"
 
@@ -6,16 +7,31 @@ import { createStore, useStore, type StoreApi } from "zustand"
 // many users' pages, and a module-level store would leak between them.
 // Server data lives in TanStack Query; shareable state lives in the URL.
 
+/**
+ * A save the server refused, kept so the editor can open again with what
+ * was typed and why it was refused (T16).
+ */
+export type Refused = {
+  draftId: string
+  fieldKey: string
+  inputs: Record<string, string>
+  issues: ChangeIssue[]
+}
+
 type UiState = {
   /** The document field the chat or the editor points at. */
   highlightedField: string | null
   highlightField: (field: string | null) => void
+  refused: Refused | null
+  setRefused: (refused: Refused | null) => void
 }
 
 export function createUiStore() {
   return createStore<UiState>()((set) => ({
     highlightedField: null,
     highlightField: (field) => set({ highlightedField: field }),
+    refused: null,
+    setRefused: (refused) => set({ refused }),
   }))
 }
 

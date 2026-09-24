@@ -65,6 +65,8 @@ function DraftPage() {
     <DraftWorkspace
       title={draft.title}
       documentName={documentName(draft.documentId)}
+      draft={draft}
+      editing={search.field}
       panelOpen={search.panel !== "closed"}
       tab={search.tab ?? "chat"}
       layout={layout}

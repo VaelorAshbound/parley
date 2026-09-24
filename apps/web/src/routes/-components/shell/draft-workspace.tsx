@@ -11,7 +11,7 @@ import {
   ToggleGroupItem,
 } from "@workspace/ui/components/toggle-group"
 import { cn } from "@workspace/ui/lib/utils"
-import { useEffect } from "react"
+import { useEffect, type ComponentProps } from "react"
 import { usePanelRef, type Layout } from "react-resizable-panels"
 
 import { writeCookie } from "@/lib/cookies"
@@ -30,12 +30,16 @@ export const defaultLayout: Layout = { chat: 45, document: 55 }
 export function DraftWorkspace({
   title,
   documentName,
+  draft,
+  editing,
   panelOpen,
   tab,
   layout,
 }: {
   title: string
   documentName: string
+  draft: ComponentProps<typeof DocumentPanel>["draft"]
+  editing: string | undefined
   panelOpen: boolean
   tab: "chat" | "document"
   layout: Layout
@@ -115,7 +119,7 @@ export function DraftWorkspace({
               })
           }}
         >
-          <DocumentPanel name={documentName} />
+          <DocumentPanel name={documentName} draft={draft} editing={editing} />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

@@ -13,3 +13,19 @@ test("each store starts empty and keeps its own state", () => {
   expect(first.getState().highlightedField).toBe("governingLaw")
   expect(second.getState().highlightedField).toBeNull()
 })
+
+test("keeps a refused save until it is taken back", () => {
+  const store = createUiStore()
+  const refused = {
+    draftId: "d1",
+    fieldKey: "party1",
+    inputs: { "party1/email": "ana@acme.test" },
+    issues: [{ path: ["email"], message: "Taken." }],
+  }
+
+  store.getState().setRefused(refused)
+  expect(store.getState().refused).toEqual(refused)
+
+  store.getState().setRefused(null)
+  expect(store.getState().refused).toBeNull()
+})

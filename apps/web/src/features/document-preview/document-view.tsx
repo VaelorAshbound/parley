@@ -203,6 +203,7 @@ function Section({
         section.lines.map((line, index) => (
           <EditButton
             key={index}
+            field={firstValue(line.parts)}
             label={line.parts
               .flatMap((part) => (part.type === "value" ? [spoken(part)] : []))
               .join("; ")}
@@ -213,6 +214,7 @@ function Section({
         ))
       ) : (
         <EditButton
+          field={field}
           label={section.heading}
           onEdit={(path) => onEdit(path ?? field)}
         >
@@ -233,10 +235,13 @@ function firstValue(parts: Part[]) {
  */
 function EditButton({
   label,
+  field,
   onEdit,
   children,
 }: {
   label: string
+  /** The field it edits, where focus returns when its editor closes. */
+  field: string | undefined
   onEdit: (path: string | undefined) => void
   children: ReactNode
 }) {
@@ -244,6 +249,7 @@ function EditButton({
   return (
     <button
       type="button"
+      data-edit={field}
       aria-label={`Edit ${label}`}
       aria-describedby={id}
       onClick={(event) => {
@@ -261,6 +267,7 @@ function EditButton({
 function Line({ line }: { line: RenderedLine }) {
   return (
     <span
+      data-unchosen={line.checked === false ? "" : undefined}
       className={cn(
         "flex items-baseline gap-2",
         line.checked === false && "opacity-42"
@@ -331,7 +338,7 @@ function Signatures({
   const { parties, rows } = document.coverPage.signatures
   if (parties.length === 0) return null
   return (
-    <table className="font-sans text-[0.86em]">
+    <table className="w-full font-sans text-[0.86em]">
       <thead>
         <tr>
           <td>
@@ -355,6 +362,7 @@ function Signatures({
                 {cell && (
                   <button
                     type="button"
+                    data-edit={cell.field}
                     aria-label={`Edit ${spoken(cell)}`}
                     onClick={() => onEdit(cell.field)}
                     className="hover:bg-hover -mx-1 cursor-text rounded-sm px-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"

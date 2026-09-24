@@ -86,7 +86,8 @@ export function FieldEditor({
   useEffect(() => {
     const root = container.current
     if (!root) return
-    const wanted = focus?.replace(".", "/")
+    // A party's notice address is its email or postal address: start there.
+    const wanted = focus?.replace(/\.notice$/, ".email").replace(".", "/")
     const target =
       (wanted &&
         root.querySelector<HTMLElement>(`[id="${CSS.escape(wanted)}"]`)) ||

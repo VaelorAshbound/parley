@@ -18,7 +18,7 @@ export const PartyFields = withFieldGroup({
   render: function Render({ group }) {
     return (
       <FieldGroup>
-        <div className="grid gap-4 @md/field-group:grid-cols-2">
+        <div className="grid gap-4 @sm/field-group:grid-cols-2">
           <group.AppField name="company">
             {(field) => (
               <field.TextField
