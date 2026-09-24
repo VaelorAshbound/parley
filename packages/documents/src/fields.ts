@@ -165,8 +165,8 @@ const MONTHS = [
  * print the same words.
  */
 function formatDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number)
-  return `${MONTHS[(month ?? 1) - 1]} ${day}, ${year}`
+  const month = MONTHS[Number(value.slice(5, 7)) - 1]
+  return `${month} ${Number(value.slice(8, 10))}, ${value.slice(0, 4)}`
 }
 
 function date(config: Common<string> & { defaultToday?: boolean }) {
@@ -215,16 +215,20 @@ function duration(config: Common<Duration>) {
 
 const CURRENCIES = new Set(Intl.supportedValuesOf("currency"))
 
+/** How many decimals a currency uses: USD 2, JPY 0, KWD 3. */
 function decimalsOf(currency: string) {
-  return new Intl.NumberFormat("en-US", {
+  const fraction = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-  }).resolvedOptions().maximumFractionDigits
+  })
+    .formatToParts(1)
+    .find((part) => part.type === "fraction")
+  return fraction?.value.length ?? 0
 }
 
 /** True when `value` has no more than `digits` decimals (float-safe). */
-function hasDecimals(value: number, digits: number | undefined) {
-  const scaled = value * 10 ** (digits ?? 0)
+function hasDecimals(value: number, digits: number) {
+  const scaled = value * 10 ** digits
   return Math.abs(scaled - Math.round(scaled)) < 1e-6
 }
 
@@ -303,10 +307,11 @@ function typed<T>(schema: z.ZodType): z.ZodType<T> {
 /** Not generic, so TypeScript can narrow on `option`. */
 function formatChoice(
   options: ChoiceOptions,
-  choice: { option: string; value?: unknown; text?: string }
+  choice: { option: string; text: string } | { option: string; value?: unknown }
 ) {
-  if (choice.option === "other") return choice.text ?? null
+  if ("text" in choice) return choice.text
   const option = options[choice.option]
+  // An old draft can hold an option a later version of the document dropped.
   if (!option) return null
   const nested =
     choice.value !== undefined && option.with

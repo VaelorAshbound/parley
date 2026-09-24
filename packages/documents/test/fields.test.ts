@@ -74,6 +74,12 @@ describe("text", () => {
 })
 
 describe("longText", () => {
+  it("formats as the value", () => {
+    expect(kinds.longText.format("Line one\nLine two")).toBe(
+      "Line one\nLine two"
+    )
+  })
+
   it("keeps line breaks and allows 2,000 characters", () => {
     const value = `First line\nSecond line${"x".repeat(1970)}`
 
@@ -221,6 +227,20 @@ describe("choice", () => {
     )
   })
 
+  it("replaces the whole choice on a change, and null clears it", () => {
+    expect(
+      term.merge({ option: "untilTerminated" }, { option: "fixed" })
+    ).toEqual({ option: "fixed" })
+    expect(term.merge({ option: "fixed" }, null)).toBeUndefined()
+  })
+
+  it("shows nothing for an option the document no longer has", () => {
+    // An old draft saved before a new version of the document dropped it.
+    const stale = { option: "forever" } as unknown as { option: "fixed" }
+
+    expect(term.format(stale)).toBeNull()
+  })
+
   it("refuses an option named 'other', which the Other answer uses", () => {
     expect(() =>
       field.choice({
@@ -258,6 +278,10 @@ describe("jurisdiction", () => {
     expect(law.schema.safeParse({ ...delaware, state: "XX" }).success).toBe(
       false
     )
+  })
+
+  it("shows no courts until their location is set", () => {
+    expect(law.formatPath({ state: "DE" }, "courtLocation")).toBeNull()
   })
 
   it("allows a half-filled value while drafting", () => {
