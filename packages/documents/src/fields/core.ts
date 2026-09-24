@@ -204,6 +204,15 @@ export function plainText(max: number) {
     )
 }
 
+/**
+ * A schema's own message for a wrong value, while a missing value falls
+ * through to the package-wide "Fill this in." (src/zod.ts).
+ */
+export function unlessMissing(message: string) {
+  return (issue: { input?: unknown }) =>
+    issue.input === undefined ? undefined : message
+}
+
 /** A field's text for a value that may be missing. */
 export function display(field: AnyField, value: unknown) {
   return value === undefined ? null : field.format(value)

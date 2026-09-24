@@ -1,5 +1,11 @@
 import { typed, z } from "../zod.ts"
-import { hasDecimals, plainText, scalar, type Common } from "./core.ts"
+import {
+  hasDecimals,
+  plainText,
+  scalar,
+  type Common,
+  unlessMissing,
+} from "./core.ts"
 
 // --- Text ---
 
@@ -42,7 +48,7 @@ export function date(config: Common<string> & { defaultToday?: boolean }) {
   const field = scalar(
     "date",
     config,
-    z.iso.date("Use a real date, like 2026-09-24."),
+    z.iso.date({ error: unlessMissing("Use a real date, like 2026-09-24.") }),
     formatDate
   )
   return { ...field, defaultToday: config.defaultToday ?? false }
@@ -176,7 +182,9 @@ export function select<const O extends Record<string, string>>(
   config: Common<keyof O & string> & { options: O }
 ) {
   const schema = typed<keyof O & string>(
-    z.enum(Object.keys(config.options), "Pick one of the options.")
+    z.enum(Object.keys(config.options), {
+      error: unlessMissing("Pick one of the options."),
+    })
   )
   return {
     ...scalar("select", config, schema, (code) => config.options[code] ?? null),
@@ -187,7 +195,11 @@ export function select<const O extends Record<string, string>>(
 export function url(config: Common<string>) {
   const message = "Use a full https:// link."
   const schema = z
-    .url({ protocol: /^https$/, hostname: z.regexes.domain, error: message })
+    .url({
+      protocol: /^https$/,
+      hostname: z.regexes.domain,
+      error: unlessMissing(message),
+    })
     .max(500, "Keep the link under 500 characters.")
     // A link printed in a contract: no "https:host" shorthand, no passwords.
     .refine((value) => {

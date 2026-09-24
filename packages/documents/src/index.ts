@@ -1,5 +1,7 @@
 // The document engine's public API. The parser (src/parse) is build-time only
-// and not exported; the app reads the typed trees in generated/.
+// and not exported; the app reads the typed trees in generated/. The outputs
+// are separate entry points, "@workspace/documents/docx" and "/print", so
+// importing the engine doesn't load the `docx` library.
 export { applyFieldChanges } from "./changes.ts"
 export type {
   AppliedChange,
@@ -29,10 +31,6 @@ export type {
   Money,
   StateCode,
 } from "./fields.ts"
-export { toDocx } from "./output/docx.ts"
-export type { DocxOptions } from "./output/docx.ts"
-export { toPrintHtml } from "./output/html.ts"
-export type { PrintOptions } from "./output/html.ts"
 export { render } from "./render.ts"
 export type {
   Part,

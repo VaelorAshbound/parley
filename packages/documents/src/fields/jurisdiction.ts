@@ -1,5 +1,11 @@
 import { z } from "../zod.ts"
-import { mergeParts, plainText, withMeta, type ObjectField } from "./core.ts"
+import {
+  mergeParts,
+  plainText,
+  withMeta,
+  type ObjectField,
+  unlessMissing,
+} from "./core.ts"
 
 // --- Jurisdiction ---
 
@@ -57,7 +63,7 @@ const stateCode = z.enum(
     "WI",
     "WY",
   ],
-  "Pick a US state."
+  { error: unlessMissing("Pick a US state.") }
 )
 export type StateCode = z.infer<typeof stateCode>
 

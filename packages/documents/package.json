@@ -4,8 +4,13 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./docx": "./src/output/docx.ts",
+    "./print": "./src/output/html.ts"
   },
+  "sideEffects": [
+    "./src/zod.ts"
+  ],
   "scripts": {
     "prepare": "node scripts/build.ts",
     "build": "node scripts/build.ts"

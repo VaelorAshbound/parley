@@ -1,7 +1,8 @@
 import { env } from "cloudflare:workers"
 import { describe, expect, it } from "vitest"
 
-import { definitions, render, toPrintHtml } from "@workspace/documents"
+import { definitions, render } from "@workspace/documents"
+import { toPrintHtml } from "@workspace/documents/print"
 
 // Real Browser Run: turns the engine's print HTML into a PDF. It costs a few
 // seconds of browser time, so it runs only in `pnpm test:workers:real`.

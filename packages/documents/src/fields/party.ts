@@ -5,6 +5,7 @@ import {
   withMeta,
   type Common,
   type ObjectField,
+  unlessMissing,
 } from "./core.ts"
 
 // --- Party ---
@@ -13,7 +14,9 @@ const partyParts = {
   company: plainText(200),
   name: plainText(200),
   title: plainText(200),
-  email: z.email("Use a real email address.").max(254),
+  email: z
+    .email({ error: unlessMissing("Use a real email address.") })
+    .max(254),
   address: plainText(500),
 }
 

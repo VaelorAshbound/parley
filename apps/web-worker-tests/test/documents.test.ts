@@ -1,7 +1,9 @@
 import JSZip from "jszip"
 import { describe, expect, it } from "vitest"
 
-import { definitions, render, toDocx, toPrintHtml } from "@workspace/documents"
+import { definitions, render } from "@workspace/documents"
+import { toDocx } from "@workspace/documents/docx"
+import { toPrintHtml } from "@workspace/documents/print"
 
 // The document engine inside workerd, the runtime that will export drafts
 // (T24). This is where `new Function` is blocked, so Zod must be jitless.

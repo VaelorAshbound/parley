@@ -82,3 +82,15 @@ function forbiddenInXml(xml: string) {
   }
   return found
 }
+
+describe("a missing required field", () => {
+  it("says to fill it in, not 'Invalid input'", () => {
+    const { issues = [] } =
+      definitions["mutual-nda"].schema.safeParse({}).error ?? {}
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(new Set(issues.map((issue) => issue.message))).toEqual(
+      new Set(["Fill this in."])
+    )
+  })
+})
