@@ -11,6 +11,17 @@ import type { Clause, Inline, StandardTerms } from "../src/parse/schema.ts"
 
 const files = readCatalog().map((entry) => entry.filename)
 
+it("generates the catalog, keyed by template id", async () => {
+  const generated: { default: unknown } =
+    await import("../generated/catalog.ts")
+
+  expect(generated.default).toEqual(
+    Object.fromEntries(
+      readCatalog().map((entry) => [templateId(entry.filename), entry])
+    )
+  )
+})
+
 describe.each(files)("%s", (file) => {
   const markdown = readTemplate(file)
   const tree =

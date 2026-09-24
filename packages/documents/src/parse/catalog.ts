@@ -17,6 +17,8 @@ const catalogSchema = z.array(
   })
 )
 
+export type CatalogEntry = z.infer<typeof catalogSchema>[number]
+
 export function readCatalog() {
   return catalogSchema.parse(
     JSON.parse(readFileSync(new URL("catalog.json", root), "utf8"))

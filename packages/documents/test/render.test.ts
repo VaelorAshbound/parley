@@ -197,8 +197,10 @@ describe("render: cover page", () => {
       coverPage: {
         source: "parley",
         title: "Test NDA",
+        subtitle: undefined,
         intro: [],
         closing: [],
+        footer: [],
       },
     })
   })
@@ -227,6 +229,7 @@ describe("render: edge cases", () => {
         sections: [{ heading: "Payment", field: "payment" }],
         closing: [],
         signatures: [],
+        footer: [],
       },
     })
 

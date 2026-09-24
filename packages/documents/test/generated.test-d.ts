@@ -2,6 +2,7 @@ import { expectTypeOf, test } from "vite-plus/test"
 
 import aiAddendum from "../generated/ai-addendum.ts"
 import baa from "../generated/baa.ts"
+import catalog from "../generated/catalog.ts"
 import csa from "../generated/csa.ts"
 import designPartnerAgreement from "../generated/design-partner-agreement.ts"
 import dpa from "../generated/dpa.ts"
@@ -33,4 +34,5 @@ test("every generated template has its schema's type", () => {
   ])
     expectTypeOf(template).toEqualTypeOf<StandardTerms>()
   expectTypeOf(mutualNdaCoverpage).toEqualTypeOf<CoverPage>()
+  expectTypeOf(catalog["mutual-nda"].name).toBeString()
 })

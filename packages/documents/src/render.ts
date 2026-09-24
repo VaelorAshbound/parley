@@ -76,10 +76,12 @@ export type RenderedDocument = {
   coverPage: {
     source: "official" | "parley"
     title: string
+    subtitle: string | undefined
     intro: RenderedInline[][]
     sections: { heading: string; hint?: string; lines: RenderedLine[] }[]
     closing: RenderedInline[][]
     signatures: RenderedSignature[]
+    footer: RenderedInline[][]
   }
   standardTerms: RenderedStandardTerms
 }
@@ -140,6 +142,7 @@ export function render<F extends Fields>(
     coverPage: {
       source: definition.coverPage.source,
       title: definition.coverPage.title,
+      subtitle: definition.coverPage.subtitle,
       intro: definition.coverPage.intro.map(inline),
       sections: definition.coverPage.sections.map(
         ({ heading, hint, ...body }) => ({
@@ -160,6 +163,7 @@ export function render<F extends Fields>(
         })
       ),
       closing: definition.coverPage.closing.map(inline),
+      footer: definition.coverPage.footer.map(inline),
       signatures: definition.coverPage.signatures.map((key) =>
         signature(key, fields[key]?.label ?? key, show)
       ),

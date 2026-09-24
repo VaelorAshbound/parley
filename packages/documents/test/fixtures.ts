@@ -106,6 +106,7 @@ export function nda() {
       ],
       closing: [],
       signatures: ["party1", "party2"],
+      footer: [],
     },
     rules: (values, issue) => {
       if (

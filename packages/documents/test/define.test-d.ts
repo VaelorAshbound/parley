@@ -22,7 +22,13 @@ const fields = {
 }
 type Fields = typeof fields
 
-const layout = { source: "parley" as const, title: "T", intro: [], closing: [] }
+const layout = {
+  source: "parley" as const,
+  title: "T",
+  intro: [],
+  closing: [],
+  footer: [],
+}
 
 test("field paths reach object parts and nothing else", () => {
   expectTypeOf<FieldPath<Fields>>().toEqualTypeOf<

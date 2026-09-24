@@ -122,13 +122,20 @@
   - Files: `packages/documents/src/{fields.ts,define.ts,render.ts,changes.ts,tree.ts,zod.ts,index.ts}`, `test/*.test.ts`, `test/*.test-d.ts`, `docs/adr/0002-*.md`, `docs/adr/0003-*.md`
   - Deps: T5 · Also: ADR-0002 (the Worker entry), ADR-0003 (the document engine). ADR-0001 is the browser-test decision from T3.
 
-- [ ] **T7: Mutual NDA definition (official cover page)** (S)
+- [x] **T7: Mutual NDA definition (official cover page)** (S)
+  - Done 2026-09-24. Checked: `pnpm test:coverage` (313 tests, 100%). The NDA covers all 6 linked terms and uses all 8 fields. The full example renders with no placeholder, and a printout of the rendered cover page reads like Common Paper's official one.
+  - Decisions:
+    - **Wording is tested against the parsed official cover page:** title, subtitle, section headings, hints, choice wording (the official `[1 year(s)]` slot is `{value}`), line labels and signature rows. The intro, the "By signing…" closing and the CC BY 4.0 line are sliced from the parsed page, not copied.
+    - **The cover page layout gained `subtitle` and `footer`**, so the "USING THIS…" heading and the attribution after the signature table have a place (the review's finding 4).
+    - **`generated/catalog.ts`** (typed, keyed by template id) gives each definition its catalog name.
+    - **One cross-field rule:** the two parties can't be the same company (case and spacing ignored). The spec's "confidentiality term can't be shorter than required" has no firm source in the NDA's terms, so it is not a rule.
+    - **Shared examples** in `test/examples.ts`: T8–T11 add one per document, and T12 snapshots them.
   - Accept:
     - The NDA fields match the official cover page: purpose, effective date, MNDA term, confidentiality term, governing law + jurisdiction, modifications, and 2 parties.
     - The coverage test passes: every linked term in `Mutual-NDA.md` is filled by a field, and every field is used.
     - A fully filled example renders with no placeholders left.
   - Verify: `pnpm --filter documents test`
-  - Files: `packages/documents/src/definitions/mutual-nda.ts`, `test/definitions.test.ts`
+  - Files: `packages/documents/src/definitions/{mutual-nda.ts,index.ts}`, `test/{definitions.test.ts,examples.ts}`, `scripts/build.ts` (catalog)
   - Deps: T6
 
 - [ ] **T8: Cover pages: CSA, SLA, AI Addendum** (M)

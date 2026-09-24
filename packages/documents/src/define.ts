@@ -46,11 +46,15 @@ export type CoverPageLayout<F extends Fields> = {
   /** "official": Common Paper's own cover page; "parley": written by us. */
   source: "official" | "parley"
   title: string
+  /** A heading under the title, like the NDA's "USING THIS …". */
+  subtitle?: string
   intro: Inline[][]
   sections: CoverSection<F>[]
-  /** Paragraphs after the sections, the attribution among them. */
+  /** Paragraphs between the sections and the signatures. */
   closing: Inline[][]
   signatures: PartyKey<F>[]
+  /** Paragraphs after the signatures: the CC BY 4.0 attribution. */
+  footer: Inline[][]
 }
 
 type Config<F extends Fields> = {
