@@ -373,6 +373,103 @@ export const examples = {
       address: "200 Bay St, Toronto, ON M5J 2J1, Canada",
     },
   },
+  dpa: {
+    agreement:
+      "Cloud Service Agreement between Northwind Health Analytics, Inc. and Lumen Clinics GmbH, dated October 1, 2026",
+    approvedSubprocessors: { option: "listed" },
+    subprocessors: [
+      {
+        name: "Stratus Cloud Hosting, Inc.",
+        country: "United States, Germany",
+        task: "Hosting and storage of the Service",
+      },
+      {
+        name: "Parcel Mail Ltd.",
+        country: "Ireland",
+        task: "Sending account emails",
+      },
+    ],
+    providerSecurityContact: "security@northwind.test",
+    securityPolicy: {
+      selected: [
+        { option: "online", value: "https://northwind.test/security" },
+        {
+          option: "certifications",
+          value: {
+            selected: [{ option: "iso27001" }, { option: "soc2Type2" }],
+            other: "Annual third-party penetration test",
+          },
+        },
+      ],
+    },
+    coveredClaim: {
+      option: "otherAgreement",
+      value:
+        "(1) Provider’s breach or alleged breach of the DPA, or (2) Provider’s gross negligence or willful misconduct, in each case, that results in a Security Incident.",
+    },
+    liabilityCap: {
+      option: "otherAgreement",
+      value: { amount: { amount: 1000000, currency: "USD" }, multiple: 3 },
+    },
+    governingLaw: { option: "none" },
+    serviceProviderRelationship: { option: "serviceProvider" },
+    governingMemberState: { option: "IE" },
+    ukTransfers: { option: "englandWales" },
+    customer: {
+      company: "Lumen Clinics GmbH",
+      name: "Lena Vogel",
+      title: "Data Protection Officer",
+      email: "privacy@lumen.test",
+      address: "Torstraße 12, 10119 Berlin, Germany",
+    },
+    customerRole: { option: "controller" },
+    provider: {
+      company: "Northwind Health Analytics, Inc.",
+      name: "Omar Haddad",
+      title: "General Counsel",
+      email: "legal@northwind.test",
+      address: "500 Howard St, San Francisco, CA 94105",
+    },
+    service: "Northwind Patient Insights",
+    dataSubjectCategories: {
+      selected: [{ option: "endUsers" }, { option: "employees" }],
+      other: "Patients of Customer’s clinics",
+    },
+    personalDataCategories: {
+      selected: [
+        { option: "name" },
+        { option: "contact" },
+        { option: "activity" },
+      ],
+      other: "Appointment history",
+    },
+    specialCategoryData: { option: "yes" },
+    specialCategorySafeguards: {
+      selected: [{ option: "securityPolicy" }],
+      other:
+        "Health data is encrypted with per-customer keys and only named support staff can access it.",
+    },
+    transferFrequency: { selected: [{ option: "continuous" }] },
+    processingNature: {
+      selected: [
+        { option: "receiving" },
+        { option: "holding" },
+        { option: "using" },
+        { option: "protecting" },
+        { option: "erasing" },
+      ],
+    },
+    processingDuration: { option: "standard" },
+    supervisoryAuthority: { option: "dataExporter" },
+    securityMeasures: {
+      selected: [{ option: "securityPolicy" }, { option: "described" }],
+    },
+    securityMeasureDetails: {
+      inTransit: "All traffic uses TLS 1.2 or newer.",
+      atRest: "Databases and backups use AES-256 encryption.",
+      restoration: "Daily backups are kept for 30 days and restored in tests.",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
