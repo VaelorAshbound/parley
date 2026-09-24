@@ -150,13 +150,27 @@
   - Files: `packages/documents/src/definitions/<doc>.ts` (×2–3), `work/PAR-1/cover-pages.md`
   - Deps: T7 · The four tasks can run in parallel.
 
-- [ ] **T12: Output builders: print HTML + DOCX** (M)
+- [x] **T12: Output builders: print HTML + DOCX** (M)
+  - Done 2026-09-24 (built before T8–T11, which only add definitions). Checked:
+    - `scripts/ci-build.sh` end to end: 343 tests, 100% coverage, workerd tests, build.
+    - `pnpm test:workers:real`: the NDA's print HTML → real Browser Run → a valid 5-page PDF.
+    - The NDA printed to PDF in Chromium with the brand fonts and looked at page by page.
+    - The NDA's DOCX passes the OOXML schema validation (docx skill) and reads back cleanly with python-docx.
+  - Snapshots run over the definitions registry, so T8–T11 get HTML and DOCX snapshots on their own. **Still open for the owner:** a look at the DOCX in Word. LibreOffice isn't on this machine, so I couldn't render it; the structure was checked instead.
+  - Decisions:
+    - **Clause numbers live in the render model** ("1.", "1.1", "a.", "i."), so the preview, PDF and DOCX can't disagree.
+    - **The caller passes the fonts as `@font-face` CSS** (data URLs). Browser Run has none, and a local dev server can't serve it any (T2). The engine stays free of I/O.
+    - **Drawn SVG checkboxes in the PDF**, because Browser Run's fonts may lack ☒/☐. The DOCX uses the ☒/☐ characters in Segoe UI Symbol, since Word has them.
+    - **Page size and margins come from the CSS `@page` rule** (`preferCSSPageSize`), with "Page X of Y" and the document name in the margin boxes.
+    - **"By signing…" stays with the signature table, and the last clause stays with the closing attribution** (`break-inside: avoid`), so no line is left alone on a page.
+    - **The DOCX uses Georgia, not Newsreader**, because Word users almost never have Newsreader. It overrides the built-in Heading 1–3 styles, so Word's outline still works.
+    - **The T2 spike routes are gone.** The workerd test now runs the real engine (Zod jitless, DOCX), and the real Browser Run test prints the engine's HTML.
   - Accept:
     - `toPrintHtml(rendered)` makes a self-contained, print-styled HTML page (A4/Letter, page numbers, attribution footer).
     - `toDocx(rendered)` makes a DOCX with real headings, numbered clauses and a table for the cover page. It runs in workerd.
     - Snapshot tests exist for all 12 documents, fully filled.
   - Verify: `pnpm --filter documents test` + a Worker test that builds and parses the DOCX. A manual look at 3 documents in Word/LibreOffice.
-  - Files: `packages/documents/src/output/{html.ts,docx.ts,print.css}`, `test/output.test.ts`
+  - Files: `packages/documents/src/output/{html.ts,docx.ts}`, `test/output-{html,docx}.test.ts`, `test/__outputs__/*`, `apps/web-worker-tests/test/{documents.test.ts,pdf.real.test.ts}`
   - Deps: T6, T2 (for the go/no-go on the approach)
 
 ### Checkpoint 1

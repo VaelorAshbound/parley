@@ -8,6 +8,8 @@ export type {
   RejectedChange,
 } from "./changes.ts"
 export { coverage, defineDocument, initialValues } from "./define.ts"
+export { definitions } from "./definitions/index.ts"
+export type { DocumentId } from "./definitions/index.ts"
 export type {
   CoverPageLayout,
   CoverSection,

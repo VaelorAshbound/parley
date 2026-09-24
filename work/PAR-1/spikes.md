@@ -54,7 +54,7 @@ The live files check out the same way: a 3-page tagged PDF, and a DOCX with 12 p
 ### Still open
 
 - [x] Deployed check (see above).
-- [ ] The spike routes are public and not rate-limited. They must be removed before launch (T12 replaces them). They are safe until then because the Worker is not deployed.
+- [x] The spike routes were public and not rate-limited. Removed in T12 (2026-09-24); the workerd and real Browser Run tests now run the real document engine.
 - Note: the script is `pnpm run deploy`. Plain `pnpm deploy` is a built-in pnpm command (spec §3 fixed).
 
 ## T3: the full test stack in Workers Builds

@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.2.0",
+    "@workspace/documents": "workspace:*",
     "jszip": "^3.10.1",
     "typescript": "catalog:",
     "vitest": "~4.1.11",

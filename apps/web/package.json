@@ -16,7 +16,6 @@
     "@tanstack/react-router": "^1.170.0",
     "@tanstack/react-start": "^1.168.0",
     "@workspace/ui": "workspace:*",
-    "docx": "^9.7.1",
     "hono": "^4.13.8",
     "lucide-react": "^1.47.0",
     "react": "^19.2.6",
