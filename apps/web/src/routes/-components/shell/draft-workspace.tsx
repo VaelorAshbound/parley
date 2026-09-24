@@ -18,9 +18,7 @@ import { writeCookie } from "@/lib/cookies"
 
 import { ChatColumn } from "./chat-column"
 import { DocumentPanel } from "./document-panel"
-
-export const layoutCookie = "draft_layout"
-export const defaultLayout: Layout = { chat: 45, document: 55 }
+import { layoutCookie } from "./layout"
 
 /**
  * Chat and document side by side, resizable, on desktop; two tabs on a phone

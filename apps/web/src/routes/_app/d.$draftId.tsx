@@ -7,11 +7,8 @@ import { z } from "zod"
 import { readCookie } from "@/lib/cookies"
 import { documentName } from "@/lib/documents"
 
-import {
-  defaultLayout,
-  DraftWorkspace,
-  layoutCookie,
-} from "../-components/shell/draft-workspace"
+import { DraftWorkspace } from "../-components/shell/draft-workspace"
+import { defaultLayout, layoutCookie } from "../-components/shell/layout"
 
 // Only the non-default states are in the URL, so links stay clean:
 // /d/:id?panel=closed&tab=document&field=governingLaw (spec §5 Routing).
