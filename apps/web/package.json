@@ -15,7 +15,10 @@
   "dependencies": {
     "@orpc/client": "1.15.4",
     "@orpc/server": "1.15.4",
+    "@orpc/tanstack-query": "1.15.4",
+    "@tanstack/react-query": "^5.103.2",
     "@tanstack/react-router": "^1.170.0",
+    "@tanstack/react-router-ssr-query": "^1.167.3",
     "@tanstack/react-start": "^1.168.0",
     "@workspace/db": "workspace:*",
     "@workspace/documents": "workspace:*",
@@ -25,7 +28,10 @@
     "lucide-react": "^1.47.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "zod": "^4.6.5"
+    "react-resizable-panels": "^4.13.2",
+    "temporal-polyfill": "^1.0.5",
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

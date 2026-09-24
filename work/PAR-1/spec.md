@@ -311,7 +311,7 @@ Route tree (file-based, nested where the UI nests):
 ```
 src/routes/
 ├─ __root.tsx                  html shell, head/meta, root ErrorComponent + NotFoundComponent
-├─ _app.tsx                    pathless layout: the three-pane shell (sidebar). beforeLoad makes sure a session exists (a guest if needed)
+├─ _app.tsx                    pathless layout: the three-pane shell (sidebar). beforeLoad reads the viewer (who is signed in, or null); the first action that needs a session (starting a draft) makes a guest in the browser, so bots never create users and T27's Turnstile gets a real user gesture (T15)
 ├─ _app/index.tsx              /                 new draft (empty state)
 ├─ _app/d.$draftId.tsx         /d/:draftId       chat + live document
 ├─ _app/_authed.tsx            pathless guard: guests get redirect({ to: "/sign-in", search: { redirect } })
@@ -331,7 +331,7 @@ src/routes/
 
 Rules:
 
-- **Router context.** `createRouter({ context: { queryClient, orpc, session } })` is set at the root. Loaders and components read from the context and never import clients directly.
+- **Router context.** `createRouter({ context: { queryClient, orpc } })` is set at the root, and `_app`'s `beforeLoad` adds `viewer` (id, name, isAnonymous: no tokens) from a server function, cached in Query for 5 minutes. The oRPC client is isomorphic: in-process during SSR (with the page request's cookies, refreshed cookies copied to the response), `RPCLink` in the browser (T15). Loaders and components read from the context and never import clients directly.
 - **Data.** Loaders call `queryClient.ensureQueryData(orpc.….queryOptions())`, and components read with `useSuspenseQuery`, using the official TanStack Query integration. Caching belongs to Query, so the router's `defaultPreloadStaleTime` is `0`. Independent loads run in parallel. Slow data that isn't critical is streamed with React 19 `use()`, not `<Await>`.
 - **Typed URL state.** Search params are checked with Zod v4 schemas passed straight to `validateSearch`, with `.catch()` for fallbacks. With Zod v4, the docs say no `@tanstack/zod-adapter` and no `fallback()` are needed, and the types stay intact. Examples:
   - `/d/$draftId?panel=open|closed&tab=chat|document&field=governingLaw`

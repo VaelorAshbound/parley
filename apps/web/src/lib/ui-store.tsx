@@ -1,0 +1,35 @@
+import { createContext, useContext, useState } from "react"
+import { createStore, useStore, type StoreApi } from "zustand"
+
+// Client-only UI state (spec §5 Zustand rules). One store per app instance,
+// made in a provider, never at module scope: on Workers one isolate renders
+// many users' pages, and a module-level store would leak between them.
+// Server data lives in TanStack Query; shareable state lives in the URL.
+
+type UiState = {
+  /** The document field the chat or the editor points at. */
+  highlightedField: string | null
+  highlightField: (field: string | null) => void
+}
+
+export function createUiStore() {
+  return createStore<UiState>()((set) => ({
+    highlightedField: null,
+    highlightField: (field) => set({ highlightedField: field }),
+  }))
+}
+
+const UiStoreContext = createContext<StoreApi<UiState> | null>(null)
+
+export function UiStoreProvider({ children }: { children: React.ReactNode }) {
+  const [store] = useState(createUiStore)
+  return (
+    <UiStoreContext.Provider value={store}>{children}</UiStoreContext.Provider>
+  )
+}
+
+export function useUiStore<T>(selector: (state: UiState) => T) {
+  const store = useContext(UiStoreContext)
+  if (!store) throw new Error("useUiStore needs a UiStoreProvider")
+  return useStore(store, selector)
+}

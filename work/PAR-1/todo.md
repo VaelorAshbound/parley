@@ -268,7 +268,21 @@
   - Files: `apps/web/src/server/{app.ts,auth.ts,rpc/router.ts,rpc/drafts.ts}`, `test/auth-matrix.test.ts`
   - Deps: T13, T6 · Skills: `better-auth-best-practices`, `cloudflare:workers-best-practices`, `api-and-interface-design`
 
-- [ ] **T15: App shell: three panes, responsive** (M)
+- [x] **T15: App shell: three panes, responsive** (M)
+  - Done 2026-09-24. Skills: incremental-implementation, test-driven-development, source-driven-development, frontend-ui-engineering; shadcn. Checked:
+    - 14 Playwright tests on the dev server (Chromium): home, first visit → guest → draft, sidebar history, panel close/reload/open, keyboard-only start, not-found draft, phone tabs, **CLS 0** (PerformanceObserver on reload), screenshots at 1440/1024/375.
+    - Looked at light, dark, desktop and the phone drawer against the design canvas.
+    - Gate green; no server code in the client bundle.
+  - Decisions:
+    - **Guests are made on the first action, not in `_app` `beforeLoad`**: bots would create users, and T27's Turnstile needs a user gesture. Spec updated.
+    - **One DOM for desktop and phone**, switched by CSS breakpoints, so SSR matches the browser; the sidebar and panel sizes come from cookies read on the server. Panel limits and collapse only apply above 768 px.
+    - **Navigation controls are real links** styled with `buttonVariants`, not buttons with a link inside.
+    - **Guest sign-in waits and retries on 429** (3 per 10 s per IP; offices share IPs). E2E tests share one guest per worker.
+    - **`html[data-hydrated]`** marks the page interactive for tests; clicks before hydration were lost in tests.
+    - **The draft page shows the short document name** from the app list, which keeps the engine out of its chunk until T16 needs it.
+    - **Store leak check**: a unit test for per-provider stores plus a lint rule banning zustand `create`, instead of a workerd SSR test (Start's server entry is a Vite virtual module the workerd runner can't load).
+    - **Later tasks**: component tests in browser mode start with T16's interactive parts; search, date groups and draft actions T22; account menu T21/T23; Share/Download T24/T25; expand to full width T16. **T35**: the entry chunk is 156 KB gzip with Zod in it (route search schemas).
+    - Local Playwright can use an installed Chromium via `PLAYWRIGHT_CHROMIUM_PATH` (the CDN was unreachable here); CI installs its own.
   - Accept:
     - The shell is built from shadcn `Sidebar` + `Resizable` (spec §5 UI). No hand-built layout parts.
     - The Claude-style layout: a collapsible sidebar, the chat column, and a resizable document panel that you can close. On a phone, a drawer and two tabs.

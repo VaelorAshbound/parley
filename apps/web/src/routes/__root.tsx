@@ -1,10 +1,22 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
+import type { QueryClient } from "@tanstack/react-query"
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router"
+import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import appCss from "@workspace/ui/globals.css?url"
+import { useEffect } from "react"
 import { fontPreloads } from "@workspace/ui/lib/fonts"
 
-import { ThemeProvider } from "@/components/theme-provider"
+import { NotFound, RouteError } from "./-components/states"
 
-export const Route = createRootRoute({
+import { ThemeProvider } from "@/components/theme-provider"
+import type { Orpc } from "@/lib/orpc"
+
+export type RouterContext = { queryClient: QueryClient; orpc: Orpc }
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -17,16 +29,17 @@ export const Route = createRootRoute({
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
     ],
   }),
-  notFoundComponent: () => (
-    <main className="container mx-auto p-4 pt-16">
-      <h1>Page not found</h1>
-      <p>This page does not exist.</p>
-    </main>
-  ),
+  notFoundComponent: NotFound,
+  errorComponent: RouteError,
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // Marks the page as interactive, so browser tests act after hydration
+  // instead of clicking a button React doesn't handle yet.
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = ""
+  }, [])
   return (
     // The theme script sets a class on <html> before React hydrates.
     <html lang="en" suppressHydrationWarning>
@@ -35,7 +48,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="theme">
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
         <Scripts />
       </body>

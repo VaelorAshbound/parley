@@ -9,54 +9,76 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as DevBrandRouteImport } from './routes/dev.brand'
+import { Route as AppDDraftIdRouteImport } from './routes/_app/d.$draftId'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 const DevBrandRoute = DevBrandRouteImport.update({
   id: '/dev/brand',
   path: '/dev/brand',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppDDraftIdRoute = AppDDraftIdRouteImport.update({
+  id: '/d/$draftId',
+  path: '/d/$draftId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
   '/dev/brand': typeof DevBrandRoute
+  '/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/dev/brand': typeof DevBrandRoute
+  '/': typeof AppIndexRoute
+  '/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/dev/brand': typeof DevBrandRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dev/brand'
+  fullPaths: '/' | '/dev/brand' | '/d/$draftId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dev/brand'
-  id: '__root__' | '/' | '/dev/brand'
+  to: '/dev/brand' | '/' | '/d/$draftId'
+  id: '__root__' | '/_app' | '/dev/brand' | '/_app/' | '/_app/d/$draftId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   DevBrandRoute: typeof DevBrandRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/dev/brand': {
       id: '/dev/brand'
@@ -65,11 +87,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevBrandRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/d/$draftId': {
+      id: '/_app/d/$draftId'
+      path: '/d/$draftId'
+      fullPath: '/d/$draftId'
+      preLoaderRoute: typeof AppDDraftIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
+  AppDDraftIdRoute: typeof AppDDraftIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
+  AppDDraftIdRoute: AppDDraftIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   DevBrandRoute: DevBrandRoute,
 }
 export const routeTree = rootRouteImport

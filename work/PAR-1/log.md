@@ -64,3 +64,6 @@ Next: T13 (DB package: Neon + Hyperdrive; creates cloud resources, so confirm fi
 
 ### 2026-09-24T19:16:59Z
 Demo note done (08c79b6, 8153e9c): 'Parley demo · Not legal advice · Do not use for real agreements' on every PDF/DOCX page (DISCLAIMER constant); lawyer review dropped by owner. T13 done (bd7d203..262e78c): packages/db on real Postgres 18 via embedded-postgres (ADR-0004), 21 DB tests, db:check drift gate. Neon branch 'preview' + Hyperdrive parley/parley-preview (caching off), production migrated. Fixed: embedded-postgres exit hook made failing test runs exit 0. Next: T14 (auth) needs owner sign-off.
+
+### 2026-09-24T19:58:04Z
+T14 done (eef11d7..a082a3c): Better Auth guest sessions + oRPC drafts with owner checks, auth matrix, CSRF/body limits, secrets set (prod + previews). Live Preview read-after-write verified. Fixed a two-Vite-copies bundle bug; CI now boots the bundle. Follow-up PAR-5. Next: T15 app shell.

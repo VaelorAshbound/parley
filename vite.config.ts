@@ -18,6 +18,23 @@ export default defineConfig({
       {
         files: ["apps/web/**", "packages/ui/**"],
         plugins: ["react", "jsx-a11y"],
+        rules: {
+          // A module-level store would be shared by every request an isolate
+          // serves (spec §5 Zustand rules); use createStore in a provider.
+          "no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "zustand",
+                  importNames: ["create", "default"],
+                  message:
+                    "Use createStore in a provider (src/lib/ui-store.tsx).",
+                },
+              ],
+            },
+          ],
+        },
       },
       {
         // Worker tests stay on Vitest 4.1 until @cloudflare/vitest-plugin supports

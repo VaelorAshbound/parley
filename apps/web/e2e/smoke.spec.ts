@@ -1,11 +1,9 @@
 import { expect, test } from "@playwright/test"
 
-test("the home page renders the app name", async ({ page }) => {
+test("the home page renders", async ({ page }) => {
   await page.goto("/")
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Parley" })
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
 })
 
 test("the API answers the health check", async ({ request }) => {
