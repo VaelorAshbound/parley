@@ -67,3 +67,6 @@ Demo note done (08c79b6, 8153e9c): 'Parley demo · Not legal advice · Do not us
 
 ### 2026-09-24T19:58:04Z
 T14 done (eef11d7..a082a3c): Better Auth guest sessions + oRPC drafts with owner checks, auth matrix, CSRF/body limits, secrets set (prod + previews). Live Preview read-after-write verified. Fixed a two-Vite-copies bundle bug; CI now boots the bundle. Follow-up PAR-5. Next: T15 app shell.
+
+### 2026-09-24T20:35:46Z
+Session end (context 70%). Finished: demo note on PDF/DOCX; T13 DB (Neon preview branch, Hyperdrive x2, real PG18 tests, ADR-0004); T14 guest auth + oRPC drafts (auth matrix, CSRF, limits, secrets set, live Preview check); T15 app shell (sidebar, resizable panel, phone tabs, SSR cookies, CLS 0, 14 e2e green in CI). Fixes on the way: exit-code bug from embedded-postgres, two Vite copies breaking the bundle, CI testing a stale Preview. Follow-up PAR-5. Next session: T16 live document preview + field editing via /build (load T16 skills from plan.md). Open for the owner: cross-model review offer for T14 auth (declined or not yet asked); look at the shell on the Preview.
