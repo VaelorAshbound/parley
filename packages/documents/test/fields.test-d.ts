@@ -48,5 +48,7 @@ test("object fields type their parts", () => {
   }>()
   expectTypeOf(party.formatPath)
     .parameter(1)
-    .toEqualTypeOf<"company" | "name" | "title" | "email" | "address">()
+    .toEqualTypeOf<
+      "company" | "name" | "title" | "email" | "address" | "notice"
+    >()
 })

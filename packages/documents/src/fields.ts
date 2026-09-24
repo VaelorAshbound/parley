@@ -19,6 +19,9 @@ export type FieldKind =
   | "choice"
   | "jurisdiction"
   | "party"
+  | "number"
+  | "select"
+  | "url"
 
 export interface Field<
   Kind extends FieldKind = FieldKind,
@@ -51,9 +54,16 @@ export interface ObjectField<
   Kind extends FieldKind,
   Value extends Record<string, unknown>,
   Draft extends Partial<Value>,
+  /** Parts that are read, never stored, like a party's "notice". */
+  Derived extends string = never,
 > extends Field<Kind, Value, Draft, NullableParts<Value>> {
-  readonly subfields: { readonly [K in keyof Value & string]: string }
-  formatPath(value: Draft, part: keyof Value & string): string | null
+  readonly subfields: {
+    readonly [K in (keyof Value & string) | Derived]: string
+  }
+  formatPath(
+    value: Draft,
+    part: (keyof Value & string) | Derived
+  ): string | null
 }
 
 export type NullableParts<Value> = { [K in keyof Value]?: Value[K] | null }
@@ -188,30 +198,39 @@ function date(config: Common<string> & { defaultToday?: boolean }) {
 // --- Duration ---
 
 const unit = z.enum([
+  "minutes",
   "hours",
   "days",
   "businessDays",
+  "calendarDays",
   "weeks",
   "months",
+  "quarters",
   "years",
 ])
+type Unit = z.infer<typeof unit>
 const UNITS = {
+  minutes: ["minute", "minutes"],
   hours: ["hour", "hours"],
   days: ["day", "days"],
   businessDays: ["business day", "business days"],
+  calendarDays: ["calendar day", "calendar days"],
   weeks: ["week", "weeks"],
   months: ["month", "months"],
+  quarters: ["quarter", "quarters"],
   years: ["year", "years"],
-} as const satisfies Record<z.infer<typeof unit>, readonly [string, string]>
+} as const satisfies Record<Unit, readonly [string, string]>
 
-const durationSchema = z.strictObject({
-  amount: z.int().min(1, "At least 1.").max(999, "At most 999."),
-  unit,
-})
+const amount = z.int().min(1, "At least 1.").max(999, "At most 999.")
+const durationSchema = z.strictObject({ amount, unit })
 export type Duration = z.infer<typeof durationSchema>
 
-function duration(config: Common<Duration>) {
-  return scalar("duration", config, durationSchema, ({ amount, unit }) => {
+/** `units` limits the choice where some make no sense (no "5 hours" term). */
+function duration(config: Common<Duration> & { units?: readonly Unit[] }) {
+  const schema = config.units
+    ? z.strictObject({ amount, unit: unit.extract(config.units) })
+    : durationSchema
+  return scalar("duration", config, schema, ({ amount, unit }) => {
     const [one, many] = UNITS[unit]
     return `${amount} ${amount === 1 ? one : many}`
   })
@@ -261,14 +280,88 @@ function money(config: Common<Money>) {
   )
 }
 
-function percent(config: Common<number>) {
+function percent(config: Common<number> & { decimals?: number }) {
+  const decimals = config.decimals ?? 2
   const schema = z
     .number()
     .min(0, "At least 0%.")
     .max(100, "At most 100%.")
-    .refine((value) => hasDecimals(value, 2), "Use at most 2 decimals.")
+    .refine(
+      (value) => hasDecimals(value, decimals),
+      `Use at most ${decimals} decimals.`
+    )
   return scalar("percent", config, schema, (value) => `${value}%`)
 }
+
+/** A plain number, like the "2" in "2x the fees". Whole unless `decimals`. */
+function number(
+  config: Common<number> & { min?: number; max?: number; decimals?: number }
+) {
+  const decimals = config.decimals ?? 0
+  const schema = z
+    .number()
+    .min(config.min ?? 0, `At least ${config.min ?? 0}.`)
+    .max(config.max ?? 1e6, `At most ${config.max ?? 1e6}.`)
+    .refine(
+      (value) => hasDecimals(value, decimals),
+      decimals === 0
+        ? "Use a whole number."
+        : `Use at most ${decimals} decimals.`
+    )
+  return scalar("number", config, schema, String)
+}
+
+/** One pick from a named list, shown as its name (the EU member states). */
+function select<const O extends Record<string, string>>(
+  config: Common<keyof O & string> & { options: O }
+) {
+  const schema = typed<keyof O & string>(
+    z.enum(Object.keys(config.options), "Pick one of the options.")
+  )
+  return {
+    ...scalar("select", config, schema, (code) => config.options[code] ?? null),
+    options: config.options,
+  }
+}
+
+function url(config: Common<string>) {
+  const schema = z.url({
+    protocol: /^https$/,
+    hostname: z.regexes.domain,
+    error: "Use a full https:// link.",
+  })
+  return scalar("url", config, schema, (value) => value)
+}
+
+export const EU_MEMBER_STATES = {
+  AT: "Austria",
+  BE: "Belgium",
+  BG: "Bulgaria",
+  HR: "Croatia",
+  CY: "Cyprus",
+  CZ: "Czechia",
+  DK: "Denmark",
+  EE: "Estonia",
+  FI: "Finland",
+  FR: "France",
+  DE: "Germany",
+  GR: "Greece",
+  HU: "Hungary",
+  IE: "Ireland",
+  IT: "Italy",
+  LV: "Latvia",
+  LT: "Lithuania",
+  LU: "Luxembourg",
+  MT: "Malta",
+  NL: "Netherlands",
+  PL: "Poland",
+  PT: "Portugal",
+  RO: "Romania",
+  SK: "Slovakia",
+  SI: "Slovenia",
+  ES: "Spain",
+  SE: "Sweden",
+} as const
 
 // --- Choice ---
 
@@ -563,6 +656,8 @@ function party(config: Common<never>) {
       title: "Title",
       email: "Email",
       address: "Address",
+      // Derived: where notices go, the email and/or the postal address.
+      notice: "Notice address",
     },
     // Notices go to an email or a postal address (the NDA cover page's
     // "Notice Address"), so a complete party needs at least one.
@@ -591,8 +686,11 @@ function party(config: Common<never>) {
     ),
     merge: mergeParts,
     format: (value) => value.company ?? null,
-    formatPath: (value, part) => value[part] ?? null,
-  } satisfies ObjectField<"party", Value, Draft>
+    formatPath: (value, part) =>
+      part === "notice"
+        ? [value.email, value.address].filter(Boolean).join("\n") || null
+        : (value[part] ?? null),
+  } satisfies ObjectField<"party", Value, Draft, "notice">
 }
 
 export const field = {
@@ -602,6 +700,9 @@ export const field = {
   duration,
   money,
   percent,
+  number,
+  select,
+  url,
   choice,
   jurisdiction,
   party,

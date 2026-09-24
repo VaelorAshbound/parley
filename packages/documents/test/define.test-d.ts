@@ -39,6 +39,7 @@ test("field paths reach object parts and nothing else", () => {
     | "party1.title"
     | "party1.email"
     | "party1.address"
+    | "party1.notice"
   >()
 
   defineDocument({

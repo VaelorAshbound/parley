@@ -269,23 +269,9 @@ function signature(
   return {
     field: key,
     label,
-    rows: SIGNATURE_ROWS.map(([rowLabel, part]) => {
-      if (part === null) return { label: rowLabel, value: null }
-      if (part !== "notice")
-        return { label: rowLabel, value: show(`${key}.${part}`) }
-      // Notices go to an email or a postal address; show whichever are set.
-      const email = show(`${key}.email`)
-      const address = show(`${key}.address`)
-      const text = [email.text, address.text].filter(Boolean).join("\n") || null
-      return {
-        label: rowLabel,
-        value: {
-          field: key,
-          label: `${label}: Notice address`,
-          text,
-          placeholder: `[${label}: Notice address]`,
-        },
-      }
-    }),
+    rows: SIGNATURE_ROWS.map(([rowLabel, part]) => ({
+      label: rowLabel,
+      value: part === null ? null : show(`${key}.${part}`),
+    })),
   }
 }
