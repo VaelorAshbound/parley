@@ -21,3 +21,4 @@ packages/documents/generated/
 .claude/worktrees/
 packages/documents/generated.next/
 packages/db/.data/
+.vitest/
