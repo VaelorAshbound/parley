@@ -4,6 +4,7 @@ import type {
   RenderedDocument,
   RenderedInline,
   RenderedLine,
+  RenderedTable,
   RenderedValue,
 } from "../render.ts"
 
@@ -42,7 +43,9 @@ export function toPrintHtml(
       (section) =>
         `<section class="field"><h3>${escape(section.heading)}</h3>${
           section.hint ? `<p class="hint">${escape(section.hint)}</p>` : ""
-        }${section.lines.map(line).join("")}</section>`
+        }${section.lines.map(line).join("")}${
+          section.table ? listTable(section.table) : ""
+        }</section>`
     ),
     // "By signing…" stays on the page with the table it introduces.
     `<div class="signing">${coverPage.closing.map(paragraph).join("")}${signatures(document)}</div>`,
@@ -135,6 +138,14 @@ const BOX_EMPTY =
 const BOX_CHECKED =
   '<svg class="box checked" role="img" aria-label="Selected" viewBox="0 0 12 12"><rect width="12" height="12" rx="2" fill="#2743c4"/><path d="M3 6.2 5.1 8.3 9 3.9" fill="none" stroke="#fdfdff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> '
 
+function listTable({ columns, rows }: RenderedTable) {
+  const head = columns.map((column) => `<th scope="col">${escape(column)}</th>`)
+  const body = rows.map(
+    (row) => `<tr>${row.map((cell) => `<td>${value(cell)}</td>`).join("")}</tr>`
+  )
+  return `<table class="list"><thead><tr>${head.join("")}</tr></thead><tbody>${body.join("")}</tbody></table>`
+}
+
 function signatures({ coverPage }: RenderedDocument) {
   const [first] = coverPage.signatures
   if (!first) return ""
@@ -219,6 +230,9 @@ a { color: inherit; }
 .signatures td { width: 39%; }
 .signatures td.sign { height: 28pt; }
 .attribution { font-size: 8pt; color: #57544c; margin-top: 12pt; }
+.list { width: 100%; border-collapse: collapse; margin: 2pt 0 6pt; }
+.list th { font: 600 8pt var(--sans); color: #57544c; text-align: left; }
+.list th, .list td { border-bottom: 0.5pt solid #e3ded3; padding: 3pt 8pt 3pt 0; vertical-align: top; }
 .terms { break-before: page; }
 .clause { margin-left: 0; }
 .clause .clause { margin-left: 18pt; }

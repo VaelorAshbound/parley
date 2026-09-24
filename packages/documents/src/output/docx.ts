@@ -26,6 +26,7 @@ import type {
   RenderedDocument,
   RenderedInline,
   RenderedLine,
+  RenderedTable,
   RenderedValue,
 } from "../render.ts"
 
@@ -264,7 +265,7 @@ const ROW_BORDER = {
   bottom: { style: BorderStyle.SINGLE, size: 4, color: RULE },
 }
 
-function cell(size: number, children: Paragraph[]) {
+function cell(size: number, children: (Paragraph | Table)[]) {
   return new TableCell({
     width: { size, type: WidthType.DXA },
     borders: ROW_BORDER,
@@ -291,10 +292,42 @@ function coverTable({ coverPage }: RenderedDocument, width: number) {
               }),
               ...(section.hint ? [small(section.hint)] : []),
             ]),
-            cell(right, section.lines.map(line)),
+            cell(right, [
+              ...section.lines.map(line),
+              ...(section.table ? [listTable(section.table, right - 240)] : []),
+            ]),
           ],
         })
     ),
+  })
+}
+
+/** A list field's records, as a table nested in the cover page's cell. */
+function listTable({ columns, rows }: RenderedTable, width: number) {
+  const column = Math.floor(width / columns.length)
+  const label = (text: string) =>
+    new Paragraph({
+      children: [
+        new TextRun({ text, font: SANS, size: 16, bold: true, color: INK_2 }),
+      ],
+    })
+  return new Table({
+    width: { size: column * columns.length, type: WidthType.DXA },
+    columnWidths: columns.map(() => column),
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        children: columns.map((text) => cell(column, [label(text)])),
+      }),
+      ...rows.map(
+        (row) =>
+          new TableRow({
+            children: row.map((shown) =>
+              cell(column, [new Paragraph({ children: value(shown) })])
+            ),
+          })
+      ),
+    ],
   })
 }
 

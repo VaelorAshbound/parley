@@ -66,6 +66,16 @@ export type RenderedLine = {
   parts: Part[]
 }
 
+/** A list field's records: one column per item field, one row per record. */
+export type RenderedTable = { columns: string[]; rows: RenderedValue[][] }
+
+export type RenderedSection = {
+  heading: string
+  hint?: string
+  lines: RenderedLine[]
+  table?: RenderedTable
+}
+
 export type RenderedSignature = {
   field: string
   label: string
@@ -81,7 +91,7 @@ export type RenderedDocument = {
     title: string
     subtitle: string | undefined
     intro: RenderedInline[][]
-    sections: { heading: string; hint?: string; lines: RenderedLine[] }[]
+    sections: RenderedSection[]
     closing: RenderedInline[][]
     signatures: RenderedSignature[]
     footer: RenderedInline[][]
@@ -152,21 +162,22 @@ export function render<F extends Fields>(
       subtitle: definition.coverPage.subtitle,
       intro: definition.coverPage.intro.map(inline),
       sections: definition.coverPage.sections.map(
-        ({ heading, hint, ...body }) => ({
+        ({ heading, hint, ...body }): RenderedSection => ({
           heading,
           hint,
-          lines:
-            "field" in body
-              ? fieldLines(
-                  fields[body.field],
-                  body.field,
-                  valueOf(body.field),
-                  show
-                )
-              : body.lines.map((line) => ({
+          ...("field" in body
+            ? fieldBody(
+                fields[body.field],
+                body.field,
+                valueOf(body.field),
+                show
+              )
+            : {
+                lines: body.lines.map((line) => ({
                   label: line.label,
                   parts: [{ type: "value", ...show(line.field) }],
                 })),
+              }),
         })
       ),
       closing: definition.coverPage.closing.map(inline),
@@ -203,40 +214,81 @@ function renderBlocks(
 }
 
 /**
- * A choice or a multi-select is one checkbox line per option (plus the Other
- * line when it takes one); any other field is one line.
+ * What a field shows on the cover page: a list is a table, a group is a
+ * checklist of its parts, a choice or multi-select is one checkbox line per
+ * option, and anything else is one line.
  */
-function fieldLines(
+function fieldBody(
   field: AnyField | undefined,
   path: string,
   value: unknown,
   show: (path: string) => RenderedValue
-): RenderedLine[] {
+): Pick<RenderedSection, "lines" | "table"> {
+  if (field?.kind === "list" && field.item)
+    return { lines: [], table: listTable(field.item, path, value) }
+  if (field?.kind === "group" && field.subfields)
+    return {
+      lines: Object.entries(field.subfields).map(([part, label]) => {
+        const shown = show(`${path}.${part}`)
+        return {
+          checked: shown.text !== null,
+          label,
+          parts: [{ type: "value", ...shown }],
+        }
+      }),
+    }
   if ((field?.kind !== "choice" && field?.kind !== "choices") || !field.options)
-    return [{ parts: [{ type: "value", ...show(path) }] }]
+    return { lines: [{ parts: [{ type: "value", ...show(path) }] }] }
+  return { lines: choiceLines(field.options, field.allowOther, path, value) }
+}
 
+/** One row per record; an empty list still prints one blank row. */
+function listTable(
+  item: Readonly<Record<string, AnyField>>,
+  path: string,
+  value: unknown
+): RenderedTable {
+  const columns = Object.entries(item)
+  const records = Array.isArray(value) ? value.filter(isRecord) : []
+  const row = (record: Readonly<Record<string, unknown>>) =>
+    columns.map(([key, column]) => ({
+      field: path,
+      label: column.label,
+      text: record[key] === undefined ? null : column.format(record[key]),
+      placeholder: `[${column.label}]`,
+    }))
+  return {
+    columns: columns.map(([, column]) => column.label),
+    rows: (records.length > 0 ? records : [{}]).map(row),
+  }
+}
+
+function choiceLines(
+  options: NonNullable<AnyField["options"]>,
+  allowOther: boolean | undefined,
+  path: string,
+  value: unknown
+): RenderedLine[] {
   const picks = picked(value)
   const other = otherOf(value)
-  const lines: RenderedLine[] = Object.entries(field.options).map(
-    ([key, option]) => {
-      const pick = picks.find((each) => each.option === key)
-      const parts = optionPieces(option).map((piece): Part => {
-        if (piece.type === "text") return { type: "text", text: piece.text }
-        const { label } = piece.field
-        return {
-          type: "value",
-          field: path,
-          label,
-          // Only picked options show their values; the others stay blank.
-          text: pick ? blankText(option, piece.name, pick.value) : null,
-          placeholder: `[${label}]`,
-        }
-      })
-      return { checked: pick !== undefined, parts }
-    }
-  )
+  const lines: RenderedLine[] = Object.entries(options).map(([key, option]) => {
+    const pick = picks.find((each) => each.option === key)
+    const parts = optionPieces(option).map((piece): Part => {
+      if (piece.type === "text") return { type: "text", text: piece.text }
+      const { label } = piece.field
+      return {
+        type: "value",
+        field: path,
+        label,
+        // Only picked options show their values; the others stay blank.
+        text: pick ? blankText(option, piece.name, pick.value) : null,
+        placeholder: `[${label}]`,
+      }
+    })
+    return { checked: pick !== undefined, parts }
+  })
   // Common Paper's pages always print the Other line, filled in or not.
-  if (field.allowOther)
+  if (allowOther)
     lines.push({
       checked: other !== null,
       parts: [
@@ -253,10 +305,10 @@ function fieldLines(
   return lines
 }
 
-type Pick = { option: string; value?: unknown }
+type Picked = { option: string; value?: unknown }
 
 /** The picked options: one for a choice, any number for a multi-select. */
-function picked(value: unknown): Pick[] {
+function picked(value: unknown): Picked[] {
   if (isPick(value)) return [value]
   if (isRecord(value) && Array.isArray(value.selected))
     return value.selected.filter(isPick)
@@ -271,7 +323,7 @@ function otherOf(value: unknown): string | null {
   return typeof value.other === "string" ? value.other : null
 }
 
-function isPick(value: unknown): value is Pick {
+function isPick(value: unknown): value is Picked {
   return isRecord(value) && typeof value.option === "string"
 }
 

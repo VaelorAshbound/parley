@@ -131,3 +131,52 @@ export const complete = {
   },
   party2: { company: "Bolt", name: "Bo", title: "CTO", address: "1 Main St" },
 }
+
+/** A document with a list and a group, for tables and checklists. */
+export function annexDocument() {
+  return defineDocument({
+    id: "annex",
+    version: 1,
+    name: "Annex",
+    template,
+    fields: {
+      subprocessors: field.list({
+        label: "Subprocessors",
+        help: "Who else handles data.",
+        item: {
+          name: field.text({ label: "Name", help: "The company." }),
+          country: field.text({ label: "Country", help: "Where." }),
+        },
+      }),
+      measures: field.group({
+        label: "Security measures",
+        help: "How data is kept safe.",
+        parts: {
+          encryption: field.longText({
+            label: "Encryption",
+            help: "How.",
+            optional: true,
+          }),
+          access: field.longText({
+            label: "Access control",
+            help: "Who.",
+            optional: true,
+          }),
+        },
+      }),
+    },
+    linkedTerms: {},
+    coverPage: {
+      source: "parley",
+      title: "Annex",
+      intro: [],
+      sections: [
+        { heading: "Subprocessors", field: "subprocessors" },
+        { heading: "Security Measures", field: "measures" },
+      ],
+      closing: [],
+      signatures: [],
+      footer: [],
+    },
+  })
+}

@@ -7,6 +7,7 @@ import { parseStandardTerms } from "../src/parse/parse.ts"
 import { toDocx } from "../src/output/docx.ts"
 import { render } from "../src/render.ts"
 import { examples } from "./examples.ts"
+import { annexDocument } from "./fixtures.ts"
 
 const nda = definitions["mutual-nda"]
 const filled = render(nda, nda.schema.parse(examples["mutual-nda"]))
@@ -145,6 +146,19 @@ describe("toDocx", () => {
     expect(text).toContain("Fill in each section.")
     expect(text).not.toContain("USING THIS")
     expect(document.match(/<w:tbl>/g)).toHaveLength(1)
+  })
+
+  it("prints a list as a table inside the cover page table", async () => {
+    const { document } = await unzip(
+      await toDocx(
+        render(annexDocument(), {
+          subprocessors: [{ name: "AWS", country: "United States" }],
+        })
+      )
+    )
+
+    expect(document.match(/<w:tbl>/g)).toHaveLength(2)
+    expect(textOf(document)).toContain("Name\nCountry\nAWS\nUnited States")
   })
 
   it("labels a cover page Parley wrote, and only that one", async () => {

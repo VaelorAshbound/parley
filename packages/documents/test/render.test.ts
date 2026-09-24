@@ -11,7 +11,7 @@ import {
   type RenderedClause,
   type RenderedInline,
 } from "../src/render.ts"
-import { complete, nda, template } from "./fixtures.ts"
+import { annexDocument, complete, nda, template } from "./fixtures.ts"
 
 const definition = nda()
 const filled = definition.draftSchema.parse(complete)
@@ -402,6 +402,48 @@ describe("render: edge cases", () => {
           expect.objectContaining({ text: "Misuse of API keys" }),
         ],
       },
+    ])
+  })
+
+  it("prints a list as a table, and a group as a checklist", () => {
+    const annex = annexDocument()
+
+    const [list, group] = render(annex, {
+      subprocessors: [
+        { name: "AWS", country: "United States" },
+        { name: "Stripe" },
+      ],
+      measures: { encryption: "AES-256." },
+    }).coverPage.sections
+
+    expect(list?.lines).toEqual([])
+    expect(list?.table?.columns).toEqual(["Name", "Country"])
+    expect(
+      list?.table?.rows.map((row) => row.map((cell) => cell.text))
+    ).toEqual([
+      ["AWS", "United States"],
+      ["Stripe", null],
+    ])
+    expect(list?.table?.rows[1]?.[1]?.placeholder).toBe("[Country]")
+    expect(group?.lines).toEqual([
+      {
+        checked: true,
+        label: "Encryption",
+        parts: [expect.objectContaining({ text: "AES-256." })],
+      },
+      {
+        checked: false,
+        label: "Access control",
+        parts: [expect.objectContaining({ text: null })],
+      },
+    ])
+
+    const [empty] = render(annex, {}).coverPage.sections
+    expect(empty?.table?.rows).toEqual([
+      [
+        expect.objectContaining({ text: null, placeholder: "[Name]" }),
+        expect.objectContaining({ text: null, placeholder: "[Country]" }),
+      ],
     ])
   })
 

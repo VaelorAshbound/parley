@@ -12,7 +12,9 @@ import {
 } from "./fields/basic.ts"
 import { choice } from "./fields/choice.ts"
 import { choices } from "./fields/choices.ts"
+import { group } from "./fields/group.ts"
 import { jurisdiction } from "./fields/jurisdiction.ts"
+import { list } from "./fields/list.ts"
 import { party } from "./fields/party.ts"
 
 export { EU_MEMBER_STATES, type Duration, type Money } from "./fields/basic.ts"
@@ -25,7 +27,9 @@ export type {
   NullableParts,
   ObjectField,
 } from "./fields/core.ts"
+export type { GroupValue } from "./fields/group.ts"
 export type { StateCode } from "./fields/jurisdiction.ts"
+export type { ListDraft, ListValue } from "./fields/list.ts"
 
 export const field = {
   text,
@@ -39,6 +43,8 @@ export const field = {
   url,
   choice,
   choices,
+  list,
+  group,
   jurisdiction,
   party,
 }

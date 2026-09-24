@@ -18,6 +18,8 @@ export type FieldKind =
   | "percent"
   | "choice"
   | "choices"
+  | "list"
+  | "group"
   | "jurisdiction"
   | "party"
   | "number"
@@ -67,7 +69,7 @@ export interface ObjectField<
   Derived extends string = never,
 > extends Field<Kind, Value, Draft, NullableParts<Value>> {
   /** The stored parts a form edits, with their names. */
-  readonly subfields: { readonly [K in keyof Value & string]: string }
+  readonly subfields: { readonly [K in keyof Value & string]?: string }
   /** Parts that are only read, like a party's "notice". */
   readonly derived: { readonly [K in Derived]: string }
   formatPath(
@@ -101,9 +103,18 @@ export interface AnyField {
   formatPath?(value: unknown, part: string): string | null
   /** Choice: its options, and whether it takes an Other answer. */
   readonly options?: Readonly<
-    Record<string, { label: string; with?: AnyField }>
+    Record<
+      string,
+      {
+        label: string
+        with?: AnyField
+        blanks?: Readonly<Record<string, AnyField>>
+      }
+    >
   >
   readonly allowOther?: boolean
+  /** List: the field behind each column. */
+  readonly item?: Readonly<Record<string, AnyField>>
 }
 
 export type Common<Value> = {

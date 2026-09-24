@@ -6,6 +6,7 @@ import { parseStandardTerms } from "../src/parse/parse.ts"
 import { toPrintHtml } from "../src/output/html.ts"
 import { render } from "../src/render.ts"
 import { examples } from "./examples.ts"
+import { annexDocument } from "./fixtures.ts"
 
 const nda = definitions["mutual-nda"]
 const filled = render(nda, nda.schema.parse(examples["mutual-nda"]))
@@ -157,6 +158,22 @@ describe("toPrintHtml", () => {
     expect(html).not.toContain('class="subtitle"')
     expect(html).toContain(
       '<p><span class="hint">Fill in each section.</span></p>'
+    )
+  })
+
+  it("prints a list as a table and a group as a checklist", () => {
+    const html = toPrintHtml(
+      render(annexDocument(), {
+        subprocessors: [{ name: "AWS", country: "United States" }],
+        measures: { encryption: "AES-256." },
+      })
+    )
+
+    expect(html).toContain(
+      '<table class="list"><thead><tr><th scope="col">Name</th><th scope="col">Country</th></tr></thead><tbody><tr><td><span class="value">AWS</span></td><td><span class="value">United States</span></td></tr></tbody></table>'
+    )
+    expect(html).toMatch(
+      /<p class="line"><svg class="box checked"[^>]*>.*?<\/svg> <span class="label">Encryption:<\/span> <span class="value">AES-256\.<\/span><\/p>/
     )
   })
 
