@@ -25,7 +25,7 @@ Order Form (part) → Product · Effective Date · Pilot Period · Fees · Payme
 5. **Multiples** are numbers above 0 with up to 2 decimals (1.5x is common), at most 100.
 6. **Fees has no default.** The official page marks neither "Free Pilot" nor paid. (The research proposed "Free Pilot"; the brief allows defaults only where Common Paper pre-marks one.)
 7. **Pilot Period has no default.** "e.g. 3 months" is an example, not a pre-mark. The help text keeps the example.
-8. **Payment Process** is a single choice (the drafting note says "select one option and delete the other"), shown only when Fees is paid ("If a free Pilot, delete this row entirely"). It is optional, see engine gap 1.
+8. **Payment Process** is a single choice (the drafting note says "select one option and delete the other"), shown only when Fees is paid ("If a free Pilot, delete this row entirely"). It is required when Fees is paid: a "complete"-phase rule checks it, so a draft can pick "paid" first.
 9. **Product** (8.14) and **Fees** (8.10) are not linked terms, but the terms get their meaning from the Order Form, so both are required rows.
 10. **DPA, Technical Support, Other Changes** are optional free text: empty means none (8.1).
 11. **Governing law** takes a US state or a province/country ("state, province, and/or country" on the official page), and the courts are named in full (`courts: "anywhere"`).
@@ -33,6 +33,7 @@ Order Form (part) → Product · Effective Date · Pilot Period · Fees · Payme
 
 ## Deviations from the official wording
 
+- **Pick lists in blanks are selects.** "[ Customer's receipt of invoice | the invoice date ]" and "[ monthly | quarterly | annually | once per Pilot Period ]" are `field.select` blanks, printed as the words picked.
 - **Payment Process options** join the official sub-heading and sentence on one line: "Pay by invoice: Customer will pay Fees…" and "Automatic payment: Customer authorizes…". The official page prints them on two lines.
 - **Chosen Courts** prints "The courts located in [place]". The official line is "The courts (whether state, federal, or otherwise) located in [place]". The jurisdiction field prints "courts located in …" itself, so the parenthesis can't sit between "courts" and "located" without an engine change. Meaning is the same: all courts in that place.
 - **Intro** says "Standard Terms Version 1.1" (the template's own name) where the official intro says "v1.1", and its link text is the full URL, as on the official page.
@@ -42,7 +43,9 @@ Order Form (part) → Product · Effective Date · Pilot Period · Fees · Payme
 
 ## Engine gaps
 
-1. **No "required when".** Rules run on drafts, and a rule issue rejects the change, so "Payment Process is required when Fees is paid" would block picking "paid" before the payment process. Payment Process is optional for now. Suggested fix: rules that run only on the complete schema.
-2. **`field.select` can't be a blank.** Its `options` (a record of strings) clash with `AnyField.options` (a record of option objects), so it fails to type-check inside `blanks`. The billing cadence and "counted from" blanks use a small `field.choice` instead (stored as `{ option: "monthly" }`).
-3. **Part headings drop their hint** in the HTML and DOCX output, so the lead-in "The key business and legal terms of this Agreement are as follows:" is stored but not printed.
-4. **No typed "any definition".** `DocumentDefinition<Fields>` has no party keys, so no real definition is assignable to it. The three test loops over `definitions` widen with `as unknown as` (commented). The app will need the same once it looks up a definition by id.
+All four are fixed in the engine (8b78a29 and earlier) and used here:
+
+1. **"Required when":** rules know their phase. Payment Process is required on a complete document when Fees is paid.
+2. **`field.select` as a blank:** the invoice start and the billing cadence are selects now (stored as `"receipt"`, `"monthly"`).
+3. **Part headings print their hint** in the HTML and DOCX.
+4. **Any definition is a `DocumentDefinition`:** the test loops need no cast.

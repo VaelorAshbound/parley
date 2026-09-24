@@ -93,4 +93,46 @@ describe("the Pilot Agreement", () => {
       "The greater of $50,000.00 or 2x the Fees paid or payable by Customer to Provider in the 12 month period immediately before the claim",
     ])
   })
+
+  it("needs a Payment Process once a paid pilot is complete", () => {
+    const { paymentProcess: _process, ...rest } = example
+
+    expect(issues({ fees: { option: "paid" } })).toBeUndefined()
+    expect(
+      pilot.schema.safeParse(rest).error?.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      }))
+    ).toEqual([
+      {
+        path: ["paymentProcess"],
+        message: "A paid pilot needs a Payment Process.",
+      },
+    ])
+    expect(
+      pilot.schema.safeParse({ ...rest, fees: { option: "free" } }).success
+    ).toBe(true)
+  })
+
+  it("picks the invoice start and the billing cadence from a list", () => {
+    const blanks = pilot.fields.paymentProcess.options
+
+    expect(blanks.invoice.blanks.start.kind).toBe("select")
+    expect(blanks.automatic.blanks.cadence.kind).toBe("select")
+    expect(
+      render(pilot, {
+        ...example,
+        paymentProcess: {
+          option: "automatic",
+          value: { cadence: "quarterly" },
+        },
+      })
+        .coverPage.sections.find(
+          (section) => section.heading === "Payment Process"
+        )
+        ?.lines.find((line) => line.checked)
+        ?.parts.map((part) => part.text)
+        .join("")
+    ).toContain("for Fees quarterly for immediate payment")
+  })
 })

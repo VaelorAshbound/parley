@@ -203,7 +203,7 @@ export const examples = {
     fees: { option: "paid", value: "$5,000 for the Pilot Period" },
     paymentProcess: {
       option: "invoice",
-      value: { days: 30, start: { option: "receipt" } },
+      value: { days: 30, start: "receipt" },
     },
     governingLaw: {
       state: "CA",

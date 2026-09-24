@@ -67,7 +67,8 @@ export const pilotAgreement = defineDocument({
         },
       },
     }),
-    // Shown only for a paid pilot ("If a free Pilot, delete this row").
+    // Shown only for a paid pilot ("If a free Pilot, delete this row"), and
+    // required then (see the rules).
     paymentProcess: field.choice({
       label: "Payment process",
       help: "How and when the Customer pays the Fees.",
@@ -83,12 +84,12 @@ export const pilotAgreement = defineDocument({
               min: 1,
               max: 365,
             }),
-            start: field.choice({
+            start: field.select({
               label: "Counted from",
               help: "When the days to pay start.",
               options: {
-                receipt: { label: "Customer's receipt of invoice" },
-                invoiceDate: { label: "the invoice date" },
+                receipt: "Customer's receipt of invoice",
+                invoiceDate: "the invoice date",
               },
             }),
           },
@@ -97,14 +98,14 @@ export const pilotAgreement = defineDocument({
           label:
             "Automatic payment: Customer authorizes Provider to automatically bill and charge the credit card, debit card, or other payment method on file for Fees {cadence} for immediate payment or deduction without further approval. Provider will make a copy of Customer's bills or transaction history available to Customer.",
           blanks: {
-            cadence: field.choice({
+            cadence: field.select({
               label: "Billing cadence",
               help: "How often Provider charges the Customer.",
               options: {
-                monthly: { label: "monthly" },
-                quarterly: { label: "quarterly" },
-                annually: { label: "annually" },
-                oncePerPilotPeriod: { label: "once per Pilot Period" },
+                monthly: "monthly",
+                quarterly: "quarterly",
+                annually: "annually",
+                oncePerPilotPeriod: "once per Pilot Period",
               },
             }),
           },
@@ -262,7 +263,7 @@ export const pilotAgreement = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const provider = company(values.provider?.company)
     if (
@@ -279,5 +280,13 @@ export const pilotAgreement = defineDocument({
       )
     if (cap?.option === "greater" && cap.value?.multiple === 1)
       issue("generalCap", "Use a multiple other than 1.")
+
+    // Only on a complete document, so "paid" can be picked first.
+    if (
+      phase === "complete" &&
+      values.fees?.option === "paid" &&
+      !values.paymentProcess
+    )
+      issue("paymentProcess", "A paid pilot needs a Payment Process.")
   },
 })
