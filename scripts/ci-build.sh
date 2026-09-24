@@ -12,3 +12,4 @@ pnpm db:check
 pnpm test:coverage
 pnpm test:workers
 pnpm build
+bash scripts/smoke-bundle.sh
