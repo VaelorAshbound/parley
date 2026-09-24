@@ -1,5 +1,6 @@
 import { z } from "../zod.ts"
 import {
+  header,
   mergeParts,
   plainText,
   withMeta,
@@ -32,11 +33,7 @@ export function party(config: Common<never>) {
   const draftSchema = withMeta(base.exactPartial(), config)
   type Draft = z.infer<typeof draftSchema>
   return {
-    kind: "party",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: undefined,
+    ...header("party", config),
     subfields: {
       company: "Company",
       name: "Name",

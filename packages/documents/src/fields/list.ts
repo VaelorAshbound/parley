@@ -1,5 +1,6 @@
 import { typed, z } from "../zod.ts"
 import {
+  header,
   checkDefault,
   display,
   withMeta,
@@ -62,11 +63,7 @@ export function list<const I extends Columns>(
       .join(", ")
 
   return {
-    kind: "list",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: config.default,
+    ...header("list", config),
     item: config.item,
     columns: Object.fromEntries(
       entries.map(([key, column]) => [key, column.label])

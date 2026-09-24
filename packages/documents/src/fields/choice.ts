@@ -1,6 +1,7 @@
 import { typed, z } from "../zod.ts"
 import { splitLabel } from "../label.ts"
 import {
+  header,
   checkDefault,
   display,
   plainText,
@@ -198,11 +199,7 @@ export function choice<
   checkDefault(config, draftSchema)
 
   return {
-    kind: "choice",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: config.default,
+    ...header("choice", config),
     options: config.options,
     allowOther: config.allowOther ?? false,
     schema,

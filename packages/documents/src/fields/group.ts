@@ -1,5 +1,6 @@
 import { typed, z } from "../zod.ts"
 import {
+  header,
   display,
   mergeParts,
   withMeta,
@@ -55,11 +56,7 @@ export function group<const P extends Parts<P>>(
   for (const key in config.parts) subfields[key] = config.parts[key].label
 
   return {
-    kind: "group",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: undefined,
+    ...header("group", config),
     parts: config.parts,
     subfields,
     derived: {},

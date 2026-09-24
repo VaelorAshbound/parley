@@ -160,6 +160,20 @@ export function withMeta<T extends z.ZodType>(
   return schema.meta({ title: config.label, description: config.help })
 }
 
+/** The fields every kind carries, from the builder's config. */
+export function header<const Kind extends FieldKind, Default>(
+  kind: Kind,
+  config: { label: string; help: string; optional?: boolean; default?: Default }
+) {
+  return {
+    kind,
+    label: config.label,
+    help: config.help,
+    optional: config.optional ?? false,
+    default: config.default,
+  }
+}
+
 export function scalar<Kind extends FieldKind, Value>(
   kind: Kind,
   config: Common<Value>,
@@ -169,11 +183,7 @@ export function scalar<Kind extends FieldKind, Value>(
   const described = withMeta(schema, config)
   checkDefault(config, described)
   return {
-    kind,
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: config.default,
+    ...header(kind, config),
     schema: described,
     draftSchema: described,
     changeSchema: described,

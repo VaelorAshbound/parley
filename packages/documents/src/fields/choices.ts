@@ -9,6 +9,7 @@ import {
   type ChoiceValue,
 } from "./choice.ts"
 import {
+  header,
   checkDefault,
   plainText,
   withMeta,
@@ -88,11 +89,7 @@ export function choices<
   checkDefault(config, draftSchema)
 
   return {
-    kind: "choices",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: config.default,
+    ...header("choices", config),
     options: config.options,
     allowOther: config.allowOther ?? false,
     schema: withMeta(typed<ChoicesValue<O, Allow>>(build(false)), config),

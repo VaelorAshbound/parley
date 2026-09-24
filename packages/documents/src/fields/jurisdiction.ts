@@ -1,5 +1,6 @@
-import { z } from "../zod.ts"
+import { typed, z } from "../zod.ts"
 import {
+  header,
   mergeParts,
   plainText,
   withMeta,
@@ -8,64 +9,6 @@ import {
 } from "./core.ts"
 
 // --- Jurisdiction ---
-
-const stateCode = z.enum(
-  [
-    "AL",
-    "AK",
-    "AZ",
-    "AR",
-    "CA",
-    "CO",
-    "CT",
-    "DE",
-    "DC",
-    "FL",
-    "GA",
-    "HI",
-    "ID",
-    "IL",
-    "IN",
-    "IA",
-    "KS",
-    "KY",
-    "LA",
-    "ME",
-    "MD",
-    "MA",
-    "MI",
-    "MN",
-    "MS",
-    "MO",
-    "MT",
-    "NE",
-    "NV",
-    "NH",
-    "NJ",
-    "NM",
-    "NY",
-    "NC",
-    "ND",
-    "OH",
-    "OK",
-    "OR",
-    "PA",
-    "RI",
-    "SC",
-    "SD",
-    "TN",
-    "TX",
-    "UT",
-    "VT",
-    "VA",
-    "WA",
-    "WV",
-    "WI",
-    "WY",
-  ],
-  { error: unlessMissing("Pick a US state.") }
-)
-export type StateCode = z.infer<typeof stateCode>
 
 const STATES = {
   AL: "Alabama",
@@ -119,7 +62,12 @@ const STATES = {
   WV: "West Virginia",
   WI: "Wisconsin",
   WY: "Wyoming",
-} as const satisfies Record<StateCode, string>
+} as const
+export type StateCode = keyof typeof STATES
+
+const stateCode = typed<StateCode>(
+  z.enum(Object.keys(STATES), { error: unlessMissing("Pick a US state.") })
+)
 
 const courtLocation = plainText(100)
 const region = plainText(100)
@@ -155,11 +103,7 @@ function usJurisdiction(config: JurisdictionConfig) {
   const draftSchema = withMeta(base.exactPartial(), config)
   type Draft = z.infer<typeof draftSchema>
   return {
-    kind: "jurisdiction",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: undefined,
+    ...header("jurisdiction", config),
     subfields: { state: "State", courtLocation: "Courts" },
     schema: withMeta(base, config),
     draftSchema,
@@ -213,11 +157,7 @@ function worldJurisdiction(config: JurisdictionConfig) {
   const placeOf = (value: Draft) =>
     value.state ? STATES[value.state] : value.region
   return {
-    kind: "jurisdiction",
-    label: config.label,
-    help: config.help,
-    optional: config.optional ?? false,
-    default: undefined,
+    ...header("jurisdiction", config),
     subfields: {
       state: "State",
       region: "Province or country",
