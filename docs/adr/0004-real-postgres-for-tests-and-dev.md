@@ -17,9 +17,11 @@ The spec wants SQL tested on real Postgres ("local in dev, a Neon branch in CI")
 
 Use [`embedded-postgres`](https://github.com/leinelissen/embedded-postgres) (dev dependency of `packages/db`). It ships real Postgres binaries as npm packages and runs them as a normal user.
 
-- **Tests** (`db` Vitest project): one Postgres 18 per run, started in `test/setup.ts` on a free port and migrated with the real migrations. Each test runs in a transaction that rolls back (`test/db.ts` fixture), so tests need no cleanup. It starts in about 0.4 s.
+- **Tests** (`db` Vitest project and the workerd tests): one Postgres 18 per run, started by `startTestDatabase()` from `@workspace/db/testing` on a free port and migrated with the real migrations. Each test runs in a transaction that rolls back (`test/db.ts` fixture), so tests need no cleanup. It starts in about 0.4 s.
 - **Local dev** (`pnpm db:dev`): the same server with its data kept in `packages/db/.data/`, on port 54320. Hyperdrive's `localConnectionString` points there.
-- **The server runs in a child process** (`test/postgres.ts`). embedded-postgres registers an exit hook (`async-exit-hook`) that calls `process.exit(0)` on `beforeExit`. Inside Vitest's process this erased the failure code: a failing test or a missed coverage threshold still exited 0, so CI would have passed a red run. We found this while building T13 and proved the fix both ways (red run exits 1, green run exits 0).
+- **The server runs in a child process** (`packages/db/testing/postgres.ts`). embedded-postgres registers an exit hook (`async-exit-hook`) that calls `process.exit(0)` on `beforeExit`. Inside Vitest's process this erased the failure code: a failing test or a missed coverage threshold still exited 0, so CI would have passed a red run. We found this while building T13 and proved the fix both ways (red run exits 1, green run exits 0).
+
+- **The workerd tests** (T14) get the same database through Hyperdrive: `globalSetup` starts it and `miniflare.hyperdrives` points `HYPERDRIVE` at it (the plugin's documented `inject` pattern). In that runner, `pg`'s `require()` calls pick the wrong builds of `pg-protocol` (ESM in `.js` files) and `pg-cloudflare` (the empty non-workerd stub), so the test config aliases both to the CommonJS builds wrangler's bundler uses for the real Worker.
 
 Cloud side (same task):
 

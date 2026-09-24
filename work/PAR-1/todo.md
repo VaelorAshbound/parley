@@ -322,6 +322,7 @@
 ## Phase 3: Accounts
 
 - [ ] **T21: Sign up / sign in / sign out + guest → account linking** (M)
+  - Must (T14 review): `anonymous()` deletes the guest user when it links, and drafts cascade with it. Set `onLinkAccount` to move the guest's drafts **before** any sign-in method is turned on, with a test that a guest's draft survives sign-up.
   - Accept:
     - Following spec §5 Auth: `better-auth/minimal`, email + password with a verification email, Google and GitHub, `lastLoginMethod` ("Last used" badge), `captcha` with Turnstile on sign-up and sign-in, the DB rate limiter with `cf-connecting-ip`, `backgroundTasks` → `waitUntil`, and `tanstackStartCookies` last. The session is fetched on the server through a `createServerFn` in the `_app` `beforeLoad`.
     - `onLinkAccount` moves the guest's drafts and messages to the new user in one transaction, and the draft stays open. Export, share and upgrade return `EMAIL_NOT_VERIFIED` until the email is verified.
@@ -400,6 +401,7 @@
 ## Phase 5: Cost and abuse
 
 - [ ] **T27: Turnstile, rate limits, AI budgets** (M)
+  - Must (T14 review): cap drafts per user (guest 1, spec §2 Limits) and new guests per IP, and rate-limit `/api/rpc` too: Better Auth's limiter only covers `/api/auth`.
   - Accept:
     - Turnstile runs before a guest's first message through Better Auth's `captcha` plugin on `/sign-in/anonymous` (no separate siteverify code). The Rate Limiting binding allows 10 requests per 10 s on the AI routes, through `CloudflareRateLimiter` + the oRPC rate-limit middleware and headers plugin. The typed `RATE_LIMITED` / `DAILY_LIMIT` errors drive the UI.
     - Per-user daily message limits (guest 20, free 100, Pro 500) and cost tracking in `aiUsage`. Friendly messages when a limit is hit.
@@ -516,6 +518,7 @@
   - Deps: T30
 
 - [ ] **T38: Production environment on `parley.runtimedrift.dev`** (M)
+  - Check (T14 review): `preview_urls: true` keeps a workers.dev URL for every production version, with production bindings. Auth already refuses those hosts in production (`allowedHosts`); decide whether to turn version URLs off for production.
   - Accept:
     - A Custom Domain on the Worker, the production Neon branch and Hyperdrive, all secrets set, the Polar sandbox production config, and a Resend sending domain.
     - Security headers (CSP, HSTS, frame-ancestors, referrer policy): Hono `secureHeaders()` on `/api`, and the same policy on the SSR responses in `src/server.ts`. The auth trusted origins are set.
