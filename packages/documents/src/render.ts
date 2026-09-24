@@ -37,6 +37,8 @@ export type RenderedInline =
 export type RenderedClause = {
   type: "clause"
   id: string
+  /** The number as printed: "1.", "1.1", "a.", "i." (the template's markers). */
+  number: string
   heading?: string
   content: RenderedInline[]
   children: RenderedClause[]
@@ -132,6 +134,7 @@ export function render<F extends Fields>(
 
   const clause = (node: Clause): RenderedClause => ({
     ...node,
+    number: clauseNumber(node.id),
     content: inline(node.content),
     children: node.children.map(clause),
   })
@@ -173,6 +176,13 @@ export function render<F extends Fields>(
       children: renderBlocks(definition.template, inline, clause),
     },
   }
+}
+
+function clauseNumber(id: string) {
+  const markers = id.split(".")
+  if (markers.length === 1) return `${id}.`
+  if (markers.length === 2) return id
+  return `${markers.at(-1)}.`
 }
 
 function renderBlocks(

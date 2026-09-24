@@ -6,7 +6,11 @@ import { defineDocument, type DocumentDefinition } from "../src/define.ts"
 import { field } from "../src/fields.ts"
 import { readTemplate } from "../src/parse/catalog.ts"
 import { parseStandardTerms } from "../src/parse/parse.ts"
-import { render, type RenderedInline } from "../src/render.ts"
+import {
+  render,
+  type RenderedClause,
+  type RenderedInline,
+} from "../src/render.ts"
 import { complete, nda, template } from "./fixtures.ts"
 
 const definition = nda()
@@ -77,27 +81,53 @@ describe("render: standard terms", () => {
 })
 
 describe("render: real templates", () => {
+  it("numbers clauses the way the template does", () => {
+    const tree = parseStandardTerms(readTemplate("DPA.md"))
+    const rendered = render({ ...definition, template: tree }, filled)
+    const numbers = new Map<string, string>()
+    const walk = (clauses: RenderedClause[]) => {
+      for (const each of clauses) {
+        numbers.set(each.id, each.number)
+        walk(each.children)
+      }
+    }
+    for (const block of rendered.standardTerms.children)
+      if (block.type === "section") walk(block.children)
+
+    expect(numbers.get("1.1")).toBe("1.1")
+    expect(numbers.get("3.2.c")).toBe("c.")
+    expect(numbers.get("3.2.c.i")).toBe("i.")
+  })
+
+  it("numbers top-level clauses with a period", () => {
+    const tree = parseStandardTerms(readTemplate("Mutual-NDA.md"))
+    const [first] = render({ ...definition, template: tree }, filled)
+      .standardTerms.children
+
+    expect(first).toMatchObject({ id: "1", number: "1." })
+  })
+
   it.each(["CSA.md", "Mutual-NDA.md"])(
     "keeps every word of %s, sections, bold text and links included",
     (file) => {
       const tree = parseStandardTerms(readTemplate(file))
       const rendered = render({ ...definition, template: tree }, filled)
 
-      expect(JSON.stringify(stripValues(rendered.standardTerms))).toBe(
+      expect(JSON.stringify(stripAdded(rendered.standardTerms))).toBe(
         JSON.stringify({ title: tree.title, children: tree.children })
       )
     }
   )
 })
 
-/** The rendered tree minus the values linked terms gained. */
-function stripValues(node: unknown): unknown {
-  if (Array.isArray(node)) return node.map(stripValues)
+/** The rendered tree minus what render adds: term values, clause numbers. */
+function stripAdded(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(stripAdded)
   if (typeof node !== "object" || node === null) return node
   return Object.fromEntries(
     Object.entries(node)
-      .filter(([key]) => key !== "values")
-      .map(([key, value]) => [key, stripValues(value)])
+      .filter(([key]) => key !== "values" && key !== "number")
+      .map(([key, value]) => [key, stripAdded(value)])
   )
 }
 
