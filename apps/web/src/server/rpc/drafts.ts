@@ -1,4 +1,4 @@
-import { createDraft, getDraft, updateDraft } from "@workspace/db"
+import { createDraft, getDraft, listDrafts, updateDraft } from "@workspace/db"
 import {
   applyFieldChanges,
   definitionOf,
@@ -33,6 +33,13 @@ export const drafts = {
         fields: initialValues(definition, { today: input.today }),
       })
     }),
+
+  /** The sidebar's history: the caller's drafts, last changed first. */
+  list: authed
+    .input(z.object({ limit: z.int().min(1).max(100).optional() }))
+    .handler(({ context, input }) =>
+      listDrafts(context.db, { userId: context.user.id, ...input })
+    ),
 
   get: authed
     .input(draftId)

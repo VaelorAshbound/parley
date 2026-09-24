@@ -25,6 +25,10 @@ const matrix: Record<
     run: (client) => client.drafts.create({ documentId: "mutual-nda", today }),
     expect: { nobody: "UNAUTHORIZED", otherGuest: "OK", owner: "OK" },
   },
+  "drafts.list": {
+    run: (client) => client.drafts.list({}),
+    expect: { nobody: "UNAUTHORIZED", otherGuest: "OK", owner: "OK" },
+  },
   "drafts.get": {
     run: (client, id) => client.drafts.get({ id }),
     expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },

@@ -138,6 +138,24 @@ describe("drafts over /api/rpc", () => {
   })
 })
 
+describe("drafts.list", () => {
+  it("lists only the caller's own drafts, last changed first", async () => {
+    const mine = browserClient((await signInGuest()).cookie)
+    const theirs = browserClient((await signInGuest()).cookie)
+    const first = await mine.drafts.create({ documentId: "mutual-nda", today })
+    const second = await mine.drafts.create({ documentId: "csa", today })
+    await theirs.drafts.create({ documentId: "psa", today })
+    await mine.drafts.updateFields({
+      id: first.id,
+      changes: [{ key: "purpose", value: "Touched last" }],
+    })
+
+    const listed = await mine.drafts.list({})
+
+    expect(listed.map((draft) => draft.id)).toEqual([first.id, second.id])
+  })
+})
+
 describe("an unexpected server error", () => {
   it("is logged with the request id and shown to the client without details", async () => {
     const client = browserClient((await signInGuest()).cookie)
