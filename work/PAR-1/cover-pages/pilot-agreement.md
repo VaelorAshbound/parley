@@ -16,7 +16,7 @@ The rows, hints, option wording, closing line and signature rows below were comp
 
 Order Form (part) → Product · Effective Date · Pilot Period · Fees · Payment Process (paid pilots only) · Governing Law · Chosen Courts · General Cap Amount → Attachments, Supplements & Modifications (part) → DPA · Technical Support · Other Changes to Standard Terms → closing → Provider | Customer signatures.
 
-## Judgment calls
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Title "Pilot Agreement Order Form".** The official page is headed "ORDER FORM" over "Pilot Agreement", and the Standard Terms say "Order Form" 25+ times. Parley's eyebrow slot holds the "Cover page by Parley" label, so the two official lines are joined into one title.
 2. **General Cap Amount is required, with no default.** The official page pre-marks "[N]x the Fees", but an empty cap means "the contract will not have any limitation of liability" (official drafting note). Nobody should get that by skipping a field.

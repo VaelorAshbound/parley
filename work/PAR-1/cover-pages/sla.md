@@ -15,7 +15,7 @@ Template: `templates/sla.md`, **SLA v2.0**. Written 2026-09-24.
 
 Agreement, one **SLA** row with the two official target boxes (Target Uptime with its Scheduled Downtime; Target Response Time with its credit sentence and Support Channel), the Uptime Credit table, and the two signature blocks. All 9 linked terms map to a field.
 
-## Judgment calls (for a lawyer to look at)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **A stand-alone page.** Common Paper prints the SLA as a block inside the CSA Order Form. Parley ships it as its own document, so it needs an **Agreement** row (the Order Form it joins) and its own signatures. The intro is Parley's, modeled on the official one ("This Order Form incorporates the Service Level Agreement Standard Terms available at … with the below Variables. A copy of the SLA Standard Terms is attached for convenience only.") and on the AI Addendum's ("amends and is incorporated into the following Agreement", "undefined capitalized words", "will control"). It adds "this Cover Page will control" over the SLA Standard Terms, as the brief asks. The closing, "By signing this Cover Page, each party agrees to enter into this SLA.", follows the AI Addendum's.
 2. **"Subscription Period" reads the Agreement row.** The SLA's terms use the Order Form's Subscription Period (1.2, 3.3, 3.4). A second duration field here could contradict the CSA, so the linked term points at the Agreement description instead of a new field.

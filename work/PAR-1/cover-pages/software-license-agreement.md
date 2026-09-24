@@ -32,7 +32,7 @@ order:
 
 One closing and one signature table cover both parts.
 
-## Judgment calls (a lawyer should look at these)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Intro.** The official "USING THE FRAMEWORK TERMS" paragraph word for word
    (Version 1.1 and its URL): it incorporates the Standard Terms and says the

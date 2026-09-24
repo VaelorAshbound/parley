@@ -38,7 +38,7 @@ Three panes on desktop:
   - the account menu at the bottom: name, plan badge, settings, billing (Polar portal), sign out.
 
   Guests see their one draft and a "Sign in to save" button there.
-- **Middle: chat.** The draft title sits at the top. Its menu has rename, duplicate and delete. The reply box sits at the bottom, with the "not legal advice" line under it.
+- **Middle: chat.** The draft title sits at the top. Its menu has rename, duplicate and delete. The reply box sits at the bottom, with the demo note under it (`DISCLAIMER`: "Parley demo · Not legal advice · Do not use for real agreements").
 - **Right: live document panel.** Its header has the document type, **Share**, **Download** (PDF/DOCX), expand to full width, and close. You can resize the panel. When it is closed, a card in the chat opens it again.
 - **Phone.** The sidebar becomes a drawer. Chat and document become two tabs, and the document tab shows a badge when it changes.
 
@@ -173,7 +173,7 @@ This is the core. It is pure TypeScript with no I/O, so it is easy to test.
   - `updateFields({ changes: [{ key, value, explanation }] })`. Invalid values go back to the model as errors, never into the draft.
   - `askQuestions({ questions: [{ name, prompt, description, required, choices[{ value, label, description }], allowOther, multiple }] })` is a **client-side, human-in-the-loop tool** (no server `execute`). It renders the shadcn `Questionnaire` in the chat. The answers go back through `addToolOutput`, the server checks them with Zod, and then the AI applies them with `updateFields`. The answers are saved in the tool part, so a reload picks up where you left off (the Questionnaire's Resume).
   - `markComplete()` runs when all required fields are valid, and suggests export.
-- **Guardrails.** The AI stays on drafting these documents. It says in plain words that it gives no legal advice. Off-topic requests get a short redirect. The chat has a server-side limit on message length and history length.
+- **Guardrails.** The AI stays on drafting these documents. It says in plain words that Parley is a demo: no legal advice, and the documents are not for real agreements. Off-topic requests get a short redirect. The chat has a server-side limit on message length and history length.
 - **Evals** (`pnpm evals`). About 30 scripted conversations, for example: "we're about to share our roadmap with a vendor" → Mutual NDA. They check the chosen document, the field values, and that no invalid values were set. They run in CI on prompt or model changes, and the score is shown in the README.
 
 ### Data model (Drizzle)
@@ -569,7 +569,7 @@ These use a separate test OpenRouter key with its own hard limit ($5, `OPENROUTE
 - Check every input with Zod at the edge: RPC, tools, webhooks.
 - Check who owns a draft on every draft read or write.
 - Keep the standard terms byte-identical to `templates/`, and test this.
-- Show the "not legal advice" note and the Common Paper credit in the app, the exports and the share page.
+- Show the demo note (`DISCLAIMER` in `@workspace/documents`: not legal advice, not for real agreements) and the Common Paper credit in the app, the exports (on every page) and the share page. The cover pages were not reviewed by a lawyer (owner, 2026-09-24).
 - Follow reduced-motion settings in every animation.
 - Use commits in the form `<type>(PAR-1): <why>` on the `PAR-1-<slug>` branches.
 

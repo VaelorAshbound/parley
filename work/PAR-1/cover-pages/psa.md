@@ -30,7 +30,7 @@ Title, subtitle "USING THIS AGREEMENT", then two parts in the official order:
 
 One closing and one signature table cover both parts.
 
-## Judgment calls (a lawyer should look at these)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Intro carries the omitted-term rule.** The PSA Standard Terms don't say
    what an empty variable means; only Common Paper's cover page does. The

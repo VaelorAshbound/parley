@@ -169,7 +169,7 @@
 - [x] **T10: Cover pages: Pilot, Design Partner, Partnership** (M)
 - [x] **T11: Cover pages: PSA, Software License** (M)
   - Done 2026-09-24. Four agents wrote the definitions in parallel worktrees from one brief (`work/PAR-1/cover-pages/BRIEF.md`); I merged each one only after `pnpm check` and `pnpm test:coverage` passed. All 11 definitions (12 catalog entries; the NDA cover page is part of the NDA) are registered in catalog order, each with a fully filled example, HTML and DOCX snapshots, and its own rule tests.
-  - Every definition mirrors Common Paper's official cover page. The notes per document (`work/PAR-1/cover-pages/<id>.md`) list the sources, the judgment calls a lawyer should check, and every deviation.
+  - Every definition mirrors Common Paper's official cover page. The notes per document (`work/PAR-1/cover-pages/<id>.md`) list the sources, the judgment calls (not reviewed by a lawyer: Parley is a demo, owner 2026-09-24), and every deviation.
   - Decisions:
     - **"None" is a real answer.** Where Common Paper says "delete the row", Parley offers an explicit None, so an empty row is never a silent choice.
     - **Caps that would mean "unlimited" when empty are required** (General Cap Amount), with no default.
@@ -283,7 +283,7 @@
 - [ ] **T19: AI questionnaire, completion and guardrails** (M)
   - Accept:
     - `askQuestions` is a client-side human-in-the-loop tool that renders the shadcn `Questionnaire` inline (steps, letter shortcuts, Other, skip, conditional items). The answers go back through `addToolOutput`, are checked with Zod on the server, and survive a reload. `markComplete` shows an "Export" card.
-    - The system prompt has the guardrails: on topic only, "not legal advice", and a short redirect for off-topic requests. The stable prefix is cached by the provider. There are server limits on message and history length.
+    - The system prompt has the guardrails: on topic only, the demo note (not legal advice, not for real agreements), and a short redirect for off-topic requests. The stable prefix is cached by the provider. There are server limits on message and history length.
     - Worker tests cover an off-topic request, a prompt injection attempt, and a message that is too long.
   - Verify: `pnpm test:workers`
   - Files: `apps/web/src/server/ai/{prompt.ts,tools.ts}`, `src/features/chat/ai-questionnaire.tsx`
@@ -495,7 +495,7 @@
 - [ ] **T37: Empty-state and first-run polish** (S)
   - Accept:
     - `/` shows a warm start: starter prompts ("I'm sharing a roadmap with a vendor…") and a gallery of the 12 documents with one-line descriptions. You can start in one click.
-    - The Common Paper credit and the "not legal advice" note are shown clearly.
+    - The Common Paper credit and the demo note (`DISCLAIMER`) are shown clearly.
   - Verify: e2e + a Claude in Chrome feel check.
   - Files: `apps/web/src/routes/index.tsx`, `src/features/empty-state/*`
   - Deps: T30

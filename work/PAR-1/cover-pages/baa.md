@@ -50,7 +50,7 @@ Optional: **Other Changes** (free text; blank means none).
 - **No default.** Common Paper gives none. The research suggested 5 business
   days as market practice. That call is for the user or the AI, not a default.
 
-## Judgment calls (a lawyer should look)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Relationship keeps the official two pickers**, and a complete BAA
    can't pair "Provider is a subcontractor" with "Company is a Covered

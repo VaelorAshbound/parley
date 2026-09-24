@@ -78,7 +78,7 @@ order. `markComplete` and export catch the blank.
 - **DPA Covered Claim** when there is a DPA Liability Cap: the cap is for "DPA
   Covered Claims", so with "None" it caps nothing (was judgment call 8).
 
-## Judgment calls (a lawyer should look)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Governing Member State lists the 27 EU states, with no default.** The
    DOCX says "EU Member State" and SCC Clause 17 says "one of the EU Member

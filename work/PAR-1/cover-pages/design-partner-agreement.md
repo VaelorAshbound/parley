@@ -21,7 +21,7 @@ The template (`templates/design-partner-agreement.md`) never names its own versi
 
 Key Terms (part) → Product · Program (Partner will) · Program (Provider will) · Effective Date · Term · Governing Law · Chosen Courts · Fees · Other Changes to Standard Terms → closing → Provider | Partner signatures.
 
-## Judgment calls
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Program is two multi-selects**, one per party, both mapped from the "Program" linked term. The official row holds both lists; Parley prints them as two "Program" rows, each with the official lead-in ("As part of the Program, Partner will:" / "…Provider will:") as its hint.
 2. **Partner will: at least one pick.** Section 1.2 says the Partner "will participate in the Program", so an empty list would leave that clause empty.

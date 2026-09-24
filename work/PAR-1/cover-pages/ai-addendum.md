@@ -16,7 +16,7 @@ Template: `templates/AI-Addendum.md`, **AI Addendum v1.0**. Written 2026-09-24.
 
 Every official row, in order: Agreement, Training Data, Training Purposes, Training Restrictions, Improvement Restrictions, Covered Claims, AI Acceptable Use Policy, and the signature blocks. All 6 linked terms map to a field.
 
-## Judgment calls (for a lawyer to look at)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Intro:** the official intro, with the name and version added ("the Common Paper AI Addendum Standard Terms Version 1.0", as the template cites them). The official page puts the Agreement blank inside the sentence. Here it is its own row ("amends and is incorporated into the “Agreement” described below"). We added one sentence the official page lacks, because the brief asks for it: "If there is any inconsistency between this Cover Page and the AI Addendum Standard Terms, this Cover Page will control."
 2. **Training Data, Training Restrictions, Improvement Restrictions are multi-select** with an exclusive "None" and an Other line, like the official checkboxes. The official page gives "None" only for Training Data and Training Purposes. For the two restriction rows its note says "write 'None' or delete the row", so Parley shows "None" as a box there too.

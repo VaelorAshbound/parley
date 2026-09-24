@@ -25,7 +25,7 @@ The rows, hints, option wording and closing were compared line by line with the 
 
 Business Terms (part) → Obligations (Company will) · Obligations (Partner will) · Territory · Payment Process · Payment Schedule · End Date → Key Terms (part) → Effective Date · Governing Law · Chosen Courts · Covered Claims · General Cap Amount · Increased Claims · Increased Cap Amount · Unlimited Claims · Additional Warranties → Attachments and Supplements (part) → DPA · Brand Guidelines → Changes to Standard Terms (part) → Changes to Standard Terms → closing → Company | Partner signatures.
 
-## Judgment calls
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Explicit "None" on every optional checklist.** Obligations (each party), Payment Process, Increased Claims, Unlimited Claims, Additional Warranties and Brand Guidelines are multi-selects with a "None" that can't be picked with anything else. Covered Claims (each party), Payment Schedule and Increased Cap Amount are single choices with "None". The official page says "delete this entire row" instead; the brief asks for "None is an answer", so an empty row is never a silent choice. "None" is a Parley addition.
 2. **General Cap Amount is required, with no default.** The official page makes it optional, and an empty cap means "the Agreement will not have a limitation of liability".

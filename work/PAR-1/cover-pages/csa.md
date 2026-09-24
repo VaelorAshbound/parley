@@ -20,7 +20,7 @@ Two part headings, **Order Form** and **Key Terms**, as on the official page. Ev
 
 All 22 linked terms map to a field. The coverage test passes.
 
-## Judgment calls (for a lawyer to look at)
+## Judgment calls (not reviewed by a lawyer: Parley is a demo)
 
 1. **Every official row, not only the linked ones.** Pilot, SLA, Professional Services, Security Policy and Insurance Minimums have no linked term in v2.1, but the brief says to add the rows the official page has. The research report had left them out; it was written for v3.
 2. **"None" is an explicit option** on every optional row (Pilot, Use Limitations, Technical Support, SLA, Professional Services, both Covered Claims, Increased/Unlimited Claims, Increased Cap Amount, Additional Warranties, DPA, Security Policy, Insurance Minimums). Common Paper says "delete the row"; Parley prints "None" instead, which 13.1 reads the same way.
