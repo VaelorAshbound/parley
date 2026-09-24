@@ -1,4 +1,30 @@
-import { defineConfig } from "vite-plus"
+import tailwindcss from "@tailwindcss/vite"
+import react from "@vitejs/plugin-react"
+import { defineConfig, type TestProjectInlineConfiguration } from "vite-plus"
+import { playwright } from "vite-plus/test/browser-playwright"
+
+// Component tests in a real browser (spec §6): Vitest browser mode with the
+// Playwright provider. T32 adds Firefox and WebKit.
+const browserProject = {
+  resolve: { tsconfigPaths: true },
+  plugins: [tailwindcss(), react()],
+  test: {
+    name: "web-browser",
+    root: "apps/web",
+    include: ["src/**/*.browser.test.tsx"],
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright({
+        launchOptions: {
+          // A local Chromium when Playwright's download isn't available.
+          executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
+        },
+      }),
+      instances: [{ browser: "chromium" }],
+    },
+  },
+} satisfies TestProjectInlineConfiguration
 
 export default defineConfig({
   staged: {
@@ -140,6 +166,7 @@ export default defineConfig({
           name: "web",
           root: "apps/web",
           include: ["src/**/*.test.{ts,tsx}"],
+          exclude: ["src/**/*.browser.test.tsx"],
           typecheck: {
             enabled: true,
             include: ["src/**/*.test-d.ts"],
@@ -147,6 +174,10 @@ export default defineConfig({
           },
         },
       },
+      // Workers Builds (WORKERS_CI=1) has no browsers, so the browser tests run
+      // on GitHub Actions (ADR-0001). Left out here, not with `--project`: any
+      // --project filter makes v8 coverage report no files (Vitest 5.0.1).
+      ...(process.env.WORKERS_CI === "1" ? [] : [browserProject]),
       {
         test: {
           name: "documents",

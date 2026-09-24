@@ -1,6 +1,7 @@
-# Browser tests against the Worker Preview that Workers Builds makes for each
-# branch. Workers Builds has no root and no GUI libraries, so browsers can't run
-# there (work/PAR-1/spikes.md, docs/adr/0001). Kept lean to save Actions minutes:
+# Browser tests: the component tests (Vitest browser mode), then the e2e
+# tests against the Worker Preview that Workers Builds makes for each branch.
+# Workers Builds has no root and no GUI libraries, so browsers can't run there
+# (work/PAR-1/spikes.md, docs/adr/0001). Kept lean to save Actions minutes:
 # Chromium only on PRs, all browsers nightly, and setup overlaps the Preview build.
 name: E2E
 
@@ -44,9 +45,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
 
-      # Only the web app's packages, and no postinstall (workerd, wrangler types):
-      # Playwright needs none of it.
-      - run: pnpm install --frozen-lockfile --filter web --ignore-scripts
+      # No postinstall (workerd, wrangler types): the browser tests need none
+      # of it. The whole workspace, because the component tests import the
+      # document engine and run on the root Vite+ config.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Install browsers
         working-directory: apps/web
@@ -56,6 +58,14 @@ jobs:
           else
             pnpm exec playwright install --with-deps chromium firefox webkit
           fi
+
+      # Vitest browser mode (spec §6): the UI's component tests in a real
+      # Chromium. They need no Preview, so they run while it builds.
+      - name: Component tests
+        if: github.event_name == 'pull_request'
+        run: |
+          pnpm documents:build
+          pnpm test:browser
 
       - name: Wait for the Workers Builds Preview of this commit
         if: github.event_name == 'pull_request'
