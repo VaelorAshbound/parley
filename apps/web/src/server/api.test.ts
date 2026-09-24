@@ -41,6 +41,21 @@ describe("GET /api/health", () => {
   })
 })
 
+describe("GET /api/version", () => {
+  it("names the deployed version, so CI can wait for the right one", async () => {
+    const response = await api.request(
+      "/api/version",
+      {},
+      {
+        ...env,
+        CF_VERSION_METADATA: { id: "v-1", tag: "35a7e8b", timestamp: "" },
+      }
+    )
+
+    expect(await response.json()).toEqual({ tag: "35a7e8b" })
+  })
+})
+
 describe("an error outside oRPC and Better Auth", () => {
   // Nothing listens on port 1, so connecting fails, as when Hyperdrive is down.
   const broken = {

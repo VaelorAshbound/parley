@@ -88,6 +88,21 @@ jobs:
           echo "Testing $url"
           curl --fail --silent --show-error --retry 5 --retry-all-errors "$url/api/health"
 
+      # The branch URL can serve the previous version for a moment after the
+      # build finishes; testing that would test the wrong code (T15).
+      - name: Wait until the Preview serves this commit
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 3
+        env:
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          while true; do
+            tag="$(curl --silent "$PREVIEW_URL/api/version" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).tag??"")}catch{console.log("")}})')"
+            echo "Preview version: ${tag:-unknown}, want ${SHA:0:7}"
+            if [ -n "$tag" ] && [ "${SHA#"$tag"}" != "$SHA" ]; then break; fi
+            sleep 5
+          done
+
       - name: Playwright
         working-directory: apps/web
         run: |
