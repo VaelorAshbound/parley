@@ -16,16 +16,14 @@ const CC_BY = "https://creativecommons.org/licenses/by/4.0/"
 const FEES_TAIL =
   "the Fees paid or payable by Customer to Provider in the 12 month period immediately before the claim"
 
-// A pick-list inside an option's sentence. A `choice`, not a `select`: a
-// select's options don't fit the AnyField type a blank needs (engine gap).
-const frequency = field.choice({
+const frequency = field.select({
   label: "How often",
   help: "How often the customer is billed.",
   options: {
-    monthly: { label: "monthly" },
-    quarterly: { label: "quarterly" },
-    annually: { label: "annually" },
-    subscriptionPeriod: { label: "once per Subscription Period" },
+    monthly: "monthly",
+    quarterly: "quarterly",
+    annually: "annually",
+    subscriptionPeriod: "once per Subscription Period",
   },
 })
 const dollars = (label: string, help: string) => field.money({ label, help })
@@ -193,12 +191,12 @@ export const csa = defineDocument({
               min: 1,
               max: 365,
             }),
-            start: field.choice({
+            start: field.select({
               label: "Counted from",
               help: "When the days to pay start counting.",
               options: {
-                receipt: { label: "Customer’s receipt of invoice" },
-                invoiceDate: { label: "the invoice date" },
+                receipt: "Customer’s receipt of invoice",
+                invoiceDate: "the invoice date",
               },
             }),
           },
@@ -777,7 +775,7 @@ export const csa = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const provider = company(values.provider?.company)
     if (
@@ -833,5 +831,18 @@ export const csa = defineDocument({
         "increasedCapAmount",
         "The Increased Cap Amount must be more than the General Cap Amount."
       )
+
+    // A finished page can't bill for services it never names. Only on the
+    // finished page, so the boxes can be ticked in any order.
+    const services = new Set(
+      values.professionalServices?.selected.map((pick) => pick.option)
+    )
+    if (
+      phase === "complete" &&
+      services.has("payment") &&
+      !services.has("reference") &&
+      !services.has("described")
+    )
+      issue("professionalServices", "Say which services this payment is for.")
   },
 })

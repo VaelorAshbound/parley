@@ -3,12 +3,22 @@ import { describe, expect, it } from "vite-plus/test"
 import { applyFieldChanges } from "../src/changes.ts"
 import { initialValues } from "../src/define.ts"
 import { csa } from "../src/definitions/csa.ts"
+import { examples } from "./examples.ts"
 
 const issues = (values: unknown) =>
   csa.draftSchema.safeParse(values).error?.issues.map((issue) => ({
     path: issue.path,
     message: issue.message,
   })) ?? []
+
+/** The issues a finished page gets: the example with some rows changed. */
+const finishedIssues = (changes: object) =>
+  csa.schema
+    .safeParse({ ...examples.csa, ...changes })
+    .error?.issues.map((issue) => ({
+      path: issue.path,
+      message: issue.message,
+    })) ?? []
 
 const perYear = {
   option: "perUnit",
@@ -152,6 +162,40 @@ describe("the CSA's cover page rules", () => {
 
     expect(rejected).toEqual([])
     expect(values.increasedCapAmount).toEqual({ option: "none" })
+  })
+
+  it("takes the billing picks as plain values", () => {
+    expect(
+      issues({
+        paymentProcess: {
+          option: "invoice",
+          value: { frequency: "monthly", days: 30, start: "invoiceDate" },
+        },
+      })
+    ).toEqual([])
+    expect(
+      issues({
+        paymentProcess: {
+          option: "automatic",
+          value: { frequency: "weekly" },
+        },
+      })
+    ).not.toEqual([])
+  })
+
+  it("needs the services named before a finished page bills for them", () => {
+    const paymentOnly = {
+      professionalServices: {
+        selected: [{ option: "payment", value: "Invoiced monthly." }],
+      },
+    }
+    expect(issues(paymentOnly)).toEqual([])
+    expect(finishedIssues(paymentOnly)).toEqual([
+      {
+        path: ["professionalServices"],
+        message: "Say which services this payment is for.",
+      },
+    ])
   })
 
   it("seeds the options Common Paper pre-marks, and nothing else", () => {

@@ -30,7 +30,7 @@ All 22 linked terms map to a field. The coverage test passes.
 6. **Governing law allows non-US places** (`usOnly` off), because the terms never say "the State of" and the official blanks say "state, province, and/or country". Courts use `courts: "anywhere"`, as the brief asks for a stand-alone "Chosen Courts".
 7. **Chosen Courts wording:** the field prints "courts located in …", so the row reads "The courts located in {place} (whether state, federal, or otherwise)". Official: "The courts (whether state, federal, or otherwise) located in …". Same meaning, words moved.
 8. **Fee multiples:** General Cap Amount takes any multiple above 0 (a $0 cap is unenforceable, official note). Increased Cap Amount must be above 1x ("a number other than 1").
-9. **Rules.** They run on drafts, and each change is checked on its own, so each rule blocks only a contradiction, never a missing value. The rows can be filled in any order.
+9. **Rules.** They run on drafts, and each change is checked on its own, so each draft rule blocks only a contradiction, never a missing value. The rows can be filled in any order. Rules that need a value run only on the finished page (see 13).
    - Provider and customer must be different companies.
    - Fee Changes: "may increase" and "will increase" can't both be picked.
    - Increased Claims (anything but None) can't have Increased Cap Amount = None, or those claims would have no cap at all (8.1(b)).
@@ -39,13 +39,16 @@ All 22 linked terms map to a field. The coverage test passes.
 10. **Details that belong to a picked option are blanks inside it**, so they are required once it is picked: the pilot's length and fee (a paid/free pick inside the pilot sentence), the certifications list, and the insurance minimums. They print on the option's line ("…with the following: SOC 2 Type II; Penetration testing") instead of as their own checkboxes. The official page shows them as nested checkboxes.
 11. **The price is its own row.** "Cloud Service Fees" holds the price (per unit, or another structure; at least one is required). The renewal increases and "inclusive of taxes" boxes are a separate optional row, **Fee Changes** (Parley heading), so a finished page always has a price and the boxes can be ticked in any order.
 12. **Parley headings** (no official heading exists): "Pilot Period Modifications", "Fee Changes", "Additional Insured". The official page nests these inside the row above. The group labels "Subscription details", "Additions and Modifications" and "Attachments, Supplements & Modifications" are dropped: the engine has one heading level, used for the two parts.
-13. **Professional Services:** the official cooperation paragraph comes after the options. Hints print before them, so it is the hint, with "described above" changed to "described below". It prints even when None is picked. "Payment Process for these services" can be picked with no service described; a rule for it would block ticking the boxes in that order.
+13. **Professional Services:** the official cooperation paragraph comes after the options. Hints print before them, so it is the hint, with "described above" changed to "described below". It prints even when None is picked. "Payment Process for these services" needs a service named (by SOW/PSA or described) on the finished page; a draft can tick the boxes in any order.
 14. **Other lines print last** (the engine always puts them last). In the certifications list the official Other comes after HITRUST.
 15. **Additional Insured stays optional:** it is a real "pick none or more" row. It shows only when insurance is required, with the official certificate paragraph as its hint.
 
-## Engine gaps
+## Engine gaps (fixed after T8)
 
-1. **A registry of two or more definitions doesn't type-check.** `DocumentDefinition<F>` doesn't widen to `DocumentDefinition` (`rules` is contravariant, and `PartyKey<Fields>` is `never`). So `render(definitions[id], …)` and `coverage(…)` fail on the union as soon as a second document is registered. Workaround (tests only): `allDefinitions` in `test/examples.ts` erases the types with one `as unknown as`, and the three looping tests use it. **T9–T11 will hit this too.** T13 will need a real fix, like an `AnyDocumentDefinition` type the engine functions accept.
-2. **`select` can't be a blank or a field.** `AnyField.options` is typed as choice options, so a `select` (string options) doesn't fit `AnyField`. The billing frequency and "counted from" blanks use a `choice` instead. It prints the same words. T9's EU member states `select` will hit this as a top-level field too.
-3. **No conditional "required" for separate rows.** Rules run on drafts, so they can't say "required when X is picked". The workaround is a blank inside the option (call 10). It costs the nested checkboxes.
-4. **No fixed text after a row's options** (see call 13), and **part headings don't print a hint** (the official "The key business terms of this Order Form are as follows:" is dropped).
+The engine gained these after T8, and this definition now uses them:
+
+1. **Any definition is a `DocumentDefinition`**, so the registry type-checks and the test loops need no cast (`allDefinitions` is gone).
+2. **`field.select` works as a blank.** "How often" and "Counted from" are selects now. The printed words are the same.
+3. **Rules know the phase.** A rule can require a value only on the finished page. Used for the services payment (call 13). The nested blanks of call 10 stay: they print well and need no rule.
+
+Still open: **no fixed text after a row's options** (call 13), and **part headings don't print a hint** (the official "The key business terms of this Order Form are as follows:" is dropped).

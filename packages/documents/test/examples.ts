@@ -550,9 +550,9 @@ export const examples = {
     paymentProcess: {
       option: "invoice",
       value: {
-        frequency: { option: "annually" },
+        frequency: "annually",
         days: 30,
-        start: { option: "receipt" },
+        start: "receipt",
       },
     },
     renewal: { option: "autoRenew", value: 30 },
