@@ -474,22 +474,26 @@ export const partnershipAgreement = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const first = company(values.company?.company)
     if (first !== undefined && first === company(values.partner?.company))
       issue("partner", "The two parties must be different companies.")
 
-    // Rules run on drafts, so each one waits until every value it reads is
-    // there; otherwise it would block filling the page in order.
-    const lists = [values.companyObligations, values.partnerObligations]
-    const picks = lists.flatMap((list) =>
-      (list?.selected ?? []).map((item) => item.option)
-    )
-    const bothAnswered = lists.every((list) => list !== undefined)
+    const cap = values.increasedCap
+    if (cap?.option === "multiple" && cap.value === 1)
+      issue("increasedCap", "Use a number other than 1.")
+
+    // Rules that tie two fields together wait for a complete document, so a
+    // draft can change them one at a time. Every field they read is required.
+    if (phase === "draft") return
+    const picks = [
+      values.companyObligations,
+      values.partnerObligations,
+    ].flatMap((list) => list?.selected.map((item) => item.option))
     const pays = picks.includes("payment")
 
-    if (bothAnswered && picks.every((pick) => pick === "none"))
+    if (picks.every((pick) => pick === "none"))
       issue(
         "partnerObligations",
         "Pick at least one Obligation for either party."
@@ -502,21 +506,16 @@ export const partnershipAgreement = defineDocument({
     // Common Paper: "In general, a $0 liability cap would be unenforceable."
     const noFees =
       "No Obligation is a payment, so a cap tied to fees is $0. Pick a dollar amount."
-    if (bothAnswered && !pays && values.generalCap?.option === "multiple")
+    if (!pays && values.generalCap?.option === "multiple")
       issue("generalCap", noFees)
-    if (bothAnswered && !pays && values.increasedCap?.option === "multiple")
-      issue("increasedCap", noFees)
+    if (!pays && cap?.option === "multiple") issue("increasedCap", noFees)
 
-    const cap = values.increasedCap
-    if (cap?.option === "multiple" && cap.value === 1)
-      issue("increasedCap", "Use a number other than 1.")
-    const claims = values.increasedClaims
-    if (claims !== undefined && cap !== undefined) {
-      const noClaims = claims.selected.some((item) => item.option === "none")
-      if (noClaims && cap.option !== "none")
-        issue("increasedCap", "There are no Increased Claims, so pick None.")
-      if (!noClaims && cap.option === "none")
-        issue("increasedCap", "Pick a cap for the Increased Claims.")
-    }
+    const noClaims = values.increasedClaims?.selected.some(
+      (item) => item.option === "none"
+    )
+    if (noClaims && cap?.option !== "none")
+      issue("increasedCap", "There are no Increased Claims, so pick None.")
+    if (!noClaims && cap?.option === "none")
+      issue("increasedCap", "Pick a cap for the Increased Claims.")
   },
 })

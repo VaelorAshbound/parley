@@ -12,6 +12,15 @@ const issues = (values: unknown) =>
     message: issue.message,
   }))
 
+/** The issues a complete Agreement gets once `change` is applied. */
+const completeIssues = (change: object) =>
+  partnership.schema
+    .safeParse({ ...example, ...change })
+    .error?.issues.map((issue) => ({
+      path: issue.path,
+      message: issue.message,
+    }))
+
 const none = { selected: [{ option: "none" }] }
 const promotes = {
   selected: [{ option: "promoActivities", value: "A joint webinar" }],
@@ -39,63 +48,56 @@ describe("the Partnership Agreement", () => {
   })
 
   it("needs at least one Obligation across both parties", () => {
-    expect(
-      issues({ companyObligations: none, partnerObligations: none })
-    ).toEqual([
+    const both = { companyObligations: none, partnerObligations: none }
+
+    expect(issues(both)).toBeUndefined()
+    expect(completeIssues(both)).toEqual([
       {
         path: ["partnerObligations"],
         message: "Pick at least one Obligation for either party.",
       },
     ])
-    // Waits for the second list while the page is filled in.
-    expect(issues({ companyObligations: none })).toBeUndefined()
     expect(
-      issues({ companyObligations: none, partnerObligations: promotes })
+      completeIssues({ companyObligations: none, partnerObligations: promotes })
     ).toBeUndefined()
   })
 
   it("needs a Payment Schedule when an Obligation is a payment", () => {
-    const schedule = { option: "none" }
+    const change = {
+      companyObligations: pays,
+      paymentSchedule: { option: "none" },
+    }
 
-    expect(
-      issues({ companyObligations: pays, paymentSchedule: schedule })
-    ).toEqual([
+    expect(issues(change)).toBeUndefined()
+    expect(completeIssues(change)).toEqual([
       {
         path: ["paymentSchedule"],
         message: "An Obligation is a payment, so fill in the Payment Schedule.",
       },
     ])
     expect(
-      issues({ companyObligations: promotes, paymentSchedule: schedule })
+      completeIssues({ ...change, companyObligations: promotes })
     ).toBeUndefined()
   })
 
   it("flags caps tied to fees when no Obligation is a payment", () => {
     const message =
       "No Obligation is a payment, so a cap tied to fees is $0. Pick a dollar amount."
-    const caps = {
+    const change = {
+      companyObligations: promotes,
+      partnerObligations: none,
       generalCap: { option: "multiple", value: 2 },
       increasedCap: { option: "multiple", value: 2 },
     }
 
-    expect(
-      issues({
-        companyObligations: promotes,
-        partnerObligations: none,
-        ...caps,
-      })
-    ).toEqual([
+    expect(issues(change)).toBeUndefined()
+    expect(completeIssues(change)).toEqual([
       { path: ["generalCap"], message },
       { path: ["increasedCap"], message },
     ])
     expect(
-      issues({
-        companyObligations: promotes,
-        partnerObligations: pays,
-        ...caps,
-      })
+      completeIssues({ ...change, partnerObligations: pays })
     ).toBeUndefined()
-    expect(issues({ companyObligations: promotes, ...caps })).toBeUndefined()
   })
 
   it("asks for an Increased Cap multiple other than 1", () => {
@@ -106,17 +108,22 @@ describe("the Partnership Agreement", () => {
 
   it("keeps Increased Claims and the Increased Cap Amount in step", () => {
     const cap = { option: "fixed", value: { amount: 1000, currency: "USD" } }
+    const noCap = { option: "none" }
 
-    expect(issues({ increasedClaims: none, increasedCap: cap })).toEqual([
+    // A draft can change the two one at a time.
+    expect(issues({ increasedClaims: none, increasedCap: cap })).toBeUndefined()
+    expect(
+      completeIssues({ increasedClaims: none, increasedCap: cap })
+    ).toEqual([
       {
         path: ["increasedCap"],
         message: "There are no Increased Claims, so pick None.",
       },
     ])
     expect(
-      issues({
+      completeIssues({
         increasedClaims: { selected: [], other: "Data breaches" },
-        increasedCap: { option: "none" },
+        increasedCap: noCap,
       })
     ).toEqual([
       {
@@ -125,9 +132,8 @@ describe("the Partnership Agreement", () => {
       },
     ])
     expect(
-      issues({ increasedClaims: none, increasedCap: { option: "none" } })
+      completeIssues({ increasedClaims: none, increasedCap: noCap })
     ).toBeUndefined()
-    expect(issues({ increasedCap: cap })).toBeUndefined()
   })
 
   it("requires a General Cap Amount, since an empty one means no cap", () => {

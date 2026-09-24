@@ -30,7 +30,7 @@ Business Terms (part) → Obligations (Company will) · Obligations (Partner wil
 1. **Explicit "None" on every optional checklist.** Obligations (each party), Payment Process, Increased Claims, Unlimited Claims, Additional Warranties and Brand Guidelines are multi-selects with a "None" that can't be picked with anything else. Covered Claims (each party), Payment Schedule and Increased Cap Amount are single choices with "None". The official page says "delete this entire row" instead; the brief asks for "None is an answer", so an empty row is never a silent choice. "None" is a Parley addition.
 2. **General Cap Amount is required, with no default.** The official page makes it optional, and an empty cap means "the Agreement will not have a limitation of liability".
 3. **Covered Claims have no default.** Common Paper leaves both boxes unchecked, with the Committee's wording in brackets. Parley offers that wording as one option, a custom claim as another, and None. (The research proposed pre-picking the Committee wording for both; the brief allows defaults only where Common Paper pre-marks one.) They print as labeled lines, "Company Covered Claim(s): …", like the official page.
-4. **Rules** (each waits until the values it reads are filled in, so it never blocks filling the page in order):
+4. **Rules.** The ones that tie two fields together run only on a complete document (the "complete" phase), so a draft can change the fields one at a time. Before, they ran on drafts, and Increased Claims and Increased Cap could deadlock: from None/None, neither could change first. Only "a number other than 1" still checks drafts, since it reads one field.
    - at least one Obligation across both parties (official: "Choose at least one");
    - an Obligation that is a payment needs a Payment Schedule (official: "this Variable is required"), so "None" is refused then;
    - with no payment Obligation, a "[#] times the fees" General or Increased Cap is $0 and is flagged (Common Paper: "a $0 liability cap would be unenforceable"); "the greater of $X or …" stays allowed;
@@ -55,8 +55,10 @@ Business Terms (part) → Obligations (Company will) · Obligations (Partner wil
 
 ## Engine gaps
 
-1. **No "required when".** Rules run on drafts and block the change, so "required when" is built from explicit None options plus consistency rules (see 4). A rule that runs only on the complete document would be simpler.
+No `field.select` change here: every pick on this page is a checkbox, a radio or free text, so no small choice stood in for a pick list.
+
+1. **Fixed: "required when".** Rules know their phase now (8b78a29). The consistency rules in 4 run on the complete document only. The explicit None options stay: None is a real answer on Common Paper's pages.
 2. **A section holds one field**, so the official Obligations row becomes two "Obligations" rows (hints "Company will:" / "Partner will:").
-3. **Part headings drop their hint** in the outputs (the Business Terms and Key Terms lead-ins are stored, not printed).
+3. **Fixed: part headings print their hint** in the outputs.
 4. **Choices print "None" above "Other"**, because Other is always the last line.
 5. **Notice Address** is not linked in this template (12.7), so no term maps to `.notice`; the signature table still prints each party's notice address.
