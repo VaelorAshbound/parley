@@ -1,3 +1,4 @@
+import type { DocumentDefinition } from "../define.ts"
 import { aiAddendum } from "./ai-addendum.ts"
 import { baa } from "./baa.ts"
 import { csa } from "./csa.ts"
@@ -26,3 +27,16 @@ export const definitions = {
 }
 
 export type DocumentId = keyof typeof definitions
+
+export function isDocumentId(value: unknown): value is DocumentId {
+  return typeof value === "string" && Object.hasOwn(definitions, value)
+}
+
+/**
+ * The definition for an id, typed for any document. Indexing `definitions`
+ * with a DocumentId gives a union that the generic engine functions can't
+ * take; each member widens to DocumentDefinition on its own.
+ */
+export function definitionOf(id: DocumentId): DocumentDefinition {
+  return definitions[id]
+}

@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vite-plus/test"
 
 import coverTemplate from "../generated/mutual-nda-coverpage.ts"
-import { coverage, initialValues } from "../src/define.ts"
-import { definitions } from "../src/definitions/index.ts"
+import {
+  coverage,
+  initialValues,
+  type DocumentDefinition,
+} from "../src/define.ts"
+import {
+  definitionOf,
+  definitions,
+  isDocumentId,
+} from "../src/definitions/index.ts"
 import type { AnyField } from "../src/fields.ts"
 import type { CoverBlock, Inline } from "../src/parse/schema.ts"
 import { render, type Part } from "../src/render.ts"
@@ -211,5 +219,22 @@ describe("the Mutual NDA's cover page", () => {
         value: { amount: 1, unit: "years" },
       },
     })
+  })
+})
+
+describe("definitionOf", () => {
+  it("finds a definition by its catalog id, typed for any document", () => {
+    const definition: DocumentDefinition = definitionOf("mutual-nda")
+
+    expect(definition).toBe(definitions["mutual-nda"])
+  })
+})
+
+describe("isDocumentId", () => {
+  it("accepts catalog ids only, never inherited keys", () => {
+    expect(isDocumentId("csa")).toBe(true)
+    expect(isDocumentId("nope")).toBe(false)
+    expect(isDocumentId("toString")).toBe(false)
+    expect(isDocumentId(42)).toBe(false)
   })
 })
