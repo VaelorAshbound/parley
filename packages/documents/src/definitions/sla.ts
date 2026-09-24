@@ -99,7 +99,8 @@ export const sla = defineDocument({
         },
       },
     }),
-    // A table can't be a blank, so it is its own row (see sla.md).
+    // A table can't be a blank, so it is its own row, required once an uptime
+    // target is picked (see rules).
     uptimeCredit: field.list({
       label: "Uptime credit",
       help: "The credit for each band of uptime below the target.",
@@ -186,7 +187,7 @@ export const sla = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const provider = company(values.provider?.company)
     if (
@@ -196,6 +197,16 @@ export const sla = defineDocument({
       issue(
         "customer",
         "The provider and the customer must be different companies."
+      )
+
+    // Without the table, an uptime target gives no credit when it is missed.
+    const uptime = values.targets?.selected.some(
+      (pick) => pick.option === "uptime"
+    )
+    if (phase === "complete" && uptime && values.uptimeCredit === undefined)
+      issue(
+        "uptimeCredit",
+        "Add the uptime credit for each band below the target."
       )
   },
 })

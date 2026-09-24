@@ -4,12 +4,31 @@ import { applyFieldChanges } from "../src/changes.ts"
 import { initialValues, type DraftValues } from "../src/define.ts"
 import { sla } from "../src/definitions/sla.ts"
 import { render } from "../src/render.ts"
+import { examples } from "./examples.ts"
 
 const issues = (values: unknown) =>
   sla.draftSchema.safeParse(values).error?.issues.map((issue) => ({
     path: issue.path,
     message: issue.message,
   })) ?? []
+
+/**
+ * The issues a finished page gets: the example with some rows changed, and
+ * rows set to undefined left out.
+ */
+const finishedIssues = (changes: object) =>
+  sla.schema
+    .safeParse(
+      Object.fromEntries(
+        Object.entries({ ...examples.sla, ...changes }).filter(
+          ([, value]) => value !== undefined
+        )
+      )
+    )
+    .error?.issues.map((issue) => ({
+      path: issue.path,
+      message: issue.message,
+    })) ?? []
 
 const headings = (values: DraftValues<typeof sla.fields>) =>
   render(sla, values).coverPage.sections.map((section) => section.heading)
@@ -88,5 +107,22 @@ describe("the SLA's cover page", () => {
 
   it("seeds nothing: Common Paper pre-marks no option", () => {
     expect(initialValues(sla, { today: "2026-09-24" })).toEqual({})
+  })
+
+  it("needs the uptime credit table once an uptime target is finished", () => {
+    const [uptime, response] = examples.sla.targets.selected
+    expect(issues({ targets: { selected: [uptime] } })).toEqual([])
+    expect(finishedIssues({ uptimeCredit: undefined })).toEqual([
+      {
+        path: ["uptimeCredit"],
+        message: "Add the uptime credit for each band below the target.",
+      },
+    ])
+    expect(
+      finishedIssues({
+        targets: { selected: [response] },
+        uptimeCredit: undefined,
+      })
+    ).toEqual([])
   })
 })

@@ -28,7 +28,7 @@ Agreement, one **SLA** row with the two official target boxes (Target Uptime wit
 9. **The 8% cap** in 3.3 caps the total credits per Subscription Period, so higher tiers in the table are still valid. No rule checks the table against it.
 10. **"Description of Agreement"** keeps the capital A: "Agreement" is a defined term.
 
-## Engine gaps
+## Engine gaps (fixed after T8)
 
-1. **An empty Uptime Credit table is accepted.** A table can't be a blank inside an option, and rules run on drafts, so nothing can say "required when an uptime target is picked". A finished page with an uptime target and no rows prints one row of placeholders and gives no credit. Needs a "required when" feature, or a placeholder check before export (for the lead to file).
-2. Same registry typing gap as the CSA (see `csa.md`); the looping tests use `allDefinitions`.
+1. **The Uptime Credit table is required once an uptime target is picked,** on the finished page only (a rule with the "complete" phase). A draft can still pick the target first.
+2. The registry typing gap is fixed in the engine (see `csa.md`).
