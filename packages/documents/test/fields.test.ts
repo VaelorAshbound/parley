@@ -329,7 +329,6 @@ describe("party", () => {
       title: "Title",
       email: "Email",
       address: "Address",
-      notice: "Notice address",
     })
   })
 })

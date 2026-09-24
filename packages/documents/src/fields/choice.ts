@@ -102,6 +102,7 @@ export function choice<
     draftSchema,
     changeSchema: draftSchema,
     merge: (_current, change) => change ?? undefined,
+    merges: "whole",
     format: (value) => formatChoice(config.options, value),
   } satisfies Field<"choice", ChoiceValue<O, Allow>, ChoiceDraft<O, Allow>> & {
     options: O

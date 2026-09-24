@@ -85,7 +85,9 @@ export function applyFieldChanges<F extends Fields>(
     inverse.unshift({
       key,
       value:
-        "subfields" in field ? partsToRestore(before, after) : (before ?? null),
+        field.merges === "parts"
+          ? partsToRestore(before, after)
+          : (before ?? null),
       expected: after ?? null,
     })
   }

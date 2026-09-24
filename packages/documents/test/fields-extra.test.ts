@@ -157,7 +157,7 @@ describe("a party's notice address", () => {
   })
 
   it("is a path to read, never a part to store or change", () => {
-    expect(party.subfields.notice).toBe("Notice address")
+    expect(party.derived.notice).toBe("Notice address")
     expect(party.draftSchema.safeParse({ notice: "x" }).success).toBe(false)
     expect(party.changeSchema.safeParse({ notice: "x" }).success).toBe(false)
   })
@@ -230,5 +230,89 @@ describe("jurisdiction outside the US", () => {
 
   it("shows no region until one is set", () => {
     expect(law.formatPath({ state: "DE" }, "region")).toBeNull()
+  })
+})
+
+// --- Fixes from the T7b design review ---
+
+describe("derived parts", () => {
+  it("are listed apart from the parts a form edits", () => {
+    const party = field.party({ label: "Customer", help: "The customer." })
+
+    expect(Object.keys(party.subfields)).not.toContain("notice")
+    expect(party.derived).toEqual({ notice: "Notice address" })
+  })
+})
+
+describe("decimals", () => {
+  it("count exactly, with no float tolerance", () => {
+    const whole = field.number({ label: "Count", help: "How many." })
+    const uptime = field.percent({ label: "Uptime", help: "Up.", decimals: 3 })
+
+    expect(whole.schema.safeParse(1.0000001).success).toBe(false)
+    expect(uptime.schema.safeParse(99.9991).success).toBe(false)
+    expect(uptime.schema.safeParse(99.999).success).toBe(true)
+  })
+})
+
+describe("number above a floor", () => {
+  it("can exclude the minimum, for 'more than 1x the fees'", () => {
+    const cap = field.number({
+      label: "Multiple",
+      help: "Times the fees.",
+      min: 1,
+      minExclusive: true,
+      decimals: 2,
+    })
+
+    expect(cap.schema.safeParse(1).success).toBe(false)
+    expect(cap.schema.safeParse(1.5).success).toBe(true)
+  })
+})
+
+describe("url, strictly", () => {
+  const policy = field.url({
+    label: "Security policy",
+    help: "Where it lives.",
+  })
+
+  it.each([
+    "https:acme.test",
+    "https://user:secret@acme.test/policy",
+    `https://acme.test/${"x".repeat(500)}`,
+  ])("rejects %j", (value) => {
+    expect(policy.schema.safeParse(value).success).toBe(false)
+  })
+})
+
+describe("defaults", () => {
+  it("must be valid values, checked when the field is defined", () => {
+    expect(() =>
+      field.duration({
+        label: "Term",
+        help: "How long.",
+        units: ["months", "years"],
+        default: { amount: 30, unit: "days" },
+      })
+    ).toThrow('Field "Term": its default is not a valid value.')
+  })
+})
+
+describe("courts anywhere", () => {
+  it("prints the courts as given, for terms whose courts may sit elsewhere", () => {
+    const law = field.jurisdiction({
+      label: "Governing law",
+      help: "Whose laws, and which courts.",
+      courts: "anywhere",
+    })
+    const value = {
+      state: "DE",
+      courtLocation: "New York County, New York",
+    } as const
+
+    expect(law.schema.parse(value)).toEqual(value)
+    expect(law.formatPath(value, "courtLocation")).toBe(
+      "courts located in New York County, New York"
+    )
   })
 })

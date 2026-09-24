@@ -80,7 +80,7 @@ export type Duration = z.infer<typeof durationSchema>
 
 /** `units` limits the choice where some make no sense (no "5 hours" term). */
 export function duration(
-  config: Common<Duration> & { units?: readonly Unit[] }
+  config: Common<Duration> & { units?: readonly [Unit, ...Unit[]] }
 ) {
   const schema = config.units
     ? z.strictObject({ amount, unit: unit.extract(config.units) })
@@ -144,12 +144,23 @@ export function percent(config: Common<number> & { decimals?: number }) {
 
 /** A plain number, like the "2" in "2x the fees". Whole unless `decimals`. */
 export function number(
-  config: Common<number> & { min?: number; max?: number; decimals?: number }
+  config: Common<number> & {
+    min?: number
+    /** "More than 1x the fees": the minimum itself is not allowed. */
+    minExclusive?: boolean
+    max?: number
+    decimals?: number
+  }
 ) {
   const decimals = config.decimals ?? 0
+  const min = config.min ?? 0
   const schema = z
     .number()
-    .min(config.min ?? 0, `At least ${config.min ?? 0}.`)
+    .check(
+      config.minExclusive
+        ? z.gt(min, `More than ${min}.`)
+        : z.gte(min, `At least ${min}.`)
+    )
     .max(config.max ?? 1e6, `At most ${config.max ?? 1e6}.`)
     .refine(
       (value) => hasDecimals(value, decimals),
@@ -174,11 +185,16 @@ export function select<const O extends Record<string, string>>(
 }
 
 export function url(config: Common<string>) {
-  const schema = z.url({
-    protocol: /^https$/,
-    hostname: z.regexes.domain,
-    error: "Use a full https:// link.",
-  })
+  const message = "Use a full https:// link."
+  const schema = z
+    .url({ protocol: /^https$/, hostname: z.regexes.domain, error: message })
+    .max(500, "Keep the link under 500 characters.")
+    // A link printed in a contract: no "https:host" shorthand, no passwords.
+    .refine((value) => {
+      if (!URL.canParse(value)) return false
+      const link = new URL(value)
+      return value.startsWith("https://") && !link.username && !link.password
+    }, message)
   return scalar("url", config, schema, (value) => value)
 }
 

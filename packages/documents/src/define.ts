@@ -9,7 +9,9 @@ import { typed, z } from "./zod.ts"
 export type Fields = Record<string, AnyField>
 type Key<F> = keyof F & string
 
-type PartsOf<T> = T extends { subfields: infer S } ? keyof S & string : never
+type PartsOf<T> = T extends { subfields: infer S; derived: infer D }
+  ? (keyof S | keyof D) & string
+  : never
 /** A field, or a part of an object field: "purpose", "party1.email". */
 export type FieldPath<F extends Fields> = {
   [K in Key<F>]: K | `${K}.${PartsOf<F[K]>}`

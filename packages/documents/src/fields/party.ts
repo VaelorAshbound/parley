@@ -40,9 +40,9 @@ export function party(config: Common<never>) {
       title: "Title",
       email: "Email",
       address: "Address",
-      // Derived: where notices go, the email and/or the postal address.
-      notice: "Notice address",
     },
+    // Where notices go: the email and/or the postal address.
+    derived: { notice: "Notice address" },
     // Notices go to an email or a postal address (the NDA cover page's
     // "Notice Address"), so a complete party needs at least one.
     schema: withMeta(
@@ -69,6 +69,7 @@ export function party(config: Common<never>) {
       config
     ),
     merge: mergeParts,
+    merges: "parts",
     format: (value) => value.company ?? null,
     formatPath: (value, part) =>
       part === "notice"

@@ -118,12 +118,29 @@ const STATES = {
 const courtLocation = plainText(100)
 const region = plainText(100)
 
-type JurisdictionConfig = { label: string; help: string; optional?: boolean }
+type JurisdictionConfig = {
+  label: string
+  help: string
+  optional?: boolean
+  /**
+   * "same" (default): the courts sit in the governing-law place. "anywhere":
+   * the courts are named in full, for terms that let them sit elsewhere
+   * (Common Paper's CSA, PSA and DPA name "Chosen Courts" on their own).
+   */
+  courts?: "same" | "anywhere"
+}
 
 // The courts sit in the governing-law place by construction, so the spec's
 // "court must match the governing-law state" rule can't be broken.
-const courts = (location: string | undefined, place: string | undefined) =>
-  location && place ? `courts located in ${location}, ${place}` : null
+function courts(
+  config: JurisdictionConfig,
+  location: string | undefined,
+  place: string | undefined
+) {
+  if (!location) return null
+  if (config.courts === "anywhere") return `courts located in ${location}`
+  return place ? `courts located in ${location}, ${place}` : null
+}
 
 /** For terms that say "the laws of the State of …": a US state only. */
 function usJurisdiction(config: JurisdictionConfig) {
@@ -150,13 +167,15 @@ function usJurisdiction(config: JurisdictionConfig) {
       config
     ),
     merge: mergeParts,
+    merges: "parts",
+    derived: {},
     format: (value) => (value.state ? STATES[value.state] : null),
     formatPath: (value, part) =>
       part === "state"
         ? value.state
           ? STATES[value.state]
           : null
-        : courts(value.courtLocation, value.state),
+        : courts(config, value.courtLocation, value.state),
   } satisfies ObjectField<"jurisdiction", Value, Draft>
 }
 
@@ -226,11 +245,13 @@ function worldJurisdiction(config: JurisdictionConfig) {
             : {}
       return mergeParts(current, { ...swap, ...change })
     },
+    merges: "parts",
+    derived: {},
     format: (value) => placeOf(value) ?? null,
     formatPath(value, part) {
       if (part === "state") return value.state ? STATES[value.state] : null
       if (part === "region") return value.region ?? null
-      return courts(value.courtLocation, value.state ?? value.region)
+      return courts(config, value.courtLocation, value.state ?? value.region)
     },
   } satisfies ObjectField<"jurisdiction", Value, Draft>
 }

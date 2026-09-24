@@ -100,7 +100,10 @@ export function render<F extends Fields>(
   function show(path: string): RenderedValue {
     const [key = "", part] = path.split(".")
     const field = fields[key]
-    const partLabel = part === undefined ? undefined : field?.subfields?.[part]
+    const partLabel =
+      part === undefined
+        ? undefined
+        : (field?.subfields?.[part] ?? field?.derived?.[part])
     const label = partLabel
       ? `${field?.label}: ${partLabel}`
       : (field?.label ?? path)
@@ -205,7 +208,8 @@ function fieldLines(
   value: unknown,
   show: (path: string) => RenderedValue
 ): RenderedLine[] {
-  if (!field?.options) return [{ parts: [{ type: "value", ...show(path) }] }]
+  if (field?.kind !== "choice" || !field.options)
+    return [{ parts: [{ type: "value", ...show(path) }] }]
 
   const chosen = isChoice(value) ? value : undefined
   const lines: RenderedLine[] = Object.entries(field.options).map(

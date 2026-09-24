@@ -41,6 +41,7 @@ export const mutualNda = defineDocument({
           label: "Expires {value} from Effective Date.",
           with: field.duration({
             label: "MNDA length",
+            units: ["days", "weeks", "months", "years"],
             help: "How long until the MNDA expires.",
           }),
         },
@@ -60,6 +61,7 @@ export const mutualNda = defineDocument({
             "{value} from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws.",
           with: field.duration({
             label: "Confidentiality length",
+            units: ["days", "weeks", "months", "years"],
             help: "How long Confidential Information stays protected.",
           }),
         },

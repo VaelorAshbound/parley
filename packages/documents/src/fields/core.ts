@@ -47,6 +47,11 @@ export interface Field<
   merge(current: Draft | undefined, change: Change | null): unknown
   /** Display text, or null when the value can't be shown yet. */
   format(value: Draft): string | null
+  /**
+   * "whole": a change replaces the value. "parts": a change is a partial
+   * object merged into it, so an undo lists the parts to restore.
+   */
+  readonly merges: "whole" | "parts"
 }
 
 /** A field whose value has named parts, like a party's company and email. */
@@ -57,9 +62,10 @@ export interface ObjectField<
   /** Parts that are read, never stored, like a party's "notice". */
   Derived extends string = never,
 > extends Field<Kind, Value, Draft, NullableParts<Value>> {
-  readonly subfields: {
-    readonly [K in (keyof Value & string) | Derived]: string
-  }
+  /** The stored parts a form edits, with their names. */
+  readonly subfields: { readonly [K in keyof Value & string]: string }
+  /** Parts that are only read, like a party's "notice". */
+  readonly derived: { readonly [K in Derived]: string }
   formatPath(
     value: Draft,
     part: (keyof Value & string) | Derived
@@ -84,8 +90,10 @@ export interface AnyField {
   readonly changeSchema: z.ZodType
   merge(current: unknown, change: unknown): unknown
   format(value: unknown): string | null
+  readonly merges: "whole" | "parts"
   /** Object kinds: the name of each part, and one part's display text. */
   readonly subfields?: Readonly<Record<string, string>>
+  readonly derived?: Readonly<Record<string, string>>
   formatPath?(value: unknown, part: string): string | null
   /** Choice: its options, and whether it takes an Other answer. */
   readonly options?: Readonly<
@@ -115,6 +123,7 @@ export function scalar<Kind extends FieldKind, Value>(
   format: (value: Value) => string | null
 ): Field<Kind, Value> {
   const described = withMeta(schema, config)
+  checkDefault(config, described)
   return {
     kind,
     label: config.label,
@@ -126,7 +135,16 @@ export function scalar<Kind extends FieldKind, Value>(
     changeSchema: described,
     merge: (_current, change) => change ?? undefined,
     format,
+    merges: "whole",
   }
+}
+
+/** A bad default is a bug in a definition: fail when the field is built. */
+export function checkDefault(config: Common<unknown>, schema: z.ZodType) {
+  if (config.default !== undefined && !schema.safeParse(config.default).success)
+    throw new Error(
+      `Field "${config.label}": its default is not a valid value.`
+    )
 }
 
 /** Shallow-merges a partial change; a `null` part removes it. */
@@ -155,6 +173,6 @@ export function plainText(max: number) {
 
 /** True when `value` has no more than `digits` decimals (float-safe). */
 export function hasDecimals(value: number, digits: number) {
-  const scaled = value * 10 ** digits
-  return Math.abs(scaled - Math.round(scaled)) < 1e-6
+  // Exact: 1.0000001 is not a whole number, even if it prints close to one.
+  return Number(value.toFixed(digits)) === value
 }
