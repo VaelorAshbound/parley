@@ -12,6 +12,8 @@ const browserProject = {
     name: "web-browser",
     root: "apps/web",
     include: ["src/**/*.browser.test.tsx"],
+    // The app's real styles, so tests see what people see.
+    setupFiles: ["src/test/browser-setup.ts"],
     browser: {
       enabled: true,
       headless: true,
@@ -60,6 +62,19 @@ export default defineConfig({
               ],
             },
           ],
+        },
+      },
+      {
+        // Components the shadcn CLI writes are kept as it writes them, so an
+        // update shows only upstream's changes. Their roles and label
+        // wiring follow Base UI's patterns, which these rules don't know.
+        files: ["packages/ui/src/components/**"],
+        plugins: ["react", "jsx-a11y"],
+        rules: {
+          "jsx-a11y/prefer-tag-over-role": "off",
+          "jsx-a11y/click-events-have-key-events": "off",
+          "jsx-a11y/no-noninteractive-element-interactions": "off",
+          "jsx-a11y/label-has-associated-control": "off",
         },
       },
       {

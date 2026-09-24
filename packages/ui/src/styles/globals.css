@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* shadcn/typeset (https://ui.shadcn.com/docs/typeset), kept as its own file. */
+@import "./typeset.css";
 /* Self-hosted variable fonts (brand.md → Type). Newsreader's `opsz` entry
    keeps the optical-size axis; the italic face only downloads when used. */
 @import "@fontsource-variable/newsreader/opsz.css";
@@ -259,5 +261,18 @@
 @media (prefers-reduced-motion: reduce) {
   .shimmer {
     animation: none;
+  }
+}
+
+/* Typeset presets (spec §5 UI). The live document reads like the printed
+   contract: Newsreader at the brand's Contract size (brand.md → Type). */
+@layer components {
+  .typeset-contract {
+    --typeset-font-body: var(--font-serif);
+    --typeset-font-heading: var(--font-serif);
+    --typeset-size: 14.5px;
+    --typeset-leading: 1.55;
+    --typeset-flow: 0.8em;
+    font-optical-sizing: auto;
   }
 }
