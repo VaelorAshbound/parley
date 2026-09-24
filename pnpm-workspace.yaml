@@ -18,6 +18,10 @@ catalog:
 
 overrides:
   vite@*: "catalog:"
+  # One Node type version (engines: node 24). Two versions gave two copies of
+  # vite-plus, and the root build then used a different Vite than the
+  # Cloudflare plugin, which broke the Worker bundle (T14).
+  "@types/node": ^24.13.6
 
 peerDependencyRules:
   allowAny:
