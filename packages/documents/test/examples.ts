@@ -232,6 +232,55 @@ export const examples = {
       address: "100 Market St, San Francisco, CA 94105",
     },
   },
+  "design-partner-agreement": {
+    product:
+      "Shelf Sense, Acme's early-stage inventory planning tool for retail stores",
+    programPartner: {
+      selected: [
+        {
+          option: "feedback",
+          value: { sessions: 2, period: { option: "month" } },
+        },
+        { option: "privateLists" },
+        { option: "reference" },
+      ],
+      other: "Share anonymized sales data from two pilot stores",
+    },
+    programProvider: {
+      selected: [
+        { option: "discount", value: "20%" },
+        {
+          option: "functionality",
+          value: "A weekly reorder report that exports to CSV",
+        },
+      ],
+    },
+    effectiveDate: { option: "lastSignature" },
+    term: { amount: 6, unit: "months" },
+    governingLaw: { state: "NY", courtLocation: "New York County, New York" },
+    fees: {
+      option: "paid",
+      value: {
+        amount: { amount: 500, currency: "USD" },
+        period: { option: "month" },
+        days: 30,
+      },
+    },
+    modifications:
+      "Provider will not name Partner in public before the Product launches.",
+    provider: {
+      company: "Acme Analytics, Inc.",
+      name: "Ana Diaz",
+      title: "CEO",
+      email: "legal@acme.test",
+    },
+    partner: {
+      company: "Corner Market Co.",
+      name: "Cy Park",
+      title: "Owner",
+      address: "12 Elm St, Brooklyn, NY 11201",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
