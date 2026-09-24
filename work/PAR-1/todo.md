@@ -244,7 +244,20 @@
   - Files: `packages/db/src/{schema.ts,client.ts,queries/drafts.ts}`, `drizzle.config.ts`, `test/*.test.ts`
   - Deps: T1 · Owner: Neon project · Skills: `neon:neon-postgres`
 
-- [ ] **T14: Worker API: Better-Auth guest sessions + oRPC drafts** (M)
+- [x] **T14: Worker API: Better-Auth guest sessions + oRPC drafts** (M)
+  - Done 2026-09-24. Skills: incremental-implementation, test-driven-development, source-driven-development, api-and-interface-design, security-and-hardening, doubt-driven-development (fresh-context adversarial review; cross-model not run yet, offered at the checkpoint), observability-and-instrumentation, documentation-and-adrs; better-auth-best-practices, create-auth, workers-best-practices, wrangler. Checked:
+    - Gate: 628 unit/integration tests + 28 workerd tests on a real Postgres through Hyperdrive, 100% coverage on the DB and engine, and the built Worker booted in workerd (`scripts/smoke-bundle.sh`).
+    - Auth matrix (nobody / other guest / owner × every procedure) and a completeness test that fails when a procedure has no row.
+    - Live on the Preview: guest sign-in, create, five edit-then-read rounds all fresh (Hyperdrive caching off), no-cookie call → typed 401.
+    - Proven to fail without the fix: CSRF header, row lock (two edits at once keep both), auth-schema sync, bundle smoke.
+  - Decisions:
+    - **oRPC v1 names and shape**: `RequestHeadersPlugin`/`ResponseHeadersPlugin`; `draftOwner` is a middleware with a mapped input (v1 can't stack `.input()`). Spec updated.
+    - **Base URL from the request host** (`allowedHosts` per `STAGE`), no `BETTER_AUTH_URL`. Production refuses workers.dev.
+    - **`BETTER_AUTH_SECRET` in `secrets.required`**; different values for production and Previews (Previews base config).
+    - **Review fixes**: CSRF header plugin, body limits (128 KB rpc, 16 KB auth), `.onError` with a plain message, request id from `cf-ray` (never the client's), cookies copied before the 401, `rpc_error`/`api_error` structured logs.
+    - **Workerd tests alias `pg-protocol` and `pg-cloudflare`** to the builds wrangler uses (ADR-0004).
+    - **One `@types/node` (24) across the workspace**: two versions made two Vite copies and broke the Worker bundle on upload. CI now boots the bundle first.
+    - **Follow-ups**: PAR-5 (drafts that stop matching a changed definition), notes on T21 (move guest drafts on sign-up), T27 (draft caps, RPC rate limit), T38 (production version URLs).
   - Accept:
     - Better-Auth is mounted at `/api/auth/*` with the `anonymous()` plugin. The first visit that needs a session creates a guest.
     - oRPC `drafts.create`, `drafts.get` and `drafts.updateFields` (through `applyFieldChanges`) enforce ownership.
