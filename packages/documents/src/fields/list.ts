@@ -1,6 +1,7 @@
 import { typed, z } from "../zod.ts"
 import {
   checkDefault,
+  display,
   withMeta,
   type AnyField,
   type Common,
@@ -56,9 +57,8 @@ export function list<const I extends Columns>(
 
   const formatItem = (item: Readonly<Record<string, unknown>>) =>
     entries
-      .flatMap(([key, column]) =>
-        item[key] === undefined ? [] : [column.format(item[key])]
-      )
+      .map(([key, column]) => display(column, item[key]))
+      .filter((text) => text !== null)
       .join(", ")
 
   return {

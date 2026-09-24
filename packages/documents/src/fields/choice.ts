@@ -2,6 +2,7 @@ import { typed, z } from "../zod.ts"
 import { splitLabel } from "../label.ts"
 import {
   checkDefault,
+  display,
   plainText,
   withMeta,
   type AnyField,
@@ -118,10 +119,9 @@ export function optionPieces(option: ChoiceOption) {
 }
 
 /** The text of one blank: its value, or the blank field's placeholder. */
-export function blankText(option: ChoiceOption, name: string, value: unknown) {
-  const blank = blanksOf(option)[name]
-  const filled = option.with ? value : isRecord(value) ? value[name] : undefined
-  return filled !== undefined && blank ? blank.format(filled) : null
+/** The value of one blank: the whole value for `with`, a part for `blanks`. */
+export function blankValue(option: ChoiceOption, name: string, value: unknown) {
+  return option.with ? value : isRecord(value) ? value[name] : undefined
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -138,12 +138,12 @@ export function formatChoice(
   // An old draft can hold an option a later version of the document dropped.
   if (!option) return null
   const value = "value" in choice ? choice.value : undefined
-  return splitLabel(option.label)
+  return optionPieces(option)
     .map((piece) =>
       piece.type === "text"
         ? piece.text
-        : (blankText(option, piece.name, value) ??
-          `[${blanksOf(option)[piece.name]?.label}]`)
+        : (display(piece.field, blankValue(option, piece.name, value)) ??
+          `[${piece.field.label}]`)
     )
     .join("")
 }

@@ -182,8 +182,31 @@ const MESSAGES = {
     `Keep it under ${max.toLocaleString("en-US")} characters.`,
 }
 
+/**
+ * Characters a contract must never carry: control characters other than tab
+ * and newline (XML can't hold most of them, so Word would call the DOCX
+ * corrupt), bidi overrides and isolates (they make the printed text read
+ * differently from the stored text), and the non-characters U+FFFE/U+FFFF.
+ */
+const HIDDEN = /(?![\t\n])\p{Cc}|[\u202A-\u202E\u2066-\u2069\uFFFE\uFFFF]/u
+
 export function plainText(max: number) {
-  return z.string().trim().min(1, MESSAGES.empty).max(max, MESSAGES.long(max))
+  return z
+    .string()
+    .overwrite((value) => value.replaceAll(/\r\n?/g, "\n"))
+    .trim()
+    .min(1, MESSAGES.empty)
+    .max(max, MESSAGES.long(max))
+    .refine(
+      // isWellFormed: no lone surrogate halves.
+      (value) => value.isWellFormed() && !HIDDEN.test(value),
+      "Remove hidden control characters."
+    )
+}
+
+/** A field's text for a value that may be missing. */
+export function display(field: AnyField, value: unknown) {
+  return value === undefined ? null : field.format(value)
 }
 
 /** True when `value` has no more than `digits` decimals (float-safe). */

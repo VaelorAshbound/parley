@@ -1,5 +1,6 @@
 import { typed, z } from "../zod.ts"
 import {
+  display,
   mergeParts,
   withMeta,
   type AnyField,
@@ -77,14 +78,11 @@ export function group<const P extends Parts<P>>(
     format(value) {
       const record: Readonly<Record<string, unknown>> = value
       const lines = entries.flatMap(([key, part]) => {
-        const text = part.format(record[key])
-        return record[key] === undefined || text === null
-          ? []
-          : [`${part.label}: ${text}`]
+        const text = display(part, record[key])
+        return text === null ? [] : [`${part.label}: ${text}`]
       })
       return lines.join("\n") || null
     },
-    formatPath: (value, part) =>
-      value[part] === undefined ? null : config.parts[part].format(value[part]),
+    formatPath: (value, part) => display(config.parts[part], value[part]),
   } satisfies ObjectField<"group", GroupValue<P>, GroupValue<P>> & { parts: P }
 }

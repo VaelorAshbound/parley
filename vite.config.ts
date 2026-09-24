@@ -9,7 +9,11 @@ export default defineConfig({
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
-    ignorePatterns: ["**/routeTree.gen.ts", "**/worker-configuration.d.ts"],
+    ignorePatterns: [
+      ".claude/worktrees/",
+      "**/routeTree.gen.ts",
+      "**/worker-configuration.d.ts",
+    ],
     overrides: [
       {
         files: ["apps/web/**", "packages/ui/**"],
@@ -62,6 +66,8 @@ export default defineConfig({
       functions: ["cn", "cva"],
     },
     ignorePatterns: [
+      // Agent worktrees are whole checkouts of the repo; each lints itself.
+      ".claude/worktrees/",
       "CLAUDE.md",
       "work/",
       "templates/",

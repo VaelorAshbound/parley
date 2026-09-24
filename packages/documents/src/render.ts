@@ -5,7 +5,8 @@ import type {
   SignatureRow,
 } from "./define.ts"
 import type { AnyField } from "./fields.ts"
-import { blankText, isRecord, optionPieces } from "./fields/choice.ts"
+import { display } from "./fields/core.ts"
+import { blankValue, isRecord, optionPieces } from "./fields/choice.ts"
 import type { Clause, Inline, LinkKind, StandardTerms } from "./parse/schema.ts"
 
 // One render model feeds all three outputs: the React preview, the print
@@ -130,7 +131,7 @@ export function render<F extends Fields>(
       value === undefined || !field
         ? null
         : part === undefined
-          ? field.format(value)
+          ? display(field, value)
           : (field.formatPath?.(value, part) ?? null)
     return { field: path, label, text, placeholder: `[${label}]` }
   }
@@ -285,7 +286,7 @@ function listTable(
     columns.map(([key, column]) => ({
       field: path,
       label: column.label,
-      text: record[key] === undefined ? null : column.format(record[key]),
+      text: display(column, record[key]),
       placeholder: `[${column.label}]`,
     }))
   return {
@@ -312,7 +313,9 @@ function choiceLines(
         field: path,
         label,
         // Only picked options show their values; the others stay blank.
-        text: pick ? blankText(option, piece.name, pick.value) : null,
+        text: pick
+          ? display(piece.field, blankValue(option, piece.name, pick.value))
+          : null,
         placeholder: `[${label}]`,
       }
     })

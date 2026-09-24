@@ -18,3 +18,4 @@ worker-configuration.d.ts
 playwright-report/
 test-results/
 packages/documents/generated/
+.claude/worktrees/
