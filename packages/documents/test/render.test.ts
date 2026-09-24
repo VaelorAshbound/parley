@@ -132,6 +132,42 @@ function stripAdded(node: unknown): unknown {
 }
 
 describe("render: cover page", () => {
+  it("names the field each section shows, so a click can edit it", () => {
+    const { sections } = render(definition, filled).coverPage
+
+    expect(sections.map((each) => each.field)).toEqual([
+      "purpose",
+      "effectiveDate",
+      "term",
+      // Lines that all show parts of one field edit that field.
+      "governingLaw",
+      "modifications",
+    ])
+  })
+
+  it("names no field for lines from several fields, or a part heading", () => {
+    const mixed = defineDocument({
+      ...definition,
+      coverPage: {
+        ...definition.coverPage,
+        sections: [
+          { heading: "Key Terms", part: true },
+          {
+            heading: "Dates and law",
+            lines: [
+              { label: "Effective Date", field: "effectiveDate" },
+              { label: "Governing Law", field: "governingLaw.state" },
+            ],
+          },
+        ],
+      },
+    })
+
+    expect(
+      render(mixed, filled).coverPage.sections.map((each) => each.field)
+    ).toEqual([undefined, undefined])
+  })
+
   it("renders a missing value as its placeholder", () => {
     expect(section({}, "Purpose").lines).toEqual([
       {

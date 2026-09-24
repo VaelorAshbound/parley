@@ -1,4 +1,5 @@
 import { z } from "../zod.ts"
+import type { Unit } from "./basic.ts"
 
 // The field kinds a document is filled with (spec §2 → Document engine).
 // Each field carries three schemas:
@@ -111,12 +112,20 @@ export type AnyField =
         | "text"
         | "longText"
         | "date"
-        | "duration"
         | "money"
         | "percent"
         | "number"
-        | "select"
         | "url"
+    })
+  | (FieldBase & {
+      readonly kind: "duration"
+      /** The units a form offers. */
+      readonly units: readonly Unit[]
+    })
+  | (FieldBase & {
+      readonly kind: "select"
+      /** Code → the name shown: "DE" → "Germany". */
+      readonly options: Readonly<Record<string, string>>
     })
   | (FieldBase & {
       readonly kind: "choice" | "choices"

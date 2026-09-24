@@ -68,7 +68,8 @@ export const unit = z.enum([
   "years",
 ])
 export type Unit = z.infer<typeof unit>
-const UNITS = {
+/** Each unit in words, for one and for many: "business day(s)". */
+export const unitWords = {
   minutes: ["minute", "minutes"],
   hours: ["hour", "hours"],
   days: ["day", "days"],
@@ -91,10 +92,12 @@ export function duration(
   const schema = config.units
     ? z.strictObject({ amount, unit: unit.extract(config.units) })
     : durationSchema
-  return scalar("duration", config, schema, ({ amount, unit }) => {
-    const [one, many] = UNITS[unit]
+  const field = scalar("duration", config, schema, ({ amount, unit }) => {
+    const [one, many] = unitWords[unit]
     return `${amount} ${amount === 1 ? one : many}`
   })
+  // The units a form offers, in the order the definition lists them.
+  return { ...field, units: config.units ?? unit.options }
 }
 
 // --- Money and percent ---

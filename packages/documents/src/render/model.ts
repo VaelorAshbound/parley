@@ -67,6 +67,11 @@ export type RenderedTable = { columns: string[]; rows: RenderedValue[][] }
 
 export type RenderedSection = {
   heading: string
+  /**
+   * The field the section shows, so the preview can open its editor. Unset
+   * for a part heading, or lines from more than one field.
+   */
+  field?: string
   hint?: string
   lines: RenderedLine[]
   table?: RenderedTable

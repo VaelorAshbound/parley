@@ -102,10 +102,12 @@ export function render<F extends Fields>(
             return []
           if ("part" in section)
             return [{ heading, hint, lines: [], part: true }]
-          if ("lines" in section)
+          if ("lines" in section) {
+            const keys = new Set(section.lines.map((line) => keyOf(line.field)))
             return [
               {
                 heading,
+                ...(keys.size === 1 && { field: [...keys][0] }),
                 hint,
                 lines: section.lines.map((line) => ({
                   label: line.label,
@@ -113,6 +115,7 @@ export function render<F extends Fields>(
                 })),
               },
             ]
+          }
           const body = section.template
             ? {
                 lines: [
@@ -125,7 +128,7 @@ export function render<F extends Fields>(
                 valueOf(section.field),
                 show
               )
-          return [{ heading, hint, ...body }]
+          return [{ heading, field: keyOf(section.field), hint, ...body }]
         }
       ),
       closing: definition.coverPage.closing.map(inline),
@@ -144,6 +147,11 @@ export function render<F extends Fields>(
       children: renderBlocks(definition.template, inline, clause),
     },
   }
+}
+
+/** "party1.email" → "party1". */
+function keyOf(path: string) {
+  return path.replace(/\..*$/s, "")
 }
 
 function clauseNumber(id: string) {

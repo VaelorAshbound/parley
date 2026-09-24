@@ -62,7 +62,13 @@ describe("applyFieldChanges", () => {
       {
         key: "purpose",
         value: "Hiring.",
-        issues: ["This field changed after that edit, so it was not undone."],
+        issues: [
+          {
+            path: [],
+            message:
+              "This field changed after that edit, so it was not undone.",
+          },
+        ],
       },
     ])
   })
@@ -116,7 +122,7 @@ describe("applyFieldChanges", () => {
       {
         key: "effectiveDate",
         value: "2026-02-30",
-        issues: ["Use a real date, like 2026-09-24."],
+        issues: [{ path: [], message: "Use a real date, like 2026-09-24." }],
       },
     ])
   })
@@ -128,7 +134,11 @@ describe("applyFieldChanges", () => {
 
       expect(result.values).toEqual({})
       expect(result.rejected).toEqual([
-        { key, value: "x", issues: [`There is no field "${key}".`] },
+        {
+          key,
+          value: "x",
+          issues: [{ path: [], message: `There is no field "${key}".` }],
+        },
       ])
     }
   )
@@ -138,7 +148,9 @@ describe("applyFieldChanges", () => {
       { key: "party1", value: { email: "ana at acme" } },
     ])
 
-    expect(rejected[0]?.issues).toEqual(["email: Use a real email address."])
+    expect(rejected[0]?.issues).toEqual([
+      { path: ["email"], message: "Use a real email address." },
+    ])
   })
 
   it("rejects a change that breaks a cross-field rule", () => {
@@ -150,7 +162,7 @@ describe("applyFieldChanges", () => {
 
     expect(values).toEqual({ party1: { company: "Acme" } })
     expect(rejected[0]?.issues).toEqual([
-      "The two parties must be different companies.",
+      { path: [], message: "The two parties must be different companies." },
     ])
   })
 
@@ -225,7 +237,13 @@ describe("undo", () => {
       {
         key: "purpose",
         value: null,
-        issues: ["This field changed after that edit, so it was not undone."],
+        issues: [
+          {
+            path: [],
+            message:
+              "This field changed after that edit, so it was not undone.",
+          },
+        ],
       },
     ])
   })

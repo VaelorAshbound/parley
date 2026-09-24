@@ -19,7 +19,13 @@ export type ChangeRequest = {
 }
 
 export type AppliedChange = { key: string; before: unknown; after: unknown }
-export type RejectedChange = { key: string; value: unknown; issues: string[] }
+/** A reason a change was refused; `path` names the part inside the field. */
+export type ChangeIssue = { path: (string | number)[]; message: string }
+export type RejectedChange = {
+  key: string
+  value: unknown
+  issues: ChangeIssue[]
+}
 
 export type ChangeResult<F extends Fields> = {
   values: DraftValues<F>
@@ -46,19 +52,21 @@ export function applyFieldChanges<F extends Fields>(
 
   for (const change of changes) {
     const { key, value } = change
-    const reject = (issues: string[]) => rejected.push({ key, value, issues })
+    const reject = (issues: ChangeIssue[]) =>
+      rejected.push({ key, value, issues })
+    const refuse = (message: string) => reject([{ path: [], message }])
 
     const field = Object.hasOwn(definition.fields, key)
       ? definition.fields[key]
       : undefined
     if (!field) {
-      reject([`There is no field "${key}".`])
+      refuse(`There is no field "${key}".`)
       continue
     }
 
     const before: unknown = current[key]
     if ("expected" in change && !dequal(before ?? null, change.expected)) {
-      reject(["This field changed after that edit, so it was not undone."])
+      refuse("This field changed after that edit, so it was not undone.")
       continue
     }
 
@@ -111,14 +119,21 @@ function partsToRestore(before: unknown, after: unknown) {
   )
 }
 
-/** Short messages for people and the model: "email: Use a real email…". */
-function messages(issues: z.core.$ZodIssue[], prefix: PropertyKey[]) {
-  return issues.map((issue) => {
-    const path = issue.path.slice(
-      prefix.length > 0 && issue.path[0] === prefix[0] ? prefix.length : 0
-    )
-    return path.length > 0
-      ? `${path.join(".")}: ${issue.message}`
-      : issue.message
-  })
+/**
+ * The issues, each with its path inside the field: "email" of a party, or
+ * none for the whole field (a cross-field rule names the field it blames).
+ */
+function messages(
+  issues: z.core.$ZodIssue[],
+  prefix: PropertyKey[]
+): ChangeIssue[] {
+  return issues.map((issue) => ({
+    path: issue.path
+      .slice(
+        prefix.length > 0 && issue.path[0] === prefix[0] ? prefix.length : 0
+      )
+      // Zod paths are object keys and array indexes; symbols never occur.
+      .filter((part): part is string | number => typeof part !== "symbol"),
+    message: issue.message,
+  }))
 }

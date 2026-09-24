@@ -1,6 +1,7 @@
 import fc from "fast-check"
 import { describe, expect, it } from "vite-plus/test"
 
+import { unit, unitWords } from "../src/fields/basic.ts"
 import { field } from "../src/fields.ts"
 import { z } from "../src/zod.ts"
 
@@ -130,6 +131,21 @@ describe("duration", () => {
     { amount: 1 },
   ])("rejects %j", (value) => {
     expect(duration.schema.safeParse(value).success).toBe(false)
+  })
+
+  it("lists the units a form may offer, all of them by default", () => {
+    const term = field.duration({
+      label: "MNDA length",
+      help: "How long.",
+      units: ["months", "years"],
+    })
+
+    expect(term.units).toEqual(["months", "years"])
+    expect(duration.units).toEqual(unit.options)
+  })
+
+  it("names each unit in words, for one and for many", () => {
+    expect(unitWords.businessDays).toEqual(["business day", "business days"])
   })
 })
 

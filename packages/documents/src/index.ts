@@ -6,6 +6,7 @@ export { applyFieldChanges } from "./changes.ts"
 export { DISCLAIMER } from "./disclaimer.ts"
 export type {
   AppliedChange,
+  ChangeIssue,
   ChangeRequest,
   ChangeResult,
   RejectedChange,
