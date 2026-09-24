@@ -1,0 +1,86 @@
+
+Cover page by Parley, not by Common Paper
+AI Addendum
+This Cover Page incorporates the Common Paper AI Addendum Standard Terms Version 1.0 available at https://commonpaper.com/standards/ai-addendum/1.0/ with the Variables set forth below (collectively, the “AI Addendum”). A copy of the AI Addendum Standard Terms is attached for convenience only.
+This AI Addendum amends and is incorporated into the “Agreement” described below. Undefined capitalized words have the meanings or descriptions given in the Agreement. If there is any inconsistency between this AI Addendum and the Agreement, the AI Addendum will control for the provision of AI Services. If there is any inconsistency between this Cover Page and the AI Addendum Standard Terms, this Cover Page will control.
+Agreement
+The signed agreement this AI Addendum amends
+Cloud Service Agreement between Northwind Analytics, Inc. and Juniper Outfitters LLC dated November 1, 2026
+Training Data
+Provider may Train the Model(s) using the following Training Data:
+☐ None
+☒ Usage Data
+☒ Feedback
+☐ Input
+☐ Output
+☐ User prompts, excluding other components of Input
+☐ Customer Content
+☐ Other: [Other]
+Training Purposes
+Permitted Model Training. Provider may use Training Data for the following purpose:
+☐ None
+☒ Train the Model(s) in the AI Services solely for Customer’s benefit
+☐ Train the Model(s) in the AI Services
+Training Restrictions
+Restrictions on Model Training
+☐ None
+☒ Training Data must be aggregated
+☒ Training Data must be de-identified
+☐ Provider will use commercially reasonable efforts consistent with industry standard technology to de-identify Training Data
+☐ Other: [Other]
+Improvement Restrictions
+For improvements to the AI System (but not any Models)
+☐ None
+☒ Neither Input nor Output may identify Customer
+☐ Improvements based on Customer’s Input, Output, or Training Data will be solely for Customer’s benefit
+☒ Other: Provider will not use Input or Output to improve features sold to Customer's competitors.
+Covered Claims
+Claims covered by indemnity obligations
+☐ None
+☒ Provider Covered Claims include any action, proceeding, or claim that the Output—when generated and used by Customer according to the terms of the Agreement and the AI Addendum—violates, misappropriates, or otherwise infringes upon the intellectual property or other proprietary rights of another person or entity. Without limiting the indemnity exclusions in the Agreement, Provider’s obligations as an Indemnifying Party will not apply to Provider Covered Claims that result from: (a) use of Output in combination with data, software, hardware, equipment, technology, or other products or services not provided by Provider; (b) Input; (c) Customer’s use of the AI Services in breach of the Agreement or the AI Addendum; (d) modifications to the Output that were not made by Provider; (e) Output that Customer knew or should have known might violate, misappropriate, or otherwise infringe upon another’s intellectual property or other proprietary rights; or (f) a claim that use of Output infringes another’s trademark or related rights.
+☐ Provider Covered Claims include any action, proceeding, or claim [Provider covered claims]
+☐ Customer Covered Claims include any action, proceeding, or claim that (1) the Input—when used by Provider according to the terms of the Agreement and the AI Addendum—violates, misappropriates, or otherwise infringes upon the intellectual property or other proprietary rights of another person or entity; or (2) results from Customer’s use of the AI Services in violation of the applicable restrictions in the Agreement or the AI Addendum.
+☒ Customer Covered Claims include any action, proceeding, or claim that the Input, when used by Provider according to the terms of the Agreement and the AI Addendum, infringes anyone else's intellectual property rights.
+AI Acceptable Use Policy
+☐ None
+☒ Use of the AI Services is subject to the Acceptable Use Policy available at https://northwind.test/ai-policy
+By signing this Cover Page, each party agrees to enter into this AI Addendum.
+Provider
+Customer
+Signature
+Print Name
+Priya Raman
+Marco Silva
+Title
+Chief Revenue Officer
+VP of Operations
+Company
+Northwind Analytics, Inc.
+Juniper Outfitters LLC
+Notice Address
+legal@northwind.test
+400 Pine St, Seattle, WA 98101
+Date
+Cover page adapted by Parley from Common Paper's AI Addendum cover page, free to use under CC BY 4.0.
+Common Paper AI Addendum Standard Terms (Version 1.0) free to use under CC BY 4.0.
+AI Addendum
+1. AI Services
+1.1 Using AI Services. The AI Services are part of the Product and subject to the Agreement as supplemented by this AI Addendum. Customer may use AI Services by providing Input. The AI Services may generate Output in response to Input. Provider may copy, display, modify, distribute, and use Input to the extent necessary to provide the AI Services as contemplated by this AI Addendum. Customer authorizes Provider to process Input for all such purposes.
+1.2 Restrictions. Without limiting the restrictions contained in the Agreement, Customer will not (and will not allow anyone else to): (a) use the AI Services for decision-making in a regulated industry or capacity without proper human oversight and review in compliance with Applicable Laws and applicable professional ethics, guidelines, and rules; (b) use the AI Services to violate, misappropriate, or otherwise infringe the intellectual property or other proprietary rights of others; or (c) falsely state Output was created by a human.
+1.3 Model Training. Unless the Cover Page identifies Training Data and Training Purposes, Provider may not use Customer's Inputs or Outputs to Train any Model. If the Cover Page permits Training, then subject to the Training Restrictions, Provider may copy, modify, distribute, and use Training Data for the Training Purposes.
+1.4 Non-Training Improvement. Subject to the Improvement Restrictions, Provider may use Input, Output, and Training Data to provide, maintain, develop, and improve the AI System, provided that such usage does not constitute Training except to the extent authorized for Training Purposes.
+2. Intellectual Property and Privacy
+2.1 Ownership. As between the parties, Customer (a) retains all right, title, and interest in and to all Input, and (b) owns all Output. To the extent permitted by Applicable Laws, Provider hereby assigns to Customer all right, title, and interest—if any—in and to Output.
+2.2 Personal Data. Nothing in this AI Addendum will reduce or limit Provider's obligations under Applicable Data Protection Laws regarding Personal Data that may be contained in Input.
+2.3 Rights to Input. Customer represents and warrants that it, all Users, and anyone submitting Input each have and will continue to have all rights necessary to submit Input to the AI Services.
+3. Disclaimers
+3.1 Nature of AI. Due to the nature of artificial intelligence and machine learning, information generated by the AI Services may be incorrect or inaccurate. The AI Services are not human and are not a substitute for human oversight. Output generated by the AI Services may not be protectable as intellectual property.
+3.2 Similarity of Output. Output may resemble or be duplicative of data, information, and materials created by the AI Services for others. Provider does not provide any representation or warranty that Output (a) does not and will not incorporate or reflect the data, information, prompts, or materials of others, (b) will not violate, misappropriate, or otherwise infringe upon the intellectual property or other proprietary rights of another person or entity, or (c) will not be reproduced in the same or similar way to another user of the AI Services.
+4. Definitions
+4.1 "AI Addendum Standard Terms" means these Common Paper AI Addendum Standard Terms Version 1.0, which are posted at https://commonpaper.com/standards/ai-addendum/1.0/.
+4.2 "AI Services" means the artificial intelligence or machine learning components of the Product, including the AI System and underlying Model(s).
+4.3 "AI System" means the artificial intelligence or machine learning application, program, and services layers of the AI Services, excluding the underlying Models.
+4.4 "Input" means the data, information, prompts, or materials submitted by or on behalf of Customer or Users to the AI Services but excludes Feedback.
+4.5 "Model" means a large language, machine learning, or artificial intelligence model.
+4.6 "Output" means the data, information, or materials created by the AI Services in response to Input.
+4.7 "Train" or "Training" means the use of data, information, or materials to create or improve a Model.

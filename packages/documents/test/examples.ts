@@ -710,6 +710,48 @@ export const examples = {
       email: "contracts@juniper.test",
     },
   },
+  "ai-addendum": {
+    agreement:
+      "Cloud Service Agreement between Northwind Analytics, Inc. and Juniper Outfitters LLC dated November 1, 2026",
+    trainingData: {
+      selected: [{ option: "usageData" }, { option: "feedback" }],
+    },
+    trainingPurposes: { option: "customerOnly" },
+    trainingRestrictions: {
+      selected: [{ option: "aggregated" }, { option: "deidentified" }],
+    },
+    improvementRestrictions: {
+      selected: [{ option: "noIdentify" }],
+      other:
+        "Provider will not use Input or Output to improve features sold to Customer's competitors.",
+    },
+    coveredClaims: {
+      selected: [
+        { option: "provider" },
+        {
+          option: "customerCustom",
+          value:
+            "that the Input, when used by Provider according to the terms of the Agreement and the AI Addendum, infringes anyone else's intellectual property rights.",
+        },
+      ],
+    },
+    acceptableUsePolicy: {
+      option: "policy",
+      value: "available at https://northwind.test/ai-policy",
+    },
+    provider: {
+      company: "Northwind Analytics, Inc.",
+      name: "Priya Raman",
+      title: "Chief Revenue Officer",
+      email: "legal@northwind.test",
+    },
+    customer: {
+      company: "Juniper Outfitters LLC",
+      name: "Marco Silva",
+      title: "VP of Operations",
+      address: "400 Pine St, Seattle, WA 98101",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
