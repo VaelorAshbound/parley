@@ -6,6 +6,8 @@ import {
   type AnyField,
   type Common,
   type Field,
+  type DraftOf,
+  type ValueOf,
 } from "./core.ts"
 
 // Records of the same shape, printed as a table: the DPA's subprocessors
@@ -13,8 +15,6 @@ import {
 // whole list; lists are short, and undo still restores the exact old one.
 
 type Columns = Readonly<Record<string, AnyField>>
-type ValueOf<F> = F extends { schema: z.ZodType<infer V> } ? V : never
-type DraftOf<F> = F extends { draftSchema: z.ZodType<infer D> } ? D : never
 
 export type ListValue<I extends Columns> = { [K in keyof I]: ValueOf<I[K]> }[]
 export type ListDraft<I extends Columns> = { [K in keyof I]?: DraftOf<I[K]> }[]

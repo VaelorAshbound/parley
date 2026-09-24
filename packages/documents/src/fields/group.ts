@@ -7,6 +7,7 @@ import {
   type Common,
   type NullableParts,
   type ObjectField,
+  type ValueOf,
 } from "./core.ts"
 
 // Named answers under one heading, like the DPA's Annex II security
@@ -14,7 +15,6 @@ import {
 
 /** Named fields; the self-reference keeps each key known, not indexed. */
 type Parts<P> = { readonly [K in keyof P]: AnyField }
-type ValueOf<F> = F extends { schema: z.ZodType<infer V> } ? V : never
 
 /** Optional parts stay optional at runtime; the type keeps every part so. */
 export type GroupValue<P extends Parts<P>> = { [K in keyof P]?: ValueOf<P[K]> }

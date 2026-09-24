@@ -2,7 +2,6 @@ import { typed, z } from "../zod.ts"
 import {
   checkOption,
   formatChoice,
-  isRecord,
   optionSchemas,
   type ChoiceDraft,
   type ChoiceOptions,
@@ -14,6 +13,7 @@ import {
   withMeta,
   type Common,
   type Field,
+  isRecord,
 } from "./core.ts"
 
 // Multi-select, for Common Paper's "[ ] pick none, one, or more than one"

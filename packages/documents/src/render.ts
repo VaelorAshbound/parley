@@ -5,8 +5,8 @@ import type {
   SignatureRow,
 } from "./define.ts"
 import type { AnyField } from "./fields.ts"
-import { display } from "./fields/core.ts"
-import { blankValue, isRecord, optionPieces } from "./fields/choice.ts"
+import { display, isRecord } from "./fields/core.ts"
+import { blankValue, optionPieces } from "./fields/choice.ts"
 import type { Clause, Inline, LinkKind, StandardTerms } from "./parse/schema.ts"
 
 // One render model feeds all three outputs: the React preview, the print

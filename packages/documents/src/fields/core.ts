@@ -213,6 +213,19 @@ export function unlessMissing(message: string) {
     issue.input === undefined ? undefined : message
 }
 
+/** The complete, draft and change value types of a field. */
+export type ValueOf<F> = F extends { schema: z.ZodType<infer V> } ? V : never
+export type DraftOf<F> = F extends { draftSchema: z.ZodType<infer V> }
+  ? V
+  : never
+export type ChangeOf<F> = F extends { changeSchema: z.ZodType<infer V> }
+  ? V
+  : never
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
 /** A field's text for a value that may be missing. */
 export function display(field: AnyField, value: unknown) {
   return value === undefined ? null : field.format(value)

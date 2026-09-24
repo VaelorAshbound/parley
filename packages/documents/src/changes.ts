@@ -1,6 +1,7 @@
 import { dequal } from "dequal/lite"
 
 import type { DocumentDefinition, DraftValues, Fields } from "./define.ts"
+import { isRecord } from "./fields/core.ts"
 import type { z } from "./zod.ts"
 
 // The one way a draft's values change (spec §5 API): the AI's updateFields
@@ -108,10 +109,6 @@ function partsToRestore(before: unknown, after: unknown) {
       .filter((part) => !dequal(before[part], after[part]))
       .map((part) => [part, before[part] ?? null])
   )
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
 }
 
 /** Short messages for people and the model: "email: Use a real email…". */

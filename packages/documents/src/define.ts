@@ -1,4 +1,5 @@
 import type { AnyField } from "./fields.ts"
+import type { ChangeOf, DraftOf, ValueOf } from "./fields/core.ts"
 import type { Inline, StandardTerms } from "./parse/schema.ts"
 import { linkedTermsOf } from "./tree.ts"
 import { typed, z } from "./zod.ts"
@@ -19,10 +20,6 @@ export type FieldPath<F extends Fields> = {
 type PartyKey<F> = {
   [K in Key<F>]: F[K] extends { kind: "party" } ? K : never
 }[Key<F>]
-
-type ValueOf<T> = T extends { schema: z.ZodType<infer V> } ? V : never
-type DraftOf<T> = T extends { draftSchema: z.ZodType<infer V> } ? V : never
-type ChangeOf<T> = T extends { changeSchema: z.ZodType<infer V> } ? V : never
 
 /** What a draft holds: any subset of the fields, each possibly partial. */
 export type DraftValues<F> = { [K in Key<F>]?: DraftOf<F[K]> }

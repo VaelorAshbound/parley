@@ -8,6 +8,9 @@ import {
   type AnyField,
   type Common,
   type Field,
+  isRecord,
+  type DraftOf,
+  type ValueOf,
 } from "./core.ts"
 
 // --- Choice ---
@@ -29,9 +32,6 @@ export function blanksOf(
 ): Readonly<Record<string, AnyField>> {
   return option.blanks ?? (option.with ? { value: option.with } : {})
 }
-
-type ValueOf<F> = F extends { schema: z.ZodType<infer V> } ? V : never
-type DraftOf<F> = F extends { draftSchema: z.ZodType<infer D> } ? D : never
 
 type Other<Allow> = Allow extends true
   ? { option: "other"; text: string }
@@ -122,10 +122,6 @@ export function optionPieces(option: ChoiceOption) {
 /** The value of one blank: the whole value for `with`, a part for `blanks`. */
 export function blankValue(option: ChoiceOption, name: string, value: unknown) {
   return option.with ? value : isRecord(value) ? value[name] : undefined
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
 }
 
 /** Not generic, so TypeScript can narrow on `option`. */
