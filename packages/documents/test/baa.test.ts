@@ -2,6 +2,10 @@ import { describe, expect, it } from "vite-plus/test"
 
 import { initialValues } from "../src/define.ts"
 import { baa } from "../src/definitions/baa.ts"
+import { render } from "../src/render.ts"
+import { examples } from "./examples.ts"
+
+const example = baa.schema.parse(examples.baa)
 
 const period = (amount: number, unit: string) =>
   baa.draftSchema.safeParse({ breachNotificationPeriod: { amount, unit } })
@@ -50,5 +54,41 @@ describe("the BAA", () => {
         message: "The two parties must be different companies.",
       }),
     ])
+  })
+
+  it("prints each role as the official sentence with its pick", () => {
+    expect(
+      render(baa, example).coverPage.sections.find(
+        (section) => section.heading === "Relationship"
+      )?.lines
+    ).toMatchObject([
+      { parts: [{ text: "Provider is a " }, { text: "Business Associate" }] },
+      { parts: [{ text: "Company is a " }, { text: "Covered Entity" }] },
+    ])
+  })
+
+  it("won't sign a subcontractor straight to a Covered Entity", () => {
+    const pair = {
+      providerRole: "subcontractor",
+      companyRole: "coveredEntity",
+    }
+
+    expect(baa.draftSchema.safeParse(pair).success).toBe(true)
+    expect(baa.schema.safeParse({ ...example, ...pair }).error?.issues).toEqual(
+      [
+        expect.objectContaining({
+          path: ["companyRole"],
+          message:
+            "A subcontractor works for a Business Associate, so Company is one.",
+        }),
+      ]
+    )
+    expect(
+      baa.schema.safeParse({
+        ...example,
+        ...pair,
+        companyRole: "businessAssociate",
+      }).success
+    ).toBe(true)
   })
 })

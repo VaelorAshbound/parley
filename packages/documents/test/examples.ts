@@ -473,8 +473,8 @@ export const examples = {
   baa: {
     agreement:
       "Cloud Service Agreement between Cedar Care Records, Inc. and Maple Valley Clinic, P.C., dated October 1, 2026",
-    providerRole: { option: "businessAssociate" },
-    companyRole: { option: "coveredEntity" },
+    providerRole: "businessAssociate",
+    companyRole: "coveredEntity",
     breachNotificationPeriod: { amount: 5, unit: "businessDays" },
     designatedRecordSet: { option: "doesNotMaintain" },
     subcontracting: {

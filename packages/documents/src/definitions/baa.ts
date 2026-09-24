@@ -44,20 +44,22 @@ export const baa = defineDocument({
     }),
     // Two pickers, as on the official page. Each option holds the whole line,
     // since a choice's row can't take a template.
-    providerRole: field.choice({
+    // "Provider is a [ subcontractor | Business Associate ]": a pick in a
+    // blank, so a select inside the official sentence.
+    providerRole: field.select({
       label: "Provider's role",
       help: "Provider's role under HIPAA.",
       options: {
-        subcontractor: { label: "Provider is a subcontractor" },
-        businessAssociate: { label: "Provider is a Business Associate" },
+        subcontractor: "subcontractor",
+        businessAssociate: "Business Associate",
       },
     }),
-    companyRole: field.choice({
+    companyRole: field.select({
       label: "Company's role",
       help: "Company's role under HIPAA.",
       options: {
-        businessAssociate: { label: "Company is a Business Associate" },
-        coveredEntity: { label: "Company is a Covered Entity" },
+        businessAssociate: "Business Associate",
+        coveredEntity: "Covered Entity",
       },
     }),
     breachNotificationPeriod: field.duration({
@@ -254,7 +256,10 @@ export const baa = defineDocument({
       },
       {
         heading: "Relationship",
-        lines: [{ field: "providerRole" }, { field: "companyRole" }],
+        lines: [
+          { field: "providerRole", template: "Provider is a {value}" },
+          { field: "companyRole", template: "Company is a {value}" },
+        ],
       },
       {
         heading: "Breach Notification Period",
@@ -308,7 +313,7 @@ export const baa = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const first = company(values.provider?.company)
     if (first !== undefined && first === company(values.company?.company))
@@ -319,6 +324,18 @@ export const baa = defineDocument({
       issue(
         "breachNotificationPeriod",
         "At most 60 calendar days (38 business days or 1,440 hours)."
+      )
+
+    // HIPAA: a subcontractor works for a Business Associate. Checked only on
+    // a complete document, so a draft can change the two roles one at a time.
+    if (
+      phase === "complete" &&
+      values.providerRole === "subcontractor" &&
+      values.companyRole === "coveredEntity"
+    )
+      issue(
+        "companyRole",
+        "A subcontractor works for a Business Associate, so Company is one."
       )
   },
 })

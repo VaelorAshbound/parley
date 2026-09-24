@@ -52,12 +52,13 @@ Optional: **Other Changes** (free text; blank means none).
 
 ## Judgment calls (a lawyer should look)
 
-1. **Relationship keeps the official two pickers**, so a user can pick
-   "Provider is a subcontractor" with "Company is a Covered Entity". Under
-   HIPAA, a subcontractor works for a Business Associate, not straight for a
-   Covered Entity. There's no rule against this pair, because a draft rule
-   would block changing the two fields one at a time (engine gap 2 in
-   `dpa.md`). The AI should warn about it.
+1. **Relationship keeps the official two pickers**, and a complete BAA
+   can't pair "Provider is a subcontractor" with "Company is a Covered
+   Entity". Under HIPAA, a subcontractor works for a Business Associate, not
+   straight for a Covered Entity. The rule runs only on a complete document,
+   so a draft can change the two roles one at a time. "Business Associate"
+   with "Business Associate" stays allowed: a subcontractor is also a
+   Business Associate under HIPAA, so that wording is not wrong.
 2. **Designated Record Set has no default.** Common Paper says "select one and
    delete the other". The right answer depends on the product.
 3. **Limitations default to nothing.** The user must pick for each of the four.
@@ -77,8 +78,9 @@ Optional: **Other Changes** (free text; blank means none).
   and De-identification are a nested multi-select inside the "unless" option.
   Both conditions can be ticked, as on the official page. They print on one
   line, joined by "; ".
-- **Relationship:** each option holds the whole sentence ("Provider is a
-  subcontractor"). The engine won't put a template on a choice's row.
+- **Relationship:** the official "Provider is a [ subcontractor | Business
+  Associate ]" is a pick in a blank, so each role is a `field.select` inside
+  the official sentence (the line's template). The printed text is the same.
 - **Drafting notes become hints:**
   - Breach Notification Period: "This time period cannot be more than 60
     calendar days."
@@ -96,5 +98,6 @@ Optional: **Other Changes** (free text; blank means none).
 - **`units` narrows a duration's schema but not its TypeScript type.** So the
   limit table lists every unit (each entry is the most that stays within 60
   calendar days). The field's schema still rejects the other units.
-- **No "required when"**, and the Relationship pair can't be checked with a
-  draft rule. Both are described in `dpa.md`, gaps 2 and 4.
+- **Fixed:** `field.select` now works in a definition, and rules know their
+  phase. The Relationship roles are selects, and the pair check is a
+  "complete"-phase rule (see judgment call 1).
