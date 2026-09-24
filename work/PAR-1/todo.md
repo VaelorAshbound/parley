@@ -80,13 +80,21 @@
   - Deps: T1 · Skills: `emil-design-eng`, `apple-design` · Owner: approve
   - Can run in parallel with T5–T12.
 
-- [ ] **T5: Template parser: markdown → typed tree** (M)
+- [x] **T5: Template parser: markdown → typed tree** (M)
+  - Done 2026-09-24. Checked: `pnpm check`, `pnpm test` (158 tests + a type test; also with `--sequence.shuffle`), and `scripts/ci-build.sh` end to end. All 11 standard terms and the NDA cover page parse. Each template's words come back in order, compared with the source minus its markup (whitespace squashed). The outline of each template is a reviewed snapshot in `test/__outlines__/`.
+  - Decisions:
+    - **A line parser for the clause structure, remark + rehype-raw for the text in each line.** CommonMark has no `a.` or `i.` lists: remark folds the lettered items into the paragraph above and turns the 12-space `i.` items after blank lines into code blocks. The templates are very regular (one item per line, 4-space steps, no wrapped lines), so the line parser is small and strict. The cover page is plain GFM, so it goes through remark whole.
+    - **Clause numbers come from the list markers** ("5.3.a", "3.2.c.i"), not from the `id` attributes, which have copy-paste mistakes (`5.4.b` inside 5.6).
+    - **A linked term keeps its words and names its term:** "Customer’s" → term "Customer", text "Customer’s", so the value can take the "’s".
+    - **Bold quoted terms become `definition` nodes**, for both `**"Usage Data"**` and the NDA's `“**MNDA**”`. T8–T11 read the definitions from them.
+    - **Three fixes for bugs in the source:** CRLF line endings (Design Partner), a link with no scheme (Partnership: the text shows `https://`), and one heading whose period sits outside its span (Software License). None changes a word.
+    - **`generated/*.ts` typed modules, not JSON.** `const template: StandardTerms = …` gives full types with no cast and no parse at runtime. They are git-ignored, built on install (`prepare`) and in the CI gate. A type test imports all 12 (lint never sees git-ignored files), and a test fails if one is stale.
   - Accept:
     - `pnpm documents:build` parses all 12 templates + the NDA cover page into `generated/*.json`, using remark + rehype-raw.
     - Node types: section, clause (with its id, like `2.1`), paragraph, text, strong, linkedTerm (`{term, kind}`), definition. The tree is checked with a Zod schema.
     - A round-trip test: joining the text of the tree gives the template's text byte for byte.
   - Verify: `pnpm --filter documents test`. All 12 parse, and the snapshot of the tree is reviewed.
-  - Files: `packages/documents/src/parse/{parse.ts,schema.ts}`, `scripts/build.ts`, `test/parse.test.ts`
+  - Files: `packages/documents/src/parse/{parse.ts,schema.ts,catalog.ts}`, `scripts/build.ts`, `test/{parse,generated}.test.ts`, `test/generated.test-d.ts`, `test/__outlines__/*`
   - Deps: T1
 
 - [ ] **T6: Field system, `defineDocument` and the render model** (M)

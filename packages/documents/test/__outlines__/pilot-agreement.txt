@@ -1,0 +1,68 @@
+# Pilot Agreement
+1 Pilot Access
+  1.1 Access and Use. [orderform:Pilot Period, orderform:Customer]
+  1.2 License. [orderform:Pilot Period, orderform:Provider, orderform:Customer]
+  1.3 User Accounts. [orderform:Customer, orderform:Provider]
+  1.4 Customer Content. [orderform:Provider, orderform:Customer]
+  1.5 Feedback and Usage Data. [orderform:Customer, orderform:Provider]
+  1.6 Restrictions. [orderform:Customer]
+  1.7 Reservation of Rights. [orderform:Provider, orderform:Effective Date, orderform:Customer]
+2 Term & Termination
+  2.1 Agreement. [orderform:Effective Date, orderform:Pilot Period]
+  2.2 Termination.
+    2.2.a
+    2.2.b
+    2.2.c
+  2.3 Effect of Termination.
+    2.3.a [orderform:Customer, orderform:Provider]
+    2.3.b [orderform:Customer, orderform:Provider]
+    2.3.c
+  2.4 Survival.
+    2.4.a
+    2.4.b
+3 Representations
+  3.1
+4 Disclaimer of Warranties
+  4.1 [orderform:Provider]
+5 Limitation of Liability
+  5.1 General Liability Cap. [orderform:General Cap Amount]
+  5.2 Damages Waiver.
+  5.3 Applicability.
+6 Confidentiality
+  6.1 Non-Use and Non-Disclosure.
+  6.2 Exclusions.
+  6.3 Required Disclosures.
+  6.4 Permitted Disclosures.
+7 General Terms
+  7.1 Entire Agreement. [orderform:Provider, orderform:Customer]
+  7.2 Modifications, Severability, and Waiver.
+  7.3 Governing Law and Chosen Courts. [orderform:Governing Law, orderform:Chosen Courts]
+  7.4 Injunctive Relief.
+  7.5 Non-Exhaustive Remedies.
+  7.6 Assignment. [orderform:Provider]
+  7.7 Notices. [orderform:Notice Address]
+  7.8 Taxes. [orderform:Customer, orderform:Provider]
+  7.9 Independent Contractors.
+  7.10 No Third-Party Beneficiary.
+  7.11 Force Majeure. [orderform:Customer]
+  7.12 Titles and Interpretation.
+  7.13 Signature.
+8 Definitions
+  8.1 Defining Variables.
+  8.2 defines "Agreement" [orderform:Provider, orderform:Customer]
+  8.3 defines "Applicable Laws" [orderform:Provider, orderform:Customer]
+  8.4 defines "Confidential Information" [orderform:Effective Date, orderform:Customer, orderform:Provider]
+  8.5 defines "Customer Content" [orderform:Customer]
+  8.6 defines "Definitive Agreement" [orderform:Provider, orderform:Customer]
+  8.7 defines "Discloser"
+  8.8 defines "Evaluation Purposes" [orderform:Provider]
+  8.9 defines "Feedback"
+  8.10 defines "Fees"
+  8.11 defines "Force Majeure Event"
+  8.12 defines "High Risk Activity"
+  8.13 defines "Order Form" [orderform:Provider, orderform:Customer]
+  8.14 defines "Product"
+  8.15 defines "Recipient"
+  8.16 defines "Software" [orderform:Provider, orderform:Customer]
+  8.17 defines "Standard Terms"
+  8.18 defines "User" [orderform:Customer]

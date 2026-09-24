@@ -1,0 +1,113 @@
+# Software License Agreement
+1 Software
+  1.1 License. [orderform:Subscription Period, coverpage:Provider, coverpage:Customer, orderform:Permitted Uses]
+  1.2 User Accounts. [coverpage:Customer, coverpage:Provider]
+  1.3 Feedback and Usage Data. [coverpage:Customer, coverpage:Provider]
+  1.4 Machine Learning. [coverpage:Provider]
+  1.5 Open Source Software. [coverpage:Provider, coverpage:Customer]
+  1.6 Updates. [orderform:Subscription Period, coverpage:Provider, coverpage:Customer]
+  1.7 Reservation of Rights. [coverpage:Provider, keyterms:Effective Date]
+2 Restrictions & Obligations
+  2.1 Restrictions on Customer.
+    2.1.a [coverpage:Customer, coverpage:Provider]
+    2.1.b [orderform:License Limits]
+  2.2 Suspension. [coverpage:Customer, coverpage:Provider]
+3 Payment & Taxes
+  3.1 Fees.
+  3.2 Invoicing. [orderform:Payment Process, coverpage:Provider]
+  3.3 Automatic Payment. [orderform:Payment Process, coverpage:Provider, coverpage:Customer]
+  3.4 Taxes. [coverpage:Customer, coverpage:Provider]
+  3.5 Payment. [coverpage:Customer, coverpage:Provider, orderform:Payment Process]
+  3.6 Payment Dispute. [coverpage:Customer, coverpage:Provider]
+4 Term & Termination
+  4.1 Order Form and Agreement. [orderform:Order Date, orderform:Subscription Period, orderform:Subscription Periods, orderform:Non-Renewal Notice Date]
+  4.2 Framework Terms. [keyterms:Effective Date]
+  4.3 Termination.
+    4.3.a
+    4.3.b
+  4.4 Force Majeure. [coverpage:Provider, coverpage:Customer, orderform:Subscription Period]
+  4.5 Effect of Termination.
+    4.5.a [coverpage:Customer, orderform:Deletion Procedure]
+    4.5.b
+    4.5.c [coverpage:Provider, coverpage:Customer]
+  4.6 Survival.
+    4.6.a
+    4.6.b
+5 Representations & Warranties
+  5.1 Mutual. [keyterms:Additional Warranties]
+  5.2 Provider Warranty. [coverpage:Provider, orderform:Warranty Period]
+  5.3 Warranty Exclusions. [coverpage:Provider, coverpage:Customer]
+  5.4 Provider Warranty Remedy. [coverpage:Provider, coverpage:Customer]
+6 Disclaimer of Warranties
+  6.1 [coverpage:Provider, coverpage:Customer]
+7 Limitation of Liability
+  7.1 Liability Caps.
+    7.1.a [keyterms:General Cap Amount]
+    7.1.b [keyterms:Increased Claims, keyterms:Increased Cap Amount]
+  7.2 Damages Waiver.
+  7.3 Applicability.
+  7.4 Exceptions. [keyterms:Increased Claims, keyterms:Unlimited Claims, coverpage:Customer]
+8 Indemnification
+  8.1 Protection by Provider. [coverpage:Provider, coverpage:Customer, keyterms:Provider Covered Claims]
+  8.2 Protection by Customer. [coverpage:Customer, coverpage:Provider, keyterms:Customer Covered Claims]
+  8.3 Procedure.
+  8.4 Changes to Product. [keyterms:Provider Covered Claim, coverpage:Provider, coverpage:Customer, orderform:Subscription Period]
+  8.5 Exclusions. [coverpage:Provider, keyterms:Provider Covered Claims, coverpage:Customer, keyterms:Provider Covered Claim]
+  8.6 Exclusive Remedy.
+9 Confidentiality
+  9.1 Non-Use and Non-Disclosure.
+  9.2 Exclusions.
+  9.3 Required Disclosures.
+  9.4 Permitted Disclosures. [coverpage:Provider, coverpage:Customer]
+10 General Terms
+  10.1 Entire Agreement. [coverpage:Provider, coverpage:Customer]
+  10.2 Modifications, Severability, and Waiver.
+  10.3 Governing Law and Chosen Courts. [keyterms:Governing Law, keyterms:Chosen Courts]
+  10.4 Injunctive Relief.
+  10.5 Non-Exhaustive Remedies.
+  10.6 Assignment.
+  10.7 Beta Products. [coverpage:Provider, coverpage:Customer]
+  10.8 Logo Rights. [coverpage:Provider, coverpage:Customer]
+  10.9 Notices.
+  10.10 Independent Contractors.
+  10.11 No Third-Party Beneficiary.
+  10.12 Export Controls. [coverpage:Customer, coverpage:Provider]
+  10.13 Government Rights.
+  10.14 Anti-Bribery. [coverpage:Provider, coverpage:Customer]
+  10.15 Titles and Interpretation.
+  10.16 Signature.
+11
+  11.1 Defining Variables.
+  11.2 defines "Affiliate"
+  11.3 defines "Agreement" [coverpage:Provider, coverpage:Customer]
+  11.4 defines "Applicable Data Protection Laws"
+  11.5 defines "Applicable Laws" [coverpage:Provider, coverpage:Customer]
+  11.6 defines "Beta Product"
+  11.7 defines "Confidential Information" [keyterms:Effective Date, coverpage:Provider]
+  11.8 defines "Cover Page" [coverpage:Provider, coverpage:Customer]
+  11.9 defines "Covered Claim" [keyterms:Provider Covered Claim, keyterms:Customer Covered Claim]
+  11.10 defines "Discloser"
+  11.11 defines "Documentation" [coverpage:Provider]
+  11.12 defines "Embargoed Country"
+  11.13 defines "Feedback"
+  11.14 defines "Fees"
+  11.15 defines "Force Majeure Event"
+  11.16 defines "Framework Terms" [coverpage:Provider, coverpage:Customer]
+  11.17 defines "GDPR"
+  11.18 defines "High Risk Activity"
+  11.19 defines "Indemnifying Party"
+  11.20 defines "Key Terms" [keyterms:Governing Law]
+  11.21 defines "OFAC"
+  11.22 defines "Open Source Software"
+  11.23 defines "Order Form" [orderform:Subscription Period]
+  11.24 defines "Personal Data"
+  11.25 defines "Product"
+  11.26 defines "Protected Party"
+  11.27 defines "Recipient"
+  11.28 defines "Services"
+  11.29 defines "Software"
+  11.30 defines "Standard Terms"
+  11.31 defines "Updates" [coverpage:Provider, coverpage:Customer]
+  11.32 defines "Usage Data" [coverpage:Customer]
+  11.33 defines "User" [coverpage:Customer]
+  11.34 defines "Variable" [orderform:Subscription Period, keyterms:Governing Law]

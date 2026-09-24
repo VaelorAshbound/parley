@@ -6,7 +6,23 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "prepare": "node scripts/build.ts",
+    "build": "node scripts/build.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
   "devDependencies": {
-    "typescript": "catalog:"
+    "@types/hast": "^3.0.5",
+    "@types/node": "^24.13.6",
+    "hast-util-to-string": "^3.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "typescript": "catalog:",
+    "unified": "^11.0.5",
+    "vite-plus": "catalog:"
   }
 }

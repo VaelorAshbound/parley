@@ -1,0 +1,76 @@
+# Data Processing Agreement
+1 Processor and Subprocessor Relationships
+  1.1 Provider as Processor. [keyterms:Customer, keyterms:Provider]
+  1.2 Provider as Subprocessor. [keyterms:Customer, keyterms:Provider]
+2 Processing
+  2.1 Processing Details. [keyterms:Categories of Personal Data, keyterms:Categories of Data Subjects]
+  2.2 Processing Instructions. [keyterms:Customer, keyterms:Provider, keyterms:Agreement]
+  2.3 Processing by Provider. [keyterms:Provider, keyterms:Categories of Data Subjects, keyterms:Categories of Personal Data, keyterms:Special Category Data, keyterms:Special Category Data Restrictions or Safeguards, keyterms:Frequency of Transfer, keyterms:Nature and Purpose of Processing, keyterms:Duration of Processing, keyterms:Customer]
+  2.4 Customer Processing. [keyterms:Customer, keyterms:Provider]
+  2.5 Consent to Processing. [keyterms:Customer, keyterms:Provider]
+  2.6 Subprocessors.
+    2.6.a [keyterms:Provider, keyterms:Customer, keyterms:Approved Subprocessors]
+    2.6.b [keyterms:Provider, keyterms:Agreement]
+    2.6.c [keyterms:Provider, keyterms:Customer]
+    2.6.d [keyterms:Provider]
+3 Restricted Transfers
+  3.1 Authorization. [keyterms:Customer, keyterms:Provider]
+  3.2 Ex-EEA Transfers. [keyterms:Customer, keyterms:Provider]
+    3.2.a [keyterms:Customer, keyterms:Provider]
+    3.2.b [keyterms:Customer, keyterms:Provider]
+    3.2.c
+      3.2.c.i
+      3.2.c.ii
+      3.2.c.iii
+      3.2.c.iv
+      3.2.c.v [keyterms:Governing Member State]
+      3.2.c.vi [keyterms:Governing Member State]
+      3.2.c.vii
+  3.3 Ex-UK Transfers. [keyterms:Customer, keyterms:Provider]
+    3.3.a
+    3.3.b
+    3.3.c
+  3.4 Other International Transfers.
+4 Security Incident Response
+  4.1 [keyterms:Provider, keyterms:Customer]
+5 Audit & Reports
+  5.1 Audit Rights. [keyterms:Provider, keyterms:Customer]
+  5.2 Security Reports. [keyterms:Customer, keyterms:Provider, keyterms:Security Policy]
+  5.3 Security Due Diligence. [keyterms:Provider, keyterms:Customer, keyterms:Provider Security Contact]
+6 Coordination & Cooperation
+  6.1 Response to Inquiries. [keyterms:Provider, keyterms:Customer]
+  6.2 DPIAs and DTIAs. [keyterms:Provider, keyterms:Customer]
+7 Deletion of Customer Personal Data
+  7.1 Deletion by Customer. [keyterms:Provider, keyterms:Customer]
+  7.2 Deletion at DPA Expiration.
+    7.2.a [keyterms:Provider, keyterms:Customer]
+    7.2.b [keyterms:Customer, keyterms:Provider]
+8 Limitation of Liability
+  8.1 Liability Caps and Damages Waiver. [keyterms:Agreement]
+  8.2 Related-Party Claims. [keyterms:Provider, keyterms:Customer, keyterms:Agreement]
+  8.3 Exceptions.
+9 Conflicts Between Documents
+  9.1 [keyterms:Agreement]
+10 Term of Agreement
+  10.1 [keyterms:Provider, keyterms:Customer, keyterms:Agreement]
+11 Definitions
+  11.1 defines "Applicable Laws"
+  11.2 defines "Applicable Data Protection Laws"
+  11.3 defines "Controller"
+  11.4 defines "Cover Page" [keyterms:Provider, keyterms:Customer]
+  11.5 defines "Customer Personal Data" [keyterms:Customer, keyterms:Provider]
+  11.6 defines "DPA" [keyterms:Provider, keyterms:Customer]
+  11.7 defines "EEA SCCs"
+  11.8 defines "European Economic Area", "EEA"
+  11.9 defines "GDPR"
+  11.10 defines "Personal Data"
+  11.11 defines "Processing", "Process"
+  11.12 defines "Processor"
+  11.13 defines "Report"
+  11.14 defines "Restricted Transfer"
+  11.15 defines "Security Incident"
+  11.16 defines "Service" [keyterms:Agreement]
+  11.17 defines "Special Category Data"
+  11.18 defines "Subprocessor"
+  11.19 defines "UK GDPR"
+  11.20 defines "UK Addendum"

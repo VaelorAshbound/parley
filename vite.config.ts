@@ -48,6 +48,7 @@ export default defineConfig({
       "pnpm-lock.yaml",
       "**/routeTree.gen.ts",
       "**/worker-configuration.d.ts",
+      "packages/documents/generated/",
       ".output/",
       ".tanstack/",
       ".wrangler/",
@@ -68,6 +69,21 @@ export default defineConfig({
             include: ["src/**/*.test-d.ts"],
             tsconfig: "./tsconfig.json",
           },
+        },
+      },
+      {
+        test: {
+          name: "documents",
+          root: "packages/documents",
+          include: ["test/**/*.test.ts"],
+          typecheck: {
+            enabled: true,
+            include: ["test/**/*.test-d.ts"],
+            tsconfig: "./tsconfig.json",
+          },
+          // Pure functions with no shared state: one module graph is faster,
+          // and CI runs with --shuffle to prove the order does not matter.
+          isolate: false,
         },
       },
       {
