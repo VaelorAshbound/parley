@@ -10,7 +10,8 @@ import {
 
 // --- Jurisdiction ---
 
-const STATES = {
+/** The US states and DC, by postal code, for pickers and printing. */
+export const US_STATES = {
   AL: "Alabama",
   AK: "Alaska",
   AZ: "Arizona",
@@ -63,10 +64,10 @@ const STATES = {
   WI: "Wisconsin",
   WY: "Wyoming",
 } as const
-export type StateCode = keyof typeof STATES
+export type StateCode = keyof typeof US_STATES
 
 const stateCode = typed<StateCode>(
-  z.enum(Object.keys(STATES), { error: unlessMissing("Pick a US state.") })
+  z.enum(Object.keys(US_STATES), { error: unlessMissing("Pick a US state.") })
 )
 
 const courtLocation = plainText(100)
@@ -119,11 +120,11 @@ function usJurisdiction(config: JurisdictionConfig) {
     merge: mergeParts,
     merges: "parts",
     derived: {},
-    format: (value) => (value.state ? STATES[value.state] : null),
+    format: (value) => (value.state ? US_STATES[value.state] : null),
     formatPath: (value, part) =>
       part === "state"
         ? value.state
-          ? STATES[value.state]
+          ? US_STATES[value.state]
           : null
         : courts(config, value.courtLocation, value.state),
   } satisfies ObjectField<"jurisdiction", Value, Draft>
@@ -155,7 +156,7 @@ function worldJurisdiction(config: JurisdictionConfig) {
   )
   type Draft = z.infer<typeof draftSchema>
   const placeOf = (value: Draft) =>
-    value.state ? STATES[value.state] : value.region
+    value.state ? US_STATES[value.state] : value.region
   return {
     ...header("jurisdiction", config),
     subfields: {
@@ -195,7 +196,7 @@ function worldJurisdiction(config: JurisdictionConfig) {
     derived: {},
     format: (value) => placeOf(value) ?? null,
     formatPath(value, part) {
-      if (part === "state") return value.state ? STATES[value.state] : null
+      if (part === "state") return value.state ? US_STATES[value.state] : null
       if (part === "region") return value.region ?? null
       return courts(config, value.courtLocation, value.state ?? value.region)
     },

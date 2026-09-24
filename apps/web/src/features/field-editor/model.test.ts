@@ -9,7 +9,15 @@ import { describe, expect, it } from "vite-plus/test"
 
 // The shared, fully filled example of each document (packages/documents).
 import { registered } from "../../../../../packages/documents/test/examples"
-import { changeOf, draftOf, inputFor, inputsOf } from "./model"
+import {
+  addRow,
+  changeOf,
+  draftOf,
+  inputFor,
+  inputsOf,
+  optionText,
+  removeRow,
+} from "./model"
 
 const nda = definitions["mutual-nda"]
 
@@ -310,5 +318,51 @@ describe("where an error shows", () => {
       inputFor(caps, ["selected", 0, "value", "amount"], "c", inputs)
     ).toBe("c/fixed/value/amount")
     expect(inputFor(caps, ["selected"], "c", inputs)).toBe("c")
+  })
+})
+
+describe("list rows", () => {
+  const tiers = field.list({
+    label: "Tiers",
+    help: "Credits.",
+    item: {
+      range: field.text({ label: "Range", help: "Which." }),
+      credit: field.percent({ label: "Credit", help: "How much." }),
+    },
+  })
+  const three = {
+    "t/#": "3",
+    "t/0/range": "a",
+    "t/0/credit": "1",
+    "t/1/range": "b",
+    "t/1/credit": "2",
+    "t/2/range": "c",
+    "t/2/credit": "3",
+  }
+
+  it("moves later rows up when one is removed, and empties the last", () => {
+    const next = { ...three, ...removeRow(three, "t", 1) }
+
+    expect(draftOf(tiers, next, "t")).toEqual([
+      { range: "a", credit: 1 },
+      { range: "c", credit: 3 },
+    ])
+    expect(next["t/2/range"]).toBe("")
+  })
+
+  it("adds an empty row at the end", () => {
+    expect(addRow(tiers, three, "t")).toEqual({
+      "t/#": "4",
+      "t/3/range": "",
+      "t/3/credit": "",
+    })
+  })
+})
+
+describe("option words", () => {
+  it("names each blank of an option", () => {
+    expect(optionText(nda.fields.mndaTerm.options.expires)).toBe(
+      "Expires [MNDA length] from Effective Date."
+    )
   })
 })

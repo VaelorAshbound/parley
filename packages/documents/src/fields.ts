@@ -17,7 +17,13 @@ import { jurisdiction } from "./fields/jurisdiction.ts"
 import { list } from "./fields/list.ts"
 import { party } from "./fields/party.ts"
 
-export { EU_MEMBER_STATES, type Duration, type Money } from "./fields/basic.ts"
+export {
+  EU_MEMBER_STATES,
+  unitWords,
+  type Duration,
+  type Money,
+  type Unit,
+} from "./fields/basic.ts"
 export type { ChoiceDraft, ChoiceValue } from "./fields/choice.ts"
 export type { ChoicesDraft, ChoicesValue } from "./fields/choices.ts"
 export type {
@@ -28,7 +34,7 @@ export type {
   ObjectField,
 } from "./fields/core.ts"
 export type { GroupValue } from "./fields/group.ts"
-export type { StateCode } from "./fields/jurisdiction.ts"
+export { US_STATES, type StateCode } from "./fields/jurisdiction.ts"
 export type { ListDraft, ListValue } from "./fields/list.ts"
 
 export const field = {

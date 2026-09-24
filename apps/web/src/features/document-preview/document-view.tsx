@@ -82,7 +82,12 @@ export function DocumentView({
       ))}
       <Signatures document={document} onEdit={onEdit} />
       {editingKey !== undefined && signed.has(editingKey) && (
-        <div className="not-typeset mt-4">{renderEditor(editingKey)}</div>
+        <section className="mt-4">
+          <h3 className="font-sans text-[0.8em] font-semibold">
+            {partyLabel(document, editingKey)}
+          </h3>
+          <div className="not-typeset mt-2">{renderEditor(editingKey)}</div>
+        </section>
       )}
       {coverPage.footer.map((paragraph, index) => (
         <p key={index} className="font-sans text-[0.8em] text-ink-2">
@@ -113,6 +118,12 @@ export function DocumentView({
       })}
     </article>
   )
+}
+
+function partyLabel(document: RenderedDocument, key: string) {
+  return document.coverPage.signatures.parties.find(
+    (party) => party.field === key
+  )?.label
 }
 
 /** The fields a section shows: its own, or those of its lines. */

@@ -25,6 +25,7 @@
     "@workspace/documents": "workspace:*",
     "@workspace/ui": "workspace:*",
     "better-auth": "1.7.5",
+    "dequal": "^2.0.3",
     "hono": "^4.13.8",
     "lucide-react": "^1.47.0",
     "react": "^19.2.6",

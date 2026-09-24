@@ -415,3 +415,49 @@ function blankInput(
     return prefix.slice(0, prefix.lastIndexOf("/"))
   return inputFor(blankField, rest, join(prefix, blank), inputs)
 }
+
+/**
+ * The input updates that remove row `index` of a list: later rows move up
+ * one, and the freed last row is emptied, so adding a row starts blank.
+ */
+export function removeRow(inputs: Inputs, name: string, index: number): Inputs {
+  const count = rowCount(inputs, name)
+  const updates: Inputs = { [join(name, ROWS)]: String(Math.max(count - 1, 1)) }
+  const rowOf = (row: number) => `${join(name, row)}/`
+  for (const [key, value] of Object.entries(inputs)) {
+    const row = Number(key.slice(name.length + 1).split("/")[0])
+    if (!key.startsWith(`${name}/`) || !Number.isInteger(row) || row < index)
+      continue
+    const rest = key.slice(rowOf(row).length)
+    if (row > index) updates[`${rowOf(row - 1)}${rest}`] = value
+    if (row === count - 1) updates[key] = ""
+  }
+  return updates
+}
+
+/** The input updates that add an empty row at the end of a list. */
+export function addRow(
+  field: Extract<AnyField, { kind: "list" }>,
+  inputs: Inputs,
+  name: string
+): Inputs {
+  const count = rowCount(inputs, name)
+  const row = join(name, count)
+  return {
+    ...Object.fromEntries(
+      Object.entries(field.item).flatMap(([column, cell]) =>
+        Object.entries(inputsOf(cell, undefined, join(row, column)))
+      )
+    ),
+    [join(name, ROWS)]: String(count + 1),
+  }
+}
+
+/** An option's words with its blanks named: "Expires [MNDA length] from…". */
+export function optionText(option: Option) {
+  const blanks = Object.fromEntries(blanksOf(option))
+  return option.label.replaceAll(/\{(\w+)\}/g, (_, blank: string) => {
+    const label = blanks[blank]?.label
+    return label === undefined ? "…" : `[${label}]`
+  })
+}

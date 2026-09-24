@@ -24,7 +24,7 @@ export type {
   Fields,
   Values,
 } from "./define.ts"
-export { field } from "./fields.ts"
+export { field, unitWords, US_STATES } from "./fields.ts"
 export type {
   AnyField,
   Duration,
@@ -32,6 +32,7 @@ export type {
   FieldKind,
   Money,
   StateCode,
+  Unit,
 } from "./fields.ts"
 export { render } from "./render.ts"
 export type {
