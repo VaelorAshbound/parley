@@ -48,3 +48,6 @@ T3 done: Workers Builds runs every gate + a Worker Preview per branch (~30 s). B
 
 ### 2026-09-24T01:48:04Z
 Checkpoint 0 approved by owner. Decision: PR #1 stays draft, merge to main after T12 (spike routes gone). Session end. Finished: T1 scaffold, T2 PDF/DOCX GO, T3 CI (Workers Builds + GitHub Actions E2E, ADR-0001), repo public. Next session: T4 code half (tokens.css, logo.svg, dev.brand page), then T5 template parser via /build.
+
+### 2026-09-24T02:38:05Z
+/build auto in progress. Done: T4 code half (cee400f: tokens, fonts, logo, /dev/brand), T5 parser (ba8605d, e6551ec: typed trees in generated/, 100% coverage gate in CI), T6 engine (f62a8de..dd57a4e: fields, defineDocument, applyFieldChanges with compare-and-set undo, render; ADR-0002, ADR-0003). Next: T7 Mutual NDA definition, then T8-T12.
