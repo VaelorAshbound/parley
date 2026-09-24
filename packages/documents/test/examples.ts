@@ -524,6 +524,144 @@ export const examples = {
       address: "22 Elm St, Portland, OR 97204",
     },
   },
+  csa: {
+    cloudService:
+      "Northwind Insights, a hosted dashboard for retail sales forecasting",
+    orderDate: { option: "custom", value: "2026-11-01" },
+    pilot: {
+      option: "pilot",
+      value: {
+        length: { amount: 2, unit: "months" },
+        fee: { option: "paid", value: { amount: 5000, currency: "USD" } },
+      },
+    },
+    pilotModifications:
+      "Sections 6.3, 6.4 and 9 do not apply during the Pilot Period. The General Cap Amount is $1,000 for all claims that arise during the Pilot Period.",
+    subscriptionPeriod: { amount: 12, unit: "months" },
+    fees: {
+      selected: [
+        {
+          option: "perUnit",
+          value: { amount: { amount: 48000, currency: "USD" }, unit: "year" },
+        },
+      ],
+    },
+    feeChanges: { selected: [{ option: "mayIncrease", value: 5 }] },
+    paymentProcess: {
+      option: "invoice",
+      value: {
+        frequency: { option: "annually" },
+        days: 30,
+        start: { option: "receipt" },
+      },
+    },
+    renewal: { option: "autoRenew", value: 30 },
+    useLimitations: {
+      option: "described",
+      value: "Up to 50 Users. Data is hosted in the United States only.",
+    },
+    technicalSupport: {
+      option: "described",
+      value:
+        "Email support at help@northwind.test, 9 a.m. to 5 p.m. Pacific Time on business days.",
+    },
+    sla: {
+      option: "custom",
+      value:
+        "The Common Paper Service Level Agreement signed with this Order Form applies.",
+    },
+    professionalServices: {
+      selected: [
+        {
+          option: "described",
+          value: "Onboarding and two training sessions for up to 20 Users.",
+        },
+        {
+          option: "payment",
+          value: "A one-time fee of $3,000, invoiced on the Order Date.",
+        },
+      ],
+    },
+    orderFormChanges:
+      "Customer may terminate this Order Form for convenience after the first 6 months by giving 30 days' notice.",
+    effectiveDate: { option: "lastSignature" },
+    governingLaw: {
+      state: "DE",
+      courtLocation: "New Castle County, Delaware",
+    },
+    providerCoveredClaims: { option: "standard" },
+    customerCoveredClaims: { option: "standard" },
+    generalCapAmount: { option: "multiple", value: 1 },
+    increasedClaims: {
+      selected: [{ option: "privacy" }, { option: "confidentiality" }],
+    },
+    increasedCapAmount: { option: "multiple", value: 3 },
+    unlimitedClaims: { selected: [{ option: "indemnification" }] },
+    additionalWarranties: {
+      selected: [
+        {
+          option: "provider",
+          value:
+            "The Product, when used as authorized by the Agreement, does not and will not infringe anyone else's copyright, trademark or trade secret.",
+        },
+      ],
+    },
+    dpa: {
+      option: "provided",
+      value: "The Common Paper DPA attached to this Cover Page",
+    },
+    securityPolicy: {
+      selected: [
+        { option: "reasonableEfforts" },
+        {
+          option: "certifications",
+          value: {
+            selected: [
+              { option: "soc2Type2" },
+              { option: "penetrationTesting" },
+            ],
+          },
+        },
+      ],
+    },
+    insurance: {
+      option: "required",
+      value: {
+        selected: [
+          {
+            option: "generalLiability",
+            value: {
+              occurrence: { amount: 1000000, currency: "USD" },
+              aggregate: { amount: 2000000, currency: "USD" },
+            },
+          },
+          {
+            option: "cyber",
+            value: {
+              occurrence: { amount: 2000000, currency: "USD" },
+              aggregate: { amount: 5000000, currency: "USD" },
+            },
+          },
+        ],
+      },
+    },
+    additionalInsured: { selected: [{ option: "cyber" }] },
+    keyTermsChanges:
+      "Section 12.8 (Logo Rights) does not apply to this Agreement.",
+    provider: {
+      company: "Northwind Analytics, Inc.",
+      name: "Priya Raman",
+      title: "Chief Revenue Officer",
+      email: "legal@northwind.test",
+    },
+    customer: {
+      company: "Juniper Outfitters LLC",
+      name: "Marco Silva",
+      title: "VP of Operations",
+      email: "contracts@juniper.test",
+      address: "400 Pine St, Seattle, WA 98101",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples

@@ -5,10 +5,12 @@ import { designPartnerAgreement } from "./design-partner-agreement.ts"
 import { partnershipAgreement } from "./partnership-agreement.ts"
 import { dpa } from "./dpa.ts"
 import { baa } from "./baa.ts"
+import { csa } from "./csa.ts"
 import { mutualNda } from "./mutual-nda.ts"
 
 /** Every document Parley drafts, by catalog id. */
 export const definitions = {
+  csa: csa,
   baa: baa,
   dpa: dpa,
   "partnership-agreement": partnershipAgreement,
