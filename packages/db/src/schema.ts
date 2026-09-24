@@ -45,7 +45,7 @@ export const draft = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     documentId: text("document_id").$type<DocumentId>().notNull(),
     title: text("title").notNull(),
-    // Checked by the document's own Zod schema on every read and write,
+    // Checked by the document's own Zod schema before the engine uses it,
     // never trusted as typed here (spec §5 Drizzle).
     fields: jsonb("fields").$type<JsonObject>().notNull().default({}),
     status: draftStatus("status").notNull().default("drafting"),

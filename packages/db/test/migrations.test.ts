@@ -5,7 +5,7 @@ import { Client } from "pg"
 import { expect, inject, test } from "vite-plus/test"
 
 import { connect, schema } from "../src/client.ts"
-import { migrationsFolder } from "./setup.ts"
+import { migrationsFolder } from "../testing/index.ts"
 
 test("the migrations build every table on an empty database", async () => {
   const admin = new Client({ connectionString: inject("adminUrl") })

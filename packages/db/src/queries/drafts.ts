@@ -27,8 +27,17 @@ export async function createDraft(
   return single(await db.insert(draft).values(values).returning(columns))
 }
 
-export async function getDraft(db: Db, key: DraftKey) {
-  const [row] = await db.select(columns).from(draft).where(owned(key))
+/**
+ * `lock` takes a row lock (SELECT … FOR UPDATE) until the transaction ends,
+ * so two edits to one draft (the AI and the user) run one after the other.
+ */
+export async function getDraft(
+  db: Db,
+  key: DraftKey,
+  { lock = false }: { lock?: boolean } = {}
+) {
+  const query = db.select(columns).from(draft).where(owned(key))
+  const [row] = await (lock ? query.for("update") : query)
   return row
 }
 

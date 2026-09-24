@@ -1,7 +1,8 @@
 import { eq, sql } from "drizzle-orm"
-import { describe, expect } from "vite-plus/test"
+import { test as base, describe, expect, inject } from "vite-plus/test"
 
 import { user } from "../src/auth-schema.ts"
+import { connect } from "../src/client.ts"
 import {
   createDraft,
   deleteDraft,
@@ -292,4 +293,39 @@ describe("the schema", () => {
     // Other answers are not party names, so they don't match.
     expect(await find("zenith")).toEqual([])
   })
+})
+
+describe("getDraft with lock", () => {
+  // Needs committed rows and two connections, so no rollback fixture here.
+  base(
+    "holds the row until the transaction ends, so edits can't cross",
+    async () => {
+      const first = await connect(inject("databaseUrl"))
+      const second = await connect(inject("databaseUrl"))
+      const [owner] = await first
+        .insert(user)
+        .values({ id: "lock-owner", name: "Lock", email: "lock@example.test" })
+        .returning()
+      const created = await createDraft(first, { userId: owner!.id, ...nda })
+      try {
+        await first.transaction(async (tx) => {
+          await getDraft(
+            tx,
+            { id: created.id, userId: owner!.id },
+            { lock: true }
+          )
+
+          await expect(
+            second.execute(
+              sql`SELECT id FROM draft WHERE id = ${created.id} FOR UPDATE NOWAIT`
+            )
+          ).rejects.toMatchObject({ cause: { code: "55P03" } })
+        })
+      } finally {
+        await first.delete(user).where(eq(user.id, owner!.id))
+        await first.$client.end()
+        await second.$client.end()
+      }
+    }
+  )
 })
