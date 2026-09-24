@@ -4,6 +4,7 @@ import { describe, expect, it } from "vite-plus/test"
 import { definitions } from "../src/definitions/index.ts"
 import { readTemplate } from "../src/parse/catalog.ts"
 import { parseStandardTerms } from "../src/parse/parse.ts"
+import { DISCLAIMER } from "../src/disclaimer.ts"
 import { toDocx } from "../src/output/docx.ts"
 import { render } from "../src/render.ts"
 import { examples, registered } from "./examples.ts"
@@ -18,6 +19,7 @@ async function unzip(buffer: ArrayBuffer) {
     (await zip.file(name)?.async("string")) ?? ""
   return {
     document: await read("word/document.xml"),
+    header: await read("word/header1.xml"),
     footer: await read("word/footer1.xml"),
     core: await read("docProps/core.xml"),
   }
@@ -120,6 +122,12 @@ describe("toDocx", () => {
     expect(textOf(footer)).toContain("Mutual Non-Disclosure Agreement\tPage ")
     expect(footer).toContain("PAGE")
     expect(footer).toContain("NUMPAGES")
+  })
+
+  it("says on every page that it is a demo, not for real agreements", async () => {
+    const { header } = await unzip(await toDocx(filled))
+
+    expect(textOf(header)).toContain(DISCLAIMER)
   })
 
   it("prints sectioned terms with nested clauses, a bare cover page and no signers", async () => {

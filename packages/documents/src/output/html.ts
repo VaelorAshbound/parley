@@ -7,6 +7,7 @@ import type {
   RenderedTable,
   RenderedValue,
 } from "../render.ts"
+import { DISCLAIMER } from "../disclaimer.ts"
 
 // The print page Browser Run turns into the PDF (T24). Printed paper stays
 // light in both themes (brand.md → Color); filled-in values are blue ink,
@@ -205,6 +206,7 @@ function styles(name: string, pageSize: "Letter" | "A4") {
 @page {
   size: ${pageSize};
   margin: 0.9in 1in 1in;
+  @top-center { content: ${cssString(DISCLAIMER)}; font: 8pt var(--sans); color: #6a665d; }
   @bottom-left { content: ${cssString(name)}; font: 8pt var(--sans); color: #6a665d; }
   @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt var(--sans); color: #6a665d; }
 }

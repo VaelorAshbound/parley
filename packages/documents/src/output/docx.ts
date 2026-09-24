@@ -4,6 +4,7 @@ import {
   Document,
   ExternalHyperlink,
   Footer,
+  Header,
   HeadingLevel,
   HeightRule,
   Packer,
@@ -29,6 +30,7 @@ import type {
   RenderedTable,
   RenderedValue,
 } from "../render.ts"
+import { DISCLAIMER } from "../disclaimer.ts"
 
 // The editable Word file (T24). It uses Georgia, not the brand's Newsreader:
 // the person opening it in Word almost never has Newsreader installed, and a
@@ -89,6 +91,7 @@ export async function toDocx(
             },
           },
         },
+        headers: { default: header() },
         footers: { default: footer(document.name, width) },
         children: [
           ...(coverPage.eyebrow
@@ -153,6 +156,19 @@ function small(text: string, options: IRunOptions = {}) {
   return new Paragraph({
     children: [
       new TextRun({ text, font: SANS, size: 15, color: INK_3, ...options }),
+    ],
+  })
+}
+
+function header() {
+  return new Header({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({ text: DISCLAIMER, font: SANS, size: 15, color: INK_3 }),
+        ],
+      }),
     ],
   })
 }

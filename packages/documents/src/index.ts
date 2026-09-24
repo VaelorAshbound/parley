@@ -3,6 +3,7 @@
 // are separate entry points, "@workspace/documents/docx" and "/print", so
 // importing the engine doesn't load the `docx` library.
 export { applyFieldChanges } from "./changes.ts"
+export { DISCLAIMER } from "./disclaimer.ts"
 export type {
   AppliedChange,
   ChangeRequest,

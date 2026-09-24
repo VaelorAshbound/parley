@@ -3,6 +3,7 @@ import { describe, expect, it } from "vite-plus/test"
 import { definitions } from "../src/definitions/index.ts"
 import { readTemplate } from "../src/parse/catalog.ts"
 import { parseStandardTerms } from "../src/parse/parse.ts"
+import { DISCLAIMER } from "../src/disclaimer.ts"
 import { toPrintHtml } from "../src/output/html.ts"
 import { render } from "../src/render.ts"
 import { examples, registered } from "./examples.ts"
@@ -122,6 +123,12 @@ describe("toPrintHtml", () => {
       'content: "Page " counter(page) " of " counter(pages)'
     )
     expect(html).toContain('content: "Mutual Non-Disclosure Agreement"')
+  })
+
+  it("says on every page that it is a demo, not for real agreements", () => {
+    const html = toPrintHtml(filled)
+
+    expect(html).toContain(`@top-center { content: "${DISCLAIMER}";`)
   })
 
   it("embeds the fonts it is given, since the PDF browser has none", () => {
