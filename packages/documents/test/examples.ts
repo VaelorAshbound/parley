@@ -662,6 +662,54 @@ export const examples = {
       address: "400 Pine St, Seattle, WA 98101",
     },
   },
+  sla: {
+    agreement:
+      "Order Form dated November 1, 2026 under the Cloud Service Agreement between Northwind Analytics, Inc. and Juniper Outfitters LLC",
+    targets: {
+      selected: [
+        {
+          option: "uptime",
+          value: {
+            target: 99.9,
+            downtime: {
+              option: "window",
+              value: {
+                start: "12:00 a.m.",
+                end: "4:00 a.m.",
+                timeZone: "Pacific Time",
+                days: "Saturdays and Sundays",
+              },
+            },
+          },
+        },
+        {
+          option: "response",
+          value: {
+            time: { amount: 4, unit: "hours" },
+            credit: 2,
+            channel: "email support@northwind.test or open a ticket in the app",
+          },
+        },
+      ],
+    },
+    uptimeCredit: [
+      { range: "99.0% to Target Uptime", credit: 5 },
+      { range: "95.0% to 99.0%", credit: 10 },
+      { range: "under 95.0%", credit: 20 },
+    ],
+    provider: {
+      company: "Northwind Analytics, Inc.",
+      name: "Priya Raman",
+      title: "Chief Revenue Officer",
+      email: "legal@northwind.test",
+    },
+    customer: {
+      company: "Juniper Outfitters LLC",
+      name: "Marco Silva",
+      title: "VP of Operations",
+      email: "contracts@juniper.test",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
