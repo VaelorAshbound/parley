@@ -57,3 +57,7 @@ T7 (Mutual NDA, ba8ef9d) and T12 (print HTML + DOCX, spike removed, 1d6e02b) don
 
 ### 2026-09-24T03:24:56Z
 T7b done (field kinds + layout for official cover pages, 01df863..e73ac55). CSA switched to published v2.1 (c4e7643). Next: T8-T11 definitions mirroring Common Paper's official cover pages.
+
+### 2026-09-24T04:15:53Z
+Phase 1 done (T4-T12, Checkpoint 1). All 12 Common Paper documents are defined on their official cover pages (T8-T11, agents in parallel worktrees). Engine gaps they found are fixed and used everywhere: any definition is a DocumentDefinition, select works as a blank, and rules know their phase ("required when" on finished pages only). Print HTML + DOCX snapshots for every document. Gate: 596 tests, 100% coverage on packages/documents, also stable with each property test cut to one run. The owner approved the brand on /dev/brand.
+Next: T13 (DB package: Neon + Hyperdrive; creates cloud resources, so confirm first). Open for the owner: push PAR-1-parley? Look at one DOCX in Word. Lawyer review of the judgment calls in work/PAR-1/cover-pages/*.md.
