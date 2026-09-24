@@ -281,23 +281,44 @@ function coverTable({ coverPage }: RenderedDocument, width: number) {
   return new Table({
     width: { size: width, type: WidthType.DXA },
     columnWidths: [left, right],
-    rows: coverPage.sections.map(
-      (section) =>
-        new TableRow({
-          cantSplit: true,
-          children: [
-            cell(left, [
-              new Paragraph({
-                children: [new TextRun({ text: section.heading, bold: true })],
+    rows: coverPage.sections.map((section) =>
+      section.part
+        ? new TableRow({
+            cantSplit: true,
+            children: [
+              new TableCell({
+                columnSpan: 2,
+                width: { size: width, type: WidthType.DXA },
+                borders: ROW_BORDER,
+                margins: { top: 200, bottom: 80 },
+                children: [
+                  new Paragraph({
+                    heading: HeadingLevel.HEADING_2,
+                    text: section.heading,
+                  }),
+                ],
               }),
-              ...(section.hint ? [small(section.hint)] : []),
-            ]),
-            cell(right, [
-              ...section.lines.map(line),
-              ...(section.table ? [listTable(section.table, right - 240)] : []),
-            ]),
-          ],
-        })
+            ],
+          })
+        : new TableRow({
+            cantSplit: true,
+            children: [
+              cell(left, [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: section.heading, bold: true }),
+                  ],
+                }),
+                ...(section.hint ? [small(section.hint)] : []),
+              ]),
+              cell(right, [
+                ...section.lines.map(line),
+                ...(section.table
+                  ? [listTable(section.table, right - 240)]
+                  : []),
+              ]),
+            ],
+          })
     ),
   })
 }

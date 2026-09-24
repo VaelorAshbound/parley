@@ -36,12 +36,26 @@ export type FieldChange<F> = {
   [K in Key<F>]: { key: K; value: ChangeOf<F[K]> | null }
 }[Key<F>]
 
+/** Where a party signs: a stored or derived part, or `null` for a blank line. */
+export type SignatureRow = {
+  label: string
+  part: "company" | "name" | "title" | "email" | "address" | "notice" | null
+}
+
 export type CoverSection<F extends Fields> = {
   heading: string
   hint?: string
+  /** Show the row only when a choice has this option picked. */
+  when?: { field: Key<F>; option: string }
 } & (
-  | { field: FieldPath<F> }
-  | { lines: { label?: string; field: FieldPath<F> }[] }
+  | {
+      field: FieldPath<F>
+      /** Fixed words around the value: "{value} from notice of rejection". */
+      template?: string
+    }
+  | { lines: { label?: string; field: FieldPath<F>; template?: string }[] }
+  /** A heading over the sections below it, like "Key Terms". */
+  | { part: true }
 )
 
 export type CoverPageLayout<F extends Fields> = {
@@ -55,6 +69,8 @@ export type CoverPageLayout<F extends Fields> = {
   /** Paragraphs between the sections and the signatures. */
   closing: Inline[][]
   signatures: PartyKey<F>[]
+  /** The rows of each signature block. Default: the NDA's rows. */
+  signatureRows?: SignatureRow[]
   /** Paragraphs after the signatures: the CC BY 4.0 attribution. */
   footer: Inline[][]
 }
@@ -88,6 +104,7 @@ export type DocumentDefinition<F extends Fields = Fields> = Config<F> & {
 export function defineDocument<const F extends Fields>(
   config: Config<F>
 ): DocumentDefinition<F> {
+  checkLayout(config.fields, config.coverPage.sections)
   const entries = Object.entries(config.fields)
   const draftSchema = typed<DraftValues<F>>(
     z
@@ -143,6 +160,44 @@ export function defineDocument<const F extends Fields>(
   }
 }
 
+/** Kinds printed on more than one line, where a template can't wrap them. */
+const MULTILINE = new Set(["choice", "choices", "list", "group"])
+
+/** Layout mistakes that types can't catch fail when the document is built. */
+function checkLayout(
+  fields: Readonly<Record<string, AnyField>>,
+  sections: readonly CoverSection<Fields>[]
+) {
+  for (const section of sections) {
+    const fail = (message: string) => {
+      throw new Error(`Section "${section.heading}": ${message}`)
+    }
+    const templated =
+      "field" in section
+        ? [{ field: section.field, template: section.template }]
+        : "lines" in section
+          ? section.lines
+          : []
+    for (const { field, template } of templated) {
+      if (template === undefined) continue
+      if (template.split("{value}").length !== 2)
+        fail("its template needs {value} exactly once.")
+      // A part ("party.email") always prints on one line; check whole fields.
+      if (MULTILINE.has(String(fields[field]?.kind)))
+        fail("a template only fits a field printed on one line.")
+    }
+    if (section.when) {
+      const choice = fields[section.when.field]
+      if (
+        (choice?.kind !== "choice" && choice?.kind !== "choices") ||
+        // Object(): a choice always has options, so no fallback branch.
+        !Object.hasOwn(Object(choice.options), section.when.option)
+      )
+        fail("its condition must name a choice and one of its options.")
+    }
+  }
+}
+
 /**
  * A new draft's values: every field's default, and today's date where a date
  * field asks for it. `today` is the user's local date (the caller knows the
@@ -176,7 +231,9 @@ export function coverage<F extends Fields>(definition: DocumentDefinition<F>) {
     ...definition.coverPage.sections.flatMap((section) =>
       "field" in section
         ? [section.field]
-        : section.lines.map((line) => line.field)
+        : "lines" in section
+          ? section.lines.map((line) => line.field)
+          : []
     ),
     ...definition.coverPage.signatures,
   ]

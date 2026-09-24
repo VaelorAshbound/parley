@@ -39,13 +39,14 @@ export function toPrintHtml(
       ? `<h2 class="subtitle">${escape(coverPage.subtitle)}</h2>`
       : "",
     ...coverPage.intro.map(paragraph),
-    ...coverPage.sections.map(
-      (section) =>
-        `<section class="field"><h3>${escape(section.heading)}</h3>${
-          section.hint ? `<p class="hint">${escape(section.hint)}</p>` : ""
-        }${section.lines.map(line).join("")}${
-          section.table ? listTable(section.table) : ""
-        }</section>`
+    ...coverPage.sections.map((section) =>
+      section.part
+        ? `<h2 class="part">${escape(section.heading)}</h2>`
+        : `<section class="field"><h3>${escape(section.heading)}</h3>${
+            section.hint ? `<p class="hint">${escape(section.hint)}</p>` : ""
+          }${section.lines.map(line).join("")}${
+            section.table ? listTable(section.table) : ""
+          }</section>`
     ),
     // "By signing…" stays on the page with the table it introduces.
     `<div class="signing">${coverPage.closing.map(paragraph).join("")}${signatures(document)}</div>`,
@@ -216,6 +217,7 @@ a { color: inherit; }
 .eyebrow, .hint, .label, .subtitle, .signatures th, .attribution { font-family: var(--sans); }
 .eyebrow { font-size: 7.5pt; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6a665d; margin-bottom: 10pt; }
 .subtitle { font-size: 8pt; letter-spacing: 0.08em; color: #57544c; margin: 12pt 0 4pt; }
+.part { font-size: 13pt; margin: 18pt 0 4pt; }
 .field { border-top: 0.5pt solid #e3ded3; padding: 8pt 0 4pt; break-inside: avoid; }
 .hint { display: block; font-size: 8pt; color: #6a665d; margin: 0 0 4pt; }
 .label { font-size: 8.5pt; color: #57544c; }

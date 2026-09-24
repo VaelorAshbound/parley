@@ -1,4 +1,9 @@
-import type { DocumentDefinition, DraftValues, Fields } from "./define.ts"
+import type {
+  DocumentDefinition,
+  DraftValues,
+  Fields,
+  SignatureRow,
+} from "./define.ts"
 import type { AnyField } from "./fields.ts"
 import { blankText, isRecord, optionPieces } from "./fields/choice.ts"
 import type { Clause, Inline, LinkKind, StandardTerms } from "./parse/schema.ts"
@@ -74,6 +79,8 @@ export type RenderedSection = {
   hint?: string
   lines: RenderedLine[]
   table?: RenderedTable
+  /** A heading over the sections below it ("Key Terms"), with no value. */
+  part?: true
 }
 
 export type RenderedSignature = {
@@ -161,29 +168,53 @@ export function render<F extends Fields>(
       title: definition.coverPage.title,
       subtitle: definition.coverPage.subtitle,
       intro: definition.coverPage.intro.map(inline),
-      sections: definition.coverPage.sections.map(
-        ({ heading, hint, ...body }): RenderedSection => ({
-          heading,
-          hint,
-          ...("field" in body
-            ? fieldBody(
-                fields[body.field],
-                body.field,
-                valueOf(body.field),
+      sections: definition.coverPage.sections.flatMap(
+        (section): RenderedSection[] => {
+          const { heading, hint, when } = section
+          if (
+            when &&
+            !picked(valueOf(when.field)).some(
+              (pick) => pick.option === when.option
+            )
+          )
+            return []
+          if ("part" in section)
+            return [{ heading, hint, lines: [], part: true }]
+          if ("lines" in section)
+            return [
+              {
+                heading,
+                hint,
+                lines: section.lines.map((line) => ({
+                  label: line.label,
+                  parts: templated(show(line.field), line.template),
+                })),
+              },
+            ]
+          const body = section.template
+            ? {
+                lines: [
+                  { parts: templated(show(section.field), section.template) },
+                ],
+              }
+            : fieldBody(
+                fields[section.field],
+                section.field,
+                valueOf(section.field),
                 show
               )
-            : {
-                lines: body.lines.map((line) => ({
-                  label: line.label,
-                  parts: [{ type: "value", ...show(line.field) }],
-                })),
-              }),
-        })
+          return [{ heading, hint, ...body }]
+        }
       ),
       closing: definition.coverPage.closing.map(inline),
       footer: definition.coverPage.footer.map(inline),
       signatures: definition.coverPage.signatures.map((key) =>
-        signature(key, fields[key]?.label ?? key, show)
+        signature(
+          key,
+          fields[key]?.label ?? key,
+          definition.coverPage.signatureRows ?? NDA_SIGNATURE_ROWS,
+          show
+        )
       ),
     },
     standardTerms: {
@@ -327,27 +358,41 @@ function isPick(value: unknown): value is Picked {
   return isRecord(value) && typeof value.option === "string"
 }
 
-const SIGNATURE_ROWS = [
-  ["Signature", null],
-  ["Print Name", "name"],
-  ["Title", "title"],
-  ["Company", "company"],
-  ["Notice Address", "notice"],
-  ["Date", null],
-] as const
+/** The NDA cover page's signature rows, the default for every document. */
+const NDA_SIGNATURE_ROWS: SignatureRow[] = [
+  { label: "Signature", part: null },
+  { label: "Print Name", part: "name" },
+  { label: "Title", part: "title" },
+  { label: "Company", part: "company" },
+  { label: "Notice Address", part: "notice" },
+  { label: "Date", part: null },
+]
 
-/** The NDA cover page's signature table, one block per party. */
+/** One signature block per party; a row with no part is a line to fill by hand. */
 function signature(
   key: string,
   label: string,
+  rows: SignatureRow[],
   show: (path: string) => RenderedValue
 ): RenderedSignature {
   return {
     field: key,
     label,
-    rows: SIGNATURE_ROWS.map(([rowLabel, part]) => ({
-      label: rowLabel,
-      value: part === null ? null : show(`${key}.${part}`),
+    rows: rows.map((row) => ({
+      label: row.label,
+      value: row.part === null ? null : show(`${key}.${row.part}`),
     })),
   }
+}
+
+/** A value wrapped in its template's fixed words, if it has a template. */
+function templated(shown: RenderedValue, template: string | undefined): Part[] {
+  const value: Part = { type: "value", ...shown }
+  if (template === undefined) return [value]
+  const [before = "", after = ""] = template.split("{value}")
+  return [
+    ...(before ? [{ type: "text" as const, text: before }] : []),
+    value,
+    ...(after ? [{ type: "text" as const, text: after }] : []),
+  ]
 }
