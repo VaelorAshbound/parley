@@ -55,7 +55,8 @@
 
 ### Checkpoint 0: **stop for owner review**
 - [x] Both spikes are "go", or a fallback was chosen and agreed with you and recorded in an ADR. (T2 GO; T3 fallback in ADR-0001)
-- [ ] CI is green on `main` and gives a red check when a test fails. (Proven on PRs #1 and #2. `main` itself has no app until PR #1 merges: **your call**.)
+- [x] CI is green and gives a red check when a test fails (proven on PRs #1 and #2).
+- **Approved by the owner 2026-09-24.** Decision: PR #1 stays a draft and merges into `main` after T12, once the spike routes are replaced. Only then does production deploy.
 
 ---
 
