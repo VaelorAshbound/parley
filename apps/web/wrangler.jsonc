@@ -9,7 +9,18 @@
   // still get workers.dev URLs so each branch can be tested (T3).
   "workers_dev": false,
   "preview_urls": true,
-  "compatibility_flags": ["nodejs_compat"],
+  // enable_request_signal: request.signal aborts when the client leaves, so
+  // oRPC can stop the work (and the LLM spend) with it (spec §5 API).
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  // Declared so `wrangler types` works without .dev.vars (CI), and deploys
+  // fail when one is missing. Previews get theirs from the Previews base
+  // config (`wrangler preview base-config secret put`).
+  "secrets": {
+    "required": ["BETTER_AUTH_SECRET"],
+  },
+  "vars": {
+    "STAGE": "production",
+  },
   // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
   // uses the real service (10 browser hours/month are in Workers Paid).
   "browser": {
@@ -31,6 +42,10 @@
   // preview refuses to run without it.
   // https://developers.cloudflare.com/workers/previews/configuration/
   "previews": {
+    // Turns on Server-Timing headers for DevTools (spec §5 Hono).
+    "vars": {
+      "STAGE": "preview",
+    },
     "browser": {
       "binding": "BROWSER",
     },
