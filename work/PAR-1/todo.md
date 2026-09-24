@@ -294,7 +294,25 @@
   - Files: `apps/web/src/routes/{__root.tsx,_app.tsx,_app/index.tsx,_app/d.$draftId.tsx}`, `src/routes/-components/shell/*`
   - Deps: T4, T14 · Skills: `shadcn`, `frontend-ui-engineering`
 
-- [ ] **T16: Live document preview + manual field editing** (M)
+- [x] **T16: Live document preview + manual field editing** (M)
+  - Done 2026-09-24. Skills: incremental-implementation, test-driven-development, source-driven-development, frontend-ui-engineering, git-workflow-and-versioning; shadcn. Checked:
+    - `pnpm check`; `pnpm test:coverage` (682 tests, `packages/documents` still 100%); `pnpm test:browser` (19 component tests in Chromium); `pnpm test:workers` (32); `scripts/ci-build.sh` with `WORKERS_CI=1`, exit 0.
+    - e2e on a local dev server, Chromium: 17/17, including filling a whole NDA by hand and reloading, a refused value, and a linked term's hover and click.
+    - Screenshots at 1440 and 390 px, editor open, no console errors. Each test that passed on its first run was broken on purpose once to prove it can fail.
+  - Decisions:
+    - **The editor opens in place of the row it edits**, not in a popover (brand.md → "Editing": inline, blue frame, "Enter to save · Esc to cancel"). A party's editor opens under the signature table. The field is in the URL (`?field=party1.email`), and the clicked part gets focus.
+    - **The browser runs the server's engine to check a save.** The form's `onDynamic` validator (with `revalidateLogic()`) calls `applyFieldChanges` on the draft, so the cross-field rules match the server exactly. No `onChangeListenTo` is needed: every rule runs on every check. The engine now returns issues with a path (`{ path, message }`), so each error lands on its input.
+    - **One flat form model for every kind** (`field-editor/model.ts`): inputs named by path with "/" (TanStack Form reads "." as nesting), mapped both ways recursively, because a choice's blank can be any kind, even another choice. A test sends every field of all 12 filled examples through the form and gets the same values back.
+    - **Choices are option cards (RadioGroup), not a ToggleGroup:** their options are whole sentences from the contract. A multi-select is checkbox cards.
+    - **A save closes the editor at once** (an optimistic update from the same engine), and saves to one draft run in order (mutation `scope`). If the server refuses a save or can't be reached, the draft returns to the server's copy and the editor reopens with what was typed and why (UI store `refused`).
+    - **Enter saves everywhere**, Shift+Enter starts a new line in long text, Esc cancels. Focus returns to the value that opened the editor.
+    - **A linked term carries its value in its accessible name:** Base UI tooltips are visual only.
+    - **Typeset** (shadcn) styles the document through a `typeset-contract` preset.
+    - **Component tests run in Vitest browser mode on GitHub Actions**, not in Workers Builds (no browsers there, ADR-0001). The project is left out when `WORKERS_CI=1`, not with `--project`: any `--project` filter makes v8 coverage report no files (Vitest 5.0.1). Locally they need a Chromium (`PLAYWRIGHT_CHROMIUM_PATH` here, since Playwright's download is blocked).
+  - Found and fixed on the way:
+    - **The phone tabs were half width** (T15): a Panel's `className` lands on its inner div in react-resizable-panels v4, so the hidden pane still took its share. The phone e2e now checks the width.
+    - **The draft page's workspace was in the entry chunk**, because the route loader imported constants from it. With the engine in it, the entry would have been 317 KB gzip; it is 129 KB now (T15: 156 KB).
+  - For later: the draft route's chunk is 185 KB gzip, about 130 KB of it the 12 document definitions; load only the draft's own definition if T35's budget needs it. UI coverage (T34) needs coverage from the browser tests. In dev, Chromium warns that the preloaded fonts aren't used within a few seconds (check in T35).
   - Accept:
     - The panel renders the `RenderedDocument`. Placeholders are clear, and a linked term shows its value on hover.
     - Clicking a field opens an inline editor built from the spec §5 Forms kit (`useAppForm`, field components per type, a `withFieldGroup` for `party`/`jurisdiction`, `onDynamic` + `revalidateLogic()`, linked fields). Saving calls `drafts.updateFields` with an optimistic update, and server errors show on the field.
