@@ -70,6 +70,9 @@ export default defineConfig({
       "**/routeTree.gen.ts",
       "**/worker-configuration.d.ts",
       "packages/documents/generated/",
+      // Byte-exact test snapshots; formatting them would break the match.
+      "**/__outputs__/",
+      "**/__outlines__/",
       ".output/",
       ".tanstack/",
       ".wrangler/",
