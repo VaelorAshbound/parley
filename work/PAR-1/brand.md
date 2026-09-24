@@ -56,6 +56,7 @@ All values checked with a script (WCAG 2.x formula). Every text pair passes AA (
 | highlighter-soft | `#FFF1BC` | `#342C10` | Settled highlight | blue on it: 6.9 / 6.6 |
 | empty | `#F2EFE8` | `#252420` | Empty field chip | ink-3 on it: 5.0 / 5.3 |
 | empty-border | `#CFC8B9` | `#4A4740` | Empty field chip border (dashed) | — |
+| destructive | `#B42318` | `#FF8A7A` | Delete, errors (added in T4 code) | AA on paper and surface (tested) |
 
 **Dark mode:** the document page goes dark too (decided 2026-09-23). One theme everywhere, calm at night. The PDF and DOCX stay light, as printed paper.
 
@@ -118,6 +119,10 @@ Rules:
 - The landing page plays one reveal on load: the sheets fan out, your message pops in, the Purpose field inks in, then its change marker appears. No loops.
 - **Reduced motion:** no sweeps, slides or blur. Highlights fade in place (color only). The shimmer holds still.
 - **Reduced transparency:** the phone's frosted action bar becomes solid paper.
+
+## In code
+
+The tokens are in `packages/ui/src/styles/globals.css`, mapped to the shadcn variables (`--background` = paper, `--card` = surface, `--primary` = ink, `--muted` = empty, `--muted-foreground` = ink-3, `--ring` = blue-ink). Parley tokens have their own utilities: `bg-sheet`, `text-blue-ink`, `bg-highlighter`, `text-ink-2`, and so on. The type scale is `text-display` … `text-label`, the curves are `ease-out`, `ease-in-out` and `ease-drawer`, and the sheet shadow is `shadow-sheet`. `/dev/brand` shows all of it in dev.
 
 ## Build notes for T4 (after T1)
 

@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import appCss from "@workspace/ui/globals.css?url"
+import { fontPreloads } from "@workspace/ui/lib/fonts"
 
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -10,7 +11,11 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Parley" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      ...fontPreloads,
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+    ],
   }),
   notFoundComponent: () => (
     <main className="container mx-auto p-4 pt-16">

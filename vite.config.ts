@@ -58,6 +58,7 @@ export default defineConfig({
   test: {
     projects: [
       {
+        resolve: { tsconfigPaths: true },
         test: {
           name: "web",
           root: "apps/web",
@@ -67,6 +68,13 @@ export default defineConfig({
             include: ["src/**/*.test-d.ts"],
             tsconfig: "./tsconfig.json",
           },
+        },
+      },
+      {
+        test: {
+          name: "ui",
+          root: "packages/ui",
+          include: ["src/**/*.test.{ts,tsx}"],
         },
       },
     ],

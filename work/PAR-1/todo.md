@@ -62,16 +62,23 @@
 
 ## Phase 1: Brand + document engine
 
-- [ ] **T4: Brand: colors, logo, type, motion feel** (M)
+- [x] **T4: Brand: colors, logo, type, motion feel** (M)
+  - Done 2026-09-24. Checked: `pnpm check`, `pnpm test` (74 tests: every text pair in light and dark passes AA, and the font fallbacks match Capsize's metrics). In Chromium on `/dev/brand`: both fonts load, light and dark match the canvas, the shimmer stops with reduced motion, no console errors. Production build: `/dev/brand` is 404, and the font preloads use the same hashed files as the CSS.
+  - Decisions:
+    - **The tokens live in `packages/ui/src/styles/globals.css`, not `apps/web/src/styles/tokens.css`.** The shadcn CLI writes theme variables into the CSS file named in `components.json` (the shadcn skill: "always edit this file, never create a new one").
+    - **`muted` = empty and `muted-foreground` = ink-3**, so captions and placeholders use the brand's caption ink.
+    - **A destructive red was added** (`#B42318` light, `#FF8A7A` dark). The approved brand had none. Both pass AA.
+    - **Font fallbacks come from Capsize** (`createFontStack`), on Times New Roman and Arial like `next/font`. A test keeps the CSS in step with the metrics.
+    - **The Button press is `scale-97`** (brand press), only with `motion-safe`.
+    - **Seen but not fixed here:** switching the theme animates colors on elements with `transition-all`. The theme menu (T23) turns transitions off during the switch.
   - Accept:
     - `work/PAR-1/brand.md` holds the palette (light + dark, contrast checked), the type scale, the logo SVG, and the shimmer and motion specs.
     - Tailwind theme tokens and shadcn theme from the brand, plus a small preview page showing them.
     - You approve it.
   - Verify: All text pairs pass WCAG AA contrast (automated check). You sign off.
-  - Files: `work/PAR-1/brand.md`, `apps/web/src/styles/tokens.css`, `apps/web/public/logo.svg`, `apps/web/src/routes/dev.brand.tsx` (`beforeLoad` throws `notFound()` outside dev)
+  - Files: `work/PAR-1/brand.md`, `packages/ui/src/styles/globals.css` (+ `theme.test.ts`), `packages/ui/src/lib/fonts.ts`, `apps/web/public/{logo,favicon}.svg`, `apps/web/src/components/logo.tsx`, `apps/web/src/routes/dev.brand.tsx` (`beforeLoad` throws `notFound()` outside dev)
   - Deps: T1 · Skills: `emil-design-eng`, `apple-design` · Owner: approve
   - Can run in parallel with T5–T12.
-  - Progress: `brand.md` approved 2026-09-23. The code half (tokens, logo file, preview page) waits for T1.
 
 - [ ] **T5: Template parser: markdown → typed tree** (M)
   - Accept:
@@ -235,7 +242,7 @@
 
 - [ ] **T23: Account menu, settings and password/email flows** (M)
   - Accept:
-    - The account menu has your name, a plan badge, settings, billing (a placeholder until T26), and sign out.
+    - The account menu has your name, a plan badge, settings, billing (a placeholder until T26), and sign out. The theme switch turns CSS transitions off while it applies (no color animation on switch, found in T4).
     - Forgot/reset password (a 30-min single-use token, other sessions revoked). Change password (optionally revoke other sessions). Set a password for OAuth-only users. Change email (confirm with the current email first). Change name. A session list with revoke. Delete account (fresh session + confirm, all data removed).
     - Integration tests for each flow + audit log entries (IDs only). The emails are React Email templates.
   - Files: `apps/web/src/features/account/*`, `src/routes/{_app/_authed/settings.tsx,_auth/forgot-password.tsx,_auth/reset-password.tsx}`, `emails/{reset-password,change-email}.tsx`
