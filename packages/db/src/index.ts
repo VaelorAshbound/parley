@@ -1,2 +1,4 @@
-// The Drizzle schema and queries land here in T13 (work/PAR-1/todo.md).
-export {}
+export { connect, schema } from "./client.ts"
+export type { Db, Schema } from "./client.ts"
+export * from "./queries/drafts.ts"
+export type { JsonObject } from "./schema.ts"

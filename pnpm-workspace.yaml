@@ -3,6 +3,7 @@ packages:
   - "packages/*"
 
 allowBuilds:
+  "@embedded-postgres/linux-x64": true
   esbuild: true
   lightningcss: true
   sharp: true
