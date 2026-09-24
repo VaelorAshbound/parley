@@ -42,3 +42,6 @@ Session end. Finished: T4 design half (Paper & Ink approved, brand.md, canvas, s
 
 ### 2026-09-23T19:32:03Z
 T1 done (925ec51): Vite+ 1.0 RC monorepo, TanStack Start on one Worker, Hono /api, shadcn base-nova in packages/ui, workerd tests on Vitest 4.1. T2 done, GO for both (50f4784, cb8ae90): DOCX in workerd, PDF via real Browser Run, deployed to workers.dev, timed, then deleted; results in spikes.md. Branch pushed. Next: T3 waits for the owner to connect the repo to Workers Builds (settings proposed in chat), then Playwright on the Preview, R2 traces, nightly hook.
+
+### 2026-09-24T01:40:57Z
+T3 done: Workers Builds runs every gate + a Worker Preview per branch (~30 s). Browser tests moved to GitHub Actions (ADR-0001, owner's choice), lean on minutes. Red/green proven on PR #2. Repo made public (owner) after a secret scan. Draft PR #1 is open. At Checkpoint 0: waiting on owner review; merging PR #1 to main is the owner's call. Next: T4 code half, then T5.
