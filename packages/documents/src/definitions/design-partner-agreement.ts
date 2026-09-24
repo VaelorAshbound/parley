@@ -13,15 +13,10 @@ const CC_BY = "https://creativecommons.org/licenses/by/4.0/"
 
 /** The official "[ month | quarter | year | term ]" pick. */
 const period = (help: string) =>
-  field.choice({
+  field.select({
     label: "Period",
     help,
-    options: {
-      month: { label: "month" },
-      quarter: { label: "quarter" },
-      year: { label: "year" },
-      term: { label: "term" },
-    },
+    options: { month: "month", quarter: "quarter", year: "year", term: "term" },
   })
 
 export const designPartnerAgreement = defineDocument({

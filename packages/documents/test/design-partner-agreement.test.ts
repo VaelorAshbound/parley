@@ -82,4 +82,23 @@ describe("the Design Partner Agreement", () => {
       "During the Term, Partner will pay Provider $500.00 per month (excluding taxes) in U.S. Dollars to access and use the Product. This amount reflects a discount for Partner’s Feedback and participation in the Program. Partner will pay the fee within 30 days from receipt of invoice.",
     ])
   })
+
+  it("picks each period from the official list, printed as the word", () => {
+    const partner = dpa.fields.programPartner.options.feedback.blanks.period
+    const fee = dpa.fields.fees.options.paid.blanks.period
+
+    expect(partner.kind).toBe("select")
+    expect(fee.kind).toBe("select")
+    expect(Object.values(fee.options)).toEqual([
+      "month",
+      "quarter",
+      "year",
+      "term",
+    ])
+    const fees = (period: string) => ({
+      fees: { option: "paid", value: { period } },
+    })
+    expect(issues(fees("quarter"))).toBeUndefined()
+    expect(issues(fees("week"))).toHaveLength(1)
+  })
 })

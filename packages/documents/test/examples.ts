@@ -239,7 +239,7 @@ export const examples = {
       selected: [
         {
           option: "feedback",
-          value: { sessions: 2, period: { option: "month" } },
+          value: { sessions: 2, period: "month" },
         },
         { option: "privateLists" },
         { option: "reference" },
@@ -262,7 +262,7 @@ export const examples = {
       option: "paid",
       value: {
         amount: { amount: 500, currency: "USD" },
-        period: { option: "month" },
+        period: "month",
         days: 30,
       },
     },

@@ -46,7 +46,14 @@ Key Terms (part) → Product · Program (Partner will) · Program (Provider will
 
 ## Engine gaps
 
-1. **`field.select` can't be a blank** (see `pilot-agreement.md`). The "[ month | quarter | year | term ]" picks use a small `field.choice`.
-2. **A section holds one field**, so the one official "Program" row becomes two rows with the same heading.
-3. **Part headings drop their hint** in the outputs (the "Key Terms" lead-in is stored, not printed).
-4. **Choices print "None" above "Other"**, because Other is always the last line.
+Fixed in the engine (8b78a29 and earlier), and used here:
+
+- **`field.select` as a blank.** Both "[ month | quarter | year | term ]" picks (the Feedback sessions and the Fees) are `field.select` blanks now, stored as `"month"` and printed as the word.
+- **Part headings print their hint** in the outputs.
+
+Still open:
+
+1. **A section holds one field**, so the one official "Program" row becomes two rows with the same heading.
+2. **Choices print "None" above "Other"**, because Other is always the last line.
+
+No "required when" rule was needed: the Fees currency check is a plain rule that already waits for the currency.
