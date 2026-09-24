@@ -127,9 +127,9 @@ describe("cover page layout", () => {
   })
 
   it("signs with the rows the document asks for", () => {
-    const [block] = render(dpa(), {}).coverPage.signatures
+    const { rows } = render(dpa(), {}).coverPage.signatures
 
-    expect(block?.rows.map((row) => row.label)).toEqual([
+    expect(rows.map((row) => row.label)).toEqual([
       "Signature",
       "Name",
       "Title",

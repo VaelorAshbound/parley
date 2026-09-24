@@ -89,11 +89,11 @@ export type RenderedSection = {
   part?: true
 }
 
-export type RenderedSignature = {
-  field: string
-  label: string
-  /** `value: null` is a line to sign or date by hand. */
-  rows: { label: string; value: RenderedValue | null }[]
+/** The signature table: one column per party, one row per signature row. */
+export type RenderedSignatures = {
+  parties: { field: string; label: string }[]
+  /** A `null` cell is a line to sign or date by hand. */
+  rows: { label: string; cells: (RenderedValue | null)[] }[]
 }
 
 export type RenderedDocument = {
@@ -101,12 +101,14 @@ export type RenderedDocument = {
   name: string
   coverPage: {
     source: "official" | "parley"
+    /** The label a Parley-written cover page must carry (CC BY 4.0). */
+    eyebrow: string | undefined
     title: string
     subtitle: string | undefined
     intro: RenderedInline[][]
     sections: RenderedSection[]
     closing: RenderedInline[][]
-    signatures: RenderedSignature[]
+    signatures: RenderedSignatures
     footer: RenderedInline[][]
   }
   standardTerms: RenderedStandardTerms
@@ -171,6 +173,10 @@ export function render<F extends Fields>(
     name: definition.name,
     coverPage: {
       source: definition.coverPage.source,
+      eyebrow:
+        definition.coverPage.source === "parley"
+          ? "Cover page by Parley, not by Common Paper"
+          : undefined,
       title: definition.coverPage.title,
       subtitle: definition.coverPage.subtitle,
       intro: definition.coverPage.intro.map(inline),
@@ -214,13 +220,13 @@ export function render<F extends Fields>(
       ),
       closing: definition.coverPage.closing.map(inline),
       footer: definition.coverPage.footer.map(inline),
-      signatures: definition.coverPage.signatures.map((key) =>
-        signature(
-          key,
-          fields[key]?.label ?? key,
-          definition.coverPage.signatureRows ?? NDA_SIGNATURE_ROWS,
-          show
-        )
+      signatures: signatures(
+        definition.coverPage.signatures.map((key) => ({
+          field: key,
+          label: fields[key]?.label ?? key,
+        })),
+        definition.coverPage.signatureRows ?? NDA_SIGNATURE_ROWS,
+        show
       ),
     },
     standardTerms: {
@@ -382,20 +388,23 @@ const NDA_SIGNATURE_ROWS: SignatureRow[] = [
   { label: "Date", part: null },
 ]
 
-/** One signature block per party; a row with no part is a line to fill by hand. */
-function signature(
-  key: string,
-  label: string,
+/** The signature grid; a row with no part is a line to fill in by hand. */
+function signatures(
+  parties: RenderedSignatures["parties"],
   rows: SignatureRow[],
   show: (path: string) => RenderedValue
-): RenderedSignature {
+): RenderedSignatures {
   return {
-    field: key,
-    label,
-    rows: rows.map((row) => ({
-      label: row.label,
-      value: row.part === null ? null : show(`${key}.${row.part}`),
-    })),
+    parties,
+    rows:
+      parties.length === 0
+        ? []
+        : rows.map((row) => ({
+            label: row.label,
+            cells: parties.map(({ field }) =>
+              row.part === null ? null : show(`${field}.${row.part}`)
+            ),
+          })),
   }
 }
 

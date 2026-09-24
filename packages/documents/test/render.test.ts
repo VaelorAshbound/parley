@@ -187,35 +187,31 @@ describe("render: cover page", () => {
     ])
   })
 
-  it("renders each signature block with blank signing rows", () => {
-    const [first] = render(definition, filled).coverPage.signatures
+  it("renders the signature table, with blank lines to sign and date", () => {
+    const { parties, rows } = render(definition, filled).coverPage.signatures
+    const party1 = rows.map((row) => [row.label, row.cells[0]?.text ?? null])
 
-    expect(first).toEqual({
-      field: "party1",
-      label: "Party 1",
-      rows: [
-        { label: "Signature", value: null },
-        {
-          label: "Print Name",
-          value: expect.objectContaining({ text: "Ana" }),
-        },
-        { label: "Title", value: expect.objectContaining({ text: "CEO" }) },
-        { label: "Company", value: expect.objectContaining({ text: "Acme" }) },
-        {
-          label: "Notice Address",
-          value: expect.objectContaining({ text: "ana@acme.test" }),
-        },
-        { label: "Date", value: null },
-      ],
-    })
+    expect(parties).toEqual([
+      { field: "party1", label: "Party 1" },
+      { field: "party2", label: "Party 2" },
+    ])
+    expect(party1).toEqual([
+      ["Signature", null],
+      ["Print Name", "Ana"],
+      ["Title", "CEO"],
+      ["Company", "Acme"],
+      ["Notice Address", "ana@acme.test"],
+      ["Date", null],
+    ])
+    expect(rows[0]?.cells).toEqual([null, null])
   })
 
   it("shows both notice addresses when a party gives both", () => {
-    const [first] = render(definition, {
+    const { rows } = render(definition, {
       party1: { email: "ana@acme.test", address: "1 Main St" },
     }).coverPage.signatures
 
-    expect(first?.rows[4]?.value?.text).toBe("ana@acme.test\n1 Main St")
+    expect(rows[4]?.cells[0]?.text).toBe("ana@acme.test\n1 Main St")
   })
 
   it("carries the layout's own words and says who wrote it", () => {
@@ -226,6 +222,7 @@ describe("render: cover page", () => {
       name: "Test NDA",
       coverPage: {
         source: "parley",
+        eyebrow: "Cover page by Parley, not by Common Paper",
         title: "Test NDA",
         subtitle: undefined,
         intro: [],
@@ -469,7 +466,7 @@ describe("render: edge cases", () => {
       text: null,
       placeholder: "[gone]",
     })
-    expect(rendered.coverPage.signatures[0]?.label).toBe("ghost")
+    expect(rendered.coverPage.signatures.parties[0]?.label).toBe("ghost")
     const [clause] = rendered.standardTerms.children
     const hovers =
       clause?.type === "clause"

@@ -132,7 +132,7 @@ describe("toDocx", () => {
           ...rendered.coverPage,
           subtitle: undefined,
           intro: [[{ type: "hint", value: "Fill in each section." }]],
-          signatures: [],
+          signatures: { parties: [], rows: [] },
         },
       })
     )
@@ -165,7 +165,11 @@ describe("toDocx", () => {
     const label = "Cover page by Parley, not by Common Paper"
     const parley = {
       ...filled,
-      coverPage: { ...filled.coverPage, source: "parley" as const },
+      coverPage: {
+        ...filled.coverPage,
+        source: "parley" as const,
+        eyebrow: label,
+      },
     }
 
     expect(textOf((await unzip(await toDocx(filled))).document)).not.toContain(

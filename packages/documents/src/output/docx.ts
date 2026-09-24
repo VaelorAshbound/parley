@@ -52,8 +52,6 @@ const SERIF = "Georgia"
 const SANS = "Arial"
 const SYMBOLS = "Segoe UI Symbol"
 
-const PARLEY_LABEL = "Cover page by Parley, not by Common Paper"
-
 export async function toDocx(
   document: RenderedDocument,
   { pageSize = "Letter" }: DocxOptions = {}
@@ -93,8 +91,8 @@ export async function toDocx(
         },
         footers: { default: footer(document.name, width) },
         children: [
-          ...(coverPage.source === "parley"
-            ? [small(PARLEY_LABEL, { allCaps: true })]
+          ...(coverPage.eyebrow
+            ? [small(coverPage.eyebrow, { allCaps: true })]
             : []),
           new Paragraph({
             heading: HeadingLevel.HEADING_1,
@@ -356,46 +354,44 @@ function listTable({ columns, rows }: RenderedTable, width: number) {
 }
 
 function signatureTable({ coverPage }: RenderedDocument, width: number) {
-  const [first] = coverPage.signatures
-  if (!first) return []
+  const { parties, rows } = coverPage.signatures
+  if (parties.length === 0) return []
   const labelWidth = Math.round(width * 0.24)
-  const column = Math.floor((width - labelWidth) / coverPage.signatures.length)
+  const column = Math.floor((width - labelWidth) / parties.length)
   const label = (text: string) =>
     new Paragraph({
       children: [
         new TextRun({ text, font: SANS, size: 17, bold: true, color: INK_2 }),
       ],
     })
-  const header = new TableRow({
-    tableHeader: true,
-    children: [
-      cell(labelWidth, [new Paragraph({})]),
-      ...coverPage.signatures.map((block) =>
-        cell(column, [label(block.label)])
-      ),
-    ],
-  })
-  const rows = first.rows.map(
-    (row, index) =>
-      new TableRow({
-        cantSplit: true,
-        height: { value: 520, rule: HeightRule.ATLEAST },
-        children: [
-          cell(labelWidth, [label(row.label)]),
-          ...coverPage.signatures.map((block) => {
-            const shown = block.rows[index]?.value
-            return cell(column, [
-              new Paragraph({ children: shown ? value(shown) : [] }),
-            ])
-          }),
-        ],
-      })
-  )
   return [
     new Table({
       width: { size: width, type: WidthType.DXA },
-      columnWidths: [labelWidth, ...coverPage.signatures.map(() => column)],
-      rows: [header, ...rows],
+      columnWidths: [labelWidth, ...parties.map(() => column)],
+      rows: [
+        new TableRow({
+          tableHeader: true,
+          children: [
+            cell(labelWidth, [new Paragraph({})]),
+            ...parties.map((party) => cell(column, [label(party.label)])),
+          ],
+        }),
+        ...rows.map(
+          (row) =>
+            new TableRow({
+              cantSplit: true,
+              height: { value: 520, rule: HeightRule.ATLEAST },
+              children: [
+                cell(labelWidth, [label(row.label)]),
+                ...row.cells.map((shown) =>
+                  cell(column, [
+                    new Paragraph({ children: shown ? value(shown) : [] }),
+                  ])
+                ),
+              ],
+            })
+        ),
+      ],
     }),
     new Paragraph({}),
   ]

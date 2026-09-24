@@ -23,8 +23,6 @@ export type PrintOptions = {
   fontCss?: string
 }
 
-const PARLEY_LABEL = "Cover page by Parley, not by Common Paper"
-
 export function toPrintHtml(
   document: RenderedDocument,
   { pageSize = "Letter", fontCss = "" }: PrintOptions = {}
@@ -32,8 +30,8 @@ export function toPrintHtml(
   const { coverPage, standardTerms } = document
   const body = [
     '<section class="cover">',
-    coverPage.source === "parley"
-      ? `<p class="eyebrow">${PARLEY_LABEL}</p>`
+    coverPage.eyebrow
+      ? `<p class="eyebrow">${escape(coverPage.eyebrow)}</p>`
       : "",
     `<h1>${escape(coverPage.title)}</h1>`,
     coverPage.subtitle
@@ -154,23 +152,22 @@ function listTable({ columns, rows }: RenderedTable) {
 }
 
 function signatures({ coverPage }: RenderedDocument) {
-  const [first] = coverPage.signatures
-  if (!first) return ""
-  const head = coverPage.signatures
-    .map((block) => `<th scope="col">${escape(block.label)}</th>`)
+  const { parties, rows } = coverPage.signatures
+  if (parties.length === 0) return ""
+  const head = parties
+    .map((party) => `<th scope="col">${escape(party.label)}</th>`)
     .join("")
-  const rows = first.rows
-    .map((row, index) => {
-      const cells = coverPage.signatures
-        .map((block) => {
-          const cell = block.rows[index]?.value
-          return `<td${cell ? "" : ' class="sign"'}>${cell ? value(cell) : ""}</td>`
-        })
-        .join("")
-      return `<tr><th scope="row">${escape(row.label)}</th>${cells}</tr>`
-    })
+  const body = rows
+    .map(
+      (row) =>
+        `<tr><th scope="row">${escape(row.label)}</th>${row.cells
+          .map((cell) =>
+            cell ? `<td>${value(cell)}</td>` : '<td class="sign"></td>'
+          )
+          .join("")}</tr>`
+    )
     .join("")
-  return `<table class="signatures"><thead><tr><td></td>${head}</tr></thead><tbody>${rows}</tbody></table>`
+  return `<table class="signatures"><thead><tr><td></td>${head}</tr></thead><tbody>${body}</tbody></table>`
 }
 
 function clause(node: RenderedClause): string {

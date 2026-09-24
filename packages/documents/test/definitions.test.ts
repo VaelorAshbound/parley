@@ -36,8 +36,8 @@ describe.each(Object.entries(definitions))("%s", (id, definition) => {
         ...cell,
       })),
     ])
-    const signed = rendered.coverPage.signatures.flatMap((block) =>
-      block.rows.flatMap((row) => (row.value ? [row.value] : []))
+    const signed = rendered.coverPage.signatures.rows.flatMap((row) =>
+      row.cells.flatMap((cell) => (cell ? [cell] : []))
     )
 
     expect(missing(parts)).toEqual([])
@@ -88,6 +88,10 @@ function blocksUnder(heading: string): CoverBlock[] {
 }
 
 describe("the Mutual NDA's cover page", () => {
+  it("is Common Paper's own page, so it carries no Parley label", () => {
+    expect(render(nda, {}).coverPage.eyebrow).toBeUndefined()
+  })
+
   it("uses the official title, subtitle and section headings", () => {
     const headings = official.flatMap((block) =>
       block.type === "heading" ? [block.text] : []
@@ -172,9 +176,9 @@ describe("the Mutual NDA's cover page", () => {
       table?.type === "table"
         ? table.rows.slice(1).map((row) => textOf(row[0] ?? []))
         : []
-    const [first] = render(nda, {}).coverPage.signatures
+    const { rows: signed } = render(nda, {}).coverPage.signatures
 
-    expect(first?.rows.map((row) => row.label)).toEqual(
+    expect(signed.map((row) => row.label)).toEqual(
       rows.map((row) => row.replace(/Use either.*$/, "").trim())
     )
   })

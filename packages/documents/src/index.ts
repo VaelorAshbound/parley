@@ -38,6 +38,6 @@ export type {
   RenderedDocument,
   RenderedInline,
   RenderedLine,
-  RenderedSignature,
+  RenderedSignatures,
   RenderedValue,
 } from "./render.ts"

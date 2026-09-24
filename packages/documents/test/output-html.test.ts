@@ -135,7 +135,10 @@ describe("toPrintHtml", () => {
     const rendered = render(csa, {})
     const html = toPrintHtml({
       ...rendered,
-      coverPage: { ...rendered.coverPage, signatures: [] },
+      coverPage: {
+        ...rendered.coverPage,
+        signatures: { parties: [], rows: [] },
+      },
     })
 
     expect(html).toContain(
@@ -193,7 +196,11 @@ describe("toPrintHtml", () => {
     const label = "Cover page by Parley, not by Common Paper"
     const parley = {
       ...filled,
-      coverPage: { ...filled.coverPage, source: "parley" as const },
+      coverPage: {
+        ...filled.coverPage,
+        source: "parley" as const,
+        eyebrow: label,
+      },
     }
 
     expect(toPrintHtml(filled)).not.toContain(label)
