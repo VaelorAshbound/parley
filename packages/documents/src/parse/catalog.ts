@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 
-import { z } from "zod"
+import { z } from "../zod.ts"
 
 // catalog.json and templates/ at the repo root are Common Paper's files. The
 // build script and the tests read them from disk; the app never does.

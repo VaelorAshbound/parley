@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "../zod.ts"
 
 // The typed tree a Common Paper template is parsed into at build time
 // (spec §2 → Document engine). The app renders from it and never parses

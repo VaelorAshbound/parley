@@ -26,6 +26,27 @@ export default defineConfig({
         files: ["**/*.test.{ts,tsx}", "**/*.test-d.ts"],
         plugins: ["vitest"],
       },
+      {
+        // Schemas must be built after z.config({ jitless: true }) runs.
+        files: ["packages/documents/**"],
+        rules: {
+          "no-restricted-imports": [
+            "error",
+            {
+              paths: [
+                {
+                  name: "zod",
+                  message: 'Import { z } from "src/zod.ts" (jitless).',
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        files: ["packages/documents/src/zod.ts"],
+        rules: { "no-restricted-imports": "off" },
+      },
     ],
   },
   fmt: {
