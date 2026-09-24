@@ -16,6 +16,17 @@
     "binding": "BROWSER",
     "remote": true,
   },
+  // Neon through Hyperdrive with query caching OFF: a cached SELECT would
+  // show a stale draft or a revoked share link (spec §5 Database). Local dev
+  // uses the Postgres from `pnpm db:dev`.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // "parley" → the Neon production branch
+      "id": "904889e1abe144c4a434c382a53f03a4",
+      "localConnectionString": "postgres://postgres:postgres@localhost:54320/parley",
+    },
+  ],
   // Worker Previews (one per branch) get their own binding list; wrangler
   // preview refuses to run without it.
   // https://developers.cloudflare.com/workers/previews/configuration/
@@ -23,6 +34,15 @@
     "browser": {
       "binding": "BROWSER",
     },
+    // Previews never touch production data. "parley-preview" → the Neon
+    // "preview" branch, until T33 gives each PR its own branch.
+    "hyperdrive": [
+      {
+        "binding": "HYPERDRIVE",
+        "id": "fc5e4caf73334f3ea148a21c83e83695",
+        "localConnectionString": "postgres://postgres:postgres@localhost:54320/parley",
+      },
+    ],
   },
   "observability": {
     "enabled": true,
