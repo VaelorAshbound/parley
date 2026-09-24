@@ -71,7 +71,7 @@ export const api = new Hono<AppEnv>()
   .use(secureHeaders())
   // Hono answers HEAD from the GET handler on its own.
   .get("/health", (c) => c.json({ ok: true as const }))
-  .get("/version", (c) => c.json({ tag: c.env.CF_VERSION_METADATA.tag }))
+  .get("/version", (c) => c.json({ commit: c.env.COMMIT_SHA }))
   .route("/auth", auth)
   .route("/rpc", rpc)
   // Anything oRPC and Better Auth didn't turn into a response, for example

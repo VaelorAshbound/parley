@@ -97,9 +97,9 @@ jobs:
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           while true; do
-            tag="$(curl --silent "$PREVIEW_URL/api/version" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).tag??"")}catch{console.log("")}})')"
-            echo "Preview version: ${tag:-unknown}, want ${SHA:0:7}"
-            if [ -n "$tag" ] && [ "${SHA#"$tag"}" != "$SHA" ]; then break; fi
+            commit="$(curl --silent "$PREVIEW_URL/api/version" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit??"")}catch{console.log("")}})')"
+            echo "Preview serves: ${commit:-unknown}, want $SHA"
+            if [ "$commit" = "$SHA" ]; then break; fi
             sleep 5
           done
 

@@ -20,11 +20,9 @@
   },
   "vars": {
     "STAGE": "production",
-  },
-  // The deployed version's tag (the commit), so CI can wait until a Preview
-  // serves the commit it is testing.
-  "version_metadata": {
-    "binding": "CF_VERSION_METADATA",
+    // Set per Preview by scripts/ci-preview.sh, so CI can wait until the
+    // Preview serves the commit it is testing.
+    "COMMIT_SHA": "",
   },
   // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
   // uses the real service (10 browser hours/month are in Workers Paid).
@@ -50,9 +48,7 @@
     // Turns on Server-Timing headers for DevTools (spec §5 Hono).
     "vars": {
       "STAGE": "preview",
-    },
-    "version_metadata": {
-      "binding": "CF_VERSION_METADATA",
+      "COMMIT_SHA": "",
     },
     "browser": {
       "binding": "BROWSER",

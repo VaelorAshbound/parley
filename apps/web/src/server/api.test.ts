@@ -48,11 +48,11 @@ describe("GET /api/version", () => {
       {},
       {
         ...env,
-        CF_VERSION_METADATA: { id: "v-1", tag: "35a7e8b", timestamp: "" },
+        COMMIT_SHA: "35a7e8b",
       }
     )
 
-    expect(await response.json()).toEqual({ tag: "35a7e8b" })
+    expect(await response.json()).toEqual({ commit: "35a7e8b" })
   })
 })
 

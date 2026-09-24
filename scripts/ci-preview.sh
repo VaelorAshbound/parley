@@ -7,7 +7,8 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../apps/web"
 
 echo "==> Creating the Worker Preview"
-if ! output="$(pnpm exec wrangler preview --json)"; then
+# The commit lets the e2e job wait for this exact version (/api/version).
+if ! output="$(pnpm exec wrangler preview --json --var "COMMIT_SHA:${WORKERS_CI_COMMIT_SHA:-}")"; then
   printf '%s\n' "$output"
   echo "wrangler preview failed" >&2
   exit 1
