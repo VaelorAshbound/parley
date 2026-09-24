@@ -51,3 +51,6 @@ Checkpoint 0 approved by owner. Decision: PR #1 stays draft, merge to main after
 
 ### 2026-09-24T02:38:05Z
 /build auto in progress. Done: T4 code half (cee400f: tokens, fonts, logo, /dev/brand), T5 parser (ba8605d, e6551ec: typed trees in generated/, 100% coverage gate in CI), T6 engine (f62a8de..dd57a4e: fields, defineDocument, applyFieldChanges with compare-and-set undo, render; ADR-0002, ADR-0003). Next: T7 Mutual NDA definition, then T8-T12.
+
+### 2026-09-24T02:55:50Z
+T7 (Mutual NDA, ba8ef9d) and T12 (print HTML + DOCX, spike removed, 1d6e02b) done; CI gate green, real Browser Run PDF passes. T8-T11 research saved in work/PAR-1/cover-research/. Blocked on owner decisions: official cover pages exist for all 10 docs, CSA template is unpublished v3, new field kinds needed.
