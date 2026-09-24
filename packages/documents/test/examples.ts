@@ -281,6 +281,98 @@ export const examples = {
       address: "12 Elm St, Brooklyn, NY 11201",
     },
   },
+  "partnership-agreement": {
+    companyObligations: {
+      selected: [
+        {
+          option: "promoActivities",
+          value: "Feature Partner in two customer webinars per year",
+        },
+        {
+          option: "payment",
+          value: "$2,000 per quarter for co-marketing",
+        },
+        { option: "brandElements" },
+      ],
+    },
+    partnerObligations: {
+      selected: [
+        {
+          option: "referrals",
+          value:
+            "A U.S. retailer with 10 or more stores that has not used Acme",
+        },
+        { option: "brandElements" },
+      ],
+    },
+    territory: { option: "areas", value: "The United States and Canada" },
+    paymentProcess: {
+      selected: [{ option: "partnerBills", value: "billing@acme.test" }],
+    },
+    paymentSchedule: {
+      option: "schedule",
+      value: "30 days from receipt of invoice",
+    },
+    endDate: {
+      option: "afterEffective",
+      value: { amount: 1, unit: "years" },
+    },
+    effectiveDate: { option: "custom", value: "2026-11-01" },
+    governingLaw: {
+      region: "Ontario, Canada",
+      courtLocation: "Toronto, Ontario",
+    },
+    companyCoveredClaim: { option: "standard" },
+    partnerCoveredClaim: {
+      option: "custom",
+      value:
+        "Partner's breach of its representations and warranties in Section 7.",
+    },
+    generalCap: {
+      option: "greater",
+      value: { amount: { amount: 25_000, currency: "USD" }, multiple: 2 },
+    },
+    increasedClaims: {
+      selected: [{ option: "confidentiality" }, { option: "indemnity" }],
+    },
+    increasedCap: {
+      option: "fixed",
+      value: { amount: 250_000, currency: "USD" },
+    },
+    unlimitedClaims: {
+      selected: [{ option: "misconduct" }],
+      other: "A party's infringement of the other party's trademarks.",
+    },
+    additionalWarranties: {
+      selected: [
+        {
+          option: "byPartner",
+          value: "Partner's referrals come from its own customer lists.",
+        },
+      ],
+    },
+    dpa: "Acme's Data Processing Agreement at https://acme.test/dpa",
+    brandGuidelines: {
+      selected: [
+        { option: "company", value: "https://acme.test/brand" },
+        { option: "partner", value: "Attached as Exhibit A" },
+      ],
+    },
+    modifications: "Section 3.4 approvals may be given by email.",
+    company: {
+      company: "Acme Analytics, Inc.",
+      name: "Ana Diaz",
+      title: "CEO",
+      email: "legal@acme.test",
+    },
+    partner: {
+      company: "Maple Retail Group Ltd.",
+      name: "Dee Singh",
+      title: "Head of Alliances",
+      email: "alliances@maple.test",
+      address: "200 Bay St, Toronto, ON M5J 2J1, Canada",
+    },
+  },
 } as const
 
 const byId: Readonly<Record<string, unknown>> = examples
