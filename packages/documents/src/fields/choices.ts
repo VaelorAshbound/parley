@@ -1,8 +1,9 @@
 import { typed, z } from "../zod.ts"
 import {
-  checkOption,
+  checkOptions,
   formatChoice,
   optionSchemas,
+  tidy,
   type ChoiceDraft,
   type ChoiceOptions,
   type ChoiceValue,
@@ -13,7 +14,6 @@ import {
   withMeta,
   type Common,
   type Field,
-  isRecord,
 } from "./core.ts"
 
 // Multi-select, for Common Paper's "[ ] pick none, one, or more than one"
@@ -49,10 +49,7 @@ export function choices<
   const fail = (message: string) => {
     throw new Error(`Choices "${config.label}": ${message}`)
   }
-  if (Object.hasOwn(config.options, "other"))
-    fail('"other" is kept for the Other answer.')
-  for (const [key, option] of Object.entries(config.options))
-    checkOption(config.label, key, option)
+  checkOptions(`Choices "${config.label}"`, config.options)
   for (const key of config.exclusive ?? [])
     if (!Object.hasOwn(config.options, key))
       fail(`exclusive option "${key}" is not one of its options.`)
@@ -107,13 +104,7 @@ export function choices<
     merge(_current, change) {
       if (change === null) return undefined
       const selected = change.selected
-        .map((item) =>
-          "value" in item &&
-          isRecord(item.value) &&
-          Object.keys(item.value).length === 0
-            ? { option: item.option }
-            : item
-        )
+        .map(tidy)
         .toSorted((a, b) => order.indexOf(a.option) - order.indexOf(b.option))
       const other =
         "other" in change && change.other?.trim() ? change.other : undefined

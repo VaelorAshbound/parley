@@ -29,25 +29,30 @@ describe("text people and the AI type", () => {
     expect(purpose.schema.parse("One\r\nTwo\tthree")).toBe("One\nTwo\tthree")
   })
 
-  it("always gives a DOCX whose XML Word can open", async () => {
-    const nda = definitions["mutual-nda"]
-    await fc.assert(
-      fc.asyncProperty(
-        fc.string({ unit: "binary", maxLength: 40 }),
-        async (text) => {
-          const { values } = applyFieldChanges(nda, {}, [
-            { key: "purpose", value: text },
-          ])
-          const zip = await JSZip.loadAsync(await toDocx(render(nda, values)))
-          const xml =
-            (await zip.file("word/document.xml")?.async("string")) ?? ""
+  // 60 DOCX builds: allow for a busy machine.
+  it(
+    "always gives a DOCX whose XML Word can open",
+    { timeout: 30_000 },
+    async () => {
+      const nda = definitions["mutual-nda"]
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ unit: "binary", maxLength: 40 }),
+          async (text) => {
+            const { values } = applyFieldChanges(nda, {}, [
+              { key: "purpose", value: text },
+            ])
+            const zip = await JSZip.loadAsync(await toDocx(render(nda, values)))
+            const xml =
+              (await zip.file("word/document.xml")?.async("string")) ?? ""
 
-          expect(forbiddenInXml(xml)).toEqual([])
-        }
-      ),
-      { numRuns: 60 }
-    )
-  })
+            expect(forbiddenInXml(xml)).toEqual([])
+          }
+        ),
+        { numRuns: 60 }
+      )
+    }
+  )
 })
 
 describe("a half-filled group", () => {

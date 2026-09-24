@@ -60,9 +60,21 @@ export type ChoiceDraft<O extends ChoiceOptions, Allow> =
   | Other<Allow>
 
 /** Every blank in the label has a field, and every field has one blank. */
-export function checkOption(choice: string, key: string, option: ChoiceOption) {
+/**
+ * An option set's mistakes fail when the field is defined: "other" is kept
+ * for the Other answer, and each label's blanks must match its fields.
+ * `owner` names the field in the error: `Choice "MNDA term"`.
+ */
+export function checkOptions(owner: string, options: ChoiceOptions) {
+  if (Object.hasOwn(options, "other"))
+    throw new Error(`${owner}: "other" is kept for the Other answer.`)
+  for (const [key, option] of Object.entries(options))
+    checkOption(owner, key, option)
+}
+
+function checkOption(owner: string, key: string, option: ChoiceOption) {
   const fail = (message: string) => {
-    throw new Error(`Choice "${choice}", option "${key}": ${message}.`)
+    throw new Error(`${owner}, option "${key}": ${message}.`)
   }
   if (option.with && option.blanks) fail("use with or blanks, not both")
   const names = splitLabel(option.label).flatMap((piece) =>
@@ -145,14 +157,14 @@ export function formatChoice(
 }
 
 /** One stored shape per meaning: an option with no blanks filled has none. */
-export function tidy(value: unknown) {
-  if (!isRecord(value) || !("value" in value)) return value
+export function tidy<T extends { option: string }>(
+  pick: T
+): T | { option: T["option"] } {
+  if (!("value" in pick)) return pick
   const empty =
-    value.value === undefined ||
-    (isRecord(value.value) && Object.keys(value.value).length === 0)
-  if (!empty) return value
-  const { value: _empty, ...rest } = value
-  return rest
+    pick.value === undefined ||
+    (isRecord(pick.value) && Object.keys(pick.value).length === 0)
+  return empty ? { option: pick.option } : pick
 }
 
 /** One `{ option, value? }` schema per option. */
@@ -167,12 +179,7 @@ export function choice<
   const O extends ChoiceOptions,
   const Allow extends boolean = false,
 >(config: Common<ChoiceDraft<O, Allow>> & { options: O; allowOther?: Allow }) {
-  if (Object.hasOwn(config.options, "other"))
-    throw new Error(
-      `Choice "${config.label}": "other" is kept for the Other answer.`
-    )
-  const entries = Object.entries(config.options)
-  for (const [key, option] of entries) checkOption(config.label, key, option)
+  checkOptions(`Choice "${config.label}"`, config.options)
   const otherText = z.strictObject({
     option: z.literal("other"),
     text: plainText(200),
