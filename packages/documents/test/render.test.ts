@@ -451,7 +451,11 @@ describe("render: edge cases", () => {
     // A definition edited by hand, with no types to catch the mistake.
     const broken = {
       ...definition,
-      linkedTerms: { Purpose: "gone" },
+      linkedTerms: {
+        Purpose: "gone",
+        "Governing Law": "purpose.part",
+        "Notice Address": "party1.nope",
+      },
       coverPage: {
         ...definition.coverPage,
         sections: [{ heading: "Gone", field: "gone" }],
@@ -466,6 +470,18 @@ describe("render: edge cases", () => {
       placeholder: "[gone]",
     })
     expect(rendered.coverPage.signatures[0]?.label).toBe("ghost")
+    const [clause] = rendered.standardTerms.children
+    const hovers =
+      clause?.type === "clause"
+        ? clause.content.flatMap((node) =>
+            node.type === "linkedTerm" ? node.values : []
+          )
+        : []
+    expect(hovers.map((shown) => [shown.label, shown.text])).toEqual([
+      ["gone", null],
+      ["Purpose", null],
+      ["Party 1: nope", null],
+    ])
   })
 })
 

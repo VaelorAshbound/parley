@@ -81,12 +81,11 @@ export interface ObjectField<
 export type NullableParts<Value> = { [K in keyof Value]?: Value[K] | null }
 
 /**
- * Any field, whatever its value type. The methods use method syntax on
- * purpose: TypeScript checks method parameters bivariantly, so every
- * `Field<…>` fits here and the engine can call them with checked values.
+ * What every field has, whatever its value type. The methods use method
+ * syntax on purpose: TypeScript checks method parameters bivariantly, so
+ * every `Field<…>` fits and the engine can call them with checked values.
  */
-export interface AnyField {
-  readonly kind: FieldKind
+interface FieldBase {
   readonly label: string
   readonly help: string
   readonly optional: boolean
@@ -94,27 +93,57 @@ export interface AnyField {
   readonly schema: z.ZodType
   readonly draftSchema: z.ZodType
   readonly changeSchema: z.ZodType
+  readonly merges: "whole" | "parts"
   merge(current: unknown, change: unknown): unknown
   format(value: unknown): string | null
-  readonly merges: "whole" | "parts"
-  /** Object kinds: the name of each part, and one part's display text. */
-  readonly subfields?: Readonly<Record<string, string>>
-  readonly derived?: Readonly<Record<string, string>>
-  formatPath?(value: unknown, part: string): string | null
-  /** Choice: its options, and whether it takes an Other answer. */
-  readonly options?: Readonly<
-    Record<
-      string,
-      {
-        label: string
-        with?: AnyField
-        blanks?: Readonly<Record<string, AnyField>>
-      }
-    >
-  >
-  readonly allowOther?: boolean
-  /** List: the field behind each column. */
-  readonly item?: Readonly<Record<string, AnyField>>
+}
+
+export type ChoiceOptionShape = {
+  label: string
+  with?: AnyField
+  blanks?: Readonly<Record<string, AnyField>>
+}
+
+/** Any field, told apart by `kind`, with what each group of kinds adds. */
+export type AnyField =
+  | (FieldBase & {
+      readonly kind:
+        | "text"
+        | "longText"
+        | "date"
+        | "duration"
+        | "money"
+        | "percent"
+        | "number"
+        | "select"
+        | "url"
+    })
+  | (FieldBase & {
+      readonly kind: "choice" | "choices"
+      readonly options: Readonly<Record<string, ChoiceOptionShape>>
+      readonly allowOther: boolean
+    })
+  | (FieldBase & {
+      readonly kind: "list"
+      /** The field behind each column. */
+      readonly item: Readonly<Record<string, AnyField>>
+    })
+  | PartsField
+
+/** A field with named parts: party, jurisdiction, group. */
+export type PartsField = FieldBase & {
+  readonly kind: "jurisdiction" | "party" | "group"
+  readonly subfields: Readonly<Record<string, string | undefined>>
+  readonly derived: Readonly<Record<string, string>>
+  formatPath(value: unknown, part: string): string | null
+}
+
+export function hasParts(field: AnyField): field is PartsField {
+  return (
+    field.kind === "party" ||
+    field.kind === "jurisdiction" ||
+    field.kind === "group"
+  )
 }
 
 export type Common<Value> = {

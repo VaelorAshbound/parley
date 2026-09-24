@@ -127,7 +127,9 @@ describe("the Mutual NDA's cover page", () => {
         section && "field" in section ? fields[section.field] : undefined
 
       expect(
-        Object.values(field?.options ?? {}).map((option) => option.label)
+        Object.values(field?.kind === "choice" ? field.options : {}).map(
+          (option) => option.label
+        )
       ).toEqual(
         options?.type === "options"
           ? options.items.map((item) => slot(textOf(item.content)))

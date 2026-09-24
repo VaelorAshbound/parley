@@ -5,7 +5,12 @@ import type {
   SignatureRow,
 } from "./define.ts"
 import type { AnyField } from "./fields.ts"
-import { display, isRecord } from "./fields/core.ts"
+import {
+  display,
+  hasParts,
+  isRecord,
+  type ChoiceOptionShape,
+} from "./fields/core.ts"
 import { blankValue, optionPieces } from "./fields/choice.ts"
 import type { Clause, Inline, LinkKind, StandardTerms } from "./parse/schema.ts"
 
@@ -119,21 +124,21 @@ export function render<F extends Fields>(
   function show(path: string): RenderedValue {
     const [key = "", part] = path.split(".")
     const field = fields[key]
-    const partLabel =
-      part === undefined
-        ? undefined
-        : (field?.subfields?.[part] ?? field?.derived?.[part])
-    const label = partLabel
-      ? `${field?.label}: ${partLabel}`
-      : (field?.label ?? path)
     const value = valueOf(key)
-    const text =
-      value === undefined || !field
-        ? null
-        : part === undefined
-          ? display(field, value)
-          : (field.formatPath?.(value, part) ?? null)
-    return { field: path, label, text, placeholder: `[${label}]` }
+    const shown = (label: string, text: string | null) => ({
+      field: path,
+      label,
+      text,
+      placeholder: `[${label}]`,
+    })
+    if (!field) return shown(path, null)
+    if (part === undefined) return shown(field.label, display(field, value))
+    if (!hasParts(field)) return shown(field.label, null)
+    const partLabel = field.subfields[part] ?? field.derived[part] ?? part
+    return shown(
+      `${field.label}: ${partLabel}`,
+      value === undefined ? null : field.formatPath(value, part)
+    )
   }
 
   function inline(nodes: Inline[]): RenderedInline[] {
@@ -256,22 +261,28 @@ function fieldBody(
   value: unknown,
   show: (path: string) => RenderedValue
 ): Pick<RenderedSection, "lines" | "table"> {
-  if (field?.kind === "list" && field.item)
-    return { lines: [], table: listTable(field.item, path, value) }
-  if (field?.kind === "group" && field.subfields)
-    return {
-      lines: Object.entries(field.subfields).map(([part, label]) => {
-        const shown = show(`${path}.${part}`)
-        return {
-          checked: shown.text !== null,
-          label,
-          parts: [{ type: "value", ...shown }],
-        }
-      }),
-    }
-  if ((field?.kind !== "choice" && field?.kind !== "choices") || !field.options)
-    return { lines: [{ parts: [{ type: "value", ...show(path) }] }] }
-  return { lines: choiceLines(field.options, field.allowOther, path, value) }
+  switch (field?.kind) {
+    case "list":
+      return { lines: [], table: listTable(field.item, path, value) }
+    case "group":
+      return {
+        lines: Object.entries(field.subfields).map(([part, label]) => {
+          const shown = show(`${path}.${part}`)
+          return {
+            checked: shown.text !== null,
+            label,
+            parts: [{ type: "value", ...shown }],
+          }
+        }),
+      }
+    case "choice":
+    case "choices":
+      return {
+        lines: choiceLines(field.options, field.allowOther, path, value),
+      }
+    default:
+      return { lines: [{ parts: [{ type: "value", ...show(path) }] }] }
+  }
 }
 
 /** One row per record; an empty list still prints one blank row. */
@@ -296,8 +307,8 @@ function listTable(
 }
 
 function choiceLines(
-  options: NonNullable<AnyField["options"]>,
-  allowOther: boolean | undefined,
+  options: Readonly<Record<string, ChoiceOptionShape>>,
+  allowOther: boolean,
   path: string,
   value: unknown
 ): RenderedLine[] {

@@ -157,9 +157,6 @@ export function defineDocument<const F extends Fields>(
   }
 }
 
-/** Kinds printed on more than one line, where a template can't wrap them. */
-const MULTILINE = new Set(["choice", "choices", "list", "group"])
-
 /** Layout mistakes that types can't catch fail when the document is built. */
 function checkLayout(
   fields: Readonly<Record<string, AnyField>>,
@@ -179,17 +176,20 @@ function checkLayout(
       if (template === undefined) continue
       if (template.split("{value}").length !== 2)
         fail("its template needs {value} exactly once.")
-      // A part ("party.email") always prints on one line; check whole fields.
-      if (MULTILINE.has(String(fields[field]?.kind)))
+      // A part ("party.email") prints on one line; only whole fields can't.
+      const kind = fields[field]?.kind
+      if (
+        kind === "choice" ||
+        kind === "choices" ||
+        kind === "list" ||
+        kind === "group"
+      )
         fail("a template only fits a field printed on one line.")
     }
     if (section.when) {
       const choice = fields[section.when.field]
-      if (
-        (choice?.kind !== "choice" && choice?.kind !== "choices") ||
-        // Object(): a choice always has options, so no fallback branch.
-        !Object.hasOwn(Object(choice.options), section.when.option)
-      )
+      const isChoice = choice?.kind === "choice" || choice?.kind === "choices"
+      if (!isChoice || !Object.hasOwn(choice.options, section.when.option))
         fail("its condition must name a choice and one of its options.")
     }
   }
