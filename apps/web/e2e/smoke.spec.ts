@@ -14,3 +14,9 @@ test("the API answers the health check", async ({ request }) => {
   expect(response.ok()).toBe(true)
   expect(await response.json()).toEqual({ ok: true })
 })
+
+test("the page title names the app", async ({ page }) => {
+  await page.goto("/")
+
+  await expect(page).toHaveTitle("Parley")
+})
