@@ -164,10 +164,23 @@
     - Same bar as T6: three schemas with meta, merge + undo properties, render + print HTML + DOCX, 100% coverage, an adversarial design review first.
   - Deps: T6, T12
 
-- [ ] **T8: Cover pages: CSA, SLA, AI Addendum** (M)
-- [ ] **T9: Cover pages: DPA, BAA** (M)
-- [ ] **T10: Cover pages: Pilot, Design Partner, Partnership** (M)
-- [ ] **T11: Cover pages: PSA, Software License** (M)
+- [x] **T8: Cover pages: CSA, SLA, AI Addendum** (M)
+- [x] **T9: Cover pages: DPA, BAA** (M)
+- [x] **T10: Cover pages: Pilot, Design Partner, Partnership** (M)
+- [x] **T11: Cover pages: PSA, Software License** (M)
+  - Done 2026-09-24. Four agents wrote the definitions in parallel worktrees from one brief (`work/PAR-1/cover-pages/BRIEF.md`); I merged each one only after `pnpm check` and `pnpm test:coverage` passed. All 11 definitions (12 catalog entries; the NDA cover page is part of the NDA) are registered in catalog order, each with a fully filled example, HTML and DOCX snapshots, and its own rule tests.
+  - Every definition mirrors Common Paper's official cover page. The notes per document (`work/PAR-1/cover-pages/<id>.md`) list the sources, the judgment calls a lawyer should check, and every deviation.
+  - Decisions:
+    - **"None" is a real answer.** Where Common Paper says "delete the row", Parley offers an explicit None, so an empty row is never a silent choice.
+    - **Caps that would mean "unlimited" when empty are required** (General Cap Amount), with no default.
+    - **The CSA uses v2.1** (owner, 2026-09-24).
+    - **The SLA is its own document** with an Agreement row and signatures; Common Paper prints it inside the CSA Order Form.
+  - The agents found three engine gaps, all fixed in the engine (8b78a29) and then used in every definition (the "T8-T11 follow-up" commits):
+    - any definition is a `DocumentDefinition`, so the registry type-checks with no casts;
+    - `field.select` works as a choice blank;
+    - rules know their phase, so "required when" runs only on the finished page and drafts fill in any order.
+  - Still open (small, noted per document): no fixed text after a row's options, and part headings print no hint.
+  - Checked: `pnpm check`, `pnpm test:coverage` (596 tests, 100%). Coverage also stays at 100% with every fast-check property cut to one run, so CI can't fail on an unlucky draw (7777ac1).
   - Accept (each task):
     - Each document has a definition. Its fields come from the terms linked in the template and from the template's definitions section, and each has plain-words help and sensible defaults.
     - The coverage test and the property tests pass. The cover page has the "Cover page by Parley, not by Common Paper" label.
@@ -200,8 +213,8 @@
   - Deps: T6, T2 (for the go/no-go on the approach)
 
 ### Checkpoint 1
-- [ ] All 12 documents render to preview, HTML and DOCX. `packages/documents` has 100% coverage.
-- [ ] You have approved the brand.
+- [x] All 12 documents render to preview, HTML and DOCX. `packages/documents` has 100% coverage. (The app preview itself is T16; the render model it reads is covered.)
+- [x] You have approved the brand. (Owner, 2026-09-24, on `/dev/brand`.)
 
 ---
 
