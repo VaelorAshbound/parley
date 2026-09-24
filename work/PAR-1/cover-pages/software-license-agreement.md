@@ -50,7 +50,9 @@ One closing and one signature table cover both parts.
    Customer will pay each invoice within {30 days} from {Customer's receipt of
    invoice}." / "Automatic payment. Customer authorizes Provider to bill …
    {monthly} …". One linked term, one field, and a picked option needs all its
-   blanks. No default: the page marks none (the Help Center says automatic
+   blanks. The picks inside the sentence ("[ monthly | quarterly | annually |
+   once per Subscription Period ]", "[ Customer's receipt of invoice | the
+   invoice date ]") are `field.select` blanks, stored as `"annually"`. No default: the page marks none (the Help Center says automatic
    payment, monthly).
 4. **Defaults only where the official page marks `x`:** Order Date and
    Effective Date = last signature; Auto-renewal = notice (days left empty);
@@ -68,7 +70,9 @@ One closing and one signature table cover both parts.
 7. **Governing law is worldwide** (`courts: "anywhere"`): the terms say "the
    Governing Law", and the page allows "state, province, and/or country".
 8. **One claim can't be both an Increased and an Unlimited Claim**, and only
-   one kind of fee increase can be picked (rules).
+   one kind of fee increase can be picked (rules). A complete Order Form with
+   Increased Claims also needs an Increased Cap Amount (a "complete"-phase
+   rule, so drafts stay free).
 9. **Warranty Period has a "None." option** with the official annotation's
    words: "None. Sections 5.2–5.4 do not apply." Required, so the choice is
    always made.
@@ -96,14 +100,15 @@ One closing and one signature table cover both parts.
 - The signature table starts with a Company row (the official header
   "PROVIDER: [official company name]").
 
-## Engine gaps (reported, not changed)
+## Engine gaps
 
-1. **`field.select` can't be a choice blank.** Its `options` (name → text)
-   clash with `AnyField.options` (name → option) at the type level; it works
-   at runtime. The Payment Process picks inside the sentence use small
-   `field.choice` fields instead, so a value is `{ option: "annually" }`.
-2. **No "required only when…"** (Increased Cap Amount when there are Increased
-   Claims). Rules also run on drafts.
-3. **Part hints don't print**, **no prose between parts**, **one field per
-   section**, and **no type for "any definition"**: same as in
-   `cover-pages/psa.md`.
+Fixed in the engine (8b78a29 and earlier), and used here:
+
+1. **`field.select` as a choice blank.** The billing frequency and "counted
+   from" picks in the Payment Process are selects now.
+2. **"Required only when…":** rules know their phase. Increased Cap Amount is
+   required on a complete document when there are Increased Claims.
+3. **Part hints print**, and **any definition is a `DocumentDefinition`**.
+
+Still open: **no prose between parts** and **one field per section**, as in
+`cover-pages/psa.md`.

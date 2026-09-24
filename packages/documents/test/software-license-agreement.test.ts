@@ -3,8 +3,10 @@ import { describe, expect, it } from "vite-plus/test"
 import { initialValues } from "../src/define.ts"
 import { definitions } from "../src/definitions/index.ts"
 import { render } from "../src/render.ts"
+import { examples } from "./examples.ts"
 
 const license = definitions["software-license-agreement"]
+const example = license.schema.parse(examples["software-license-agreement"])
 
 describe("the Software License Agreement", () => {
   it("won't let a company sign both sides", () => {
@@ -74,9 +76,9 @@ describe("the Software License Agreement", () => {
         paymentProcess: {
           option: "invoice",
           value: {
-            frequency: { option: "oncePerPeriod" },
+            frequency: "oncePerPeriod",
             days: { amount: 45, unit: "days" },
-            from: { option: "invoiceDate" },
+            from: "invoiceDate",
           },
         },
       }).coverPage.sections.find(
@@ -86,5 +88,29 @@ describe("the Software License Agreement", () => {
     expect(invoice?.parts.map((part) => part.text).join("")).toBe(
       "Pay by invoice. Provider will invoice Customer once per Subscription Period. Customer will pay each invoice within 45 days from the invoice date."
     )
+  })
+
+  it("needs an Increased Cap Amount once there are Increased Claims", () => {
+    const { increasedCapAmount: _cap, ...noCap } = example
+    const { increasedClaims: _claims, ...noClaims } = noCap
+
+    expect(
+      license.draftSchema.safeParse({
+        increasedClaims: { selected: [{ option: "confidentiality" }] },
+      }).success
+    ).toBe(true)
+    expect(
+      license.schema.safeParse(noCap).error?.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      }))
+    ).toEqual([
+      {
+        path: ["increasedCapAmount"],
+        message:
+          "There are Increased Claims, so set their Increased Cap Amount.",
+      },
+    ])
+    expect(license.schema.safeParse(noClaims).success).toBe(true)
   })
 })

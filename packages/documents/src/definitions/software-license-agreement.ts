@@ -76,17 +76,16 @@ const coveredClaims = (label: string, help: string, standard: string) => ({
   },
 })
 
-// The official "[ monthly | quarterly | … ]" picks inside a sentence. A
-// choice, not a select: a select's options don't fit a blank's type.
+/** The official "[ monthly | quarterly | … ]" pick inside a sentence. */
 const frequency = () =>
-  field.choice({
+  field.select({
     label: "Billing frequency",
     help: "How often Provider bills Customer.",
     options: {
-      monthly: { label: "monthly" },
-      quarterly: { label: "quarterly" },
-      annually: { label: "annually" },
-      oncePerPeriod: { label: "once per Subscription Period" },
+      monthly: "monthly",
+      quarterly: "quarterly",
+      annually: "annually",
+      oncePerPeriod: "once per Subscription Period",
     },
   })
 
@@ -182,12 +181,12 @@ export const softwareLicenseAgreement = defineDocument({
               help: "Days Customer has to pay an invoice.",
               units: ["days"],
             }),
-            from: field.choice({
+            from: field.select({
               label: "Counted from",
               help: "When the days to pay start.",
               options: {
-                receipt: { label: "Customer’s receipt of invoice" },
-                invoiceDate: { label: "the invoice date" },
+                receipt: "Customer’s receipt of invoice",
+                invoiceDate: "the invoice date",
               },
             }),
           },
@@ -594,7 +593,7 @@ export const softwareLicenseAgreement = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const provider = company(values.provider?.company)
     if (
@@ -621,5 +620,16 @@ export const softwareLicenseAgreement = defineDocument({
     const picked = new Set(values.feeTerms?.selected.map((pick) => pick.option))
     if (picked.has("increaseUpTo") && picked.has("increaseFixed"))
       issue("feeTerms", "Pick one kind of fee increase, not both.")
+
+    // Only on a complete document, so a draft can be filled in any order.
+    if (
+      phase === "complete" &&
+      values.increasedClaims &&
+      !values.increasedCapAmount
+    )
+      issue(
+        "increasedCapAmount",
+        "There are Increased Claims, so set their Increased Cap Amount."
+      )
   },
 })
