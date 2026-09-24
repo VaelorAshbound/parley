@@ -144,6 +144,8 @@ export type PartsField = FieldBase & {
   readonly kind: "jurisdiction" | "party" | "group"
   readonly subfields: Readonly<Record<string, string | undefined>>
   readonly derived: Readonly<Record<string, string>>
+  /** A group's parts are fields of their own; a party's are plain text. */
+  readonly parts?: Readonly<Record<string, AnyField>>
   formatPath(value: unknown, part: string): string | null
 }
 
