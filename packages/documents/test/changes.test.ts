@@ -138,6 +138,23 @@ describe("undo", () => {
     expect(undone.rejected).toEqual([])
   })
 
+  it("brings back a US state after a change swapped it for a region", () => {
+    const before = {
+      governingLaw: { state: "DE", courtLocation: "Dover" },
+    } as const
+    const change = applyFieldChanges(definition, before, [
+      { key: "governingLaw", value: { region: "Ontario, Canada" } },
+    ])
+
+    expect(change.values.governingLaw).toEqual({
+      region: "Ontario, Canada",
+      courtLocation: "Dover",
+    })
+    expect(
+      applyFieldChanges(definition, change.values, change.inverse).values
+    ).toEqual(before)
+  })
+
   it("won't overwrite a field someone changed after the AI did", () => {
     const change = applyFieldChanges(definition, {}, [
       { key: "purpose", value: "Selling." },

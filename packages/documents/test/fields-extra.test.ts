@@ -162,3 +162,73 @@ describe("a party's notice address", () => {
     expect(party.changeSchema.safeParse({ notice: "x" }).success).toBe(false)
   })
 })
+
+describe("jurisdiction outside the US", () => {
+  const law = field.jurisdiction({
+    label: "Governing law",
+    help: "Whose laws.",
+  })
+  const ontario = { region: "Ontario, Canada", courtLocation: "Toronto" }
+
+  it("takes a province or country, with courts in the same place", () => {
+    expect(law.schema.parse(ontario)).toEqual(ontario)
+    expect(law.format(ontario)).toBe("Ontario, Canada")
+    expect(law.formatPath(ontario, "region")).toBe("Ontario, Canada")
+    expect(law.formatPath(ontario, "courtLocation")).toBe(
+      "courts located in Toronto, Ontario, Canada"
+    )
+    expect(law.formatPath(ontario, "state")).toBeNull()
+  })
+
+  it("needs exactly one place once complete, and at most one while drafting", () => {
+    const both = { ...ontario, state: "DE" }
+
+    expect(law.schema.safeParse(both).success).toBe(false)
+    expect(law.schema.safeParse({ courtLocation: "Toronto" }).success).toBe(
+      false
+    )
+    expect(law.draftSchema.safeParse(both).success).toBe(false)
+    expect(
+      law.draftSchema.safeParse({ courtLocation: "Toronto" }).success
+    ).toBe(true)
+  })
+
+  it("swaps the place when a change picks the other kind", () => {
+    expect(
+      law.merge(
+        { state: "DE", courtLocation: "Dover" },
+        { region: "Ontario, Canada" }
+      )
+    ).toEqual({ region: "Ontario, Canada", courtLocation: "Dover" })
+    expect(law.merge(ontario, { state: "NY" })).toEqual({
+      state: "NY",
+      courtLocation: "Toronto",
+    })
+  })
+
+  it("stays US-only where the terms say 'the State of'", () => {
+    const usOnly = field.jurisdiction({
+      label: "Governing law",
+      help: "Whose laws.",
+      usOnly: true,
+    })
+
+    expect(
+      usOnly.draftSchema.safeParse({ region: "Ontario, Canada" }).success
+    ).toBe(false)
+    expect(
+      usOnly.changeSchema.safeParse({ region: "Ontario, Canada" }).success
+    ).toBe(false)
+    expect(usOnly.subfields).toEqual({
+      state: "State",
+      courtLocation: "Courts",
+    })
+    expect(usOnly.format({ state: "DE" })).toBe("Delaware")
+    expect(usOnly.format({ courtLocation: "Dover" })).toBeNull()
+    expect(usOnly.formatPath({ courtLocation: "Dover" }, "state")).toBeNull()
+  })
+
+  it("shows no region until one is set", () => {
+    expect(law.formatPath({ state: "DE" }, "region")).toBeNull()
+  })
+})

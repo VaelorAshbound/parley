@@ -67,9 +67,11 @@ export const mutualNda = defineDocument({
       },
       default: { option: "fixed", value: { amount: 1, unit: "years" } },
     }),
+    // The NDA's terms say "the laws of the State of", so a US state only.
     governingLaw: field.jurisdiction({
       label: "Governing law & jurisdiction",
       help: "Which state's laws govern the MNDA, and where its courts sit.",
+      usOnly: true,
     }),
     modifications: field.longText({
       label: "MNDA modifications",
