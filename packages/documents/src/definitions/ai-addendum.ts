@@ -212,7 +212,7 @@ export const aiAddendum = defineDocument({
       ),
     ],
   },
-  rules: (values, issue) => {
+  rules: (values, issue, phase) => {
     const company = (name?: string) => name?.trim().toLowerCase()
     const provider = company(values.provider?.company)
     if (
@@ -231,5 +231,24 @@ export const aiAddendum = defineDocument({
       issue("coveredClaims", "Pick one version of the Provider Covered Claims.")
     if (claims.has("customer") && claims.has("customerCustom"))
       issue("coveredClaims", "Pick one version of the Customer Covered Claims.")
+
+    // 1.3 allows training only when the page names both the data and the
+    // purpose, so a finished page with one of them reads like a grant it isn't.
+    const { trainingData: data, trainingPurposes: purpose } = values
+    if (phase !== "complete" || !data || !purpose) return
+    const hasData =
+      data.other !== undefined ||
+      data.selected.some((pick) => pick.option !== "none")
+    const hasPurpose = purpose.option !== "none"
+    if (hasData && !hasPurpose)
+      issue(
+        "trainingPurposes",
+        "Training data is picked, so pick a training purpose, or set Training data to None."
+      )
+    if (hasPurpose && !hasData)
+      issue(
+        "trainingData",
+        "A training purpose is picked, so pick the training data, or set Training purposes to None."
+      )
   },
 })
