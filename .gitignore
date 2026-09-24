@@ -19,3 +19,4 @@ playwright-report/
 test-results/
 packages/documents/generated/
 .claude/worktrees/
+packages/documents/generated.next/

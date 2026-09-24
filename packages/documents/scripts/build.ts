@@ -1,7 +1,7 @@
 // `pnpm documents:build`: parses every Common Paper template into a typed
 // module in generated/, so the app renders from data and never parses
 // markdown at runtime. Also runs on install (`prepare`).
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
 
 import {
   COVER_PAGE_FILE,
@@ -11,7 +11,10 @@ import {
 } from "../src/parse/catalog.ts"
 import { parseCoverPage, parseStandardTerms } from "../src/parse/parse.ts"
 
-const out = new URL("../generated/", import.meta.url)
+// Build into a fresh folder and swap it in only when every template parsed,
+// so a parse error never leaves generated/ half written.
+const target = new URL("../generated/", import.meta.url)
+const out = new URL("../generated.next/", import.meta.url)
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out)
 
@@ -58,3 +61,6 @@ for (const { filename } of catalog) {
     ].join("\n")
   )
 }
+
+rmSync(target, { recursive: true, force: true })
+renameSync(out, target)

@@ -101,12 +101,21 @@ export function duration(
 
 const CURRENCIES = new Set(Intl.supportedValuesOf("currency"))
 
+// One formatter per currency, built on first use: Intl.NumberFormat is
+// costly to build, and every money check and print needs one.
+const formatters = new Map<string, Intl.NumberFormat>()
+function currencyFormat(currency: string) {
+  let format = formatters.get(currency)
+  if (!format) {
+    format = new Intl.NumberFormat("en-US", { style: "currency", currency })
+    formatters.set(currency, format)
+  }
+  return format
+}
+
 /** How many decimals a currency uses: USD 2, JPY 0, KWD 3. */
 function decimalsOf(currency: string) {
-  const fraction = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  })
+  const fraction = currencyFormat(currency)
     .formatToParts(1)
     .find((part) => part.type === "fraction")
   return fraction?.value.length ?? 0
@@ -129,9 +138,7 @@ export type Money = z.infer<typeof moneySchema>
 
 export function money(config: Common<Money>) {
   return scalar("money", config, moneySchema, ({ amount, currency }) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-      amount
-    )
+    currencyFormat(currency).format(amount)
   )
 }
 
