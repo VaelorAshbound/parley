@@ -2,12 +2,10 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Outlet } from "@tanstack/react-router"
 import { SidebarInset, SidebarProvider } from "@workspace/ui/components/sidebar"
 
-import { Temporal } from "temporal-polyfill"
-
 import {
-  calendarKey,
   readTimeZone,
   timeZoneCookie,
+  todayKey,
 } from "@/features/drafts/calendar"
 import { readCookie } from "@/lib/cookies"
 import { viewerQuery } from "@/lib/session"
@@ -29,17 +27,13 @@ export const Route = createFileRoute("/_app")({
       await context.queryClient.ensureQueryData(
         context.orpc.drafts.list.queryOptions({ input: {} })
       )
-    // The history's days in the user's time zone, which the browser saved
-    // (UTC until it has): the server groups drafts as the browser will.
-    const timeZone = readTimeZone(readCookie(timeZoneCookie))
     return {
       // shadcn's Sidebar saves open/closed here; read on the server so the
       // first paint is already right.
       sidebarCookie: readCookie("sidebar_state"),
-      calendar: calendarKey({
-        timeZone,
-        today: Temporal.Now.plainDateISO(timeZone),
-      }),
+      // The history's days in the user's time zone, which the browser saved
+      // (UTC until it has): the server groups drafts as the browser will.
+      calendar: todayKey(readTimeZone(readCookie(timeZoneCookie))),
     }
   },
   component: AppLayout,

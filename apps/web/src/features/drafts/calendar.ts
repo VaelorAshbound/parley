@@ -64,10 +64,14 @@ export function readTimeZone(value: string | undefined) {
   }
 }
 
-/** The browser's own calendar, as a string that changes once a day. */
+/** Today's calendar in `timeZone`, as a string that changes once a day. */
+export function todayKey(timeZone: string) {
+  return calendarKey({ timeZone, today: Temporal.Now.plainDateISO(timeZone) })
+}
+
+/** The browser's own calendar key. */
 export function browserCalendarKey() {
-  const timeZone = Temporal.Now.timeZoneId()
-  return `${Temporal.Now.plainDateISO(timeZone).toString()} ${timeZone}`
+  return todayKey(Temporal.Now.timeZoneId())
 }
 
 export function calendarKey({ timeZone, today }: Calendar) {
