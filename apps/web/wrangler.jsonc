@@ -70,10 +70,9 @@
   // preview refuses to run without it.
   // https://developers.cloudflare.com/workers/previews/configuration/
   // Secrets: a new one on the Preview base config reaches only Previews
-  // created after it. Put it on each live Preview too, or its requests fail
-  // (T21's TURNSTILE_SECRET_KEY did, as "Missing secret key"):
-  //   wrangler preview base-config secret put NAME
-  //   wrangler preview secret put NAME --name <branch>
+  // created after it, and `wrangler preview secret put` lasts only until the
+  // next build. So a value that isn't secret goes in `vars` below, in git
+  // (T21's TURNSTILE_SECRET_KEY was missing on the live Preview this way).
   "previews": {
     // Turns on Server-Timing headers for DevTools (spec §5 Hono).
     "vars": {
@@ -82,6 +81,8 @@
       // Cloudflare's "always passes" test widget: Preview hosts change per
       // branch, and CI's browsers must get through (spec §5 Auth).
       "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+      // Its public test secret: every token passes, so it isn't a secret.
+      "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA",
     },
     "browser": {
       "binding": "BROWSER",
