@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test"
+import { test as fresh, type Page } from "@playwright/test"
 
 import { accountTest, expect, open, test } from "./helpers"
 
@@ -213,6 +213,28 @@ accountTest(
 
     await expect(page).toHaveURL(/[?&]q=acme(\+|%20)bol/)
     await expect(box).toHaveValue("acme bol")
+  }
+)
+
+fresh(
+  "a signed-out visitor keeps the browser's own Ctrl+K",
+  async ({ page }) => {
+    await open(page, "/")
+    // Runs after the page's own listeners.
+    const prevented = page.evaluate(
+      () =>
+        new Promise<boolean>((resolve) =>
+          window.addEventListener(
+            "keydown",
+            (event) => resolve(event.defaultPrevented),
+            { once: true }
+          )
+        )
+    )
+
+    await page.keyboard.press("ControlOrMeta+k")
+
+    expect(await prevented).toBe(false)
   }
 )
 

@@ -48,7 +48,9 @@ export function AppSidebar({
   orpc: Orpc
   calendarKey: string
 }) {
-  const search = useSearchDialog()
+  // Search needs someone signed in (a guest counts); ⌘K stays the
+  // browser's until then.
+  const search = useSearchDialog(viewer !== null)
   const isAccount = viewer !== null && !viewer.isAnonymous
 
   return (
@@ -143,12 +145,13 @@ export function AppSidebar({
  * The search dialog's state, and ⌘K / Ctrl+K from anywhere in the shell.
  * Opening it closes the phone drawer, so a picked draft isn't hidden.
  */
-function useSearchDialog() {
+function useSearchDialog(enabled: boolean) {
   const { setOpenMobile } = useSidebar()
   const [open, setOpen] = useState(false)
   // Loads the dialog's code only once someone searches.
   const [used, setUsed] = useState(false)
   useEffect(() => {
+    if (!enabled) return
     function onKeyDown(event: KeyboardEvent) {
       if (event.key.toLowerCase() !== "k") return
       if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey)
@@ -160,7 +163,7 @@ function useSearchDialog() {
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [setOpenMobile])
+  }, [enabled, setOpenMobile])
   return {
     open,
     used,
