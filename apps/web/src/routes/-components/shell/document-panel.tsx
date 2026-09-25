@@ -9,7 +9,7 @@ import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { FileTextIcon, XIcon } from "lucide-react"
 import { useIsMutating } from "@tanstack/react-query"
-import { useEffect, useRef, type RefObject } from "react"
+import { useDeferredValue, useEffect, useRef, type RefObject } from "react"
 
 import { ChooseDocument } from "@/features/document-preview/choose-document"
 import { DocumentView } from "@/features/document-preview/document-view"
@@ -67,7 +67,7 @@ export function DocumentPanel({
       </header>
       <div
         ref={panel}
-        className="min-h-0 flex-1 overflow-y-auto px-4 pb-12 md:px-9"
+        className="min-h-0 flex-1 scroll-fade-y overflow-y-auto px-4 pb-12 md:px-9"
       >
         <div className="mx-auto max-w-[552px] rounded-sm bg-sheet px-6 py-10 shadow-sheet md:px-13 md:py-12">
           {draft.documentId === null ? (
@@ -108,9 +108,15 @@ function LiveDocument({
   const save = useSaveField(orpc, draftId)
   const refused = useUiStore((state) => state.refused)
   const setRefused = useUiStore((state) => state.setRefused)
+  const changed = useUiStore((state) => state.changed)
+  const focus = useUiStore((state) => state.focus)
+  // A change (or a newly picked agreement) is drawn from a deferred copy of
+  // the fields, in time slices, so it never blocks the chat's streaming
+  // (T18: no long tasks while the AI answers).
+  const shownFields = useDeferredValue(fields)
   // Stored values are checked on the way in: a draft is only ever shown in
   // the shape its document defines.
-  const values = definition.draftSchema.parse(fields)
+  const values = definition.draftSchema.parse(shownFields)
   const document = render(definition, values)
   const editingKey = editing?.split(".")[0]
   const known = editingKey !== undefined && editingKey in definition.fields
@@ -146,9 +152,31 @@ function LiveDocument({
     )?.focus()
   }, [known, editing, panel])
 
+  // The panel follows the AI: it scrolls smoothly to the first field of each
+  // change, unless the user is editing (brand.md: no motion if reduced).
+  useEffect(() => {
+    if (!focus || known) return
+    const row = panel.current?.querySelector<HTMLElement>(
+      `[data-section="${CSS.escape(focus.field)}"], [data-edit^="${CSS.escape(focus.field)}"]`
+    )
+    const view = panel.current?.getBoundingClientRect()
+    if (!row || !view) return
+    const box = row.getBoundingClientRect()
+    // Already in full view: nothing to move.
+    if (box.top >= view.top && box.bottom <= view.bottom) return
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches
+    row.scrollIntoView({
+      block: "center",
+      behavior: still ? "instant" : "smooth",
+    })
+    // Only a new change scrolls, not an edit that ends.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus])
+
   return (
     <DocumentView
       document={document}
+      changed={changed}
       editing={known ? editing : undefined}
       onEdit={edit}
       renderEditor={(key) => (

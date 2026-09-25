@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 
 import type { Orpc } from "@/lib/orpc"
+import { useUiStore } from "@/lib/ui-store"
 import type { ChatMessage } from "@/server/ai/chat"
 
 // The live document follows the chat (spec §8: a field changes within 100 ms
@@ -14,6 +15,7 @@ export function useDocumentSync(
   messages: ChatMessage[]
 ) {
   const queryClient = useQueryClient()
+  const markChanged = useUiStore((state) => state.markChanged)
   const draftKey = orpc.drafts.get.queryKey({ input: { id: draftId } })
   // Tool calls already on the page when it loaded are in the draft already.
   const [done] = useState(
@@ -41,8 +43,10 @@ export function useDocumentSync(
         }
         return { ...draft, fields }
       })
+      // The changed fields ink in, and the panel scrolls to the first.
+      markChanged(part.output.applied.map((change) => change.key))
     }
-  }, [messages, queryClient, draftKey, orpc, done])
+  }, [messages, queryClient, draftKey, orpc, done, markChanged])
 }
 
 function finishedCalls(messages: ChatMessage[]) {

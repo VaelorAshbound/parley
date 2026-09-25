@@ -1,7 +1,7 @@
 import { definitions, render as renderDocument } from "@workspace/documents"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { describe, expect, test, vi } from "vite-plus/test"
-import { userEvent } from "vite-plus/test/browser"
+import { cdp, userEvent } from "vite-plus/test/browser"
 import { render } from "vitest-browser-react"
 
 import { DocumentView } from "./document-view"
@@ -15,19 +15,29 @@ const filled = nda.draftSchema.parse({
   party1: { company: "Acme Analytics, Inc.", name: "Ana Diaz" },
 })
 
-async function show(values: typeof filled, editing?: string) {
+async function show(
+  values: typeof filled,
+  editing?: string,
+  changed?: Record<string, number>
+) {
   const onEdit = vi.fn<(path: string) => void>()
-  const screen = await render(
+  const view = (seen?: Record<string, number>) => (
     <TooltipProvider>
       <DocumentView
         document={renderDocument(nda, values)}
         editing={editing}
         onEdit={onEdit}
         renderEditor={(key) => <p>Editing {key}</p>}
+        changed={seen}
       />
     </TooltipProvider>
   )
-  return { screen, onEdit }
+  const screen = await render(view(changed))
+  return {
+    screen,
+    onEdit,
+    rerender: (seen: Record<string, number>) => screen.rerender(view(seen)),
+  }
 }
 
 describe("the live document", () => {
@@ -125,5 +135,47 @@ describe("the live document", () => {
     const { screen } = await show(filled, "party2.email")
 
     await expect.element(screen.getByText("Editing party2")).toBeVisible()
+  })
+
+  test("inks in a field the AI just changed, with a bar in the margin", async () => {
+    const { screen } = await show(filled, undefined, { purpose: 1 })
+
+    const value = screen.getByText("Evaluating a partnership.")
+    await expect.element(value).toHaveClass("ink-in")
+    expect(
+      document.querySelector('[data-section="purpose"] .change-bar')
+    ).not.toBeNull()
+    expect(
+      document.querySelector('[data-section="effectiveDate"] .change-bar')
+    ).toBeNull()
+  })
+
+  test("replays the ink when the same field changes again", async () => {
+    const { screen, rerender } = await show(filled, undefined, { purpose: 1 })
+    const first = screen.getByText("Evaluating a partnership.").element()
+
+    await rerender({ purpose: 2 })
+
+    const second = screen.getByText("Evaluating a partnership.").element()
+    expect(second).not.toBe(first)
+    await expect.element(second).toHaveClass("ink-in")
+  })
+
+  test("with reduced motion, a change fades in place: no sweep, blur or slide", async () => {
+    const session = cdp()
+    await session.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+    })
+    try {
+      const { screen } = await show(filled, undefined, { purpose: 1 })
+      const value = screen.getByText("Evaluating a partnership.").element()
+
+      const names = getComputedStyle(value).animationName
+      expect(names).toContain("ink-fade")
+      expect(names).not.toContain("ink-sweep")
+      expect(names).not.toContain("ink-blur")
+    } finally {
+      await session.send("Emulation.setEmulatedMedia", { features: [] })
+    }
   })
 })

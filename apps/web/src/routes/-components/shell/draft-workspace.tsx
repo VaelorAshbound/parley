@@ -15,6 +15,7 @@ import { useEffect, type ComponentProps } from "react"
 import { usePanelRef, type Layout } from "react-resizable-panels"
 
 import { writeCookie } from "@/lib/cookies"
+import { useUiStore } from "@/lib/ui-store"
 
 import type { ChatMessage } from "@/server/ai/chat"
 
@@ -51,6 +52,13 @@ export function DraftWorkspace({
   // Phones show one pane at a time (CSS below), so sizes and collapsing only
   // apply on wider screens.
   const isMobile = useIsMobile()
+  // On a phone the Document tab shows a dot when the AI changed the document
+  // while the chat was open (spec §1 Phone).
+  const unseen = useUiStore((state) => state.unseen)
+  const seeDocument = useUiStore((state) => state.seeDocument)
+  useEffect(() => {
+    if (tab === "document" || !isMobile) seeDocument()
+  }, [tab, isMobile, unseen, seeDocument])
 
   // The URL decides open or closed; the panel follows it.
   useEffect(() => {
@@ -80,7 +88,18 @@ export function DraftWorkspace({
           className="ml-auto"
         >
           <ToggleGroupItem value="chat">Chat</ToggleGroupItem>
-          <ToggleGroupItem value="document">Document</ToggleGroupItem>
+          <ToggleGroupItem value="document">
+            Document
+            {unseen && tab === "chat" && (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="enter size-1.5 rounded-full bg-blue-ink"
+                />
+                <span className="sr-only">(changed)</span>
+              </>
+            )}
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
       <ResizablePanelGroup

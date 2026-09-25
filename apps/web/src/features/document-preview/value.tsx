@@ -1,5 +1,6 @@
 import type { RenderedValue } from "@workspace/documents"
 import { cn } from "@workspace/ui/lib/utils"
+import { createContext, useContext } from "react"
 
 // A field's value in the live document (brand.md → A field's life): blue ink
 // when filled, a dashed chip with the field's name while empty. Never a blank
@@ -10,6 +11,19 @@ export function shortLabel(label: string) {
   return label.slice(label.lastIndexOf(": ") + 1).trim()
 }
 
+/**
+ * Fields the AI changed this turn, each with a count that grows per change
+ * (UI store `changed`). A changed value inks in; a new count replays it.
+ */
+export const ChangedContext = createContext<Readonly<Record<string, number>>>(
+  {}
+)
+
+export function useChanged(path: string | undefined) {
+  const changed = useContext(ChangedContext)
+  return path === undefined ? undefined : changed[path.replace(/\..*$/s, "")]
+}
+
 export function Value({
   value,
   className,
@@ -17,6 +31,7 @@ export function Value({
   value: RenderedValue
   className?: string
 }) {
+  const inked = useChanged(value.field)
   if (value.text === null)
     return (
       <span
@@ -32,8 +47,14 @@ export function Value({
     )
   return (
     <span
+      // A new change remounts the value, which replays its ink-in.
+      key={inked}
       data-field={value.field}
-      className={cn("whitespace-pre-line text-blue-ink", className)}
+      className={cn(
+        "whitespace-pre-line text-blue-ink",
+        inked !== undefined && "ink-in",
+        className
+      )}
     >
       {value.text}
     </span>

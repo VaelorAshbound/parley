@@ -6,10 +6,11 @@ import type {
   RenderedSection,
 } from "@workspace/documents"
 import { cn } from "@workspace/ui/lib/utils"
+import { motion } from "motion/react"
 import { useId, type ReactNode } from "react"
 
 import { Inline } from "./inline"
-import { spoken, Value } from "./value"
+import { ChangedContext, spoken, useChanged, Value } from "./value"
 
 // The live document (spec §1): the render model as a page. Every value can be
 // clicked to edit its field; the editor opens in place of the row it edits
@@ -23,6 +24,8 @@ type Props = {
   onEdit: (path: string) => void
   /** The editor for a field, shown where that field's row is. */
   renderEditor: (key: string) => ReactNode
+  /** Fields the AI changed this turn (UI store `changed`). */
+  changed?: Readonly<Record<string, number>>
 }
 
 const keyOf = (path: string) => path.split(".")[0] ?? path
@@ -32,91 +35,100 @@ export function DocumentView({
   editing,
   onEdit,
   renderEditor,
+  changed = {},
 }: Props) {
   const { coverPage, standardTerms } = document
   const editingKey = editing === undefined ? undefined : keyOf(editing)
   const signed = new Set(coverPage.signatures.parties.map((each) => each.field))
 
   return (
-    <article className="typeset typeset-contract">
-      <header>
-        {coverPage.eyebrow && (
-          <p className="text-label text-muted-foreground uppercase">
-            {coverPage.eyebrow}
-          </p>
-        )}
-        <h2 className="text-[1.8em] leading-tight font-medium tracking-[-0.012em]">
-          {coverPage.title}
-        </h2>
-        {coverPage.subtitle && (
-          <p className="font-sans text-label text-ink-2 uppercase">
-            {coverPage.subtitle}
-          </p>
-        )}
-      </header>
-      {coverPage.intro.map((paragraph, index) => (
-        <p key={index}>
-          <Inline nodes={paragraph} onEdit={onEdit} />
-        </p>
-      ))}
-      {coverPage.sections.map((section, index) =>
-        section.part ? (
-          <PartHeading key={index} section={section} />
-        ) : (
-          <Section
-            key={index}
-            section={section}
-            onEdit={onEdit}
-            editor={
-              editingKey !== undefined && fieldsOf(section).has(editingKey)
-                ? renderEditor(editingKey)
-                : undefined
-            }
-          />
-        )
-      )}
-      {coverPage.closing.map((paragraph, index) => (
-        <p key={index}>
-          <Inline nodes={paragraph} onEdit={onEdit} />
-        </p>
-      ))}
-      <Signatures document={document} onEdit={onEdit} />
-      {editingKey !== undefined && signed.has(editingKey) && (
-        <section className="mt-4">
-          <h3 className="font-sans text-[0.8em] font-semibold">
-            {partyLabel(document, editingKey)}
-          </h3>
-          <div className="not-typeset mt-2">{renderEditor(editingKey)}</div>
-        </section>
-      )}
-      {coverPage.footer.map((paragraph, index) => (
-        <p key={index} className="font-sans text-[0.8em] text-ink-2">
-          <Inline nodes={paragraph} onEdit={onEdit} />
-        </p>
-      ))}
-      <hr className="my-10 border-rule-sheet" />
-      <h2 className="text-[1.5em] font-medium">{standardTerms.title}</h2>
-      {standardTerms.children.map((block, index) => {
-        if (block.type === "paragraph")
-          return (
-            <p key={index} className="font-sans text-[0.8em] text-ink-2">
-              <Inline nodes={block.content} onEdit={onEdit} />
+    <ChangedContext value={changed}>
+      <article className="typeset typeset-contract">
+        <header>
+          {coverPage.eyebrow && (
+            <p className="text-label text-muted-foreground uppercase">
+              {coverPage.eyebrow}
             </p>
+          )}
+          <h2 className="text-[1.8em] leading-tight font-medium tracking-[-0.012em]">
+            {coverPage.title}
+          </h2>
+          {coverPage.subtitle && (
+            <p className="font-sans text-label text-ink-2 uppercase">
+              {coverPage.subtitle}
+            </p>
+          )}
+        </header>
+        {coverPage.intro.map((paragraph, index) => (
+          <p key={index}>
+            <Inline nodes={paragraph} onEdit={onEdit} />
+          </p>
+        ))}
+        {coverPage.sections.map((section, index) =>
+          section.part ? (
+            <PartHeading key={index} section={section} />
+          ) : (
+            <Section
+              key={index}
+              section={section}
+              onEdit={onEdit}
+              editor={
+                editingKey !== undefined && fieldsOf(section).has(editingKey)
+                  ? renderEditor(editingKey)
+                  : undefined
+              }
+            />
           )
-        if (block.type === "clause")
-          return <Clause key={index} clause={block} onEdit={onEdit} />
-        return (
-          <section key={index}>
-            <h3>
-              <span className="tabular-nums">{block.id}.</span> {block.heading}
+        )}
+        {coverPage.closing.map((paragraph, index) => (
+          <p key={index}>
+            <Inline nodes={paragraph} onEdit={onEdit} />
+          </p>
+        ))}
+        <Signatures document={document} onEdit={onEdit} />
+        {editingKey !== undefined && signed.has(editingKey) && (
+          <section className="mt-4">
+            <h3 className="font-sans text-[0.8em] font-semibold">
+              {partyLabel(document, editingKey)}
             </h3>
-            {block.children.map((clause) => (
-              <Clause key={clause.id} clause={clause} onEdit={onEdit} />
-            ))}
+            <div className="not-typeset mt-2">{renderEditor(editingKey)}</div>
           </section>
-        )
-      })}
-    </article>
+        )}
+        {coverPage.footer.map((paragraph, index) => (
+          <p key={index} className="font-sans text-[0.8em] text-ink-2">
+            <Inline nodes={paragraph} onEdit={onEdit} />
+          </p>
+        ))}
+        <hr className="my-10 border-rule-sheet" />
+        {/* The long terms below the cover page: the browser skips laying
+            them out until they scroll near (content-visibility), which keeps
+            each change cheap. */}
+        <div className="[contain-intrinsic-size:auto_2400px] [content-visibility:auto]">
+          <h2 className="text-[1.5em] font-medium">{standardTerms.title}</h2>
+          {standardTerms.children.map((block, index) => {
+            if (block.type === "paragraph")
+              return (
+                <p key={index} className="font-sans text-[0.8em] text-ink-2">
+                  <Inline nodes={block.content} onEdit={onEdit} />
+                </p>
+              )
+            if (block.type === "clause")
+              return <Clause key={index} clause={block} onEdit={onEdit} />
+            return (
+              <section key={index}>
+                <h3>
+                  <span className="tabular-nums">{block.id}.</span>{" "}
+                  {block.heading}
+                </h3>
+                {block.children.map((clause) => (
+                  <Clause key={clause.id} clause={clause} onEdit={onEdit} />
+                ))}
+              </section>
+            )
+          })}
+        </div>
+      </article>
+    </ChangedContext>
   )
 }
 
@@ -159,10 +171,13 @@ function Section({
   editor: ReactNode
 }) {
   const { field } = section
+  const changedAt = useChanged(
+    field ?? firstValue(section.lines.flatMap((line) => line.parts))
+  )
   const body = (
     <>
       {section.lines.map((line, index) => (
-        <Line key={index} line={line} />
+        <Line key={index} line={line} changed={changedAt !== undefined} />
       ))}
       {section.table && (
         <span
@@ -187,7 +202,22 @@ function Section({
   )
 
   return (
-    <section className="border-t border-rule-sheet pt-3">
+    // Rows below a row that grows or shrinks slide to their new place
+    // (brand.md: spring, bounce 0, 0.4 s); position only, so text never
+    // stretches.
+    <motion.section
+      layout="position"
+      transition={SPRING}
+      data-section={field}
+      className="relative border-t border-rule-sheet pt-3"
+    >
+      {changedAt !== undefined && (
+        <span
+          key={changedAt}
+          aria-hidden="true"
+          className="change-bar absolute top-3 bottom-0 -left-4 w-0.5 rounded-full bg-blue-ink md:-left-7"
+        />
+      )}
       <h3 className="mt-0! font-sans text-[0.8em] font-semibold tracking-normal">
         {section.heading}
       </h3>
@@ -209,7 +239,7 @@ function Section({
               .join("; ")}
             onEdit={(path) => onEdit(path ?? firstValue(line.parts) ?? "")}
           >
-            <Line line={line} />
+            <Line line={line} changed={changedAt !== undefined} />
           </EditButton>
         ))
       ) : (
@@ -221,9 +251,11 @@ function Section({
           {body}
         </EditButton>
       )}
-    </section>
+    </motion.section>
   )
 }
+
+const SPRING = { type: "spring", bounce: 0, duration: 0.4 } as const
 
 function firstValue(parts: Part[]) {
   return parts.find((part) => part.type === "value")?.field
@@ -264,16 +296,18 @@ function EditButton({
   )
 }
 
-function Line({ line }: { line: RenderedLine }) {
+function Line({ line, changed }: { line: RenderedLine; changed: boolean }) {
   return (
     <span
       data-unchosen={line.checked === false ? "" : undefined}
       className={cn(
-        "flex items-baseline gap-2",
+        "flex items-baseline gap-2 transition-opacity duration-240 ease-out",
         line.checked === false && "opacity-42"
       )}
     >
-      {line.checked !== undefined && <Box checked={line.checked} />}
+      {line.checked !== undefined && (
+        <Box checked={line.checked} pop={changed && line.checked} />
+      )}
       <span className="min-w-0">
         {line.label && (
           <span className="font-sans text-[0.86em] text-ink-2">
@@ -289,7 +323,7 @@ function Line({ line }: { line: RenderedLine }) {
 }
 
 /** The checkbox of a choice line, drawn like the PDF's. */
-function Box({ checked }: { checked: boolean }) {
+function Box({ checked, pop }: { checked: boolean; pop: boolean }) {
   return (
     <svg
       // Drawn inline like the PDF's boxes, so it takes the theme's colors;
@@ -298,7 +332,7 @@ function Box({ checked }: { checked: boolean }) {
       role="img"
       aria-label={checked ? "Selected" : "Not selected"}
       viewBox="0 0 12 12"
-      className="size-3 shrink-0 translate-y-px"
+      className={cn("size-3 shrink-0 translate-y-px", pop && "check-in")}
     >
       {checked ? (
         <>
