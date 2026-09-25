@@ -837,14 +837,14 @@ describe("the AI's questionnaire", () => {
     expect(error).toMatchObject({ code: "INVALID_ANSWERS" })
     expect(model.doStreamCalls).toHaveLength(1)
     // Logged with the question that failed and why, never the answers.
-    const [line] = warn.mock.calls.map(([each]) => String(each))
-    expect(JSON.parse(line ?? "{}")).toMatchObject({
+    const [line] = warn.mock.calls.map(([each]) => each)
+    expect(line).toMatchObject({
       level: "warn",
       event: "answers_refused",
       toolCallId: "call-1-0",
       issues: "term: Answer this question.",
     })
-    expect(line).not.toContain("Secret Street")
+    expect(JSON.stringify(line)).not.toContain("Secret Street")
   })
 
   it("won't take answers twice, or for questions that were never asked", async () => {

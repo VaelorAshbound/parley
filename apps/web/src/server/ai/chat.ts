@@ -2,6 +2,7 @@ import { streamToEventIterator } from "@orpc/server"
 import { getDraft, listMessages, saveMessages, type Db } from "@workspace/db"
 import { definitionOf, type DocumentDefinition } from "@workspace/documents"
 import {
+  APICallError,
   convertToModelMessages,
   isStepCount,
   safeValidateUIMessages,
@@ -11,10 +12,23 @@ import {
   type UIMessage,
 } from "ai"
 
-import { logWarn } from "../log"
-import { authed, draftOwner, type BaseContext } from "../rpc/base"
+import {
+  currentRequestId,
+  log,
+  logError,
+  logWarn,
+  type LogFields,
+} from "../log"
+import {
+  authed,
+  draftOwner,
+  tierOf,
+  type BaseContext,
+  type Tier,
+} from "../rpc/base"
 import { z } from "../zod"
 import { recent } from "./history"
+import { turnMetrics, type TurnStep } from "./metrics"
 import { instructions } from "./prompt"
 import { answersFor, answersShape } from "./questions"
 import { chatTools, runningTools, type ChatTools } from "./tools"
@@ -115,20 +129,77 @@ function closeQuestions(message: ChatMessage | undefined) {
   }
 }
 
+/**
+ * Logs one `chat_turn` line when the turn ends, is left or fails (T29):
+ * tokens, cost, time to first token and tool errors, never text. Set up in
+ * the request, since the stream's callbacks can run outside its context.
+ *
+ * `callbacks` go to streamText. `close` runs when the reply stream ends: a
+ * turn that failed before any step finished gets no onEnd.
+ */
+function turnLog(key: DraftKey, tier: Tier) {
+  const started = Date.now()
+  const fields = {
+    requestId: currentRequestId(),
+    draftId: key.id,
+    userId: key.userId,
+    tier,
+  }
+  const steps: TurnStep[] = []
+  let failure: LogFields | undefined
+  let ended = false
+  const end = (how: "done" | "aborted") => {
+    if (ended) return
+    ended = true
+    log(failure ? "error" : "info", "chat_turn", {
+      ...fields,
+      ...turnMetrics(steps),
+      outcome: failure ? "error" : how,
+      durationMs: Date.now() - started,
+      ...failure,
+    })
+  }
+  return {
+    callbacks: {
+      onStepEnd: (step: TurnStep) => {
+        steps.push(step)
+      },
+      onEnd: () => end("done"),
+      onAbort: () => end("aborted"),
+      // Replaces the AI SDK's default, which logs the whole error: its
+      // message can hold what the model wrote. The name (and an HTTP
+      // status) is enough to find the cause. It runs before the failing
+      // step is counted, so the line waits for the end.
+      onError: ({ error }: { error: unknown }) => {
+        failure ??= {
+          errorName: error instanceof Error ? error.name : typeof error,
+          errorStatus: APICallError.isInstance(error)
+            ? error.statusCode
+            : undefined,
+        }
+      },
+    },
+    close: () => end("done"),
+  }
+}
+
 /** Streams the model's reply to the chat so far, and saves it when done. */
 async function reply({
   context,
   key,
+  tier,
   messages: all,
   today,
   signal,
 }: {
   context: BaseContext
   key: DraftKey
+  tier: Tier
   messages: ChatMessage[]
   today: string
   signal: AbortSignal | undefined
 }) {
+  const metrics = turnLog(key, tier)
   const messages = recent(all, HISTORY)
   const current = async () => {
     const draft = await getDraft(context.db, key)
@@ -154,6 +225,7 @@ async function reply({
     // chosen agreement's fields.
     prepareStep: async ({ stepNumber }) =>
       stepNumber === 0 ? {} : { instructions: instructions(await current()) },
+    ...metrics.callbacks,
   })
 
   return streamToEventIterator(
@@ -166,8 +238,16 @@ async function reply({
       originalMessages: all,
       generateMessageId: () => crypto.randomUUID(),
       onEnd: ({ responseMessage }) => {
-        // After the response too: the save outlives a closed tab.
-        context.waitUntil(saveMessages(context.db, key, [responseMessage]))
+        metrics.close()
+        // After the response too: the save outlives a closed tab. A failure
+        // is logged here: uncaught, Workers would log Drizzle's message,
+        // which holds the whole reply.
+        context.waitUntil(
+          saveMessages(context.db, key, [responseMessage]).catch(
+            (error: unknown) =>
+              logError("chat_save_failed", error, { draftId: key.id })
+          )
+        )
       },
     })
   )
@@ -212,7 +292,14 @@ export const chat = {
           chat: [...earlier, input.message],
         }
       })
-      return reply({ context, key, messages, today: input.today, signal })
+      return reply({
+        context,
+        key,
+        tier: tierOf(context.user),
+        messages,
+        today: input.today,
+        signal,
+      })
     }),
 
   /**
@@ -296,6 +383,13 @@ export const chat = {
         }
         return { save: [answered], chat: [...stored.slice(0, -1), answered] }
       })
-      return reply({ context, key, messages, today: input.today, signal })
+      return reply({
+        context,
+        key,
+        tier: tierOf(context.user),
+        messages,
+        today: input.today,
+        signal,
+      })
     }),
 }

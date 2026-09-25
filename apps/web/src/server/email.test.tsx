@@ -70,7 +70,7 @@ describe("createMailer", () => {
     await send(verifyEmail("ana@acme.com"))
 
     expect(fetch).not.toHaveBeenCalled()
-    expect(JSON.parse(String(warn.mock.calls[0]?.[0]))).toMatchObject({
+    expect(warn.mock.calls[0]?.[0]).toMatchObject({
       event: "email_not_configured",
       email: "verify_email",
     })
@@ -92,17 +92,18 @@ describe("createMailer", () => {
 
     await send(verifyEmail("ana@acme.com"))
 
-    // Ours is the JSON line (the SDK adds its own outside production builds).
-    const line = String(
-      error.mock.calls.find(([first]) => String(first).startsWith("{"))?.[0]
-    )
-    expect(JSON.parse(line)).toMatchObject({
+    // Ours is the object line (the SDK adds its own outside production builds).
+    const entry: unknown = error.mock.calls.find(
+      ([first]) => typeof first === "object"
+    )?.[0]
+    expect(entry).toMatchObject({
       level: "error",
       event: "email_failed",
       email: "verify_email",
       status: 429,
       code: "daily_quota_exceeded",
     })
+    const line = JSON.stringify(entry)
     expect(line).not.toContain("ana@acme.com")
     expect(line).not.toContain("token=")
   })

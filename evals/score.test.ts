@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import { scoreFields } from "./score"
+import { belowBar, mentioned, scoreFields } from "./score"
 
 describe("scoring an eval's fields", () => {
   test("checks each part of a field on its own", () => {
@@ -36,7 +36,38 @@ describe("scoring an eval's fields", () => {
       { term: { option: "expires", value: { amount: 1, unit: "years" } } }
     )
 
-    expect(results.map((each) => each.ok)).toEqual([true, false, true])
+    expect(results.map((each) => each.ok)).toEqual([true, false])
+  })
+
+  test("takes the same length in other units as the same duration", () => {
+    const results = scoreFields(
+      {
+        subscriptionPeriod: { amount: 12, unit: "months" },
+        pilotPeriod: { amount: 2, unit: "weeks" },
+      },
+      {
+        subscriptionPeriod: { amount: 1, unit: "years" },
+        pilotPeriod: { amount: 14, unit: "days" },
+      }
+    )
+
+    expect(results).toEqual([
+      {
+        path: "subscriptionPeriod",
+        ok: true,
+        got: { amount: 1, unit: "years" },
+      },
+      { path: "pilotPeriod", ok: true, got: { amount: 14, unit: "days" } },
+    ])
+  })
+
+  test("keeps business days apart from calendar days", () => {
+    const [result] = scoreFields(
+      { breachNotificationPeriod: { amount: 5, unit: "businessDays" } },
+      { breachNotificationPeriod: { amount: 5, unit: "days" } }
+    )
+
+    expect(result?.ok).toBe(false)
   })
 
   test("counts a missing value as wrong", () => {
@@ -52,5 +83,114 @@ describe("scoring an eval's fields", () => {
     )
 
     expect(result?.ok).toBe(false)
+  })
+})
+
+describe("scoring a list inside a field", () => {
+  test("takes the same items in any order", () => {
+    const results = scoreFields(
+      {
+        programPartner: {
+          selected: [{ option: "feedback" }, { option: "reference" }],
+        },
+      },
+      {
+        programPartner: {
+          selected: [{ option: "reference" }, { option: "feedback" }],
+        },
+      }
+    )
+
+    expect(results).toEqual([
+      {
+        path: "programPartner.selected",
+        ok: true,
+        got: [{ option: "reference" }, { option: "feedback" }],
+      },
+    ])
+  })
+
+  test("compares each item's words like any other value", () => {
+    const [result] = scoreFields(
+      { fees: { selected: [{ option: "perUnit", value: { unit: "Year" } }] } },
+      { fees: { selected: [{ option: "perUnit", value: { unit: "year." } }] } }
+    )
+
+    expect(result?.ok).toBe(true)
+  })
+
+  test("counts a missing or an extra item as wrong", () => {
+    const want = { targets: { selected: [{ option: "uptime" }] } }
+
+    const [missing] = scoreFields(want, { targets: { selected: [] } })
+    const [extra] = scoreFields(want, {
+      targets: { selected: [{ option: "uptime" }, { option: "response" }] },
+    })
+
+    expect(missing?.ok).toBe(false)
+    expect(extra?.ok).toBe(false)
+  })
+
+  test("counts a list that isn't there as wrong", () => {
+    const [result] = scoreFields(
+      { trainingData: { selected: [{ option: "none" }] } },
+      {}
+    )
+
+    expect(result).toEqual({
+      path: "trainingData.selected",
+      ok: false,
+      got: undefined,
+    })
+  })
+})
+
+describe("finding the agreements a reply names", () => {
+  test("finds an agreement by its name or its short form", () => {
+    expect(
+      mentioned(
+        "I picked the Cloud Service Agreement. You may also want an SLA and a data processing agreement.",
+        ["sla", "dpa", "ai-addendum"]
+      )
+    ).toEqual(["sla", "dpa"])
+  })
+
+  test("doesn't take a short form inside another word", () => {
+    expect(
+      mentioned("The CSAs of the world, and the DPAX tool.", ["csa", "dpa"])
+    ).toEqual([])
+  })
+
+  test("finds the NDA by its short form", () => {
+    expect(mentioned("Start with a mutual NDA.", ["mutual-nda"])).toEqual([
+      "mutual-nda",
+    ])
+  })
+})
+
+describe("checking a run against the bar", () => {
+  const passing = { documents: 1, fields: 1, invalidWrites: 0, finished: 1 }
+
+  test("passes a run that meets every bar", () => {
+    expect(belowBar(passing)).toEqual([])
+    expect(belowBar({ ...passing, documents: 0.9, fields: 0.95 })).toEqual([])
+  })
+
+  test("fails a run where a whole draft didn't finish", () => {
+    // A draft stuck at the turn cap is still scored on its fields; the run
+    // must fail anyway, or "every draft finished" is only a claim.
+    expect(belowBar({ ...passing, finished: 13 / 14 })).toEqual([
+      "drafts finished 93%",
+    ])
+  })
+
+  test("names every measure below its bar", () => {
+    expect(
+      belowBar({ documents: 0.8, fields: 0.9, invalidWrites: 2, finished: 1 })
+    ).toEqual([
+      "right agreement 80%",
+      "right field values 90%",
+      "2 invalid writes",
+    ])
   })
 })

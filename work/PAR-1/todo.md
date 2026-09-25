@@ -579,7 +579,18 @@
   - Files: `apps/web/src/server/cron.ts`, `src/server.ts`, `test/cron.test.ts`
   - Deps: T21
 
-- [ ] **T29: Observability** (S)
+- [x] **T29: Observability** (S)
+  - Done 2026-09-25. Skills: observability-and-instrumentation, incremental-implementation, test-driven-development, source-driven-development, git-workflow-and-versioning, documentation-and-adrs; cloudflare:cloudflare (Workers Logs, Query Builder, traces docs). Checked:
+    - `pnpm check`; `pnpm test` (767; the browser project needs Playwright's chromium 1243 on this laptop, so it ran with `WORKERS_CI=1`); `pnpm test:workers` (89, 8 new in `observability.test.ts`); `pnpm test:e2e --project=chromium` on port 3112 (17).
+    - A real `pnpm dev`: `/api/health`, a 404 path with a token in the path and query, and a guest sign-in each wrote one `request` object with the route pattern, and no token.
+    - Still open for the owner: the Workers Observability query after a chat on the preview (ADR-0005 lists the queries).
+    - Review fixes (2026-09-25): errors log `name`, `code` and `cause`, never the message (Drizzle's holds the query's values); Better Auth's own lines go through our logger as `auth_log`; a failed reply save is a `chat_save_failed` line, not an uncaught error; `chat_turn` is written at the turn's end, so a step that failed part way counts its tokens. New workerd tests break the database on purpose (read-only session, missing schema, a NUL in a reply) and check no value, chat text or session token is logged; one sends a chat turn over `/api` and checks its `requestId`. Gates: `pnpm check`; `pnpm test` (771, `WORKERS_CI=1`); `pnpm test:workers` (95); e2e chromium on 3112 (17).
+  - Decisions (ADR-0005):
+    - **Metrics are fields on log events**, not a metrics store: `request` (every `/api` request: `requestId` = Cloudflare's ray id, `method`, `route` pattern or oRPC procedure, `status`, `latencyMs`, `userId`, `tier`) and `chat_turn` (tokens, cached tokens, `costMicroUsd` from OpenRouter's `usage.cost`, `ttftMs` from the AI SDK's `timeToFirstOutputMs`, tool calls and errors, refused changes, outcome done / aborted / error). Workers Logs indexes every key, so the Query Builder can group and take P95.
+    - **Log fields are flat values** (`string | number | boolean`), so a body, draft or message can't be logged by accident. Errors log name, code and cause, never the message; a failed chat turn logs only the error's name and HTTP status (our `onError` replaces the AI SDK's, which logged the whole error).
+    - **`requestLog` is our one custom Hono middleware**: Hono's `logger()` prints the full path and query, and Better Auth puts tokens there. Handlers add facts with `annotate()` (the tier from `authed`, the procedure from the oRPC mount).
+    - **Traces on**, full sampling, and `redact_query_string` in `wrangler.jsonc` (top level and previews). Logs and spans share one quota from 2026-10-01 (20M a month in Paid); a request writes a few.
+    - **No alerts yet** (no production traffic): symptom alerts (5xx rate, P95 `ttftMs`, daily cost) go with T38.
   - Accept:
     - Structured JSON logs with a request id, route, status, latency and user tier. **No field values or chat text.**
     - AI metrics: tokens, cost, time to first token and tool errors for each chat turn. They show up in Workers Observability.
@@ -595,7 +606,29 @@
 
 ## Phase 6: All 12 documents in chat
 
-- [ ] **T30: AI across all 12 documents** (M)
+- [x] **T30: AI across all 12 documents** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development (AI SDK's bundled docs: `toModelOutput`, `isToolUIPart`, `getToolName`), git-workflow-and-versioning; ai-sdk, dataviz (the report stays tables, as T20). Checked:
+    - `pnpm evals`: **36 conversations** (2 situations per agreement, a whole draft of each of the 11 agreements plus 2 more NDAs, 2 guardrails). Last run: **100% right agreement, 100% right field values, 0 invalid writes, every draft finished, on task 2/2.** The run before: 100% / 99% / 0 (one design-partner commitment missed). `evals/report.md`.
+    - **Cost per finished draft** is in the report's per-agreement table: the NDA $0.0036 (goal under $0.02), the cheapest the pilot $0.0031, the most costly the DPA $0.0195 and the CSA $0.0165.
+    - `pnpm check`; `pnpm test` (825; browser tests need `PLAYWRIGHT_CHROMIUM_PATH` here); `pnpm test:workers` (81); `pnpm test:e2e` on PORT=3113: 19/19 in Chromium (Firefox and WebKit aren't installed locally).
+    - Spend on the OpenRouter test key: $0.54 in the finishing session (3 full runs, 4 single-case runs); the key has used $1.33 of its $5 in all (T20 and T30).
+  - Built:
+    - **Related agreements** (spec §2 example): `RELATED` in `prompt.ts`; the catalog says what often comes with each, and the chosen agreement's section tells the model to name them once as new drafts, never to switch.
+    - **Each choice lists its options' wording** (cut at 160 characters): the model read only keys and took the DPA's `commonPaperCsa` for "use the CSA's cap".
+    - **Optional fields are marked** in the field list, with a rule to fill one when the deal calls for it. The DPA never got its UK clause before, even with UK clinics.
+    - **Rules from what the runs refused or got wrong:** a jurisdiction takes state or region, never both, and a US state as its code; no empty strings; ask once for a legal name, then use what the user gives; don't guess a law, court or member state from where a party is based; $ means USD; when the user doesn't know, use the usual choice; call `markComplete` again after filling what it listed.
+    - **The engine refuses a US state's full name written as a region** ("Oregon"), so the document can say "the State of Oregon". Only on writes (`changeSchema`), and not Georgia or the postal codes, which are also countries (see the review below).
+    - Evals: scoring of multi-choice lists and durations of the same length (12 months = 1 year); "named a related agreement"; a per-agreement table; failed tool calls without a valid input show in the transcripts.
+  - Found on the way:
+    - **Naming a related agreement is not reliable: 40–100% across runs** (5 cases). The model skips it when it goes straight to a questionnaire. Spec §2 says it "can" mention them, so it has no bar. A reminder in `chooseDocument`'s result was tried and did no better (40%), so it was not kept. A card under the choice in the UI would make it certain; that is UI work, not T30.
+    - Case facts were fixed only where a real user would know more than the simulated one did (the DPA's Annex I addresses, UK data, signers' emails for notices).
+  - Review and simplify (2026-09-25; code-review-and-quality by an independent reviewer, then test-driven-development and code-simplification). Fixed, each with a test that fails without the fix:
+    - **The region rule refused real countries:** Georgia, and ISO codes that are also state codes (CA Canada, DE Germany, IN India), with a message that pushed the model to write US Georgia law. Now only full state names, minus Georgia.
+    - **The region rule broke stored drafts:** it sat on `draftSchema` and `schema` too, so a draft saved with `{ region: "Oregon" }` would throw on every chat turn, edit, `markComplete` and preview. It is now on `changeSchema` only.
+    - **"Every draft finished" had no bar:** the DPA had finished on turn 12 of 12. The bars moved to `score.ts` with a tested `belowBar()`, which now also needs every whole draft finished, and `MAX_TURNS` is 16.
+    - A test checks that no two options of one choice read the same after the 160-character cut.
+    - Simplified: the related-agreements line, the list matcher in scoring, and each report row's outcome (its own function; the bar column reads from `BAR`).
+    - `pnpm evals` twice: the first run failed the gate with 1 invalid write (an `askQuestions` call whose input didn't fit, fixed by the model on the next call); the second passed: 100% right agreement, 99% right fields, 0 invalid writes, every draft finished (slowest 9 of 16 turns), NDA $0.0037. About $0.29 on the test key (with the simulated user); the key has used $1.62 of its $5.
   - Accept:
     - The prompt and tools cover all 12 documents, including suggestions of related documents (for example CSA → SLA / DPA / AI Addendum).
     - Evals grow to 30 or more cases with at least 2 per document. The bar is met: correct document ≥ 90%, correct fields ≥ 95%, invalid writes 0.

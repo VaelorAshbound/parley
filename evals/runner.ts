@@ -1,6 +1,8 @@
 import { connect } from "@workspace/db"
 import {
   generateText,
+  getToolName,
+  isToolUIPart,
   Output,
   wrapLanguageModel,
   type LanguageModel,
@@ -228,16 +230,20 @@ export function fullTranscript(messages: ChatMessage[]) {
         lines.push(
           `**${message.role === "user" ? "User" : "Parley"}:** ${part.text}`
         )
-      else if (part.type.startsWith("tool-") && "input" in part) {
+      else if (isToolUIPart(part)) {
         const out =
           part.state === "output-available"
             ? JSON.stringify(part.output)
             : part.state === "output-error"
               ? `ERROR ${part.errorText}`
               : part.state
-        lines.push(
-          `- \`${part.type.slice(5)}\` ${JSON.stringify(part.input)}\n  → ${out}`
-        )
+        // A call whose input didn't fit the tool's schema is stored without
+        // one; it still counts as a failed write, so it must show here.
+        const input =
+          part.input === undefined
+            ? "(no valid input)"
+            : JSON.stringify(part.input)
+        lines.push(`- \`${getToolName(part)}\` ${input}\n  → ${out}`)
       }
     }
   return lines.join("\n\n")

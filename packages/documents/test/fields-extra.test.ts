@@ -193,6 +193,39 @@ describe("jurisdiction outside the US", () => {
     ).toBe(true)
   })
 
+  it("sends a US state to the state, not the province or country", () => {
+    // The model wrote { region: "Oregon" } in T30's evals: a US state
+    // must be a state, so the document says "the State of Oregon".
+    const oregon = law.changeSchema.safeParse({ region: " oregon " })
+
+    expect(oregon.error?.issues).toEqual([
+      expect.objectContaining({
+        path: ["region"],
+        message: "That's a US state: pick it as the state.",
+      }),
+    ])
+  })
+
+  it("takes a country that shares a US state's name or code", () => {
+    // Georgia is a country too, and two-letter codes are also ISO country
+    // codes (IN India, DE Germany, CA Canada).
+    const refused = ["Georgia", "IN", "DE", "CA", "Pennsylvania, USA"].filter(
+      (region) => !law.changeSchema.safeParse({ region }).success
+    )
+
+    expect(refused).toEqual([])
+  })
+
+  it("still reads a stored draft whose region names a US state", () => {
+    // Drafts saved before the rule may hold { region: "Oregon" }: only new
+    // writes are checked, so loading them never throws.
+    const stored = { region: "Oregon", courtLocation: "Portland" }
+
+    expect(law.draftSchema.parse(stored)).toEqual(stored)
+    expect(law.schema.parse(stored)).toEqual(stored)
+    expect(law.changeSchema.safeParse({ region: "Oregon" }).success).toBe(false)
+  })
+
   it("swaps the place when a change picks the other kind", () => {
     expect(
       law.merge(

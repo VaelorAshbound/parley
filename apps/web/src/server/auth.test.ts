@@ -1,9 +1,9 @@
 import { schema } from "@workspace/db"
 import { getSchema } from "better-auth/db"
-import { getTableColumns, is } from "drizzle-orm"
+import { DrizzleQueryError, getTableColumns, is } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
 import { PgTable } from "drizzle-orm/pg-core"
-import { describe, expect, it } from "vite-plus/test"
+import { describe, expect, it, vi } from "vite-plus/test"
 
 import { allowedHosts, createAuth } from "./auth"
 
@@ -43,6 +43,48 @@ describe("the auth config", () => {
     expect(allowedHosts("preview")).toEqual([
       "*-parley.vaelorashbound.workers.dev",
       "localhost:*",
+    ])
+  })
+})
+
+// Better Auth logs a failed query's whole error, and some of its messages
+// end with a URL or a value (T29: no field values in logs).
+describe("Better Auth's logs", () => {
+  const log = auth.options.logger?.log
+
+  it("are structured lines with the error's name and code, not its message", () => {
+    using error = vi.spyOn(console, "error").mockImplementation(() => {})
+    const failed = new DrizzleQueryError(
+      'select * from "session" where "token" = $1',
+      ["session-token-123"],
+      Object.assign(new Error("gone"), { code: "08006" })
+    )
+
+    log?.("error", "INTERNAL_SERVER_ERROR", failed)
+
+    expect(error.mock.calls).toEqual([
+      [
+        {
+          level: "error",
+          event: "auth_log",
+          message: "INTERNAL_SERVER_ERROR",
+          error: { name: "DrizzleQueryError", code: "08006", cause: "Error" },
+        },
+      ],
+    ])
+  })
+
+  it("keep a message's fixed text, not the value after it", () => {
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+    log?.("warn", "Invalid redirect URL: https://evil.example/?token=abc")
+    log?.("warn", 'Provider "acme" skipped')
+    log?.("warn", "Failed query: select 1\nparams: Acme Secret")
+
+    expect(warn.mock.calls.map(([line]) => line)).toEqual([
+      { level: "warn", event: "auth_log", message: "Invalid redirect URL" },
+      { level: "warn", event: "auth_log", message: "Provider" },
+      { level: "warn", event: "auth_log", message: "Failed query" },
     ])
   })
 })

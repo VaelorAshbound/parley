@@ -442,9 +442,10 @@ Hono is a thin `/api` layer. oRPC does the real API work.
 
 - **Structure.** `new Hono<{ Bindings: Env; Variables: AppVariables }>()`, split into sub-apps in their own files and joined with `app.route()`: `/api/auth` (Better Auth), `/api/rpc` (oRPC) and `/api/health`. The handlers are written right after the path. No Rails-style controllers, so the types stay inferred.
 - **Mounting oRPC.** It is mounted as middleware: `app.use("/api/rpc/*", …)` → `handler.handle(c.req.raw, …)` → `c.newResponse(response.body, response)`. **No Hono middleware may read the body before oRPC**, or you get "Body already used".
-- **Built-in middleware only**, in this order:
+- **Built-in middleware**, with one exception (`requestLog`), in this order:
   - `requestId()`, which gives the ID in every log line. It uses Cloudflare's `cf-ray` (so our logs line up with Cloudflare's) and never a client's `X-Request-Id`;
   - `contextStorage()`, so the logger can read it without passing it around;
+  - `requestLog` (T29, ours): one `request` line per request with the route pattern, status, latency and the user's tier. Hono's `logger()` prints the full path and query as text, and Better Auth puts tokens in some paths. Events and fields: ADR-0005;
   - `timing()`, which adds `Server-Timing` headers on preview builds for DevTools (off in production). The switch is the `STAGE` var: `"production"` at the top of `wrangler.jsonc`, `"preview"` in `previews.vars`;
   - `secureHeaders()` for the `/api` responses.
 
@@ -465,7 +466,7 @@ Hono is a thin `/api` layer. oRPC does the real API work.
 - **Rate limit.** `CloudflareRateLimiter` from `@orpc/cloudflare` (stable) wraps the Workers binding and is used through oRPC's rate-limit middleware and headers plugin. The daily AI budget stays our own Postgres counter.
 - **TanStack Query.** Use `@orpc/tanstack-query` (`orpc.x.queryOptions()`, `mutationOptions()`, keys).
 - **Tests.** Procedures are called directly with server-side clients plus a test context (the auth matrix). The client is mocked with oRPC's `implement` where needed.
-- **Later.** oRPC Cloudflare Traces (`CloudflareTracer`) is v2-beta only. Until v2 is stable, we use Workers' automatic tracing + our structured logs.
+- **Later.** oRPC Cloudflare Traces (`CloudflareTracer`) is v2-beta only. Until v2 is stable, we use Workers' automatic tracing (turned on in T29, with `redact_query_string`) + our structured logs.
 
 ### Forms (TanStack Form, the owner's rules + docs checked 2026-09-23)
 

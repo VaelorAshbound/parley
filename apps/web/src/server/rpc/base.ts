@@ -7,6 +7,7 @@ import type {
 } from "@orpc/server/plugins"
 
 import type { Auth, Session } from "../auth"
+import { annotate } from "../log"
 
 // Every procedure is built from one of these (spec §5 API): `pub` for
 // anyone, `authed` for a signed-in user or guest, and `authed` + `draftOwner`
@@ -49,8 +50,15 @@ async function readSession(context: BaseContext, { fresh = false } = {}) {
 export const authed = pub.use(async ({ context, next, errors }) => {
   const session = await readSession(context)
   if (!session) throw errors.UNAUTHORIZED()
+  annotate({ userId: session.user.id, tier: tierOf(session.user) })
   return next({ context: { user: session.user, session: session.session } })
 })
+
+/** A user's plan, for logs and metrics (T29). T26 adds "pro". */
+export function tierOf(user: { isAnonymous?: boolean | null }) {
+  return user.isAnonymous ? ("guest" as const) : ("free" as const)
+}
+export type Tier = ReturnType<typeof tierOf>
 
 /**
  * A signed-up user with a confirmed email: export, share and upgrade (spec

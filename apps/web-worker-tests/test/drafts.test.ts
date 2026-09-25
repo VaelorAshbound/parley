@@ -1,31 +1,10 @@
-import { createORPCClient, safe } from "@orpc/client"
-import { RPCLink } from "@orpc/client/fetch"
-import { SimpleCsrfProtectionLinkPlugin } from "@orpc/client/plugins"
-import type { RouterClient } from "@orpc/server"
+import { safe } from "@orpc/client"
 import { connect, schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
 import { describe, expect, it, vi } from "vitest"
 
-import type { Router } from "../../web/src/server/rpc/router"
-import { call, origin, signInGuest } from "./helpers"
-
-/** The browser's client, over HTTP through the real /api app. */
-function browserClient(cookie: string): RouterClient<Router> {
-  return createORPCClient(
-    new RPCLink({
-      url: `${origin}/api/rpc`,
-      headers: { cookie },
-      plugins: [new SimpleCsrfProtectionLinkPlugin()],
-      fetch: async (request) =>
-        call(new URL(request.url).pathname + new URL(request.url).search, {
-          method: request.method,
-          headers: request.headers,
-          body: request.method === "GET" ? null : await request.text(),
-        }),
-    })
-  )
-}
+import { browserClient, call, signInGuest } from "./helpers"
 
 const today = "2026-09-24"
 
@@ -358,7 +337,7 @@ describe("an unexpected server error", () => {
       code: "INTERNAL_SERVER_ERROR",
       message: "Internal server error",
     })
-    const line = JSON.parse(String(logged.mock.calls[0]?.[0]))
+    const line = logged.mock.calls[0]?.[0]
     expect(line).toMatchObject({
       level: "error",
       event: "rpc_error",

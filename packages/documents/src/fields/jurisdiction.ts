@@ -71,7 +71,23 @@ const stateCode = typed<StateCode>(
 )
 
 const courtLocation = plainText(100)
+/**
+ * A US state's full name, in any case: it has its own part. Not Georgia,
+ * which is also a country, and not the postal codes, which are also ISO
+ * country codes (CA Canada, DE Germany, IN India).
+ */
+const usPlaces = new Set(
+  Object.values(US_STATES)
+    .map((name) => name.toLowerCase())
+    .filter((name) => name !== "georgia")
+)
 const region = plainText(100)
+// Checked on writes only: drafts saved before this rule may hold "Oregon",
+// and the draft and complete schemas must still read them.
+const newRegion = region.refine(
+  (value) => !usPlaces.has(value.toLowerCase()),
+  "That's a US state: pick it as the state."
+)
 
 type JurisdictionConfig = {
   label: string
@@ -176,7 +192,7 @@ function worldJurisdiction(config: JurisdictionConfig) {
       z
         .strictObject({
           state: stateCode.nullable(),
-          region: region.nullable(),
+          region: newRegion.nullable(),
           courtLocation: courtLocation.nullable(),
         })
         .exactPartial(),

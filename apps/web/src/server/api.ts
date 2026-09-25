@@ -9,15 +9,18 @@ import { timing, type TimingVariables } from "hono/timing"
 
 import { createModel } from "./ai/model"
 import { createAuth } from "./auth"
-import { logError } from "./log"
+import { annotate, logError, type LogVariables } from "./log"
+import { requestLog } from "./middleware"
 import { rpcHandler } from "./rpc/router"
 
-// The /api layer (spec §5 Hono): built-in middleware only, then the sub-apps.
+// The /api layer (spec §5 Hono): built-in middleware, then the sub-apps.
+// One exception, requestLog (T29): Hono's logger() prints the full path and
+// query as text, and Better Auth puts tokens in some paths.
 // Nothing here may read a request body before oRPC or Better Auth does.
 
 type AppEnv = {
   Bindings: Env
-  Variables: RequestIdVariables & TimingVariables
+  Variables: RequestIdVariables & TimingVariables & LogVariables
 }
 
 /** A database client and an auth instance for this request only. */
@@ -53,8 +56,10 @@ const rpc = new Hono<AppEnv>()
         waitUntil: (promise) => c.executionCtx.waitUntil(promise),
       },
     })
-    if (matched) return c.newResponse(response.body, response)
-    await next()
+    if (!matched) return next()
+    // A procedure's path ("/api/rpc/chat/send"): one of a fixed set.
+    annotate({ route: c.req.path })
+    return c.newResponse(response.body, response)
   })
 
 export const api = new Hono<AppEnv>()
@@ -68,6 +73,7 @@ export const api = new Hono<AppEnv>()
     })
   )
   .use(contextStorage())
+  .use(requestLog)
   .use(async (c, next) => {
     // Server-Timing for DevTools on previews only; it would leak timings in
     // production.

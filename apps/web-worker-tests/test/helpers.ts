@@ -1,3 +1,7 @@
+import { createORPCClient } from "@orpc/client"
+import { RPCLink } from "@orpc/client/fetch"
+import { SimpleCsrfProtectionLinkPlugin } from "@orpc/client/plugins"
+import type { RouterClient } from "@orpc/server"
 import { connect } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
@@ -7,13 +11,21 @@ import { afterAll, expect, onTestFinished } from "vitest"
 
 import { api } from "../../web/src/server/api"
 import { createAuth } from "../../web/src/server/auth"
+import type { Router } from "../../web/src/server/rpc/router"
 import { createServerClient } from "../../web/src/server/rpc/server-client"
 import { passingToken } from "./siteverify"
 
 export const origin = "http://localhost:3000"
 
-/** One request through the real /api app, as the browser would send it. */
-export async function call(path: string, init: RequestInit = {}) {
+/**
+ * One request through the real /api app, as the browser would send it.
+ * `bindings` replaces the Worker's env (a broken database, say).
+ */
+export async function call(
+  path: string,
+  init: RequestInit = {},
+  bindings: Env = env
+) {
   const headers = new Headers(init.headers)
   if (!headers.has("origin")) headers.set("origin", origin)
   // Every real HTTP request has one; Better Auth builds its URL from it.
@@ -27,11 +39,35 @@ export async function call(path: string, init: RequestInit = {}) {
   const ctx = createExecutionContext()
   const response = await api.fetch(
     new Request(origin + path, { ...init, headers }),
-    env,
+    bindings,
     ctx
   )
   await waitOnExecutionContext(ctx)
   return response
+}
+
+/** The browser's client, over HTTP through the real /api app. */
+export function browserClient(
+  cookie: string,
+  bindings: Env = env
+): RouterClient<Router> {
+  return createORPCClient(
+    new RPCLink({
+      url: `${origin}/api/rpc`,
+      headers: { cookie },
+      plugins: [new SimpleCsrfProtectionLinkPlugin()],
+      fetch: async (request) =>
+        call(
+          new URL(request.url).pathname + new URL(request.url).search,
+          {
+            method: request.method,
+            headers: request.headers,
+            body: request.method === "GET" ? null : await request.text(),
+          },
+          bindings
+        ),
+    })
+  )
 }
 
 /** The Cookie header a browser would send back after this response. */
@@ -129,7 +165,8 @@ export type Step = ({ text: string } | { tool: string; input: unknown })[]
 
 /**
  * A scripted model (AI SDK MockLanguageModelV4): each call streams the next
- * step. Its `doStreamCalls` show what the model was sent.
+ * step, using 10 input and 5 output tokens and costing $0.00002. Its
+ * `doStreamCalls` show what the model was sent.
  */
 export function scriptedModel(steps: Step[]) {
   let call = 0
@@ -172,6 +209,9 @@ export function scriptedModel(steps: Step[]) {
                 },
                 outputTokens: { total: 5, text: 5, reasoning: undefined },
               },
+              // What OpenRouter charged for the call, in dollars, as its
+              // provider reports it.
+              providerMetadata: { openrouter: { usage: { cost: 0.00002 } } },
             },
           ],
         }),
