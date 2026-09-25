@@ -11,14 +11,13 @@ import {
 } from "@workspace/ui/components/card"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
-import { z } from "zod"
 
 import { authConfigQuery } from "@/features/auth/auth-config"
 import {
   authErrorMessage,
   verifyLinkErrorMessage,
 } from "@/features/auth/messages"
-import { redirectSearch } from "@/features/auth/redirect"
+import { authSearch } from "@/features/auth/redirect"
 import { useTurnstile } from "@/features/auth/turnstile"
 import { authClient } from "@/lib/auth-client"
 import { freshViewer, viewerQuery, type Viewer } from "@/lib/session"
@@ -26,10 +25,7 @@ import { freshViewer, viewerQuery, type Viewer } from "@/lib/session"
 // "Check your inbox" after sign-up, and where the link in the email lands
 // (spec §5 Auth). Export, share and upgrade wait for this.
 export const Route = createFileRoute("/_auth/verify-email")({
-  validateSearch: redirectSearch.extend({
-    // Better Auth adds it when a link has expired or was used.
-    error: z.string().max(64).optional().catch(undefined),
-  }),
+  validateSearch: authSearch,
   beforeLoad: async ({ context: { viewer, queryClient } }) => {
     if (!viewer || viewer.isAnonymous || viewer.emailVerified) return
     // The link was likely just opened, but the session cookie can say "not

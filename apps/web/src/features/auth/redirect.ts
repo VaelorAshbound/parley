@@ -15,3 +15,12 @@ export const redirectSearch = z.object({
 })
 
 export type RedirectSearch = z.infer<typeof redirectSearch>
+
+/**
+ * The auth pages' search: `?redirect=`, plus the `?error=` code Better Auth
+ * adds when it sends the browser back with a problem (Google or GitHub
+ * refused, a confirmation link expired).
+ */
+export const authSearch = redirectSearch.extend({
+  error: z.string().max(64).optional().catch(undefined),
+})

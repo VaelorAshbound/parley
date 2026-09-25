@@ -166,3 +166,17 @@ fresh("a link to another site after sign-in is ignored", async ({ page }) => {
     page.getByRole("link", { name: "Create an account" })
   ).toHaveAttribute("href", "/sign-up?redirect=%2F")
 })
+
+fresh(
+  "a Google or GitHub sign-up that comes back with a problem says so",
+  async ({ page }) => {
+    // Better Auth sends the browser back to the page it left from.
+    await open(page, "/sign-up?error=account_not_linked")
+
+    await expect(
+      page.getByText("This email already has a Parley account.", {
+        exact: false,
+      })
+    ).toBeVisible()
+  }
+)

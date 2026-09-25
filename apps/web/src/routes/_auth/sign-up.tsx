@@ -13,12 +13,13 @@ import { FieldSeparator } from "@workspace/ui/components/field"
 import { useState } from "react"
 
 import { authConfigQuery } from "@/features/auth/auth-config"
-import { redirectSearch } from "@/features/auth/redirect"
+import { oauthErrorMessage } from "@/features/auth/messages"
+import { authSearch } from "@/features/auth/redirect"
 import { SignUpForm } from "@/features/auth/sign-up-form"
 import { SocialButtons } from "@/features/auth/social-buttons"
 
 export const Route = createFileRoute("/_auth/sign-up")({
-  validateSearch: redirectSearch,
+  validateSearch: authSearch,
   beforeLoad: ({ context, search }) => {
     if (context.viewer && !context.viewer.isAnonymous)
       throw redirect({ href: search.redirect ?? "/", replace: true })
@@ -28,10 +29,12 @@ export const Route = createFileRoute("/_auth/sign-up")({
 })
 
 function SignUp() {
-  const { redirect: returnTo = "/" } = Route.useSearch()
+  const { redirect: returnTo = "/", error } = Route.useSearch()
   const { viewer } = Route.useRouteContext()
   const { data: config } = useSuspenseQuery(authConfigQuery)
-  const [socialError, setSocialError] = useState<string>()
+  const [socialError, setSocialError] = useState(
+    error ? oauthErrorMessage(error) : undefined
+  )
 
   return (
     <Card>

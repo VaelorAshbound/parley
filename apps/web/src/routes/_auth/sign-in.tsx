@@ -11,11 +11,10 @@ import {
 } from "@workspace/ui/components/card"
 import { FieldSeparator } from "@workspace/ui/components/field"
 import { useState } from "react"
-import { z } from "zod"
 
 import { authConfigQuery } from "@/features/auth/auth-config"
 import { oauthErrorMessage } from "@/features/auth/messages"
-import { redirectSearch } from "@/features/auth/redirect"
+import { authSearch } from "@/features/auth/redirect"
 import { SignInForm } from "@/features/auth/sign-in-form"
 import { SocialButtons } from "@/features/auth/social-buttons"
 import { readCookie } from "@/lib/cookies"
@@ -24,10 +23,7 @@ import { readCookie } from "@/lib/cookies"
 const lastUsedCookie = "better-auth.last_used_login_method"
 
 export const Route = createFileRoute("/_auth/sign-in")({
-  validateSearch: redirectSearch.extend({
-    // Google or GitHub sent the user back with a problem.
-    error: z.string().max(64).optional().catch(undefined),
-  }),
+  validateSearch: authSearch,
   beforeLoad: ({ context, search }) => {
     // Already signed in: nothing to do here.
     if (context.viewer && !context.viewer.isAnonymous)
