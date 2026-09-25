@@ -28,11 +28,11 @@ import { useEffect, useState } from "react"
 import { DownloadButton } from "@/features/export/download"
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
+import { ProblemNote } from "@/components/problem-note"
 import type { ChatMessage } from "@/server/ai/chat"
 import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
-import { LimitBanner } from "./limit-banner"
 import { limitProblem } from "./limit-problem"
 import { MessageParts, PlainText } from "./message-parts"
 import { forgetSettledQuestions } from "./ai-questionnaire"
@@ -204,10 +204,10 @@ export function ChatPanel({
                   <MarkerContent className="shimmer">Thinking…</MarkerContent>
                 </Marker>
               )}
-              {error && limit ? (
-                <LimitBanner
+              {limit ? (
+                <ProblemNote
                   problem={limit}
-                  onRetry={() => void regenerate()}
+                  onRetry={limit.retry ? () => void regenerate() : undefined}
                 />
               ) : error ? (
                 <Alert variant="destructive">
