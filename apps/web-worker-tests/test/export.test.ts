@@ -368,8 +368,8 @@ describe("exportDraft when the user leaves", () => {
     const id = await completeNda(client)
     const leaving = new AbortController()
     // The tab closes while Browser Run prints.
-    const printPdf: PrintPdf = async (html) => {
-      const printed = await fakePrinter().printPdf(html)
+    const printPdf: PrintPdf = async (html, frame) => {
+      const printed = await fakePrinter().printPdf(html, frame)
       leaving.abort()
       return printed
     }
