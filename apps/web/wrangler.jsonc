@@ -16,6 +16,10 @@
   // trips, which took 0.8 s from a US edge on the Preview (T16). T35 measures
   // it against the default. https://developers.cloudflare.com/workers/configuration/placement/
   "placement": { "region": "aws:eu-central-1" },
+  // The nightly guest cleanup (src/server/cron.ts, T28): 03:17 UTC, once a
+  // day, so it wakes Neon only once. Cron Triggers run on production only,
+  // never on Previews.
+  "triggers": { "crons": ["17 3 * * *"] },
   // Declared so `wrangler types` works without .dev.vars (CI), and deploys
   // fail when one is missing. Previews get theirs from the Previews base
   // config (`wrangler preview base-config secret put`); `wrangler preview`
