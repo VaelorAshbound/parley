@@ -12,3 +12,7 @@ test("lists every document in the catalog once", () => {
 test("names a document by its short name", () => {
   expect(documentName("mutual-nda")).toBe("Mutual NDA")
 })
+
+test("names a draft whose agreement isn't chosen yet", () => {
+  expect(documentName(null)).toBe("New draft")
+})

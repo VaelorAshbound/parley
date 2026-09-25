@@ -27,6 +27,18 @@ test("the migrations build every table on an empty database", async () => {
         .map((table) => getTableName(table))
         .toSorted()
     )
+    // Every index the schema declares exists after all migrations (0001
+    // changes the search column in place, which keeps its GIN index).
+    const indexes = await db.$client.query<{ indexname: string }>(
+      "SELECT indexname FROM pg_indexes WHERE schemaname = 'public'"
+    )
+    const declared = Object.values(schema)
+      .filter((each) => is(each, PgTable))
+      .flatMap((table) => getTableConfig(table).indexes)
+      .map((index) => index.config.name)
+    expect(indexes.rows.map((row) => row.indexname)).toEqual(
+      expect.arrayContaining(declared)
+    )
   } finally {
     await db.$client.end()
     await admin.query(`DROP DATABASE ${name}`)

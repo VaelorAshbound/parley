@@ -64,8 +64,12 @@ export const documentList: {
   },
 ]
 
-/** The short name the app shows for a document ("Mutual NDA"). */
-export function documentName(id: DocumentId) {
+/**
+ * The short name the app shows for a document ("Mutual NDA"), or "New draft"
+ * before the chat has picked one.
+ */
+export function documentName(id: DocumentId | null) {
+  if (id === null) return "New draft"
   // Every catalog id is in the list (tested).
   return documentList.find((document) => document.id === id)?.name ?? id
 }

@@ -1,14 +1,21 @@
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router"
-import { definitionOf, render, type DocumentId } from "@workspace/documents"
+import {
+  definitionOf,
+  render,
+  type DocumentDefinition,
+  type DocumentId,
+} from "@workspace/documents"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { FileTextIcon, XIcon } from "lucide-react"
 import { useIsMutating } from "@tanstack/react-query"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, type RefObject } from "react"
 
+import { ChooseDocument } from "@/features/document-preview/choose-document"
 import { DocumentView } from "@/features/document-preview/document-view"
 import { FieldEditor } from "@/features/field-editor/field-editor"
 import { useSaveField } from "@/features/field-editor/use-save-field"
+import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
 
 // The right panel (spec §1 Layout): the live document, where any value can be
@@ -18,7 +25,7 @@ import { useUiStore } from "@/lib/ui-store"
 
 type Draft = {
   id: string
-  documentId: DocumentId
+  documentId: DocumentId | null
   fields: Record<string, unknown>
 }
 
@@ -33,49 +40,7 @@ export function DocumentPanel({
   editing: string | undefined
 }) {
   const { orpc } = useRouteContext({ from: "/_app/d/$draftId" })
-  const navigate = useNavigate()
-  const save = useSaveField(orpc, draft.id)
-  const refused = useUiStore((state) => state.refused)
-  const setRefused = useUiStore((state) => state.setRefused)
-  const definition = definitionOf(draft.documentId)
-  // Stored values are checked on the way in: a draft is only ever shown in
-  // the shape its document defines.
-  const values = definition.draftSchema.parse(draft.fields)
-  const document = render(definition, values)
   const panel = useRef<HTMLDivElement>(null)
-  const editingKey = editing?.split(".")[0]
-  const known = editingKey !== undefined && editingKey in definition.fields
-  const recovery =
-    refused?.draftId === draft.id && refused.fieldKey === editingKey
-      ? refused
-      : undefined
-
-  const edit = (path: string | undefined) =>
-    void navigate({
-      to: ".",
-      search: (prev) => ({ ...prev, field: path }),
-      replace: true,
-    })
-
-  // When an editor closes, focus goes back to what opened it: the value
-  // that was clicked, or else its row.
-  const lastEdited = useRef<string | undefined>(undefined)
-  useEffect(() => {
-    if (known) {
-      lastEdited.current = editing
-      return
-    }
-    const path = lastEdited.current
-    lastEdited.current = undefined
-    if (path === undefined) return
-    const find = (selector: string) =>
-      panel.current?.querySelector<HTMLElement>(selector)
-    const key = CSS.escape(path.split(".")[0] ?? path)
-    ;(
-      find(`[data-edit="${CSS.escape(path)}"]`) ??
-      find(`[data-edit="${key}"], [data-edit^="${key}."]`)
-    )?.focus()
-  }, [known, editing])
 
   return (
     <section
@@ -105,34 +70,108 @@ export function DocumentPanel({
         className="min-h-0 flex-1 overflow-y-auto px-4 pb-12 md:px-9"
       >
         <div className="mx-auto max-w-[552px] rounded-sm bg-sheet px-6 py-10 shadow-sheet md:px-13 md:py-12">
-          <DocumentView
-            document={document}
-            editing={known ? editing : undefined}
-            onEdit={edit}
-            renderEditor={(key) => (
-              <FieldEditor
-                // A refused save opens a fresh editor with what was typed.
-                key={`${key}${recovery ? "-refused" : ""}`}
-                definition={definition}
-                values={values}
-                fieldKey={key}
-                focus={editing}
-                recovery={recovery}
-                onSave={(change, inputs) => {
-                  setRefused(null)
-                  edit(undefined)
-                  save({ fieldKey: key, change, inputs })
-                }}
-                onCancel={() => {
-                  setRefused(null)
-                  edit(undefined)
-                }}
-              />
-            )}
-          />
+          {draft.documentId === null ? (
+            <ChooseDocument orpc={orpc} draftId={draft.id} />
+          ) : (
+            <LiveDocument
+              orpc={orpc}
+              draftId={draft.id}
+              definition={definitionOf(draft.documentId)}
+              fields={draft.fields}
+              editing={editing}
+              panel={panel}
+            />
+          )}
         </div>
       </div>
     </section>
+  )
+}
+
+/** The document, where any value can be clicked and edited in place. */
+function LiveDocument({
+  orpc,
+  draftId,
+  definition,
+  fields,
+  editing,
+  panel,
+}: {
+  orpc: Orpc
+  draftId: string
+  definition: DocumentDefinition
+  fields: Record<string, unknown>
+  editing: string | undefined
+  panel: RefObject<HTMLDivElement | null>
+}) {
+  const navigate = useNavigate()
+  const save = useSaveField(orpc, draftId)
+  const refused = useUiStore((state) => state.refused)
+  const setRefused = useUiStore((state) => state.setRefused)
+  // Stored values are checked on the way in: a draft is only ever shown in
+  // the shape its document defines.
+  const values = definition.draftSchema.parse(fields)
+  const document = render(definition, values)
+  const editingKey = editing?.split(".")[0]
+  const known = editingKey !== undefined && editingKey in definition.fields
+  const recovery =
+    refused?.draftId === draftId && refused.fieldKey === editingKey
+      ? refused
+      : undefined
+
+  const edit = (path: string | undefined) =>
+    void navigate({
+      to: ".",
+      search: (prev) => ({ ...prev, field: path }),
+      replace: true,
+    })
+
+  // When an editor closes, focus goes back to what opened it: the value
+  // that was clicked, or else its row.
+  const lastEdited = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (known) {
+      lastEdited.current = editing
+      return
+    }
+    const path = lastEdited.current
+    lastEdited.current = undefined
+    if (path === undefined) return
+    const find = (selector: string) =>
+      panel.current?.querySelector<HTMLElement>(selector)
+    const key = CSS.escape(path.split(".")[0] ?? path)
+    ;(
+      find(`[data-edit="${CSS.escape(path)}"]`) ??
+      find(`[data-edit="${key}"], [data-edit^="${key}."]`)
+    )?.focus()
+  }, [known, editing, panel])
+
+  return (
+    <DocumentView
+      document={document}
+      editing={known ? editing : undefined}
+      onEdit={edit}
+      renderEditor={(key) => (
+        <FieldEditor
+          // A refused save opens a fresh editor with what was typed.
+          key={`${key}${recovery ? "-refused" : ""}`}
+          definition={definition}
+          values={values}
+          fieldKey={key}
+          focus={editing}
+          recovery={recovery}
+          onSave={(change, inputs) => {
+            setRefused(null)
+            edit(undefined)
+            save({ fieldKey: key, change, inputs })
+          }}
+          onCancel={() => {
+            setRefused(null)
+            edit(undefined)
+          }}
+        />
+      )}
+    />
   )
 }
 

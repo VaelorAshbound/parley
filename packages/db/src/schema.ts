@@ -43,7 +43,9 @@ export const draft = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    documentId: text("document_id").$type<DocumentId>().notNull(),
+    // Null until the chat picks the agreement (T17: a chat can start before
+    // the user knows which document they need).
+    documentId: text("document_id").$type<DocumentId>(),
     title: text("title").notNull(),
     // Checked by the document's own Zod schema before the engine uses it,
     // never trusted as typed here (spec §5 Drizzle).
@@ -62,7 +64,7 @@ export const draft = pgTable(
     search: tsvector("search")
       .notNull()
       .generatedAlwaysAs(
-        sql`to_tsvector('simple', title || ' ' || replace(document_id, '-', ' ') || ' ' || jsonb_path_query_array(fields, 'strict $.**.company')::text || ' ' || jsonb_path_query_array(fields, 'strict $.**.name')::text)`
+        sql`to_tsvector('simple', title || ' ' || coalesce(replace(document_id, '-', ' '), '') || ' ' || jsonb_path_query_array(fields, 'strict $.**.company')::text || ' ' || jsonb_path_query_array(fields, 'strict $.**.name')::text)`
       ),
   },
   (table) => [

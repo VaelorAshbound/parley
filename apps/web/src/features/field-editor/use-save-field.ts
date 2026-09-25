@@ -69,7 +69,7 @@ export function useSaveField(orpc: Orpc, draftId: string) {
     // one only runs its onMutate when its turn comes.
     void queryClient.cancelQueries({ queryKey: draftKey })
     const draft = queryClient.getQueryData(draftKey)
-    if (draft) {
+    if (draft?.documentId) {
       const definition = definitionOf(draft.documentId)
       const { values } = applyFieldChanges(
         definition,

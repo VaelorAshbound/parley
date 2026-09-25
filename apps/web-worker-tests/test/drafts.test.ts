@@ -48,6 +48,69 @@ describe("drafts over /api/rpc", () => {
     expect(await client.drafts.get({ id: draft.id })).toEqual(draft)
   })
 
+  it("starts a draft before its agreement is chosen", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+
+    const draft = await client.drafts.create({ today })
+
+    expect(draft).toMatchObject({
+      documentId: null,
+      title: "New draft",
+      fields: {},
+    })
+  })
+
+  it("won't take field changes before the agreement is chosen", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({ today })
+
+    const { error } = await safe(
+      client.drafts.updateFields({
+        id: draft.id,
+        changes: [{ key: "purpose", value: "Hiring." }],
+      })
+    )
+
+    expect(error).toMatchObject({ code: "NO_DOCUMENT", defined: true })
+  })
+
+  it("chooses the agreement: its defaults, its name, today's date", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({ today })
+
+    const chosen = await client.drafts.chooseDocument({
+      id: draft.id,
+      documentId: "mutual-nda",
+      today,
+    })
+
+    expect(chosen).toMatchObject({
+      documentId: "mutual-nda",
+      title: "Mutual Non-Disclosure Agreement",
+      fields: { effectiveDate: today },
+    })
+  })
+
+  it("switching agreements keeps what fits, and a title the user chose", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({ documentId: "csa", today })
+    const provider = { company: "Acme Cloud, Inc." }
+    await client.drafts.updateFields({
+      id: draft.id,
+      changes: [{ key: "provider", value: provider }],
+    })
+
+    const switched = await client.drafts.chooseDocument({
+      id: draft.id,
+      documentId: "sla",
+      today,
+    })
+
+    expect(switched.documentId).toBe("sla")
+    expect(switched.title).toBe("Service Level Agreement")
+    expect(switched.fields).toMatchObject({ provider })
+  })
+
   it("refuses an unknown document", async () => {
     const client = browserClient((await signInGuest()).cookie)
 

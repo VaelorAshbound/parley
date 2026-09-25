@@ -293,6 +293,24 @@ describe("the schema", () => {
     // Other answers are not party names, so they don't match.
     expect(await find("zenith")).toEqual([])
   })
+
+  test("starts a draft before its document is chosen, still searchable", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const created = await createDraft(db, {
+      userId: owner.id,
+      documentId: null,
+      title: "Roadmap with a vendor",
+    })
+    const found = await db
+      .select({ id: draft.id })
+      .from(draft)
+      .where(sql`${draft.search} @@ to_tsquery('simple', 'vendor')`)
+
+    expect(created.documentId).toBeNull()
+    expect(found.map((row) => row.id)).toEqual([created.id])
+  })
 })
 
 describe("getDraft with lock", () => {

@@ -4,6 +4,7 @@ import {
   definitionOf,
   initialValues,
   isDocumentId,
+  switchDocument,
   type DocumentId,
 } from "@workspace/documents"
 
@@ -14,25 +15,61 @@ const documentId = z.custom<DocumentId>(isDocumentId, {
   message: "Unknown document.",
 })
 const draftId = z.object({ id: z.uuid() })
+// The user's own calendar day, for fields that default to today.
+const today = z.iso.date()
+
+/** A draft's title until the user renames it: the agreement's name. */
+const NEW_DRAFT = "New draft"
+function defaultTitle(id: DocumentId | null) {
+  return id === null ? NEW_DRAFT : definitionOf(id).name
+}
 
 export const drafts = {
+  /**
+   * A new draft. Without a document, the chat picks one first (T17: you can
+   * start by describing the deal).
+   */
   create: authed
-    .input(
-      z.object({
-        documentId,
-        // The user's own calendar day, for fields that default to today.
-        today: z.iso.date(),
-      })
-    )
+    .input(z.object({ documentId: documentId.optional(), today }))
     .handler(({ context, input }) => {
-      const definition = definitionOf(input.documentId)
+      const id = input.documentId ?? null
       return createDraft(context.db, {
         userId: context.user.id,
-        documentId: input.documentId,
-        title: definition.name,
-        fields: initialValues(definition, { today: input.today }),
+        documentId: id,
+        title: defaultTitle(id),
+        fields:
+          id === null
+            ? {}
+            : initialValues(definitionOf(id), { today: input.today }),
       })
     }),
+
+  /**
+   * Picks the draft's agreement, for the AI's chooseDocument tool and the
+   * picker. Switching keeps the values that fit the new document; a title
+   * the user chose stays.
+   */
+  chooseDocument: authed
+    .input(draftId.extend({ documentId, today }))
+    .use(draftOwner, (input) => input.id)
+    .handler(({ context, input, errors }) =>
+      context.db.transaction(async (tx) => {
+        const key = { id: input.id, userId: context.user.id }
+        const draft = await getDraft(tx, key, { lock: true })
+        if (!draft) throw errors.NOT_FOUND()
+        const saved = await updateDraft(tx, key, {
+          documentId: input.documentId,
+          title:
+            draft.title === defaultTitle(draft.documentId)
+              ? defaultTitle(input.documentId)
+              : draft.title,
+          fields: switchDocument(draft.fields, definitionOf(input.documentId), {
+            today: input.today,
+          }),
+        })
+        return saved ?? draft
+      })
+    ),
 
   /** The sidebar's history: the caller's drafts, last changed first. */
   list: authed
@@ -66,6 +103,7 @@ export const drafts = {
           .max(50),
       })
     )
+    .errors({ NO_DOCUMENT: { message: "Pick an agreement first." } })
     .use(draftOwner, (input) => input.id)
     .handler(({ context, input, errors }) =>
       // The row lock makes a second edit wait for this one, so neither edit
@@ -75,6 +113,7 @@ export const drafts = {
         const draft = await getDraft(tx, key, { lock: true })
         // Deleted between the owner check and the lock.
         if (!draft) throw errors.NOT_FOUND()
+        if (draft.documentId === null) throw errors.NO_DOCUMENT()
         const definition = definitionOf(draft.documentId)
         const result = applyFieldChanges(
           definition,
