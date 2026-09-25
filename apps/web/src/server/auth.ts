@@ -111,6 +111,11 @@ export function createAuth({
       },
     },
     user: {
+      // Settings → Delete account (spec §5 Auth): the password, or for a
+      // Google or GitHub account a sign-in in the last 15 minutes
+      // (freshAge). The user row goes, and every draft, chat, session and
+      // login with it (foreign keys cascade).
+      deleteUser: { enabled: true },
       changeEmail: {
         enabled: true,
         // A confirmed address approves the move first; Better Auth then

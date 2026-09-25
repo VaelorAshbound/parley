@@ -454,3 +454,90 @@ describe("changing the email", () => {
     expect(resend?.sent.at(-1)?.to).toBe(ana.email)
   })
 })
+
+describe("deleting the account", () => {
+  /** Every row that holds the user's data, by table. */
+  async function rowsOf(userId: string) {
+    const db = await database()
+    const count = async (rows: Promise<unknown[]>) => (await rows).length
+    return {
+      user: await count(
+        db.select().from(schema.user).where(eq(schema.user.id, userId))
+      ),
+      sessions: await count(
+        db
+          .select()
+          .from(schema.session)
+          .where(eq(schema.session.userId, userId))
+      ),
+      accounts: await count(
+        db
+          .select()
+          .from(schema.account)
+          .where(eq(schema.account.userId, userId))
+      ),
+      drafts: await count(
+        db.select().from(schema.draft).where(eq(schema.draft.userId, userId))
+      ),
+    }
+  }
+
+  const gone = { user: 0, sessions: 0, accounts: 0, drafts: 0 }
+
+  it("removes the account and all its data, after the password", async () => {
+    const ana = await signUp()
+    await browserClient(ana.cookie).drafts.create({
+      documentId: "mutual-nda",
+      today: "2026-09-25",
+    })
+
+    const { result, lines } = await audited(() =>
+      post("/api/auth/delete-user", { password }, ana.cookie)
+    )
+
+    expect(result.status).toBe(200)
+    expect(await rowsOf(ana.userId)).toEqual(gone)
+    expect(lines).toContainEqual(
+      expect.objectContaining({
+        event: "user_deleted",
+        userId: ana.userId,
+        guest: false,
+      })
+    )
+  })
+
+  it("keeps everything when the password is wrong", async () => {
+    const ana = await signUp()
+
+    const response = await post(
+      "/api/auth/delete-user",
+      { password: "not my password" },
+      ana.cookie
+    )
+
+    expect(response.status).toBe(400)
+    expect((await rowsOf(ana.userId)).user).toBe(1)
+  })
+
+  it("lets a Google or GitHub account delete itself right after signing in", async () => {
+    const ana = await signUp()
+    await withoutPassword(ana.userId)
+
+    const response = await post("/api/auth/delete-user", {}, ana.cookie)
+
+    expect(response.status).toBe(200)
+    expect(await rowsOf(ana.userId)).toEqual(gone)
+  })
+
+  it("asks a Google or GitHub account to sign in again when the session is old", async () => {
+    const ana = await signUp()
+    await withoutPassword(ana.userId)
+    await signedInLongAgo(ana.userId)
+
+    const response = await post("/api/auth/delete-user", {}, ana.cookie)
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ code: "SESSION_EXPIRED" })
+    expect((await rowsOf(ana.userId)).user).toBe(1)
+  })
+})
