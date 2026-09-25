@@ -20,7 +20,8 @@
     "test:workers": "vp run --filter web-worker-tests test",
     "deploy": "vp run --filter web deploy",
     "test:workers:real": "vp run --filter web-worker-tests test:real",
-    "test:e2e": "vp run --filter web test:e2e"
+    "test:e2e": "vp run --filter web test:e2e",
+    "evals": "vp run --filter evals evals"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

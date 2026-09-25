@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "evals"
 
 allowBuilds:
   "@embedded-postgres/linux-x64": true

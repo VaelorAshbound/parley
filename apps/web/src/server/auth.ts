@@ -27,7 +27,7 @@ export function createAuth({
   waitUntil,
 }: {
   db: Db
-  env: Env
+  env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE">
   /** ctx.waitUntil: work that may finish after the response. */
   waitUntil: (promise: Promise<unknown>) => void
 }) {

@@ -219,6 +219,14 @@ export default defineConfig({
         },
       },
       {
+        // The evals' scoring only; the evals themselves run with `pnpm evals`.
+        test: {
+          name: "evals",
+          root: "evals",
+          include: ["**/*.test.ts"],
+        },
+      },
+      {
         test: {
           name: "ui",
           root: "packages/ui",

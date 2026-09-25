@@ -376,6 +376,36 @@ importers:
         specifier: workspace:*
         version: link:../web
 
+  evals:
+    devDependencies:
+      '@orpc/server':
+        specifier: 1.15.4
+        version: 1.15.4(ws@8.21.3)
+      '@types/node':
+        specifier: ^24.13.6
+        version: 24.13.6
+      '@workspace/db':
+        specifier: workspace:*
+        version: link:../packages/db
+      '@workspace/documents':
+        specifier: workspace:*
+        version: link:../packages/documents
+      ai:
+        specifier: 7.0.112
+        version: 7.0.112(zod@4.6.5)
+      temporal-polyfill:
+        specifier: ^1.0.5
+        version: 1.0.5
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.0.0-rc.0(@types/node@24.13.6)(@vitest/browser-playwright@5.0.1)(@vitest/coverage-v8@5.0.1)(@vitest/ui@5.0.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3)
+      web:
+        specifier: workspace:*
+        version: link:../apps/web
+
   packages/db:
     dependencies:
       '@workspace/documents':
