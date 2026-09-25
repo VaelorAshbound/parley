@@ -19,9 +19,23 @@ export type Refused = {
 }
 
 type UiState = {
-  /** The document field the chat or the editor points at. */
-  highlightedField: string | null
-  highlightField: (field: string | null) => void
+  /**
+   * Fields the AI changed since the user's last message, each with a count
+   * that grows with every change, so the same field can ink in again
+   * (brand.md → "Just changed").
+   */
+  changed: Record<string, number>
+  /** The field the document panel scrolls to: the latest change's first. */
+  focus: { field: string; seq: number } | null
+  /** A change the phone's Document tab hasn't shown yet (its badge). */
+  unseen: boolean
+  markChanged: (fields: string[]) => void
+  /** The next message settles the highlights. */
+  settle: () => void
+  seeDocument: () => void
+  /** AI changes undone from the chat, by "toolCallId:field". */
+  undo: Record<string, "undone" | "stale">
+  setUndo: (row: string, state: "undone" | "stale") => void
   refused: Refused | null
   setRefused: (refused: Refused | null) => void
   /** A first message typed on the home page, sent once its draft opens. */
@@ -31,8 +45,31 @@ type UiState = {
 
 export function createUiStore() {
   return createStore<UiState>()((set) => ({
-    highlightedField: null,
-    highlightField: (field) => set({ highlightedField: field }),
+    changed: {},
+    focus: null,
+    unseen: false,
+    markChanged: (fields) =>
+      set((state) => {
+        if (fields.length === 0) return state
+        let seq = Math.max(
+          0,
+          ...Object.values(state.changed),
+          state.focus?.seq ?? 0
+        )
+        const changed = { ...state.changed }
+        for (const field of fields) changed[field] = ++seq
+        const [first = ""] = fields
+        return {
+          changed,
+          focus: { field: first, seq: changed[first] ?? seq },
+          unseen: true,
+        }
+      }),
+    settle: () => set({ changed: {} }),
+    seeDocument: () => set({ unseen: false }),
+    undo: {},
+    setUndo: (row, state) =>
+      set((current) => ({ undo: { ...current.undo, [row]: state } })),
     refused: null,
     setRefused: (refused) => set({ refused }),
     pending: null,

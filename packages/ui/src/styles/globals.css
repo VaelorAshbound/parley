@@ -283,3 +283,104 @@
     --typeset-flow: 0.65em;
   }
 }
+
+/* A field's life in the live document (brand.md → A field's life, Motion).
+   Only transform, opacity and filter move, plus the highlighter's
+   background-size on short inline text. */
+@property --ink {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+
+@layer components {
+  /* Just changed: a highlighter sweeps over the value as it inks in, then
+     settles to a soft highlight until the next message. */
+  .ink-in {
+    --ink: var(--highlighter);
+    background-image: linear-gradient(var(--ink), var(--ink));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-radius: 2px;
+    box-decoration-break: clone;
+    animation:
+      ink-sweep 640ms var(--ease-out) both,
+      ink-blur 520ms var(--ease-out) both,
+      ink-settle 1600ms ease 1600ms forwards;
+  }
+
+  /* The row changed this turn: a blue bar in the margin, like a redline. */
+  .change-bar {
+    transform-origin: top;
+    animation: change-bar 480ms var(--ease-out) both;
+  }
+
+  /* A check mark that was just picked. */
+  .check-in {
+    transform-origin: center;
+    animation: check-in 260ms var(--ease-out) both;
+  }
+
+  /* New chat messages and markers rise in. */
+  .enter {
+    animation: enter 340ms var(--ease-out) both;
+  }
+}
+
+@keyframes ink-sweep {
+  from {
+    background-size: 0% 100%;
+  }
+}
+@keyframes ink-blur {
+  from {
+    filter: blur(3px);
+    opacity: 0.4;
+  }
+}
+@keyframes ink-settle {
+  to {
+    --ink: var(--highlighter-soft);
+  }
+}
+@keyframes change-bar {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes check-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+@keyframes enter {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ink-fade {
+  from {
+    --ink: transparent;
+  }
+}
+
+/* Reduced motion: no sweeps, slides or blur. Highlights fade in place. */
+@media (prefers-reduced-motion: reduce) {
+  .ink-in {
+    animation:
+      ink-fade 320ms ease both,
+      ink-settle 1600ms ease 1600ms forwards;
+  }
+  .change-bar,
+  .check-in,
+  .enter {
+    animation: fade-in 200ms ease both;
+  }
+}

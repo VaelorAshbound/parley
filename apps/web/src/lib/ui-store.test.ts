@@ -8,10 +8,48 @@ test("each store starts empty and keeps its own state", () => {
   const first = createUiStore()
   const second = createUiStore()
 
-  first.getState().highlightField("governingLaw")
+  first.getState().markChanged(["governingLaw"])
 
-  expect(first.getState().highlightedField).toBe("governingLaw")
-  expect(second.getState().highlightedField).toBeNull()
+  expect(first.getState().changed).toEqual({ governingLaw: 1 })
+  expect(second.getState().changed).toEqual({})
+})
+
+test("counts each change, so the same field can ink in again", () => {
+  const store = createUiStore()
+
+  store.getState().markChanged(["purpose", "party1"])
+  store.getState().markChanged(["purpose"])
+
+  expect(store.getState().changed).toEqual({ purpose: 3, party1: 2 })
+  // The panel scrolls to the first field of the latest change.
+  expect(store.getState().focus).toEqual({ field: "purpose", seq: 3 })
+})
+
+test("settles the highlights when the next message is sent", () => {
+  const store = createUiStore()
+  store.getState().markChanged(["purpose"])
+
+  store.getState().settle()
+
+  expect(store.getState().changed).toEqual({})
+})
+
+test("tells the phone's Document tab about changes until it is opened", () => {
+  const store = createUiStore()
+
+  store.getState().markChanged(["purpose"])
+  expect(store.getState().unseen).toBe(true)
+
+  store.getState().seeDocument()
+  expect(store.getState().unseen).toBe(false)
+})
+
+test("remembers which AI changes were undone", () => {
+  const store = createUiStore()
+
+  store.getState().setUndo("call-1:purpose", "undone")
+
+  expect(store.getState().undo).toEqual({ "call-1:purpose": "undone" })
 })
 
 test("keeps a refused save until it is taken back", () => {

@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from "@workspace/ui/components/sidebar"
 import { readCookie } from "@/lib/cookies"
 import { viewerQuery } from "@/lib/session"
 import { UiStoreProvider } from "@/lib/ui-store"
+import { MotionConfig } from "motion/react"
 
 import { AppSidebar } from "./-components/shell/app-sidebar"
 
@@ -41,12 +42,15 @@ function AppLayout() {
 
   return (
     <UiStoreProvider>
-      <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar viewer={viewer} />
-        <SidebarInset>
-          <Outlet />
-        </SidebarInset>
-      </SidebarProvider>
+      {/* Motion follows the system's reduced-motion setting everywhere. */}
+      <MotionConfig reducedMotion="user">
+        <SidebarProvider defaultOpen={defaultOpen}>
+          <AppSidebar viewer={viewer} />
+          <SidebarInset>
+            <Outlet />
+          </SidebarInset>
+        </SidebarProvider>
+      </MotionConfig>
     </UiStoreProvider>
   )
 }

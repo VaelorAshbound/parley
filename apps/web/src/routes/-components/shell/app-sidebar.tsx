@@ -45,7 +45,7 @@ export function AppSidebar({ viewer }: { viewer: Viewer }) {
         <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="scroll-fade-y">
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
