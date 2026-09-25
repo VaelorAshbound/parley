@@ -1,20 +1,10 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { call, cookiesFrom } from "./helpers"
+import { auditEvents, cookiesFrom, post } from "./helpers"
 
 // Audit lines (spec §5 Auth, T23): who signed in, out, and changed what,
 // written by Better Auth's databaseHooks. IDs only: never an email, a name,
 // a password or a token.
-
-const auditEvents = new Set([
-  "session_created",
-  "session_ended",
-  "login_method_added",
-  "email_changed",
-  "password_changed",
-  "password_reset",
-  "user_deleted",
-])
 
 /** The audit lines written while `run` runs, and all console text. */
 async function audited<T>(run: () => Promise<T>) {
@@ -27,17 +17,6 @@ async function audited<T>(run: () => Promise<T>) {
     .map(([line]) => line as Record<string, unknown>)
     .filter((line) => auditEvents.has(String(line.event)))
   return { result, lines, text: JSON.stringify(calls) }
-}
-
-function post(path: string, body: unknown, cookie?: string) {
-  return call(path, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(cookie && { cookie }),
-    },
-    body: JSON.stringify(body),
-  })
 }
 
 const password = "correct horse 1"

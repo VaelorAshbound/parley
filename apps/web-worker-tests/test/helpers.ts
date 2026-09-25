@@ -70,6 +70,36 @@ export function browserClient(
   )
 }
 
+/** A JSON POST, as Better Auth's browser client sends it. */
+export function post(path: string, body: unknown, cookie?: string) {
+  return call(path, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(cookie && { cookie }),
+    },
+    body: JSON.stringify(body),
+  })
+}
+
+/** The test database, to set up or check rows; closed after the test. */
+export async function database() {
+  const db = await connect(env.HYPERDRIVE.connectionString)
+  onTestFinished(() => db.$client.end())
+  return db
+}
+
+/** The audit lines' events (server/audit.ts), each about one user. */
+export const auditEvents = new Set([
+  "session_created",
+  "session_ended",
+  "login_method_added",
+  "email_changed",
+  "password_changed",
+  "password_reset",
+  "user_deleted",
+])
+
 /** The Cookie header a browser would send back after this response. */
 export function cookiesFrom(response: Response) {
   return response.headers

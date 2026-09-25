@@ -1,10 +1,16 @@
 import { ORPCError, safe } from "@orpc/client"
-import { connect, schema } from "@workspace/db"
+import { schema } from "@workspace/db"
 import { and, eq } from "drizzle-orm"
-import { env } from "cloudflare:workers"
-import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { browserClient, call, cookiesFrom, origin } from "./helpers"
+import {
+  browserClient,
+  call,
+  cookiesFrom,
+  database,
+  origin,
+  post,
+} from "./helpers"
 import { fakeResend } from "./resend"
 
 // Account settings (spec §5 Auth, T23), through the real /api app: what the
@@ -15,17 +21,6 @@ afterEach(() => resend?.restore())
 
 const password = "correct horse 1"
 const newPassword = "battery staple 2"
-
-function post(path: string, body: unknown, cookie?: string) {
-  return call(path, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(cookie && { cookie }),
-    },
-    body: JSON.stringify(body),
-  })
-}
 
 /** A new account, signed in; `email` on a test domain sends no email. */
 async function signUp(email = `ana-${crypto.randomUUID()}@example.test`) {
@@ -145,12 +140,6 @@ describe("changing the name", () => {
     })
   })
 })
-
-async function database() {
-  const db = await connect(env.HYPERDRIVE.connectionString)
-  onTestFinished(() => db.$client.end())
-  return db
-}
 
 /** Makes the account one that signs in with Google or GitHub only. */
 async function withoutPassword(userId: string) {

@@ -1,9 +1,8 @@
-import { connect, schema } from "@workspace/db"
+import { schema } from "@workspace/db"
 import { eq } from "drizzle-orm"
-import { env } from "cloudflare:workers"
-import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { call, cookiesFrom } from "./helpers"
+import { auditEvents, call, cookiesFrom, database, post } from "./helpers"
 import { fakeResend } from "./resend"
 
 // "Forgot password?" (spec §5 Auth, T23): a single-use link that works for
@@ -15,38 +14,11 @@ let resend: ReturnType<typeof fakeResend>
 afterEach(() => resend?.restore())
 
 const password = "correct horse 1"
-/** The events audit.ts writes, each about one user. */
-const auditEvents = new Set([
-  "session_created",
-  "session_ended",
-  "login_method_added",
-  "email_changed",
-  "password_changed",
-  "password_reset",
-  "user_deleted",
-])
 const newPassword = "battery staple 2"
 
 function newEmail() {
   // A real-looking domain, so the mailer sends (to the fake Resend).
   return `ana-${crypto.randomUUID()}@acme.dev`
-}
-
-function post(path: string, body: unknown, cookie?: string) {
-  return call(path, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(cookie && { cookie }),
-    },
-    body: JSON.stringify(body),
-  })
-}
-
-async function database() {
-  const db = await connect(env.HYPERDRIVE.connectionString)
-  onTestFinished(() => db.$client.end())
-  return db
 }
 
 /** Signs up (the confirmation email goes to the fake Resend too). */
@@ -298,10 +270,7 @@ describe("an unconfirmed address", () => {
     resend = fakeResend()
     const email = newEmail()
     const ana = await signUp(email)
-    const confirm = resend.sent.findLast((each) => each.to === email)
-    const link = new URL(
-      confirm?.text.match(/https?:\/\/\S+verify-email\?\S+/)?.[0] ?? ""
-    )
+    const link = resend.linkFor(email)
     await call(link.pathname + link.search, {
       headers: { cookie: ana.cookie },
       redirect: "manual",
