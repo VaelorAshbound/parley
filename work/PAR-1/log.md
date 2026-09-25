@@ -100,3 +100,9 @@ Session end. Finished: T19, T20, the pre-checkpoint review fixes, the Firefox qu
 
 ### 2026-09-25T10:31:03Z
 Wave A paused (usage limit). Worktrees kept: -1=T21, -2=T29, -3=T30 under .claude/worktrees/wf_846f7275-6fb-*, base 8b86759; uncommitted edits may exist. Resume: new agents continue each task from its worktree (build, review, fix), then merge one by one. Script: workflows/scripts/par1-wave-a-wf_b15be26a-fcf.js in this session's dir.
+
+### 2026-09-25T12:27:23Z
+T29 + T30 merged (cff6c77), gate green, pushed. Owner approved setting T21's production secrets (RESEND_API_KEY, TURNSTILE_SECRET_KEY, GOOGLE_/GITHUB_CLIENT_ID/SECRET) when T21 merges.
+
+### 2026-09-25T13:00:53Z
+Wave A done and merged (c97eeb8): T21 accounts, T29 observability, T30 AI for all 12. Review caught a critical T21 bug (a confirmation link could move a guest's drafts to an attacker), fixed with a test. Gate green: check, 878 unit, 149 worker, e2e Chromium. Production secrets set (new sending-only Resend key parley-production-sending). Filed PAR-8 (local e2e fails), PAR-9 (NUL in replies), PAR-10 (related-agreements card). Next: wave B (T22, T23, T24, T25, T27, T28).
