@@ -97,3 +97,6 @@ Checkpoint 2 passed (owner demo in Firefox). Decisions: complete card without Ex
 
 ### 2026-09-25T09:46:35Z
 Session end. Finished: T19, T20, the pre-checkpoint review fixes, the Firefox questionnaire fix, Firefox in CI, Checkpoint 2 passed. 21 of 42 tasks done. Next session: T21 via /build (auth: get owner sign-off first; load its skills from plan.md). Open follow-ups: PAR-6, PAR-7.
+
+### 2026-09-25T10:31:03Z
+Wave A paused (usage limit). Worktrees kept: -1=T21, -2=T29, -3=T30 under .claude/worktrees/wf_846f7275-6fb-*, base 8b86759; uncommitted edits may exist. Resume: new agents continue each task from its worktree (build, review, fix), then merge one by one. Script: workflows/scripts/par1-wave-a-wf_b15be26a-fcf.js in this session's dir.
