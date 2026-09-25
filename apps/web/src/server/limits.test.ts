@@ -1,9 +1,10 @@
 import { fileURLToPath } from "node:url"
 
+import { Temporal } from "temporal-polyfill"
 import { unstable_readConfig } from "wrangler"
 import { describe, expect, it } from "vite-plus/test"
 
-import { RATE_LIMITS } from "./limits"
+import { RATE_LIMITS, usageDay } from "./limits"
 
 // The Rate Limiting bindings' numbers are set in wrangler.jsonc; the code
 // and tests read them from RATE_LIMITS. Both must say the same, for
@@ -29,6 +30,28 @@ function limitsOf(bindings: RateLimitBinding[]) {
     ])
   )
 }
+
+describe("usageDay", () => {
+  it("is the UTC day, and ends at the next UTC midnight", () => {
+    expect(usageDay(Temporal.Instant.from("2026-09-25T13:45:00Z"))).toEqual({
+      day: "2026-09-25",
+      resetsAt: "2026-09-26T00:00:00.000Z",
+    })
+  })
+
+  it("goes by UTC, not the user's evening", () => {
+    // 23:30 in New York is already the next day in UTC.
+    expect(
+      usageDay(Temporal.Instant.from("2026-09-25T23:30:00-04:00")).day
+    ).toBe("2026-09-26")
+  })
+
+  it("crosses a month end", () => {
+    expect(
+      usageDay(Temporal.Instant.from("2026-09-30T23:59:59Z")).resetsAt
+    ).toBe("2026-10-01T00:00:00.000Z")
+  })
+})
 
 describe("RATE_LIMITS", () => {
   it("matches production's bindings", () => {

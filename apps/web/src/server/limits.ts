@@ -1,5 +1,6 @@
 import type { Ratelimiter } from "@orpc/experimental-ratelimit"
 import { CloudflareRatelimiter } from "@orpc/experimental-ratelimit/cloudflare-ratelimit"
+import { Temporal } from "temporal-polyfill"
 
 // Who may do how much (spec §2 Limits, T27). The first values; change them
 // here. Each limit guards something that costs money or can be abused.
@@ -32,6 +33,24 @@ export function limitersFrom(env: Pick<Env, Binding>): Limiters {
     rpc: new CloudflareRatelimiter(env.RPC_RATE_LIMITER),
     ai: new CloudflareRatelimiter(env.AI_RATE_LIMITER),
     export: new CloudflareRatelimiter(env.EXPORT_RATE_LIMITER),
+  }
+}
+
+/**
+ * AI messages a day (spec §2 Limits): each message or set of answers to the
+ * AI's questions is one, since each is a model reply. Counted per UTC day in
+ * `ai_usage`. T26 gives Pro users "pro".
+ */
+export const DAILY_MESSAGES = { guest: 20, free: 100, pro: 500 } as const
+export type LimitTier = keyof typeof DAILY_MESSAGES
+
+/** The UTC day the daily limits count in, and when the next one starts. */
+export function usageDay(now: Temporal.Instant = Temporal.Now.instant()) {
+  const day = now.toZonedDateTimeISO("UTC").toPlainDate()
+  const next = day.add({ days: 1 }).toZonedDateTime("UTC").toInstant()
+  return {
+    day: day.toString(),
+    resetsAt: new Date(next.epochMilliseconds).toISOString(),
   }
 }
 

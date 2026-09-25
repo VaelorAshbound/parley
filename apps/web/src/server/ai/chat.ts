@@ -1,5 +1,12 @@
 import { streamToEventIterator } from "@orpc/server"
-import { getDraft, listMessages, saveMessages, type Db } from "@workspace/db"
+import {
+  addAiUsage,
+  claimMessage,
+  getDraft,
+  listMessages,
+  saveMessages,
+  type Db,
+} from "@workspace/db"
 import { definitionOf, type DocumentDefinition } from "@workspace/documents"
 import {
   APICallError,
@@ -12,10 +19,12 @@ import {
   type UIMessage,
 } from "ai"
 
+import { DAILY_MESSAGES, usageDay } from "../limits"
 import {
   currentRequestId,
   log,
   logError,
+  logInfo,
   logWarn,
   type LogFields,
 } from "../log"
@@ -81,14 +90,54 @@ async function history(db: Db, key: DraftKey) {
   return result.success ? result.data : []
 }
 
+/** Who is asking, and the day their messages count in (spec §2 Limits). */
+type Quota = { tier: Tier; day: string; resetsAt: string }
+
+function quotaOf(user: { isAnonymous?: boolean | null }): Quota {
+  return { tier: tierOf(user), ...usageDay() }
+}
+
+/**
+ * The typed DAILY_LIMIT for this caller, with one `ai_limit` line: how often
+ * each tier runs out is what the limits and Pro are judged by.
+ */
+function outOfMessages(
+  quota: Quota,
+  userId: string,
+  error: (options: { data: z.infer<typeof DAILY_LIMIT.data> }) => Error
+) {
+  return (limit: number) => {
+    logInfo("ai_limit", { userId, tier: quota.tier, limit })
+    return error({
+      data: { limit, tier: quota.tier, resetsAt: quota.resetsAt },
+    })
+  }
+}
+
+const DAILY_LIMIT = {
+  status: 429,
+  message: "You've used today's messages.",
+  data: z.object({
+    limit: z.number(),
+    tier: z.enum(["guest", "free", "pro"]),
+    /** When the next day's messages start (UTC midnight), ISO 8601. */
+    resetsAt: z.iso.datetime(),
+  }),
+}
+
 /**
  * Reads the chat and saves what `change` returns under the draft's row lock,
  * so two tabs can't both answer the same questions (or answer while a
  * message closes them). The model's reply streams after, outside the lock.
+ *
+ * The turn counts toward the day's messages once `change` has accepted it;
+ * past the limit, `refuse` is thrown and nothing is saved or counted.
  */
 function lockedChat(
   context: BaseContext,
   key: DraftKey,
+  quota: Quota,
+  refuse: (limit: number) => Error,
   change: (stored: ChatMessage[]) => {
     save: ChatMessage[]
     chat: ChatMessage[]
@@ -97,6 +146,11 @@ function lockedChat(
   return context.db.transaction(async (tx) => {
     await getDraft(tx, key, { lock: true })
     const { save, chat } = change(await history(tx, key))
+    const limit = DAILY_MESSAGES[quota.tier]
+    if (
+      !(await claimMessage(tx, { userId: key.userId, day: quota.day, limit }))
+    )
+      throw refuse(limit)
     await saveMessages(tx, key, save)
     return chat
   })
@@ -136,9 +190,14 @@ function closeQuestions(message: ChatMessage | undefined) {
  * the request, since the stream's callbacks can run outside its context.
  *
  * `callbacks` go to streamText. `close` runs when the reply stream ends: a
- * turn that failed before any step finished gets no onEnd.
+ * turn that failed before any step finished gets no onEnd. `used` gets the
+ * turn's numbers once, at the end.
  */
-function turnLog(key: DraftKey, tier: Tier) {
+function turnLog(
+  key: DraftKey,
+  tier: Tier,
+  used: (metrics: ReturnType<typeof turnMetrics>) => void
+) {
   const started = Date.now()
   const fields = {
     requestId: currentRequestId(),
@@ -152,13 +211,15 @@ function turnLog(key: DraftKey, tier: Tier) {
   const end = (how: "done" | "aborted") => {
     if (ended) return
     ended = true
+    const metrics = turnMetrics(steps)
     log(failure ? "error" : "info", "chat_turn", {
       ...fields,
-      ...turnMetrics(steps),
+      ...metrics,
       outcome: failure ? "error" : how,
       durationMs: Date.now() - started,
       ...failure,
     })
+    used(metrics)
   }
   return {
     callbacks: {
@@ -184,23 +245,50 @@ function turnLog(key: DraftKey, tier: Tier) {
   }
 }
 
+/**
+ * Adds a turn's tokens and cost to the user's day in `ai_usage`, after the
+ * response. A failure is logged, never thrown: the reply already went out.
+ */
+function recordUsage(
+  context: BaseContext,
+  key: DraftKey,
+  day: string,
+  metrics: ReturnType<typeof turnMetrics>
+) {
+  if (metrics.steps === 0) return
+  context.waitUntil(
+    addAiUsage(context.db, {
+      userId: key.userId,
+      day,
+      inputTokens: metrics.inputTokens,
+      outputTokens: metrics.outputTokens,
+      // Unknown when OpenRouter didn't say; the chat_turn line shows that.
+      costMicroUsd: metrics.costMicroUsd ?? 0,
+    }).catch((error: unknown) =>
+      logError("ai_usage_failed", error, { draftId: key.id })
+    )
+  )
+}
+
 /** Streams the model's reply to the chat so far, and saves it when done. */
 async function reply({
   context,
   key,
-  tier,
+  quota,
   messages: all,
   today,
   signal,
 }: {
   context: BaseContext
   key: DraftKey
-  tier: Tier
+  quota: Quota
   messages: ChatMessage[]
   today: string
   signal: AbortSignal | undefined
 }) {
-  const metrics = turnLog(key, tier)
+  const metrics = turnLog(key, quota.tier, (used) =>
+    recordUsage(context, key, quota.day, used)
+  )
   const messages = recent(all, HISTORY)
   const current = async () => {
     const draft = await getDraft(context.db, key)
@@ -274,30 +362,39 @@ export const chat = {
     .input(turn.extend({ message: userMessage }))
     .errors({
       MESSAGE_ID_TAKEN: { message: "That message id belongs to Parley." },
+      DAILY_LIMIT,
     })
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const messages = await lockedChat(context, key, (stored) => {
-        // Ids come from the browser (useChat makes them): one of Parley's
-        // own would let a message stand in for its reply.
-        if (
-          stored.some(
-            (each) => each.id === input.message.id && each.role !== "user"
+      const quota = quotaOf(context.user)
+      const refuse = outOfMessages(quota, key.userId, errors.DAILY_LIMIT)
+      const messages = await lockedChat(
+        context,
+        key,
+        quota,
+        refuse,
+        (stored) => {
+          // Ids come from the browser (useChat makes them): one of Parley's
+          // own would let a message stand in for its reply.
+          if (
+            stored.some(
+              (each) => each.id === input.message.id && each.role !== "user"
+            )
           )
-        )
-          throw errors.MESSAGE_ID_TAKEN()
-        const closed = closeQuestions(stored.at(-1))
-        const earlier = closed ? [...stored.slice(0, -1), closed] : stored
-        return {
-          save: closed ? [closed, input.message] : [input.message],
-          chat: [...earlier, input.message],
+            throw errors.MESSAGE_ID_TAKEN()
+          const closed = closeQuestions(stored.at(-1))
+          const earlier = closed ? [...stored.slice(0, -1), closed] : stored
+          return {
+            save: closed ? [closed, input.message] : [input.message],
+            chat: [...earlier, input.message],
+          }
         }
-      })
+      )
       return reply({
         context,
         key,
-        tier: tierOf(context.user),
+        quota,
         messages,
         today: input.today,
         signal,
@@ -329,67 +426,78 @@ export const chat = {
     .errors({
       NOT_OPEN: { message: "These questions are no longer open." },
       INVALID_ANSWERS: { message: "Those answers don't fit the questions." },
+      DAILY_LIMIT,
     })
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const messages = await lockedChat(context, key, (stored) => {
-        const last = stored.at(-1)
-        const open = last?.role === "assistant" ? last.parts.filter(isOpen) : []
-        const byCall = new Map(
-          input.calls.map((each) => [each.toolCallId, each.answers])
-        )
-        if (
-          !last ||
-          open.length === 0 ||
-          input.calls.some(
-            (each) => !open.some((part) => part.toolCallId === each.toolCallId)
+      const quota = quotaOf(context.user)
+      const refuse = outOfMessages(quota, key.userId, errors.DAILY_LIMIT)
+      const messages = await lockedChat(
+        context,
+        key,
+        quota,
+        refuse,
+        (stored) => {
+          const last = stored.at(-1)
+          const open =
+            last?.role === "assistant" ? last.parts.filter(isOpen) : []
+          const byCall = new Map(
+            input.calls.map((each) => [each.toolCallId, each.answers])
           )
-        )
-          throw errors.NOT_OPEN()
-        const outputs = new Map(
-          open.map((part) => {
-            const checked = answersFor(part.input.questions).safeParse({
-              answers: byCall.get(part.toolCallId),
-            })
-            if (!checked.success) {
-              // Which question failed and why, never the answers: a refusal
-              // means the browser and the server disagree (a bug to find).
-              logWarn("answers_refused", {
-                toolCallId: part.toolCallId,
-                issues: checked.error.issues
-                  .map(
-                    ({ path, message }) =>
-                      `${path.filter((each) => each !== "answers").join(".")}: ${message}`
-                  )
-                  .join("; "),
+          if (
+            !last ||
+            open.length === 0 ||
+            input.calls.some(
+              (each) =>
+                !open.some((part) => part.toolCallId === each.toolCallId)
+            )
+          )
+            throw errors.NOT_OPEN()
+          const outputs = new Map(
+            open.map((part) => {
+              const checked = answersFor(part.input.questions).safeParse({
+                answers: byCall.get(part.toolCallId),
               })
-              throw errors.INVALID_ANSWERS()
-            }
-            return [part.toolCallId, answersShape.parse(checked.data)]
-          })
-        )
-        const answered: ChatMessage = {
-          ...last,
-          parts: last.parts.map((part): Part => {
-            const output = isOpen(part) && outputs.get(part.toolCallId)
-            return output
-              ? {
-                  type: part.type,
+              if (!checked.success) {
+                // Which question failed and why, never the answers: a refusal
+                // means the browser and the server disagree (a bug to find).
+                logWarn("answers_refused", {
                   toolCallId: part.toolCallId,
-                  state: "output-available",
-                  input: part.input,
-                  output,
-                }
-              : part
-          }),
+                  issues: checked.error.issues
+                    .map(
+                      ({ path, message }) =>
+                        `${path.filter((each) => each !== "answers").join(".")}: ${message}`
+                    )
+                    .join("; "),
+                })
+                throw errors.INVALID_ANSWERS()
+              }
+              return [part.toolCallId, answersShape.parse(checked.data)]
+            })
+          )
+          const answered: ChatMessage = {
+            ...last,
+            parts: last.parts.map((part): Part => {
+              const output = isOpen(part) && outputs.get(part.toolCallId)
+              return output
+                ? {
+                    type: part.type,
+                    toolCallId: part.toolCallId,
+                    state: "output-available",
+                    input: part.input,
+                    output,
+                  }
+                : part
+            }),
+          }
+          return { save: [answered], chat: [...stored.slice(0, -1), answered] }
         }
-        return { save: [answered], chat: [...stored.slice(0, -1), answered] }
-      })
+      )
       return reply({
         context,
         key,
-        tier: tierOf(context.user),
+        quota,
         messages,
         today: input.today,
         signal,
