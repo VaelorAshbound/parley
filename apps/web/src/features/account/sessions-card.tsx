@@ -78,7 +78,9 @@ export function SessionsCard() {
           {sessions.map((session) => (
             <Item
               key={session.id}
-              // ItemGroup is a list; its rows must be list items.
+              // ItemGroup is a div with role="list", so an <li> can't go
+              // in it; shadcn's docs give its rows role="listitem".
+              // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
               role="listitem"
               variant="outline"
               size="sm"
