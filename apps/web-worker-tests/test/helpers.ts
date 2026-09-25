@@ -13,6 +13,7 @@ import { afterAll, expect, onTestFinished } from "vitest"
 import { api } from "../../web/src/server/api"
 import { createAuth } from "../../web/src/server/auth"
 import type { PrintFailed, PrintPdf } from "../../web/src/server/files"
+import { limitersFrom } from "../../web/src/server/limits"
 import type { Router } from "../../web/src/server/rpc/router"
 import { createServerClient } from "../../web/src/server/rpc/server-client"
 import { passingToken } from "./siteverify"
@@ -227,6 +228,7 @@ export async function chatClient(
     model,
     printPdf,
     waitUntil,
+    limiters: limitersFrom(env),
     reqHeaders,
     resHeaders: new Headers(),
   })

@@ -92,6 +92,12 @@ describe("exportProblem", () => {
     })
   })
 
+  it("asks to wait after many downloads in a minute", () => {
+    expect(exportProblem(defined("TOO_MANY_REQUESTS"), draftPath)).toEqual({
+      message: "That's a lot of downloads at once. Please wait a minute.",
+    })
+  })
+
   it("says to try again when the network failed", () => {
     expect(exportProblem(new TypeError("Failed to fetch"), draftPath)).toEqual({
       message: "We couldn't make the file. Please try again.",

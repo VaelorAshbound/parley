@@ -11,19 +11,23 @@ export async function open(page: Page, url: string) {
   await page.locator("html[data-hydrated]").waitFor({ state: "attached" })
 }
 
+/** Tries at a 429 before a sign-in gives up. */
+const attempts = 10
+
 /**
- * A browser context signed in through `path` (an auth endpoint), saved for
- * the worker's tests. Sign-ins and sign-ups are rate limited per IP (3 per
- * 10 s), so it waits and tries again on 429.
+ * A browser context signed in through `path` (an auth endpoint), saved to a
+ * file. Sign-ins and sign-ups are rate limited per IP (a Preview lets 5 new
+ * guests in per 10 s), so it waits as long as the server says and tries
+ * again on 429.
  */
 async function signedInState(
   browser: Browser,
-  workerInfo: WorkerInfo,
+  workerInfo: Pick<WorkerInfo, "project" | "workerIndex">,
   { name, path, data }: { name: string; path: string; data: object }
 ) {
   const baseURL = workerInfo.project.use.baseURL ?? ""
   const context = await browser.newContext({ baseURL })
-  for (let attempt = 1; attempt <= 5; attempt++) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     const response = await context.request.post(path, {
       headers: {
         origin: new URL(baseURL).origin,
@@ -34,7 +38,7 @@ async function signedInState(
       data,
     })
     if (response.ok()) break
-    if (response.status() !== 429 || attempt === 5)
+    if (response.status() !== 429 || attempt === attempts)
       throw new Error(`${name} sign-in failed: ${response.status()}`)
     const wait = Number(response.headers()["x-retry-after"] ?? 1)
     await new Promise((resolve) => setTimeout(resolve, wait * 1000))
@@ -47,22 +51,23 @@ async function signedInState(
 }
 
 /**
- * `test` with a signed-in guest per worker, shared by the worker's tests
- * (sign-ins are rate limited). Tests of the first visit use the plain `test`
- * from Playwright.
+ * `test` with a new signed-in guest for each test: a guest keeps one draft
+ * (T27), and a fresh one can't see what an earlier test left. Tests of the
+ * first visit use the plain `test` from Playwright.
  */
-export const test = base.extend<object, { guestState: string }>({
+export const test = base.extend<{ guestState: string }>({
   guestState: [
-    async ({ browser }, use, workerInfo) => {
+    async ({ browser }, use, testInfo) => {
       await use(
-        await signedInState(browser, workerInfo, {
-          name: "guest",
+        await signedInState(browser, testInfo, {
+          name: `guest-${crypto.randomUUID()}`,
           path: "/api/auth/sign-in/anonymous",
           data: {},
         })
       )
     },
-    { scope: "worker" },
+    // Waiting for a new guest doesn't use up the test's own time.
+    { timeout: 60_000 },
   ],
   storageState: ({ guestState }, use) => use(guestState),
 })

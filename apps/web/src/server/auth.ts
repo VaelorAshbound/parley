@@ -24,6 +24,11 @@ import { VerifyEmail } from "../emails/verify-email"
 
 import { auditHooks } from "./audit"
 import { createMailer } from "./email"
+import {
+  GUESTS_PER_NETWORK,
+  PREVIEW_GUESTS_PER_NETWORK,
+  TEST_GUESTS_PER_NETWORK,
+} from "./limits"
 import { log, logInfo } from "./log"
 
 // Better Auth, built per request because the database client is per request
@@ -194,7 +199,15 @@ export function createAuth({
     // Who signed in, out, and changed what: IDs only (spec §5 Auth).
     databaseHooks: auditHooks(),
     // Memory would reset per isolate on Workers.
-    rateLimit: { enabled: true, storage: "database" },
+    rateLimit: {
+      enabled: true,
+      storage: "database",
+      customRules: {
+        // New guests per network (spec §2 Limits). Better Auth counts per
+        // IP and path, before the Turnstile check.
+        "/sign-in/anonymous": guestsPerNetwork(env),
+      },
+    },
     advanced: {
       useSecureCookies: true,
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
@@ -272,25 +285,44 @@ const turnstileTestSecrets = new Set(
 )
 
 /**
- * Turnstile before the routes a bot would hammer: making accounts, guessing
- * passwords, and sending email (spec §5 Auth). With the real widget, a token
- * counts only if it was solved on Parley's domain, for the "auth" action.
- * T27 adds the guest sign-in (/sign-in/anonymous).
+ * A test deployment: local dev, the Worker tests and Previews, which run
+ * with Turnstile's test keys (production has the real widget).
+ */
+function usesTestKeys(env: Pick<Env, "TURNSTILE_SECRET_KEY">) {
+  return turnstileTestSecrets.has(env.TURNSTILE_SECRET_KEY)
+}
+
+/** How many new guests one network may make (spec §2 Limits). */
+function guestsPerNetwork(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
+  if (!usesTestKeys(env)) return GUESTS_PER_NETWORK
+  const stage: string = env.STAGE
+  return stage === "preview"
+    ? PREVIEW_GUESTS_PER_NETWORK
+    : TEST_GUESTS_PER_NETWORK
+}
+
+/**
+ * Turnstile before the routes a bot would hammer: making accounts and
+ * guests, guessing passwords, and sending email (spec §5 Auth). With the
+ * real widget, a token counts only if it was solved on Parley's domain, for
+ * the "auth" action.
  */
 function turnstile(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
-  const real = !turnstileTestSecrets.has(env.TURNSTILE_SECRET_KEY)
   return captcha({
     provider: "cloudflare-turnstile",
     secretKey: env.TURNSTILE_SECRET_KEY,
     endpoints: [
       "/sign-up/email",
       "/sign-in/email",
+      // A guest gets AI messages: Turnstile once, before the first (spec §2
+      // Limits).
+      "/sign-in/anonymous",
       "/request-password-reset",
       "/send-verification-email",
       // An unconfirmed account's link goes to whatever address is typed.
       "/change-email",
     ],
-    ...(real && {
+    ...(!usesTestKeys(env) && {
       expectedAction: "auth",
       // Previews move from host to host; production has one.
       ...(env.STAGE === "production" && {

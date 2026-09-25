@@ -1,5 +1,5 @@
 import type { DocumentId } from "@workspace/documents"
-import { and, desc, eq, getTableColumns, sql } from "drizzle-orm"
+import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
 import { draft, type JsonObject } from "../schema.ts"
@@ -141,6 +141,32 @@ export async function duplicateDraft(
     title,
     fields: original.fields,
     status: original.status,
+  })
+}
+
+/**
+ * Runs `make` (which adds one draft for the user) only while the user has
+ * fewer than `max` drafts, and returns what it made; undefined when they
+ * have that many (a guest keeps one, spec §2 Limits). A per-user transaction
+ * lock makes a second call wait, so two at once can't both get the last
+ * place. The advisory lock is released on commit or rollback, and is safe
+ * behind Hyperdrive's transaction pooling.
+ */
+export async function withinDraftLimit<T>(
+  db: Db,
+  { userId, max }: { userId: string; max: number },
+  make: (tx: Db) => Promise<T>
+): Promise<{ made: T } | undefined> {
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`drafts:${userId}`}, 0))`
+    )
+    const [row] = await tx
+      .select({ drafts: count() })
+      .from(draft)
+      .where(eq(draft.userId, userId))
+    if ((row?.drafts ?? 0) >= max) return undefined
+    return { made: await make(tx) }
   })
 }
 

@@ -6,6 +6,8 @@ import {
   getDraft,
   listDrafts,
   updateDraft,
+  withinDraftLimit,
+  type Db,
 } from "@workspace/db"
 import {
   applyFieldChanges,
@@ -19,6 +21,7 @@ import {
 
 import { copyTitle, draftTitle, QUERY_MAX } from "../../lib/drafts"
 
+import { GUEST_DRAFTS } from "../limits"
 import { z } from "../zod"
 import { authed, draftOwner } from "./base"
 
@@ -35,6 +38,33 @@ function defaultTitle(id: DocumentId | null) {
   return id === null ? NEW_DRAFT : definitionOf(id).name
 }
 
+/** A guest keeps one draft (spec §2 Limits); an account has no limit. */
+const DRAFT_LIMIT = {
+  status: 403,
+  message: "Create a free account to keep more than one draft.",
+  data: z.object({ limit: z.number() }),
+}
+
+/**
+ * Makes a draft with `make`, within the guest's draft limit, or throws
+ * `refuse` (the procedure's DRAFT_LIMIT). `make` runs in the limit's
+ * transaction.
+ */
+async function withinLimit<T>(
+  context: { db: Db; user: { id: string; isAnonymous?: boolean | null } },
+  refuse: (options: { data: { limit: number } }) => Error,
+  make: (db: Db) => Promise<T>
+) {
+  if (!context.user.isAnonymous) return make(context.db)
+  const result = await withinDraftLimit(
+    context.db,
+    { userId: context.user.id, max: GUEST_DRAFTS },
+    make
+  )
+  if (!result) throw refuse({ data: { limit: GUEST_DRAFTS } })
+  return result.made
+}
+
 export const drafts = {
   /**
    * A new draft. Without a document, the chat picks one first (T17: you can
@@ -42,17 +72,20 @@ export const drafts = {
    */
   create: authed
     .input(z.object({ documentId: documentId.optional(), today }))
-    .handler(({ context, input }) => {
+    .errors({ DRAFT_LIMIT })
+    .handler(({ context, input, errors }) => {
       const id = input.documentId ?? null
-      return createDraft(context.db, {
-        userId: context.user.id,
-        documentId: id,
-        title: defaultTitle(id),
-        fields:
-          id === null
-            ? {}
-            : initialValues(definitionOf(id), { today: input.today }),
-      })
+      return withinLimit(context, errors.DRAFT_LIMIT, (db) =>
+        createDraft(db, {
+          userId: context.user.id,
+          documentId: id,
+          title: defaultTitle(id),
+          fields:
+            id === null
+              ? {}
+              : initialValues(definitionOf(id), { today: input.today }),
+        })
+      )
     }),
 
   /**
@@ -129,12 +162,15 @@ export const drafts = {
   /** A copy with the same agreement and answers, and an empty chat. */
   duplicate: authed
     .input(draftId)
+    .errors({ DRAFT_LIMIT })
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors }) => {
-      const copy = await duplicateDraft(
-        context.db,
-        { id: input.id, userId: context.user.id },
-        { title: copyTitle(context.draft.title) }
+      const copy = await withinLimit(context, errors.DRAFT_LIMIT, (db) =>
+        duplicateDraft(
+          db,
+          { id: input.id, userId: context.user.id },
+          { title: copyTitle(context.draft.title) }
+        )
       )
       if (!copy) throw errors.NOT_FOUND()
       return copy

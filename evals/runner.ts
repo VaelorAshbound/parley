@@ -74,6 +74,8 @@ export function meteredModel(apiKey: string) {
   return { model: wrapLanguageModel({ model: base, middleware }), usage }
 }
 
+const unlimited = { limit: async () => ({ success: true }) }
+
 /** A new guest with a fresh draft's worth of chat, like a first visit. */
 export async function openChat(databaseUrl: string, model: LanguageModel) {
   const db = await connect(databaseUrl)
@@ -106,6 +108,9 @@ export async function openChat(databaseUrl: string, model: LanguageModel) {
     model,
     printPdf: () => Promise.reject(new Error("The evals never export.")),
     waitUntil,
+    // No Rate Limiting binding outside workerd, and the evals don't test
+    // limits: every call may go.
+    limiters: { rpc: unlimited, ai: unlimited, export: unlimited },
     reqHeaders: new Headers({ host: "localhost:3000", cookie }),
     resHeaders: new Headers(),
   })
