@@ -143,5 +143,3 @@ export function useShare(orpc: Orpc, draftId: string) {
 
   return { link, copyLink, stopSharing, prefetch }
 }
-
-export type Share = ReturnType<typeof useShare>
