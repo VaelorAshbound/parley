@@ -14,9 +14,16 @@ import { getContext } from "hono/context-storage"
 export type LogField = string | number | boolean | undefined
 export type LogFields = Record<string, LogField>
 
+/** Hono variables the logger reads (and `annotate` writes). */
+export type LogVariables = {
+  requestId: string
+  /** Facts learned while handling the request, for its request line. */
+  logFields?: LogFields
+}
+
 function request() {
   try {
-    return getContext<{ Variables: { requestId: string } }>()
+    return getContext<{ Variables: LogVariables }>()
   } catch {
     // Outside a Hono request: tests, SSR, cron.
     return undefined
@@ -26,6 +33,15 @@ function request() {
 /** The request id of the /api request being handled, if any. */
 export function currentRequestId(): string | undefined {
   return request()?.var.requestId
+}
+
+/**
+ * Adds facts to the current request's request line (the user's tier, the
+ * procedure). Does nothing outside a Hono request.
+ */
+export function annotate(fields: LogFields) {
+  const c = request()
+  c?.set("logFields", { ...c.var.logFields, ...fields })
 }
 
 function line(level: string, event: string, fields: LogFields) {
