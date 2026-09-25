@@ -121,3 +121,6 @@ Wave B2 (T25, T27, T28) started then stopped at the owner's request before any c
 
 ### 2026-09-25T20:03:43Z
 Preview CI fixed: sign-up (Turnstile test secret now in previews.vars; base-config secrets reach only new Previews) and first-load layout shift (Linux fallback fonts: Tinos/Liberation and Noto faces, Capsize-checked; CLS 0.050 -> 0.015). Owner chose font-display swap over optional: the zero-shift e2e now allows <= 0.02.
+
+### 2026-09-25T20:11:12Z
+Session end. Finished: waves A (T21, T29, T30) and B1 (T22, T23, T24) built, reviewed, fixed and merged; Neon preview migrated (0002, 0003); T21 production secrets set; Preview CI fixed (Turnstile test secret in previews.vars; Linux font fallbacks, CLS 0.05 -> 0.015, owner kept font-display swap, e2e budget 0.02). CI green on 576e1cb. 27 of 42 tasks done. Next session: wave B2 (T25, T27, T28) with work/PAR-1/waves/wave-b2.js (faster rules in plan.md; update SCRATCH and BASE), then wave C (T23b, T26, T31, T37), then STOP at Checkpoint 6. Open: PAR-8..12; production migrations 0002/0003 wait for T38 with owner OK; owner checks: one exported PDF, one DOCX in Word, Observability chat_turn on the Preview.
