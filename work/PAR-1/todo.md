@@ -645,6 +645,14 @@
     - **T27:** put `share.view` and `/s/*` in the per-IP rate limit (guessing 128 bits isn't practical, but a burst of misses should cost nothing). The page's loader shows any 4xx as the 404, so a `RATE_LIMITED` there would read "This link doesn't work"; T27 may want its own message.
     - **T38:** Workers Logs' invocation records keep the request path, and `/s/:token` puts the token there (`redact_query_string` only covers query strings). Only operators see it.
     - **T37:** the phone design's bottom Share + Download bar.
+    - A partial unique index `share(draft_id) WHERE revoked_at IS NULL` would make the database itself keep one live link per draft. The row lock already does (and is tested); the index needs a migration, so it waits.
+  - Review fixes (2026-09-25), each test-first:
+    - **Two clicks at once give one link, now proven.** A two-connection test on committed rows races two `shareDraft` calls; it failed with the row lock removed, and passes with it.
+    - **When the browser won't copy, the owner can still take the link.** The Share menu shows the live link (one tap selects it), and the toast says "Open Share to copy it". A browser with no clipboard (plain http, older ones) used to throw with no toast; it now gets the same message (browser tests).
+    - **The public page reads the draft once per load.** `share.view` never goes stale (`features/share/shared-query.ts`), so focusing the tab no longer costs a Worker request, a DB read and a `share_viewed` log (unit test with TanStack Query's `focusManager`).
+    - Simplified: dropped the unused `Share` type.
+    - **Needs the owner's OK:** the Accept says "the Share button copies the link". It is a menu with Copy link first (two clicks), so Stop sharing has a lasting place, like Download's menu. If one click matters more, a split button (Share copies, the arrow opens Stop sharing) is the other way.
+    - Gates: `pnpm check`; `pnpm test` (1039, 1 skipped); `pnpm test:workers` (344). e2e Chromium + Firefox on port 3131: `share.spec.ts` 4/4 (it now also sees the link in the menu); `export.spec.ts` 2/2 alone. Run together with share, the export test once hit its 30 s limit on the dev server's first compile of `/sign-up` (23 s even alone): not T25's. Screenshots of the menu with the link at 1440 px, Chromium and Firefox.
   - Accept:
     - `share.create` and `share.revoke` use a random 128-bit token. `/s/$token` is a public, read-only SSR page with `noindex`, the attribution, and a "Draft your own" call to action.
     - A revoked or unknown token gives a friendly 404. The auth matrix covers these calls.
