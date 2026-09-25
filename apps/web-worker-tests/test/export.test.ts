@@ -86,6 +86,24 @@ describe("export.pdf", () => {
     expect(browser.pages[0]).toContain("data:font/woff2;base64,")
   })
 
+  it("keeps the draft's own title in the name, accents and dash too", async () => {
+    const { cookie } = await signUpVerified()
+    const client = browserClient(cookie, fakeBrowserBinding().bindings)
+    const id = await completeNda(client)
+    const db = await database()
+    await db
+      .update(schema.draft)
+      .set({ title: "Zoë's deal: Łódź/Berlin" })
+      .where(eq(schema.draft.id, id))
+
+    const file = await client.export.pdf({ id })
+
+    // Through the real HTTP response and its Content-Disposition header.
+    expect(file.name).toBe(
+      "Zoë's deal Łódź Berlin – Mutual Non-Disclosure Agreement.pdf"
+    )
+  })
+
   it("counts the first download of a document", async () => {
     const { cookie, email } = await signUpVerified()
     const client = await serverClient(cookie)
