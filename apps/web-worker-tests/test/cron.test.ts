@@ -157,6 +157,13 @@ describe("the nightly purge", () => {
   it("keeps a guest idle for less than 7 days", async () => {
     const guest = await guestWithDraft()
     await idleSince(guest.userId, daysAgo(6))
+    // Their session ran out, so only the 6-day-old activity keeps them.
+    const db = await database()
+    await db
+      .update(schema.session)
+      // updatedAt too, or Drizzle's $onUpdate sets it to the real now.
+      .set({ expiresAt: daysAgo(1), updatedAt: daysAgo(6) })
+      .where(eq(schema.session.userId, guest.userId))
 
     await runCron()
 
