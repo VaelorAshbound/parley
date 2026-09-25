@@ -13,7 +13,7 @@ import { useState } from "react"
 
 import type { Orpc } from "@/lib/orpc"
 
-import { useShare } from "./use-share"
+import { shareUrl, useShare } from "./use-share"
 
 // Share in the document panel's header (spec §1 Layout; T25), a menu like
 // Download: copy the draft's read-only link, and turn it off while it is on.
@@ -44,6 +44,12 @@ export function ShareMenu({ orpc, draftId }: { orpc: Orpc; draftId: string }) {
             {link
               ? "Anyone with the link can read this draft. Your chat stays private."
               : "A read-only link to this draft. Your chat stays private."}
+            {/* One tap selects it, for when the browser won't copy. */}
+            {link && (
+              <span className="mt-1.5 block font-mono text-xs break-all text-ink-2 select-all">
+                {shareUrl(link.token)}
+              </span>
+            )}
           </DropdownMenuLabel>
           <DropdownMenuItem onClick={() => void share.copyLink()}>
             <LinkIcon />

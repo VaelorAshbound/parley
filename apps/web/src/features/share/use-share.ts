@@ -18,9 +18,15 @@ export function shareUrl(token: string) {
  * during the click, while the browser still counts it as the user's own
  * action (Safari refuses a copy after an await), and waits for the text:
  * https://developer.mozilla.org/en-US/docs/Web/API/ClipboardItem/ClipboardItem
+ * Rejects, like a refused copy, where there is no clipboard (plain http,
+ * older browsers).
  */
-function copyLater(text: Promise<string>) {
-  return navigator.clipboard.write([
+async function copyLater(text: Promise<string>) {
+  if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
+    text.catch(() => {}) // The caller tells why the link failed.
+    throw new Error("No clipboard here")
+  }
+  await navigator.clipboard.write([
     new ClipboardItem({
       "text/plain": text.then(
         (value) => new Blob([value], { type: "text/plain" })
@@ -111,7 +117,7 @@ export function useShare(orpc: Orpc, draftId: string) {
     } catch {
       tell({
         title: "Your link is ready, but not copied",
-        description: "The browser didn’t allow it. Try Copy link again.",
+        description: "The browser didn’t allow it. Open Share to copy it.",
       })
     }
   }

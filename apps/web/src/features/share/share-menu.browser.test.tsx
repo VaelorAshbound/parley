@@ -53,7 +53,10 @@ async function show(orpc: ReturnType<typeof fakeServer>) {
   )
 }
 
-afterEach(() => vi.restoreAllMocks())
+afterEach(() => {
+  vi.restoreAllMocks()
+  vi.unstubAllGlobals()
+})
 
 describe("the Share menu", () => {
   test("copies the link and says so", async () => {
@@ -150,13 +153,36 @@ describe("the Share menu", () => {
     vi.spyOn(navigator.clipboard, "write").mockRejectedValue(
       new DOMException("Denied", "NotAllowedError")
     )
-    const screen = await show(fakeServer({}))
+    // Once made, the link is on.
+    const screen = await show(fakeServer({ get: async () => link }))
 
     await screen.getByRole("button", { name: "Share" }).click()
     await screen.getByRole("menuitem", { name: "Copy link" }).click()
 
     await expect
       .element(screen.getByText("Your link is ready, but not copied"))
+      .toBeVisible()
+    // The owner can still take the link from the menu, by hand.
+    await screen.getByRole("button", { name: "Share" }).click()
+    await expect
+      .element(screen.getByText(`${location.origin}/s/${token}`))
+      .toBeVisible()
+  })
+
+  test("says so when the browser has no clipboard", async () => {
+    // As on plain http, or in an older browser.
+    vi.stubGlobal("ClipboardItem", undefined)
+    const screen = await show(fakeServer({ get: async () => link }))
+
+    await screen.getByRole("button", { name: "Share" }).click()
+    await screen.getByRole("menuitem", { name: "Copy link" }).click()
+
+    await expect
+      .element(screen.getByText("Your link is ready, but not copied"))
+      .toBeVisible()
+    await screen.getByRole("button", { name: "Share" }).click()
+    await expect
+      .element(screen.getByText(`${location.origin}/s/${token}`))
       .toBeVisible()
   })
 })

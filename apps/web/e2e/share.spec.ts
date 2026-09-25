@@ -116,6 +116,8 @@ test("a shared draft opens read-only for anyone, until it is turned off", async 
 
   // The owner turns it off; the visitor's next load is a friendly 404.
   await page.getByRole("button", { name: "Share" }).click()
+  // The menu shows the link that is on, to take by hand if a copy fails.
+  await expect(page.getByText(new URL(path, page.url()).href)).toBeVisible()
   await page.getByRole("menuitem", { name: "Stop sharing" }).click()
   await expect(page.getByText("Link turned off")).toBeVisible()
 
