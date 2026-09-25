@@ -219,7 +219,7 @@ describe("a chat turn", () => {
     expect(heard).toContain(String.raw`Party 2: Fill this in. (key \"party2\")`)
   })
 
-  it("tells the model a finished agreement is complete, and not to offer export yet", async () => {
+  it("tells the model a finished agreement is complete, and where to download it", async () => {
     const { cookie } = await signInGuest()
     const model = scriptedModel([
       [{ tool: "markComplete", input: {} }],
@@ -269,7 +269,7 @@ describe("a chat turn", () => {
 
     const heard = JSON.stringify(model.doStreamCalls[1]?.prompt)
     expect(heard).toContain("The agreement is complete.")
-    expect(heard).toContain("Export is not available yet")
+    expect(heard).toContain("the Download PDF button")
     expect(await client.drafts.get({ id: draft.id })).toMatchObject({
       status: "complete",
     })

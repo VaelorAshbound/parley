@@ -244,7 +244,7 @@ export function runningTools({ context, draftId, today }: Turn) {
       toModelOutput: ({ output }) => ({
         type: "text",
         value: output.complete
-          ? "The agreement is complete. Tell the user in one line that it is complete and they can read it through next to the chat. Export is not available yet: never offer it."
+          ? "The agreement is complete. Tell the user in one line that it is complete, that they can read it through next to the chat, and that the Download PDF button under this note saves it."
           : `Not complete yet. Missing: ${output.missing
               .map(
                 ({ key, label, path, message }) =>

@@ -12,6 +12,8 @@ import { useIsMutating } from "@tanstack/react-query"
 import { useDeferredValue, useEffect, useRef, type RefObject } from "react"
 
 import { ChooseDocument } from "@/features/document-preview/choose-document"
+import { DownloadMenu, DownloadProblem } from "@/features/export/download"
+import { useDownload } from "@/features/export/use-download"
 import { DocumentView } from "@/features/document-preview/document-view"
 import { FieldEditor } from "@/features/field-editor/field-editor"
 import { useSaveField } from "@/features/field-editor/use-save-field"
@@ -21,7 +23,7 @@ import { useUiStore } from "@/lib/ui-store"
 // The right panel (spec §1 Layout): the live document, where any value can be
 // clicked and edited in place. The field being edited is in the URL
 // (`?field=party1.email`), so a reload or a shared link opens the same
-// editor. T24 and T25 add Download and Share.
+// editor. The header has Download (T24); T25 adds Share.
 
 type Draft = {
   id: string
@@ -41,6 +43,7 @@ export function DocumentPanel({
 }) {
   const { orpc } = useRouteContext({ from: "/_app/d/$draftId" })
   const panel = useRef<HTMLDivElement>(null)
+  const download = useDownload(orpc, draft.id)
 
   return (
     <section
@@ -53,6 +56,7 @@ export function DocumentPanel({
           {name}
         </h2>
         <SaveStatus />
+        {draft.documentId !== null && <DownloadMenu download={download} />}
         <Link
           to="."
           search={(prev) => ({ ...prev, panel: "closed" })}
@@ -65,6 +69,15 @@ export function DocumentPanel({
           <XIcon />
         </Link>
       </header>
+      {/* Over the document, not above it: the page doesn't move. */}
+      <div className="relative">
+        <div className="absolute inset-x-4 top-0 z-10 md:inset-x-9">
+          <DownloadProblem
+            download={download}
+            className="mx-auto max-w-[552px] shadow-md"
+          />
+        </div>
+      </div>
       <div
         ref={panel}
         className="min-h-0 flex-1 scroll-fade-y overflow-y-auto px-4 pb-12 md:px-9"

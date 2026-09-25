@@ -25,6 +25,7 @@ import {
 import type { ChatTransport } from "ai"
 import { useEffect, useState } from "react"
 
+import { DownloadButton } from "@/features/export/download"
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
 import type { ChatMessage } from "@/server/ai/chat"
@@ -179,6 +180,9 @@ export function ChatPanel({
                           parts={message.parts}
                           definition={definition}
                           onUndo={undo}
+                          download={
+                            <DownloadButton orpc={orpc} draftId={draftId} />
+                          }
                           last={index === messages.length - 1}
                           onAnswer={
                             index === messages.length - 1 && !busy
