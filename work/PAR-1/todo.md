@@ -443,8 +443,9 @@
 - **Owner's demo: "Parley couldn't answer" after a questionnaire.** The browser sent the choice but not the two typed answers (company names), and the server rightly refused. Not reproduced yet (keyboard, mouse, Next, a reload with server rendering, typing before clicking the box: all send every answer). Done: `answers_refused` warn log (question names and reasons, never answers), the chat reloads the server's copy on INVALID_ANSWERS/NOT_OPEN so the questionnaire comes back, and typed progress is kept until the server takes it. **Root cause found** (owner's second try, Firefox 153 on Hyprland): the log showed every typed answer missing and the choice present. The questionnaire moves a typed box in and out of its form with the `form` attribute, `FormData` follows the form owner, and browsers differ on resetting it (whatwg/html#2928). Answers are now read from the form's own inputs; a test drops a box's form owner. T32 runs the component tests in Firefox too, which would have caught this.
 
 ### Checkpoint 2: **stop for owner review (demo)**
-- [ ] On a local run, a guest drafts a complete NDA by chat and sees the live shimmer, the undo markers, and the inline questionnaire.
-- [ ] `pnpm check`, all tests and the evals are green. You have tried it yourself.
+- [x] On a local run, a guest drafts a complete NDA by chat and sees the live shimmer, the undo markers, and the inline questionnaire. (Owner, 2026-09-25, in Firefox, after the form-owner fix.)
+- [x] `pnpm check`, all tests and the evals are green. You have tried it yourself.
+- Owner decisions: the "complete" card stays without an Export button until T24; "Something else…" is always offered (spec §2 updated); component tests now run in Chromium and Firefox on every PR (110 in CI, 018bd18).
 
 ---
 

@@ -91,3 +91,6 @@ Demo bug root cause: Firefox. The questionnaire library moves typed boxes in/out
 
 ### 2026-09-25T09:32:52Z
 Owner confirmed the Firefox questionnaire fix works.
+
+### 2026-09-25T09:39:55Z
+Checkpoint 2 passed (owner demo in Firefox). Decisions: complete card without Export until T24; Other always offered; component tests in Chromium + Firefox on PRs (110 green, 018bd18). Next: Phase 3, T21 sign up/in + guest linking (auth: owner sign-off first).
