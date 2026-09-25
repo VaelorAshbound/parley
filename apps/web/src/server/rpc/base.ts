@@ -1,3 +1,4 @@
+import { createRatelimitMiddleware } from "@orpc/experimental-ratelimit"
 import { getDraft, type Db } from "@workspace/db"
 import { os } from "@orpc/server"
 import type { LanguageModel } from "ai"
@@ -8,6 +9,7 @@ import type {
 
 import type { Auth, Session } from "../auth"
 import type { PrintPdf } from "../files"
+import type { Limiters } from "../limits"
 import { annotate } from "../log"
 
 // Every procedure is built from one of these (spec §5 API): `pub` for
@@ -24,6 +26,8 @@ export type BaseContext = RequestHeadersPluginContext &
     printPdf: PrintPdf
     /** Keeps the Worker alive for work after the response (saving a reply). */
     waitUntil: (promise: Promise<unknown>) => void
+    /** Per-user rate limits (the Rate Limiting bindings, spec §2 Limits). */
+    limiters: Limiters
   }
 type AuthedContext = BaseContext & Session
 
@@ -32,6 +36,12 @@ const errors = {
   // The same answer for "not yours" and "doesn't exist", so ids can't be
   // probed.
   NOT_FOUND: { message: "We couldn't find that draft." },
+  // oRPC's rate-limit middleware throws this code; declared so it is typed
+  // for the browser.
+  TOO_MANY_REQUESTS: {
+    status: 429,
+    message: "You're going a little fast. Please wait a few seconds.",
+  },
 }
 
 export const pub = os.$context<BaseContext>().errors(errors)
@@ -50,12 +60,31 @@ async function readSession(context: BaseContext, { fresh = false } = {}) {
   return response
 }
 
-export const authed = pub.use(async ({ context, next, errors }) => {
-  const session = await readSession(context)
-  if (!session) throw errors.UNAUTHORIZED()
-  annotate({ userId: session.user.id, tier: tierOf(session.user) })
-  return next({ context: { user: session.user, session: session.session } })
-})
+/**
+ * A per-user rate limit on one of the context's limiters. oRPC's middleware
+ * throws TOO_MANY_REQUESTS (429) past the limit. Cloudflare's binding only
+ * answers "allowed or not", so there are no RateLimit-* headers to send
+ * (oRPC's headers plugin would add none).
+ * https://orpc.dev/docs/helpers/ratelimit
+ */
+export function perUser(limiter: keyof Limiters) {
+  return createRatelimitMiddleware<AuthedContext>({
+    limiter: ({ context }) => context.limiters[limiter],
+    key: ({ context }) => context.user.id,
+  })
+}
+
+export const authed = pub
+  .use(async ({ context, next, errors }) => {
+    const session = await readSession(context)
+    if (!session) throw errors.UNAUTHORIZED()
+    annotate({ userId: session.user.id, tier: tierOf(session.user) })
+    return next({ context: { user: session.user, session: session.session } })
+  })
+  // /api/rpc isn't under Better Auth's limiter (T14 review). The AI's tool
+  // calls run inside a chat turn's context, and count once with it (the
+  // middleware's dedupe).
+  .use(perUser("rpc"))
 
 /** A user's plan, for logs and metrics (T29). T26 adds "pro". */
 export function tierOf(user: { isAnonymous?: boolean | null }) {

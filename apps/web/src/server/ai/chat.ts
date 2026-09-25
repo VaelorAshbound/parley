@@ -22,6 +22,7 @@ import {
 import {
   authed,
   draftOwner,
+  perUser,
   tierOf,
   type BaseContext,
   type Tier,
@@ -269,6 +270,7 @@ export const chat = {
     ),
 
   send: authed
+    .use(perUser("ai"))
     .input(turn.extend({ message: userMessage }))
     .errors({
       MESSAGE_ID_TAKEN: { message: "That message id belongs to Parley." },
@@ -310,6 +312,7 @@ export const chat = {
    * can't see a tool call without a result.
    */
   answer: authed
+    .use(perUser("ai"))
     .input(
       turn.extend({
         calls: z

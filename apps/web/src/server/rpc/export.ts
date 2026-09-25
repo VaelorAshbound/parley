@@ -20,7 +20,7 @@ import {
   type Plan,
 } from "../quota"
 import { z } from "../zod"
-import { draftOwner, verified } from "./base"
+import { draftOwner, perUser, verified } from "./base"
 
 // Download a draft as a PDF or a Word file (T24, spec §2 Quota). Only a
 // confirmed email may export (`verified`), so fake addresses can't use up
@@ -138,6 +138,7 @@ const errors = {
 
 function download(format: ExportFormat) {
   return verified
+    .use(perUser("export"))
     .input(input)
     .errors(errors)
     .use(draftOwner, ({ id }) => id)

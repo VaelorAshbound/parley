@@ -10,6 +10,7 @@ import { timing, type TimingVariables } from "hono/timing"
 import { createModel } from "./ai/model"
 import { createAuth } from "./auth"
 import { browserRunPrinter } from "./files"
+import { limitersFrom } from "./limits"
 import { annotate, logError, type LogVariables } from "./log"
 import { requestLog } from "./middleware"
 import { rpcHandler } from "./rpc/router"
@@ -37,6 +38,7 @@ async function services(c: Context<AppEnv>) {
     auth,
     model: createModel(c.env),
     printPdf: browserRunPrinter(c.env.BROWSER),
+    limiters: limitersFrom(c.env),
   }
 }
 
@@ -52,7 +54,7 @@ const auth = new Hono<AppEnv>()
 const rpc = new Hono<AppEnv>()
   .use(bodyLimit({ maxSize: 128 * 1024 }))
   .use("/*", async (c, next) => {
-    const { db, auth, model, printPdf } = await services(c)
+    const { db, auth, model, printPdf, limiters } = await services(c)
     const { matched, response } = await rpcHandler.handle(c.req.raw, {
       prefix: "/api/rpc",
       context: {
@@ -60,6 +62,7 @@ const rpc = new Hono<AppEnv>()
         auth,
         model,
         printPdf,
+        limiters,
         waitUntil: (promise) => c.executionCtx.waitUntil(promise),
       },
     })
