@@ -4,7 +4,7 @@ import {
   type DraftValues,
   type Fields,
 } from "@workspace/documents"
-import { toPrintHtml } from "@workspace/documents/print"
+import { printFrame, toPrintHtml } from "@workspace/documents/print"
 
 import type { ExportFormat } from "./quota"
 
@@ -47,8 +47,14 @@ export function fileName(
 }
 
 export type PrintedPdf = { bytes: ArrayBuffer; browserMs: number | undefined }
-/** Prints an HTML page to a PDF. The Worker uses Browser Run; tests fake it. */
-export type PrintPdf = (html: string) => Promise<PrintedPdf>
+/**
+ * Prints an HTML page to a PDF, with a header and footer on every page
+ * (the engine's printFrame). The Worker uses Browser Run; tests fake it.
+ */
+export type PrintPdf = (
+  html: string,
+  frame: { header: string; footer: string }
+) => Promise<PrintedPdf>
 
 /** Browser Run couldn't print: its HTTP status (429 is its rate limit). */
 export class PrintFailed extends Error {
@@ -63,16 +69,23 @@ export class PrintFailed extends Error {
  * https://developers.cloudflare.com/browser-run/quick-actions/pdf-endpoint/
  */
 export function browserRunPrinter(browser: BrowserRun): PrintPdf {
-  return async (html) => {
+  return async (html, { header, footer }) => {
     const response = await browser.quickAction("pdf", {
       html,
       // Drafts are private: never keep them in Browser Run's cache.
       cacheTTL: 0,
-      // The page size and margins come from the print CSS's @page rule.
       pdfOptions: {
+        // The page size and margins come from the print CSS's @page rule.
         preferCSSPageSize: true,
         printBackground: true,
         tagged: true,
+        // Browser Run doesn't draw the print CSS's page margin boxes (the
+        // demo note, the name, "Page 1 of 5"), so Chrome's own header and
+        // footer carry them:
+        // https://developers.cloudflare.com/browser-run/quick-actions/pdf-endpoint/#customize-page-headers-and-footers
+        displayHeaderFooter: true,
+        headerTemplate: header,
+        footerTemplate: footer,
       },
     })
     if (!response.ok) {
@@ -111,7 +124,8 @@ export async function buildFile<F extends Fields>(
       ? await printPdf(
           toPrintHtml(document, {
             fontCss: (await import("./fonts")).FONT_CSS,
-          })
+          }),
+          printFrame(document)
         )
       : {
           bytes: await (

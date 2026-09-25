@@ -1,4 +1,4 @@
-import { definitions } from "@workspace/documents"
+import { DISCLAIMER, definitions } from "@workspace/documents"
 import { env } from "cloudflare:workers"
 import JSZip from "jszip"
 import { extractText, getDocumentProxy } from "unpdf"
@@ -43,11 +43,19 @@ describe("a real export", () => {
       expect(totalPages).toBeGreaterThanOrEqual(3)
       expect(text).toContain("Mutual Non-Disclosure Agreement")
       expect(text).toContain("Bolt Retail LLC")
+      // Chrome's header and footer, on every page.
       expect(text).toContain(`Page 1 of ${totalPages}`)
-      // The brand fonts are embedded, not a fallback (T2 found Liberation Serif).
-      const fonts = new TextDecoder("latin1").decode(await file.arrayBuffer())
-      expect(fonts).toMatch(/\/BaseFont\s*\/[A-Z]{6}\+Newsreader/)
-      expect(fonts).toMatch(/\/BaseFont\s*\/[A-Z]{6}\+InstrumentSans/)
+      expect(text).toContain(`Page ${totalPages} of ${totalPages}`)
+      expect(text.split(DISCLAIMER)).toHaveLength(totalPages + 1)
+      // Words with "fi" and "ff" can be found and copied.
+      expect(text).toContain("Confidential Information")
+      expect(text).toContain("Effective Date")
+      // The brand fonts, not a fallback serif (T2 found Liberation Serif).
+      // Browser Run embeds the variable fonts as Type 3 fonts, which carry
+      // no font name; the header and footer's sans is the only named font.
+      const raw = new TextDecoder("latin1").decode(await file.arrayBuffer())
+      expect(raw).toMatch(/\/Subtype\s*\/Type3/)
+      expect(raw).not.toMatch(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?\w*Serif/)
       expect(browserMs).toBeGreaterThan(0)
     }
   )

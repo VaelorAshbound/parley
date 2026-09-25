@@ -29,4 +29,9 @@ export const FONT_CSS = [
   face("Newsreader Variable", "200 800", newsreaderLatinExt, LATIN_EXT),
   face("Instrument Sans Variable", "400 700", instrumentLatin, LATIN),
   face("Instrument Sans Variable", "400 700", instrumentLatinExt, LATIN_EXT),
+  // Browser Run embeds variable fonts in the PDF as Type 3 fonts, and their
+  // "fi"/"ff" ligatures come out of the file as blanks: "Confidential"
+  // couldn't be found or copied. Plain letters instead. !important because
+  // the print CSS's `font` shorthands reset this property.
+  "*{font-variant-ligatures:no-common-ligatures!important}",
 ].join("")

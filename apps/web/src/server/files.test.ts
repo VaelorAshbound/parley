@@ -69,6 +69,12 @@ describe("FONT_CSS", () => {
     expect(FONT_CSS).toContain('font-family:"Instrument Sans Variable"')
     expect(FONT_CSS.match(/url\(data:font\/woff2;base64,/g)).toHaveLength(4)
   })
+
+  it("prints fi and ff as letters, so the PDF's words can be found and copied", () => {
+    // Browser Run embeds these variable fonts as Type 3, whose ligatures
+    // come out of the PDF as blanks ("Con dential").
+    expect(FONT_CSS).toContain("font-variant-ligatures:no-common-ligatures")
+  })
 })
 
 /** A fake Browser Run: answers with the given response, records the call. */
@@ -92,7 +98,10 @@ describe("browserRunPrinter", () => {
         })
     )
 
-    const printed = await browserRunPrinter(browser)("<p>Hi</p>")
+    const printed = await browserRunPrinter(browser)("<p>Hi</p>", {
+      header: "<div>Top</div>",
+      footer: "<div>Bottom</div>",
+    })
 
     expect(new TextDecoder().decode(printed.bytes)).toBe("%PDF-1.7 fake")
     expect(printed.browserMs).toBe(210)
@@ -106,6 +115,9 @@ describe("browserRunPrinter", () => {
             preferCSSPageSize: true,
             printBackground: true,
             tagged: true,
+            displayHeaderFooter: true,
+            headerTemplate: "<div>Top</div>",
+            footerTemplate: "<div>Bottom</div>",
           },
         },
       },
@@ -117,7 +129,10 @@ describe("browserRunPrinter", () => {
       () => new Response('{"success":false}', { status: 429 })
     )
 
-    const printing = browserRunPrinter(browser)("<p>Hi</p>")
+    const printing = browserRunPrinter(browser)("<p>Hi</p>", {
+      header: "",
+      footer: "",
+    })
 
     await expect(printing).rejects.toBeInstanceOf(PrintFailed)
     await expect(printing).rejects.toMatchObject({ status: 429 })
@@ -129,8 +144,10 @@ describe("buildFile", () => {
 
   it("prints the PDF from the print page with the brand fonts", async () => {
     let printedHtml = ""
-    const printPdf: PrintPdf = async (html) => {
+    let printedFooter = ""
+    const printPdf: PrintPdf = async (html, { footer }) => {
       printedHtml = html
+      printedFooter = footer
       return {
         bytes: await new Response("%PDF-1.7").arrayBuffer(),
         browserMs: 5,
@@ -146,6 +163,8 @@ describe("buildFile", () => {
     expect(built.browserMs).toBe(5)
     expect(printedHtml).toContain("Acme Analytics, Inc.")
     expect(printedHtml).toContain(FONT_CSS)
+    // The engine's footer: the agreement's name and the page number.
+    expect(printedFooter).toContain("Mutual Non-Disclosure Agreement")
   })
 
   it("builds the Word file without Browser Run", async () => {

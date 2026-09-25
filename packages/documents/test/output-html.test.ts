@@ -4,7 +4,7 @@ import { definitions } from "../src/definitions/index.ts"
 import { readTemplate } from "../src/parse/catalog.ts"
 import { parseStandardTerms } from "../src/parse/parse.ts"
 import { DISCLAIMER } from "../src/disclaimer.ts"
-import { toPrintHtml } from "../src/output/html.ts"
+import { printFrame, toPrintHtml } from "../src/output/html.ts"
 import { render } from "../src/render.ts"
 import { examples, registered } from "./examples.ts"
 import { annexDocument } from "./fixtures.ts"
@@ -116,19 +116,10 @@ describe("toPrintHtml", () => {
     expect(toPrintHtml(filled, { pageSize: "A4" })).toContain("size: A4")
   })
 
-  it("numbers the pages and names the document in the margin", () => {
-    const html = toPrintHtml(filled)
-
-    expect(html).toContain(
-      'content: "Page " counter(page) " of " counter(pages)'
-    )
-    expect(html).toContain('content: "Mutual Non-Disclosure Agreement"')
-  })
-
-  it("says on every page that it is a demo, not for real agreements", () => {
-    const html = toPrintHtml(filled)
-
-    expect(html).toContain(`@top-center { content: "${DISCLAIMER}";`)
+  it("leaves the page margins to the printer's header and footer", () => {
+    // Browser Run doesn't draw CSS page margin boxes, and a Chrome that does
+    // would print them under printFrame's header and footer, twice (T24).
+    expect(toPrintHtml(filled)).not.toMatch(/@(top|bottom)-/)
   })
 
   it("embeds the fonts it is given, since the PDF browser has none", () => {
@@ -187,15 +178,15 @@ describe("toPrintHtml", () => {
     )
   })
 
-  it("can't be broken out of its style block by a document name", () => {
+  it("can't be broken out of by a document name", () => {
     const html = toPrintHtml({
       ...filled,
-      name: 'Deal</style><script>x()</script>"',
+      name: 'Deal</title><script>x()</script>"',
     })
 
-    expect(html).not.toContain("</style><script>")
+    expect(html).not.toContain("<script>")
     expect(html).toContain(
-      'content: "Deal\\3C /style>\\3C script>x()\\3C /script>\\""'
+      "<title>Deal&lt;/title&gt;&lt;script&gt;x()&lt;/script&gt;&quot;</title>"
     )
   })
 
@@ -222,5 +213,33 @@ describe.each(registered)("$id print HTML", ({ id, definition, example }) => {
     await expect(toPrintHtml(render(definition, values))).toMatchFileSnapshot(
       `__outputs__/${id}.html`
     )
+  })
+})
+
+describe("printFrame", () => {
+  it("numbers the pages and names the document in the footer", () => {
+    const { footer } = printFrame(filled)
+
+    expect(footer).toContain(
+      'Page <span class="pageNumber"></span> of <span class="totalPages"></span>'
+    )
+    expect(footer).toContain("<span>Mutual Non-Disclosure Agreement</span>")
+  })
+
+  it("says on every page that it is a demo, not for real agreements", () => {
+    expect(printFrame(filled).header).toContain(DISCLAIMER)
+  })
+
+  it("escapes the document's name", () => {
+    expect(
+      printFrame({ ...filled, name: 'Pilot <Agreement> & "Co"' }).footer
+    ).toContain("<span>Pilot &lt;Agreement&gt; &amp; &quot;Co&quot;</span>")
+  })
+
+  it("gives the text a size and a font, since Chrome's default is too small to read", () => {
+    const { header, footer } = printFrame(filled)
+
+    expect(header).toContain("font:8pt Arial")
+    expect(footer).toContain("font:8pt Arial")
   })
 })
