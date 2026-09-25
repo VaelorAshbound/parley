@@ -400,7 +400,24 @@
   - Files: `apps/web/src/server/ai/{prompt.ts,tools.ts}`, `src/features/chat/ai-questionnaire.tsx`
   - Deps: T17
 
-- [ ] **T20: AI evals v1 (NDA + choosing a document)** (S)
+- [x] **T20: AI evals v1 (NDA + choosing a document)** (S)
+  - Done 2026-09-25. Skills: incremental-implementation, test-driven-development, source-driven-development, git-workflow-and-versioning; ai-sdk, dataviz (the report is tables: two numbers per case read better than charts). Checked:
+    - `pnpm evals`, 16 conversations with `gpt-6-luna`, twice in a row after the fixes: **100% right agreement, 100% right NDA fields, 0 invalid writes, on task in 2/2 guardrail cases**, $0.0011-0.0016 per conversation (`evals/report.md`). The first run was 93% / 75% / 12 refused writes (in git history).
+    - `pnpm check`; `pnpm test:coverage` (742, including the evals' scorer); `pnpm test:workers` (76); `pnpm test:browser` (51); `scripts/ci-build.sh` with `WORKERS_CI=1`.
+  - Decisions:
+    - **Evals run in Node, through the real chat procedure** (`createServerClient`: tools, engine, auth, a migrated Postgres from `@workspace/db/testing`), not in workerd: the chat path has no workerd-only code, and Node keeps the harness simple. Only the model's behavior is under test; the Worker tests cover workerd.
+    - **A simulated user** (the same model, told only the case's facts) answers in chat or in the questionnaire, its answers checked with the server's own `answersFor`. It is metered apart: the cost in the report is the product's model only, at OpenRouter's list prices (spec §2).
+    - **"Invalid writes" = values the engine refused** (the model tried to write something invalid). Bar 0, as spec §6.
+    - **Field scoring** is per part (`party1.email`), case and spacing ignored; a court location may leave out "County". Unit-tested in `evals/score.test.ts` (runs in `pnpm test`).
+    - **v1 has 16 cases:** all 11 agreements from a situation, 3 whole NDAs, 2 guardrails. Spec §6's ~30 across all 12 documents is T30.
+    - **Transcripts** of each case go to `evals/.transcripts/` (git-ignored): what to read when a case fails.
+  - Found by the evals and fixed (product, not test tuning):
+    - **The model couldn't see a party's `title` part:** the instructions' schema cleaner dropped every key named "title" (T17 bug), so it guessed `party1Title`. It now walks the schema's structure.
+    - **It finished NDAs on silent defaults** (1-year terms, never asked). The instructions now list values still on their default, to confirm before `markComplete`.
+    - **It guessed keys** from "Party 1 title: Fill this in." `markComplete` now names the key and part, and the engine's unknown-key refusal lists the real keys.
+    - **It left "Other" off a term's length** twice, even when told not to. The questionnaire now always offers "Something else…"; `allowOther` is gone from `askQuestions` (**changes spec §2's tool shape**).
+    - **It wrote `party1.company`** (the app's own path form). `updateFields` folds one-level paths into their field.
+    - The health-data case was ambiguous ("we build clinic software and store health data" is a CSA first; the model picked it and named the BAA). The case now asks for the BAA itself.
   - Accept:
     - `pnpm evals` runs 12 or more conversations with the real model: picking the right document from a situation, and filling the NDA end to end.
     - It reports the % correct document, the % correct fields, invalid writes, and the cost per conversation to `evals/report.md`.
