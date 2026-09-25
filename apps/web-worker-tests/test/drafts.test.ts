@@ -10,6 +10,7 @@ import {
   chatClient,
   scriptedModel,
   signInGuest,
+  signUpUser,
 } from "./helpers"
 
 const today = "2026-09-24"
@@ -299,9 +300,10 @@ describe("drafts.markComplete", () => {
   })
 })
 
+// A guest keeps one draft (T27), so tests with more use an account.
 describe("drafts.list", () => {
   it("lists only the caller's own drafts, last changed first", async () => {
-    const mine = browserClient((await signInGuest()).cookie)
+    const mine = browserClient((await signUpUser()).cookie)
     const theirs = browserClient((await signInGuest()).cookie)
     const first = await mine.drafts.create({ documentId: "mutual-nda", today })
     const second = await mine.drafts.create({ documentId: "csa", today })
@@ -317,7 +319,7 @@ describe("drafts.list", () => {
   })
 
   it("searches titles, document types and party names from the start of each word", async () => {
-    const client = browserClient((await signInGuest()).cookie)
+    const client = browserClient((await signUpUser()).cookie)
     const nda = await client.drafts.create({ documentId: "mutual-nda", today })
     await client.drafts.create({ documentId: "csa", today })
     await client.drafts.updateFields({
@@ -333,7 +335,7 @@ describe("drafts.list", () => {
   })
 
   it("filters by document type and goes on page by page", async () => {
-    const client = browserClient((await signInGuest()).cookie)
+    const client = browserClient((await signUpUser()).cookie)
     const ndas = [
       await client.drafts.create({ documentId: "mutual-nda", today }),
       await client.drafts.create({ documentId: "mutual-nda", today }),
@@ -417,9 +419,10 @@ describe("drafts.rename", () => {
   })
 })
 
+// Guests can't copy (T27: one draft), so these use an account.
 describe("drafts.duplicate", () => {
   it("makes a copy with the same answers, marked as a copy, first in the list", async () => {
-    const client = browserClient((await signInGuest()).cookie)
+    const client = browserClient((await signUpUser()).cookie)
     const draft = await client.drafts.create({
       documentId: "mutual-nda",
       today,
@@ -439,7 +442,7 @@ describe("drafts.duplicate", () => {
 
   it("starts the copy with an empty chat", async () => {
     const { client, settle } = await chatClient(
-      (await signInGuest()).cookie,
+      (await signUpUser()).cookie,
       scriptedModel([[{ text: "Noted." }]])
     )
     const draft = await client.drafts.create({
@@ -465,7 +468,7 @@ describe("drafts.duplicate", () => {
   })
 
   it("keeps a long title within the limit", async () => {
-    const client = browserClient((await signInGuest()).cookie)
+    const client = browserClient((await signUpUser()).cookie)
     const draft = await client.drafts.create({
       documentId: "mutual-nda",
       today,
@@ -481,7 +484,7 @@ describe("drafts.duplicate", () => {
 
 describe("drafts.delete", () => {
   it("deletes the draft: gone from the list and not found after", async () => {
-    const client = browserClient((await signInGuest()).cookie)
+    const client = browserClient((await signUpUser()).cookie)
     const kept = await client.drafts.create({ documentId: "csa", today })
     const draft = await client.drafts.create({
       documentId: "mutual-nda",

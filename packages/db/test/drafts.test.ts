@@ -13,6 +13,7 @@ import {
   listDrafts,
   listDraftsQuery,
   updateDraft,
+  withinDraftLimit,
 } from "../src/queries/drafts.ts"
 import { draft, message, share } from "../src/schema.ts"
 import { makeUser, test } from "./db.ts"
@@ -581,6 +582,52 @@ describe("deleteDraft", () => {
     expect(
       await getDraft(db, { id: created.id, userId: owner.id })
     ).toBeDefined()
+  })
+})
+
+describe("withinDraftLimit", () => {
+  test("makes the draft while the user has fewer than the limit", async ({
+    db,
+  }) => {
+    const guest = await makeUser(db, { isAnonymous: true })
+
+    const made = await withinDraftLimit(
+      db,
+      { userId: guest.id, max: 1 },
+      (tx) => createDraft(tx, { userId: guest.id, ...nda })
+    )
+
+    expect(made?.made.title).toBe(nda.title)
+  })
+
+  test("makes nothing once the user has the limit", async ({ db }) => {
+    const guest = await makeUser(db, { isAnonymous: true })
+    await createDraft(db, { userId: guest.id, ...nda })
+
+    const made = await withinDraftLimit(
+      db,
+      { userId: guest.id, max: 1 },
+      (tx) => createDraft(tx, { userId: guest.id, ...nda })
+    )
+
+    expect(made).toBeUndefined()
+    expect(
+      await db.select().from(draft).where(eq(draft.userId, guest.id))
+    ).toHaveLength(1)
+  })
+
+  test("counts only the user's own drafts", async ({ db }) => {
+    const guest = await makeUser(db, { isAnonymous: true })
+    const other = await makeUser(db, { isAnonymous: true })
+    await createDraft(db, { userId: other.id, ...nda })
+
+    const made = await withinDraftLimit(
+      db,
+      { userId: guest.id, max: 1 },
+      (tx) => createDraft(tx, { userId: guest.id, ...nda })
+    )
+
+    expect(made).toBeDefined()
   })
 })
 
