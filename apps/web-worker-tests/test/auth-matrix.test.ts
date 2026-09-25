@@ -32,6 +32,7 @@ type Outcome =
   | "EMAIL_NOT_VERIFIED"
   | "INCOMPLETE"
   | "PRO_REQUIRED"
+  | "DRAFT_LIMIT"
 type Client = Awaited<ReturnType<typeof serverClient>>
 
 const today = "2026-09-24"
@@ -93,7 +94,8 @@ const matrix: Record<
 > = {
   "drafts.create": {
     run: (client) => client.drafts.create({ documentId: "mutual-nda", today }),
-    expect: signedIn,
+    // The guest owner has its one draft already (T27).
+    expect: { ...signedIn, owner: "DRAFT_LIMIT" },
   },
   "drafts.list": {
     run: (client) => client.drafts.list({}),
@@ -198,7 +200,8 @@ const matrix: Record<
   },
   "drafts.duplicate": {
     run: (client, id) => client.drafts.duplicate({ id }),
-    expect: ownersOnly,
+    // A guest keeps one draft (T27).
+    expect: { ...ownersOnly, owner: "DRAFT_LIMIT" },
   },
   // Last: the owners' own drafts are gone after it.
   "drafts.delete": {

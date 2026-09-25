@@ -47,8 +47,7 @@ test("the new draft is in the sidebar's history", async ({ page }) => {
     .getByRole("list")
     .getByRole("link", { name: "Mutual Non-Disclosure Agreement" })
     .and(page.locator(`[href="${draftUrl}"]`))
-  // The worker's guest may have drafts from other tests, and then the
-  // sidebar is open already.
+  // A guest with a draft may find the sidebar open already.
   if (!(await row.isVisible()))
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click()
 

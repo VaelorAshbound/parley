@@ -54,6 +54,26 @@ describe.each([
   })
 })
 
+// A guest is made on the first action that needs a session (spec §2
+// Limits: Turnstile once), so bots can't make guests to spend AI messages.
+describe("a new guest", () => {
+  it("is refused without a Turnstile token", async () => {
+    const response = await post("/api/auth/sign-in/anonymous", {}, "")
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ code: "MISSING_RESPONSE" })
+  })
+
+  it("is refused when Turnstile rejects the token", async () => {
+    const response = await post("/api/auth/sign-in/anonymous", {}, "forged")
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toMatchObject({
+      code: "VERIFICATION_FAILED",
+    })
+  })
+})
+
 describe("with the production widget", () => {
   /** Sign-up straight through Better Auth, with a real (non-test) secret. */
   async function signUpInProduction(captcha: string) {
