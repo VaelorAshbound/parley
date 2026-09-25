@@ -20,10 +20,11 @@ import { PlusIcon } from "lucide-react"
 import { Logo, LogoMark } from "@/components/logo"
 import type { Viewer } from "@/lib/session"
 
+import { AccountMenu } from "./account-menu"
 import { ThemeToggle } from "./theme-toggle"
 
 // The left sidebar (spec §1 Layout). T22 adds search, date groups and draft
-// actions; T21/T23 the account menu.
+// actions; T23 the rest of the account menu.
 export function AppSidebar({ viewer }: { viewer: Viewer }) {
   return (
     <Sidebar collapsible="icon" aria-label="Drafts">
@@ -66,6 +67,9 @@ export function AppSidebar({ viewer }: { viewer: Viewer }) {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <ThemeToggle />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <AccountMenu viewer={viewer} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

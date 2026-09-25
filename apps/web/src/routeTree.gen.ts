@@ -10,7 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
+import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as DevBrandRouteImport } from './routes/dev.brand'
 import { Route as AppDDraftIdRouteImport } from './routes/_app/d.$draftId'
 
@@ -18,10 +22,29 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AuthRoute,
 } as any)
 const DevBrandRoute = DevBrandRouteImport.update({
   id: '/dev/brand',
@@ -36,31 +59,63 @@ const AppDDraftIdRoute = AppDDraftIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/sign-in': typeof AuthSignInRoute
+  '/sign-up': typeof AuthSignUpRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRoutesByTo {
-  '/dev/brand': typeof DevBrandRoute
   '/': typeof AppIndexRoute
+  '/sign-in': typeof AuthSignInRoute
+  '/sign-up': typeof AuthSignUpRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
+  '/dev/brand': typeof DevBrandRoute
   '/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/_auth': typeof AuthRouteWithChildren
+  '/_auth/sign-in': typeof AuthSignInRoute
+  '/_auth/sign-up': typeof AuthSignUpRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/_app/': typeof AppIndexRoute
   '/_app/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dev/brand' | '/d/$draftId'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/sign-up'
+    | '/verify-email'
+    | '/dev/brand'
+    | '/d/$draftId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/dev/brand' | '/' | '/d/$draftId'
-  id: '__root__' | '/_app' | '/dev/brand' | '/_app/' | '/_app/d/$draftId'
+  to:
+    | '/'
+    | '/sign-in'
+    | '/sign-up'
+    | '/verify-email'
+    | '/dev/brand'
+    | '/d/$draftId'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_auth'
+    | '/_auth/sign-in'
+    | '/_auth/sign-up'
+    | '/_auth/verify-email'
+    | '/dev/brand'
+    | '/_app/'
+    | '/_app/d/$draftId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
   DevBrandRoute: typeof DevBrandRoute
 }
 
@@ -73,12 +128,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/': {
       id: '/_app/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_auth/sign-in': {
+      id: '/_auth/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sign-up': {
+      id: '/_auth/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/dev/brand': {
       id: '/dev/brand'
@@ -109,8 +192,23 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AuthRouteChildren {
+  AuthSignInRoute: typeof AuthSignInRoute
+  AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthSignInRoute: AuthSignInRoute,
+  AuthSignUpRoute: AuthSignUpRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  AuthRoute: AuthRouteWithChildren,
   DevBrandRoute: DevBrandRoute,
 }
 export const routeTree = rootRouteImport

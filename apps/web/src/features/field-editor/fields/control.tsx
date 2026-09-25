@@ -14,11 +14,21 @@ import { useFieldContext } from "@/lib/form-context"
 
 export type Labels = { label: string; help?: string | undefined }
 
-/** The field's errors as FieldError takes them. Our validators give text. */
+/**
+ * The field's errors as FieldError takes them. The editor's validators give
+ * text; a Zod schema as the form's validator gives its issues (Standard
+ * Schema), which carry a message.
+ */
 export function errorsOf(errors: readonly unknown[]) {
-  return errors.flatMap((error) =>
-    typeof error === "string" && error ? [{ message: error }] : []
-  )
+  return errors.flatMap((error) => {
+    const message =
+      typeof error === "string"
+        ? error
+        : typeof error === "object" && error !== null && "message" in error
+          ? error.message
+          : undefined
+    return typeof message === "string" && message ? [{ message }] : []
+  })
 }
 
 /** The bound input's state, for a control to spread its props from. */

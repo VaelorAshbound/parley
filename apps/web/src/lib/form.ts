@@ -1,5 +1,6 @@
 import { createFormHook } from "@tanstack/react-form"
 
+import { PasswordField } from "@/features/auth/password-field"
 import { ErrorSlot } from "@/features/field-editor/fields/control"
 import { CheckField, ChoiceField } from "@/features/field-editor/fields/choice"
 import { PickField, SelectField } from "@/features/field-editor/fields/pickers"
@@ -31,6 +32,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     ChoiceField,
     CheckField,
     ErrorSlot,
+    PasswordField,
   },
   formComponents: {},
 })

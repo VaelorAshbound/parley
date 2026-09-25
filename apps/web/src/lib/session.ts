@@ -11,6 +11,8 @@ import { requestServices } from "@/server/request-services"
 export type Viewer = {
   id: string
   name: string
+  email: string
+  emailVerified: boolean
   isAnonymous: boolean
 } | null
 
@@ -26,8 +28,8 @@ const getViewer = createServerFn({ method: "GET" }).handler(
     const cookies = headers.getSetCookie()
     if (cookies.length > 0) setResponseHeader("set-cookie", cookies)
     if (!response) return null
-    const { id, name, isAnonymous } = response.user
-    return { id, name, isAnonymous: isAnonymous === true }
+    const { id, name, email, emailVerified, isAnonymous } = response.user
+    return { id, name, email, emailVerified, isAnonymous: isAnonymous === true }
   }
 )
 

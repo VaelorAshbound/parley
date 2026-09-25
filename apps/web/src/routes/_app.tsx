@@ -13,7 +13,9 @@ import { AppSidebar } from "./-components/shell/app-sidebar"
 // here are for the UI only; every procedure checks the session itself.
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ context }) => ({
-    viewer: await context.queryClient.ensureQueryData(viewerQuery),
+    // fetchQuery, not ensureQueryData: once a new guest or a sign-in marks
+    // the viewer stale, ensureQueryData would still hand back the old one.
+    viewer: await context.queryClient.fetchQuery(viewerQuery),
   }),
   loader: async ({ context }) => {
     if (context.viewer)
