@@ -337,7 +337,7 @@ describe("changing the email", () => {
 
   /** Where the links land, as the settings page asks (afterEmailLink). */
   const settingsFor = (newEmail: string) =>
-    `/settings?${new URLSearchParams({ email: newEmail })}`
+    `/settings?${new URLSearchParams({ email: newEmail }).toString()}`
 
   function changeEmail(cookie: string, newEmail: string) {
     return post(
