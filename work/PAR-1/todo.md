@@ -501,7 +501,29 @@
   - Files: `packages/db/src/queries/drafts.ts`, `apps/web/src/server/rpc/drafts.ts`, `src/features/sidebar/*`, `src/routes/_app/_authed/drafts.tsx` (`validateSearch`: `q`, `type` with `.catch()`)
   - Deps: T21
 
-- [ ] **T23: Account menu, settings and password/email flows** (M)
+- [x] **T23: Account menu, settings and password/email flows** (M)
+  - Done 2026-09-25 (a stopped run, finished by a second agent). Skills: build, incremental-implementation, test-driven-development, source-driven-development, security-and-hardening, git-workflow-and-versioning; better-auth-best-practices, email-and-password-best-practices, better-auth-security-best-practices, resend:react-email, shadcn. Not run: a separate /review and /code-simplify pass (a self-review found the fixes below). Checked:
+    - `pnpm check` clean; `pnpm test` (904, 1 skipped); `pnpm test:workers` (204, 16 files: `password-reset`, `account`, `audit`, auth matrix rows for every `account.*` procedure).
+    - e2e Chromium + Firefox on PORT 3122: 60/62. `account.spec.ts` 9/9 in both, and 36/36 with `--repeat-each 2`. The 2 red are `shell.spec` "the new draft is in the sidebar's history" (see For later); it passes alone.
+    - Two real Resend sends (`test:workers:real -t "account emails"`): the reset and change-email emails to `delivered+parley-t23@resend.dev`, both **delivered**. 2 of 3 allowed.
+    - Screenshots of settings, the account menu, the delete dialog, forgot and reset: 1440 light, 375 dark, no sideways scroll (a long email now shortens in its card).
+  - Decisions:
+    - **Audit lines** through `databaseHooks` (`server/audit.ts`): `session_created`, `session_ended`, `login_method_added`, `email_changed`, `password_changed`, `user_deleted`. IDs and fixed names only. A before hook marks the endpoint context, because Better Auth 1.7's update-after hook gets no old row.
+    - **Reset:** `resetPasswordTokenExpiresIn` 30 min, single use, `revokeSessionsOnPasswordReset`. `sendResetPassword` builds its own link, `/reset-password?token=` (Better Auth's puts the token in the path; ADR-0005). Turnstile guards `/request-password-reset` (the form sends the header). A new password set with the link **confirms the email**: that is the way back for the real owner of an address someone else signed up with and never confirmed (their sessions end, their password is replaced; Worker test). The Google/GitHub "not linked" message now says "Forgot password?".
+    - **Change email** confirms with the current (confirmed) address first. The new address's link works only where the account is signed in (a `hooks.before` on `/verify-email`): it would otherwise sign in a browser with no session (login CSRF), like T21's confirm link.
+    - **Devices list** from our own `account.sessions` (names and times, no tokens: Better Auth's `/list-sessions` sends every token to the browser). `account.revokeSession` finds the token on the server, only among the user's own sessions.
+    - **Set a password** (Google/GitHub only accounts) through `account.setPassword`, and **delete without a password**, need a sign-in in the last 15 min (`freshAge`). Delete with a password needs the password. All data goes (cascade; Worker test).
+    - **Theme switch** turns transitions off while it applies (an attribute + one CSS rule, CSP-safe). Browser test.
+    - Account menu: name, email, "Free" badge, Settings, Billing ("Soon", T26), Sign out. `/settings` sits behind `_authed` (`requireAccount`).
+    - Spec §5 Auth updated with these.
+  - Found and fixed on the way:
+    - The name and email forms had no `method="post"`: a submit before hydration put the new address in the URL, and `/settings?email=` then read as a finished change-email link.
+    - Device rows get `role="listitem"` (their group is a list), as shadcn's docs show.
+    - The account e2e now waits out the shared per-IP limits (3 sign-ins per 10 s, 3 reset emails per minute) and checks a deleted account through the API (Firefox's home page navigation cut off a `goto`).
+  - For later:
+    - **T22 / PAR-8:** `shell.spec` "the new draft is in the sidebar's history" depends on test order. The guest is shared per worker; if that guest already has a draft, the sidebar starts open, and the test's toggle closes it. Open the sidebar only when it is collapsed, or use a fresh guest.
+    - **T23b:** `twoFactor` is already in the config; the Settings page has room for a "Two-factor" card.
+    - **T26:** Billing in the account menu is a disabled "Soon" item, and the plan badge is the constant `plan = "Free"` in `account-menu.tsx`.
   - Accept:
     - The account menu has your name, a plan badge, settings, billing (a placeholder until T26), and sign out. The theme switch turns CSS transitions off while it applies (no color animation on switch, found in T4).
     - Forgot/reset password (a 30-min single-use token, other sessions revoked). Change password (optionally revoke other sessions). Set a password for OAuth-only users. Change email (confirm with the current email first). Change name. A session list with revoke. Delete account (fresh session + confirm, all data removed).
