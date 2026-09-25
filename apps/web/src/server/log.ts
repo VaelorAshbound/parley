@@ -44,27 +44,61 @@ export function annotate(fields: LogFields) {
   c?.set("logFields", { ...c.var.logFields, ...fields })
 }
 
-function line(level: string, event: string, fields: LogFields) {
-  const out: Record<string, unknown> = {
-    level,
-    event,
-    requestId: currentRequestId(),
-    ...fields,
-  }
-  for (const key of Object.keys(out))
-    if (out[key] === undefined) delete out[key]
-  return out
+/** The fields that have a value. */
+function defined(fields: LogFields) {
+  return Object.fromEntries(
+    Object.entries(fields).filter(([, value]) => value !== undefined)
+  )
+}
+
+/** Error codes are short constants ("08006", "ECONNREFUSED"), never text. */
+const CODE = /^[A-Z0-9_]{1,40}$/
+
+function nameOf(error: unknown) {
+  if (!(error instanceof Error)) return typeof error
+  // Some libraries (Drizzle) keep the generic name; their class says more.
+  return error.name === "Error" ? error.constructor.name : error.name
+}
+
+function codeOf(error: unknown) {
+  const code: unknown =
+    typeof error === "object" && error !== null && "code" in error
+      ? error.code
+      : undefined
+  return typeof code === "string" && CODE.test(code) ? code : undefined
+}
+
+/**
+ * What we log of an error: its name, its code (a Postgres SQLSTATE, a system
+ * code) and its cause's name. Never its message: Drizzle's holds the failed
+ * query's bound values (draft values, chat text, session tokens), Postgres
+ * quotes the value that failed, and JSON.parse quotes its input.
+ */
+function errorFields(error: unknown) {
+  const cause = error instanceof Error ? error.cause : undefined
+  return defined({
+    name: nameOf(error),
+    code: codeOf(error) ?? codeOf(cause),
+    cause: cause === undefined ? undefined : nameOf(cause),
+  })
 }
 
 const method = { info: "log", warn: "warn", error: "error" } as const
 
-/** An event at a level chosen at run time (a chat turn that failed). */
+/**
+ * An event at a level chosen at run time (a chat turn that failed), with
+ * the error behind it if there is one.
+ */
 export function log(
   level: keyof typeof method,
   event: string,
-  fields: LogFields = {}
+  fields: LogFields = {},
+  error?: unknown
 ) {
-  console[method[level]](line(level, event, fields))
+  console[method[level]]({
+    ...defined({ level, event, requestId: currentRequestId(), ...fields }),
+    ...(error === undefined ? {} : { error: errorFields(error) }),
+  })
 }
 
 /** Something happened that on-call may ask about (a request, a chat turn). */
@@ -83,12 +117,5 @@ export function logError(
   error: unknown,
   fields: LogFields = {}
 ) {
-  console.error({
-    ...line("error", event, fields),
-    // Name and message only: database errors keep row values in `detail`.
-    error:
-      error instanceof Error
-        ? { name: error.name, message: error.message }
-        : { message: String(error) },
-  })
+  log("error", event, fields, error)
 }

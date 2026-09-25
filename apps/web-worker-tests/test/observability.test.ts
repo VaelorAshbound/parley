@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers"
 import { simulateReadableStream } from "ai"
 import { MockLanguageModelV4 } from "ai/test"
 import { describe, expect, it, vi } from "vitest"
@@ -23,16 +24,16 @@ async function captured<T>(run: () => Promise<T>) {
   using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
   using error = vi.spyOn(console, "error").mockImplementation(() => {})
   const result = await run()
-  const lines = [info, warn, error].flatMap((spy) =>
-    spy.mock.calls.map(([line]) => line as Record<string, unknown>)
-  )
-  // Errors in full: Workers Logs shows a logged Error's message and stack.
-  const text = JSON.stringify(lines, (_key, value: unknown) =>
+  const calls = [info, warn, error].flatMap((spy) => spy.mock.calls)
+  const lines = calls.map(([line]) => line as Record<string, unknown>)
+  // Every argument, and errors in full: Workers Logs shows a logged Error's
+  // message and stack.
+  const text = JSON.stringify(calls, (_key, value: unknown) =>
     value instanceof Error
       ? { name: value.name, message: value.message, stack: value.stack }
       : value
   )
-  return { result, lines, text }
+  return { result, calls, lines, text }
 }
 
 describe("the request line", () => {
@@ -114,6 +115,83 @@ describe("the request line", () => {
       }),
     ])
     expect(lines[0]).not.toHaveProperty("tier")
+  })
+})
+
+/**
+ * The Worker's env with a database whose every session runs with `setting`
+ * (a Postgres run-time parameter): a way to make queries fail on purpose.
+ */
+function brokenDatabase(setting: string): Env {
+  const url = new URL(env.HYPERDRIVE.connectionString)
+  url.searchParams.set("options", `-c ${setting}`)
+  const hyperdrive: Hyperdrive = Object.create(env.HYPERDRIVE, {
+    connectionString: { value: url.toString() },
+  })
+  return { ...env, HYPERDRIVE: hyperdrive }
+}
+
+// Drizzle's error message holds the failed query and its bound values
+// (`Failed query: ...\nparams: ...`), so any database failure is where a
+// value, chat text or a session token could reach the logs.
+describe("a database failure", () => {
+  it("logs the error's code, and none of the values the query carried", async () => {
+    const { cookie } = await signInGuest()
+    const draft = await browserClient(cookie).drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const readOnly = browserClient(
+      cookie,
+      brokenDatabase("default_transaction_read_only=on")
+    )
+
+    const { lines, text } = await captured(() =>
+      readOnly.drafts
+        .updateFields({
+          id: draft.id,
+          changes: [
+            { key: "purpose", value: "Merging with Zebracorp quietly." },
+          ],
+        })
+        .catch((error: unknown) => error)
+    )
+
+    expect(lines).toContainEqual(
+      expect.objectContaining({
+        event: "rpc_error",
+        error: expect.objectContaining({ code: "25006" }),
+      })
+    )
+    expect(text).not.toContain("Zebracorp")
+    expect(text).not.toContain("params")
+  })
+
+  it("keeps a failed sign-in's logs structured and free of query values", async () => {
+    const {
+      result: response,
+      calls,
+      text,
+    } = await captured(() =>
+      call(
+        "/api/auth/sign-in/anonymous",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: "{}",
+        },
+        brokenDatabase("search_path=nowhere")
+      )
+    )
+
+    expect(response.status).toBe(500)
+    // One structured object per line, as our logger writes them.
+    for (const each of calls) {
+      expect(each).toHaveLength(1)
+      expect(each[0]).toHaveProperty("event")
+    }
+    expect(text).not.toContain("params")
+    expect(text).not.toContain("Failed query")
   })
 })
 
@@ -287,9 +365,9 @@ describe("the chat's metrics", () => {
       }),
     })
 
-    const { logged } = await turn(model, "Hi.")
+    const { logged, turns } = await turn(model, "Hi.")
 
-    expect(JSON.parse(logged)).toContainEqual(
+    expect(turns).toContainEqual(
       expect.objectContaining({
         level: "error",
         event: "chat_turn",

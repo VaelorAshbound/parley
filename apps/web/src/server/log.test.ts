@@ -1,3 +1,4 @@
+import { DrizzleQueryError } from "drizzle-orm"
 import { describe, expect, it, vi } from "vite-plus/test"
 
 import { logError, logInfo, logWarn } from "./log"
@@ -33,13 +34,17 @@ describe("the structured logger", () => {
     })
   })
 
-  it("keeps an error's name and message only: no stack, cause or detail", () => {
+  it("keeps an error's name and code, never its message, stack or detail", () => {
     using error = vi.spyOn(console, "error").mockImplementation(() => {})
-    // Postgres errors carry the row's values in `detail`.
-    const failed = Object.assign(new Error("duplicate key"), {
-      detail: "Key (email)=(ada@example.com) already exists.",
-      cause: new Error("ada@example.com"),
-    })
+    // Postgres errors carry the row's values in `detail`, and some messages
+    // quote the value that failed.
+    const failed = Object.assign(
+      new Error('invalid input syntax for type uuid: "ada@example.com"'),
+      {
+        code: "22P02",
+        detail: "Key (email)=(ada@example.com) already exists.",
+      }
+    )
 
     logError("rpc_error", failed, { route: "/api/rpc/drafts/get" })
 
@@ -49,19 +54,60 @@ describe("the structured logger", () => {
           level: "error",
           event: "rpc_error",
           route: "/api/rpc/drafts/get",
-          error: { name: "Error", message: "duplicate key" },
+          error: { name: "Error", code: "22P02" },
         },
       ],
     ])
   })
 
-  it("logs what was thrown when it isn't an Error", () => {
+  it("leaves out a failed query's SQL and values, and names its cause", () => {
     using error = vi.spyOn(console, "error").mockImplementation(() => {})
+    // Drizzle puts the query and its bound values in the message.
+    const cause = Object.assign(new Error("connection refused"), {
+      name: "DatabaseError",
+      code: "08006",
+    })
+    const failed = new DrizzleQueryError(
+      'update "draft" set "fields" = $1',
+      ["Acme Secret", "session-token-123"],
+      cause
+    )
 
-    logError("api_error", "down")
+    logError("rpc_error", failed)
 
     expect(error.mock.calls[0]?.[0]).toMatchObject({
-      error: { message: "down" },
+      error: {
+        name: "DrizzleQueryError",
+        code: "08006",
+        cause: "DatabaseError",
+      },
     })
+    const text = JSON.stringify(error.mock.calls)
+    expect(text).not.toContain("Acme Secret")
+    expect(text).not.toContain("session-token-123")
+    expect(text).not.toContain("draft")
+  })
+
+  it("logs only a code that looks like one", () => {
+    using error = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    logError(
+      "api_error",
+      Object.assign(new Error("x"), { code: "ada lovelace" })
+    )
+
+    expect(error.mock.calls[0]?.[0]).toMatchObject({ error: { name: "Error" } })
+    expect(JSON.stringify(error.mock.calls)).not.toContain("ada")
+  })
+
+  it("logs only the type of what was thrown when it isn't an Error", () => {
+    using error = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    logError("api_error", "Acme Secret")
+
+    expect(error.mock.calls[0]?.[0]).toMatchObject({
+      error: { name: "string" },
+    })
+    expect(JSON.stringify(error.mock.calls)).not.toContain("Acme")
   })
 })

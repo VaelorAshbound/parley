@@ -16,8 +16,15 @@ import { createServerClient } from "../../web/src/server/rpc/server-client"
 
 export const origin = "http://localhost:3000"
 
-/** One request through the real /api app, as the browser would send it. */
-export async function call(path: string, init: RequestInit = {}) {
+/**
+ * One request through the real /api app, as the browser would send it.
+ * `bindings` replaces the Worker's env (a broken database, say).
+ */
+export async function call(
+  path: string,
+  init: RequestInit = {},
+  bindings: Env = env
+) {
   const headers = new Headers(init.headers)
   if (!headers.has("origin")) headers.set("origin", origin)
   // Every real HTTP request has one; Better Auth builds its URL from it.
@@ -28,7 +35,7 @@ export async function call(path: string, init: RequestInit = {}) {
   const ctx = createExecutionContext()
   const response = await api.fetch(
     new Request(origin + path, { ...init, headers }),
-    env,
+    bindings,
     ctx
   )
   await waitOnExecutionContext(ctx)
@@ -36,18 +43,25 @@ export async function call(path: string, init: RequestInit = {}) {
 }
 
 /** The browser's client, over HTTP through the real /api app. */
-export function browserClient(cookie: string): RouterClient<Router> {
+export function browserClient(
+  cookie: string,
+  bindings: Env = env
+): RouterClient<Router> {
   return createORPCClient(
     new RPCLink({
       url: `${origin}/api/rpc`,
       headers: { cookie },
       plugins: [new SimpleCsrfProtectionLinkPlugin()],
       fetch: async (request) =>
-        call(new URL(request.url).pathname + new URL(request.url).search, {
-          method: request.method,
-          headers: request.headers,
-          body: request.method === "GET" ? null : await request.text(),
-        }),
+        call(
+          new URL(request.url).pathname + new URL(request.url).search,
+          {
+            method: request.method,
+            headers: request.headers,
+            body: request.method === "GET" ? null : await request.text(),
+          },
+          bindings
+        ),
     })
   )
 }
