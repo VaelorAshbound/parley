@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import { mentioned, scoreFields } from "./score"
+import { belowBar, mentioned, scoreFields } from "./score"
 
 describe("scoring an eval's fields", () => {
   test("checks each part of a field on its own", () => {
@@ -164,6 +164,33 @@ describe("finding the agreements a reply names", () => {
   test("finds the NDA by its short form", () => {
     expect(mentioned("Start with a mutual NDA.", ["mutual-nda"])).toEqual([
       "mutual-nda",
+    ])
+  })
+})
+
+describe("checking a run against the bar", () => {
+  const passing = { documents: 1, fields: 1, invalidWrites: 0, finished: 1 }
+
+  test("passes a run that meets every bar", () => {
+    expect(belowBar(passing)).toEqual([])
+    expect(belowBar({ ...passing, documents: 0.9, fields: 0.95 })).toEqual([])
+  })
+
+  test("fails a run where a whole draft didn't finish", () => {
+    // A draft stuck at the turn cap is still scored on its fields; the run
+    // must fail anyway, or "every draft finished" is only a claim.
+    expect(belowBar({ ...passing, finished: 13 / 14 })).toEqual([
+      "drafts finished 93%",
+    ])
+  })
+
+  test("names every measure below its bar", () => {
+    expect(
+      belowBar({ documents: 0.8, fields: 0.9, invalidWrites: 2, finished: 1 })
+    ).toEqual([
+      "right agreement 80%",
+      "right field values 90%",
+      "2 invalid writes",
     ])
   })
 })

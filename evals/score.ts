@@ -107,3 +107,31 @@ const NAMES: Record<DocumentId, RegExp> = {
 export function mentioned(text: string, ids: readonly DocumentId[]) {
   return ids.filter((id) => NAMES[id].test(text))
 }
+
+/**
+ * The bars (spec §6): the right agreement in 90% or more, the right field
+ * values in 95% or more, zero invalid writes. And every whole draft
+ * finishes (T30): one stuck at the turn cap fails the run.
+ */
+export const BAR = {
+  documents: 0.9,
+  fields: 0.95,
+  invalidWrites: 0,
+  finished: 1,
+}
+
+export const percent = (value: number) => `${Math.round(value * 100)}%`
+
+/** Each measure of a run below its bar, in words; empty when it passes. */
+export function belowBar(run: {
+  [measure in keyof typeof BAR]: number
+}): string[] {
+  return [
+    run.documents < BAR.documents &&
+      `right agreement ${percent(run.documents)}`,
+    run.fields < BAR.fields && `right field values ${percent(run.fields)}`,
+    run.invalidWrites > BAR.invalidWrites &&
+      `${run.invalidWrites} invalid writes`,
+    run.finished < BAR.finished && `drafts finished ${percent(run.finished)}`,
+  ].filter((miss) => miss !== false)
+}
