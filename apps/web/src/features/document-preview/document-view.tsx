@@ -257,7 +257,7 @@ function EditButton({
         const part = target?.closest<HTMLElement>("[data-field]")?.dataset.field
         onEdit(part)
       }}
-      className="hover:bg-hover -mx-2 mt-1 block w-[calc(100%+1rem)] cursor-text rounded-md px-2 py-1 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="-mx-2 mt-1 block w-[calc(100%+1rem)] cursor-text rounded-md px-2 py-1 text-left transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span id={id}>{children}</span>
     </button>
@@ -365,7 +365,7 @@ function Signatures({
                     data-edit={cell.field}
                     aria-label={`Edit ${spoken(cell)}`}
                     onClick={() => onEdit(cell.field)}
-                    className="hover:bg-hover -mx-1 cursor-text rounded-sm px-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="-mx-1 cursor-text rounded-sm px-1 text-left outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Value value={cell} />
                   </button>
