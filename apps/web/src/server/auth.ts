@@ -1,5 +1,11 @@
 import { confirmEmail, moveGuestData, schema, type Db } from "@workspace/db"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import {
+  APIError,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api"
+import { verifyJWT } from "better-auth/crypto"
 import { betterAuth } from "better-auth/minimal"
 // captcha and lastLoginMethod have no path of their own in 1.7.5.
 import { captcha, lastLoginMethod } from "better-auth/plugins"
@@ -7,6 +13,7 @@ import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
 import { createElement } from "react"
 
+import { ChangeEmail } from "../emails/change-email"
 import { ResetPassword } from "../emails/reset-password"
 import { VerifyEmail } from "../emails/verify-email"
 
@@ -103,6 +110,25 @@ export function createAuth({
         logInfo("password_reset", { userId: user.id })
       },
     },
+    user: {
+      changeEmail: {
+        enabled: true,
+        // A confirmed address approves the move first; Better Auth then
+        // sends the new address its own link (sendVerificationEmail), and
+        // the email changes when that one is opened. An unconfirmed
+        // account's link goes straight to the new address. Better Auth
+        // answers the same, and sends nothing, when the new address already
+        // has an account.
+        sendChangeEmailConfirmation: async ({ user, newEmail, url, token }) =>
+          sendEmail({
+            event: "change_email",
+            to: user.email,
+            subject: "Approve your new email for Parley",
+            react: createElement(ChangeEmail, { url, newEmail }),
+            idempotencyKey: `change-email/${user.id}/${await digest(token)}`,
+          }),
+      },
+    },
     // Google and GitHub, where their apps are set up (spec §5 Auth).
     socialProviders: socialProviders(env),
     account: {
@@ -148,6 +174,7 @@ export function createAuth({
       // 5 minutes to reach other devices (spec §5 Auth).
       cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },
     },
+    hooks: { before: newEmailNeedsItsAccount(env.BETTER_AUTH_SECRET) },
     // Who signed in, out, and changed what: IDs only (spec §5 Auth).
     databaseHooks: auditHooks(),
     // Memory would reset per isolate on Workers.
@@ -252,6 +279,38 @@ function turnstile(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
         allowedHostnames: [productionHost],
       }),
     }),
+  })
+}
+
+/**
+ * The link Better Auth sends to a new email address changes the email, and
+ * signs in a browser that has no session. Anyone holding such a link (one
+ * for their own account, or one sent to an address the user mistyped)
+ * could then sign a stranger in to that account and see what the stranger
+ * types there: login CSRF, which T21 closed for the confirm link. So this
+ * link works only where the account is signed in; elsewhere it says to sign
+ * in first, and still works afterwards (it lasts an hour).
+ */
+function newEmailNeedsItsAccount(secret: string) {
+  return createAuthMiddleware(async (ctx) => {
+    if (ctx.path !== "/verify-email") return
+    const token: unknown = ctx.query?.token
+    if (typeof token !== "string") return
+    const payload = await verifyJWT<{ requestType?: unknown }>(token, secret)
+    if (payload?.requestType !== "change-email-verification") return
+    if (await getSessionFromCtx(ctx)) return
+    // Back to the page that asked, as Better Auth sends its own errors, but
+    // only to a path on Parley (this runs before its origin check).
+    const callbackURL: unknown = ctx.query?.callbackURL
+    if (typeof callbackURL === "string" && /^\/(?![/\\])/.test(callbackURL)) {
+      const url = new URL(callbackURL, "http://parley")
+      url.searchParams.set("error", "SIGN_IN_FIRST")
+      throw ctx.redirect(url.pathname + url.search)
+    }
+    throw APIError.from("UNAUTHORIZED", {
+      code: "SIGN_IN_FIRST",
+      message: "Sign in, then open the link again.",
+    })
   })
 }
 

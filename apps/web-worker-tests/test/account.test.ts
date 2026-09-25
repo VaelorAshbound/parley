@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm"
 import { env } from "cloudflare:workers"
 import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
 
-import { browserClient, call, cookiesFrom } from "./helpers"
+import { browserClient, call, cookiesFrom, origin } from "./helpers"
 import { fakeResend } from "./resend"
 
 // Account settings (spec §5 Auth, T23), through the real /api app: what the
@@ -320,5 +320,137 @@ describe("account.setPassword", () => {
     )
 
     expect(codeOf(error)).toBe("BAD_REQUEST")
+  })
+})
+
+describe("changing the email", () => {
+  // Real-looking domains, so the mailer sends (to the fake Resend).
+  const address = () => `ana-${crypto.randomUUID()}@acme.dev`
+
+  /** Opens a link from an email, in the browser with this cookie. */
+  async function open(link: URL, cookie?: string) {
+    return call(link.pathname + link.search, {
+      headers: cookie ? { cookie } : {},
+      redirect: "manual",
+    })
+  }
+
+  /** A signed-up account whose email is confirmed. */
+  async function confirmedAccount() {
+    resend = fakeResend()
+    const ana = await signUp(address())
+    await open(resend.linkFor(ana.email), ana.cookie)
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { emailVerified: true },
+    })
+    return ana
+  }
+
+  function changeEmail(cookie: string, newEmail: string) {
+    return post(
+      "/api/auth/change-email",
+      { newEmail, callbackURL: "/settings" },
+      cookie
+    )
+  }
+
+  it("asks the current address to approve, then the new one to confirm", async () => {
+    const ana = await confirmedAccount()
+    const newEmail = address()
+
+    const response = await changeEmail(ana.cookie, newEmail)
+
+    expect(response.status).toBe(200)
+    expect(resend?.sent.at(-1)).toMatchObject({
+      to: ana.email,
+      subject: "Approve your new email for Parley",
+    })
+    expect(resend?.sent.at(-1)?.text).toContain(newEmail)
+
+    // The approval sends the confirmation to the new address.
+    await open(resend?.linkFor(ana.email) ?? new URL(origin), ana.cookie)
+    expect(resend?.sent.at(-1)).toMatchObject({
+      to: newEmail,
+      subject: "Confirm your email for Parley",
+    })
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: ana.email },
+    })
+
+    const { lines } = await audited(() =>
+      open(resend?.linkFor(newEmail) ?? new URL(origin), ana.cookie)
+    )
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: newEmail, emailVerified: true },
+    })
+    expect(lines).toContainEqual(
+      expect.objectContaining({ event: "email_changed", userId: ana.userId })
+    )
+  })
+
+  it("sends an unconfirmed account's link straight to the new address", async () => {
+    resend = fakeResend()
+    const ana = await signUp(address())
+    const newEmail = address()
+
+    await changeEmail(ana.cookie, newEmail)
+    expect(resend.sent.at(-1)).toMatchObject({ to: newEmail })
+    await open(resend.linkFor(newEmail), ana.cookie)
+
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: newEmail, emailVerified: true },
+    })
+  })
+
+  it("answers the same for an address that has an account, and sends nothing", async () => {
+    const ana = await confirmedAccount()
+    const bo = await signUp(address())
+    const sent = resend?.sent.length
+
+    const response = await changeEmail(ana.cookie, bo.email)
+
+    expect(response.status).toBe(200)
+    expect(resend?.sent.length).toBe(sent)
+  })
+
+  // Better Auth's last link signs in a browser with no session. Anyone who
+  // gets it could sign a stranger in to their own account and collect what
+  // the stranger types there (login CSRF, as T21 found for the confirm
+  // link), and a mistyped new address would get the account.
+  it("needs the account signed in to open the new address's link", async () => {
+    const ana = await confirmedAccount()
+    const newEmail = address()
+    await changeEmail(ana.cookie, newEmail)
+    await open(resend?.linkFor(ana.email) ?? new URL(origin), ana.cookie)
+    const link = resend?.linkFor(newEmail) ?? new URL(origin)
+
+    const elsewhere = await open(link)
+
+    expect(elsewhere.status).toBe(302)
+    expect(elsewhere.headers.get("location")).toBe(
+      "/settings?error=SIGN_IN_FIRST"
+    )
+    expect(cookiesFrom(elsewhere)).not.toContain("session_token=")
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: ana.email },
+    })
+    // Signed in, the same link still works.
+    await open(link, ana.cookie)
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: newEmail },
+    })
+  })
+
+  it("does nothing when the link is opened by someone else who is signed in", async () => {
+    const ana = await confirmedAccount()
+    const newEmail = address()
+    await changeEmail(ana.cookie, newEmail)
+    const approval = resend?.linkFor(ana.email) ?? new URL(origin)
+    const bo = await signUp()
+
+    const response = await open(approval, bo.cookie)
+
+    expect(response.headers.get("location")).toContain("error=")
+    expect(resend?.sent.at(-1)?.to).toBe(ana.email)
   })
 })
