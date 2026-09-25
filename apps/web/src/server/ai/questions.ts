@@ -34,8 +34,9 @@ const question = z.object({
   choices: z
     .array(choice)
     .max(8)
-    .describe("Up to 8 likely answers. Empty for a question only typed."),
-  allowOther: z.boolean().describe("Let the user type another answer."),
+    .describe(
+      "Up to 8 likely answers. The user can always type another. Empty for a question only typed."
+    ),
   multiple: z.boolean().describe("Several choices may be picked."),
   showIf: z
     .object({
@@ -82,12 +83,6 @@ export const questionSet = z
           code: "custom",
           path: at("choices"),
           message: `The choice ${repeated} is given twice.`,
-        })
-      if (each.choices.length === 0 && !each.allowOther)
-        ctx.addIssue({
-          code: "custom",
-          path: at("choices"),
-          message: "A question needs choices or allowOther.",
         })
       if (each.showIf) {
         const parent = seen.get(each.showIf.question)
@@ -145,11 +140,10 @@ export function answersFor(questions: readonly Question[]) {
           questions.map((each) => [
             each.name,
             z
-              .array(
-                each.allowOther
-                  ? z.string().trim().min(1).max(MAX_ANSWER)
-                  : z.enum(each.choices.map((option) => option.value))
-              )
+              // A choice's value, or the user's own words: the card always
+              // has "Something else…", because the model sometimes left it
+              // off where the user needed it (a term's length, T20).
+              .array(z.string().trim().min(1).max(MAX_ANSWER))
               .min(1)
               .max(each.multiple ? each.choices.length + 1 : 1)
               .optional(),

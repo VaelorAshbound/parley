@@ -20,7 +20,6 @@ const set: QuestionSet = {
         { value: "1y", label: "1 year" },
         { value: "2y", label: "2 years", description: "Room to evaluate." },
       ],
-      allowOther: false,
       multiple: false,
     },
     {
@@ -31,7 +30,6 @@ const set: QuestionSet = {
         { value: "yes", label: "Yes" },
         { value: "no", label: "Not yet" },
       ],
-      allowOther: false,
       multiple: false,
     },
     {
@@ -39,7 +37,6 @@ const set: QuestionSet = {
       prompt: "Who signs for Northwind?",
       required: true,
       choices: [],
-      allowOther: true,
       multiple: false,
       showIf: { question: "hasSigner", answers: ["yes"] },
     },
@@ -48,7 +45,6 @@ const set: QuestionSet = {
       prompt: "Which state's law applies?",
       required: false,
       choices: [{ value: "DE", label: "Delaware" }],
-      allowOther: true,
       multiple: false,
     },
   ],
@@ -85,6 +81,21 @@ describe("the AI's questionnaire", () => {
     await expect
       .element(screen.getByRole("progressbar", { name: "Key terms progress" }))
       .toHaveTextContent("1 of 3")
+  })
+
+  test("always offers another answer beside the choices", async () => {
+    const { screen, onAnswer } = await show()
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Another answer" }),
+      "3 years{Enter}"
+    )
+    await userEvent.keyboard("b")
+    await screen.getByRole("button", { name: "Skip" }).click()
+
+    await expect
+      .poll(() => onAnswer.mock.calls[0]?.[0])
+      .toEqual({ term: ["3 years"], hasSigner: ["no"] })
   })
 
   test("picks an answer by its letter and moves on by itself", async () => {

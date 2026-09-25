@@ -12,7 +12,6 @@ const set = {
       prompt: "How long?",
       required: true,
       choices: [{ value: "1y", label: "1 year" }],
-      allowOther: false,
       multiple: false,
     },
   ],

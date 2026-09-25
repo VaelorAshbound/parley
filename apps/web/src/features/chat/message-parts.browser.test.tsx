@@ -154,7 +154,6 @@ const keyTerms = {
       prompt: "How long should the NDA last?",
       required: true,
       choices: [{ value: "2y", label: "2 years" }],
-      allowOther: false,
       multiple: false,
     },
     {
@@ -162,7 +161,6 @@ const keyTerms = {
       prompt: "Which state's law applies?",
       required: false,
       choices: [],
-      allowOther: true,
       multiple: false,
     },
   ],

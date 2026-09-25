@@ -223,22 +223,21 @@ function Steps({
                     ) : null}
                   </QuestionnaireChoice>
                 ))}
-                {question.allowOther ? (
-                  <QuestionnaireInput
-                    aria-label={
-                      question.choices.length > 0
-                        ? "Another answer"
-                        : question.prompt
-                    }
-                    placeholder={
-                      question.choices.length > 0
-                        ? "Something else…"
-                        : "Type your answer…"
-                    }
-                    maxLength={MAX_ANSWER}
-                    defaultValue={typed}
-                  />
-                ) : null}
+                {/* Always there: no one is stuck with the wrong choices. */}
+                <QuestionnaireInput
+                  aria-label={
+                    question.choices.length > 0
+                      ? "Another answer"
+                      : question.prompt
+                  }
+                  placeholder={
+                    question.choices.length > 0
+                      ? "Something else…"
+                      : "Type your answer…"
+                  }
+                  maxLength={MAX_ANSWER}
+                  defaultValue={typed}
+                />
               </QuestionnaireChoices>
               <QuestionnaireError />
             </QuestionnaireItem>

@@ -641,7 +641,6 @@ describe("the AI's questionnaire", () => {
         { value: "1y", label: "1 year" },
         { value: "2y", label: "2 years" },
       ],
-      allowOther: false,
       multiple: false,
     },
     {
@@ -649,7 +648,6 @@ describe("the AI's questionnaire", () => {
       prompt: "Which state's law applies?",
       required: false,
       choices: [{ value: "DE", label: "Delaware" }],
-      allowOther: true,
       multiple: false,
     },
   ]
@@ -740,7 +738,7 @@ describe("the AI's questionnaire", () => {
       client.chat.answer({
         id: draft.id,
         toolCallId: "call-1-0",
-        answers: { term: ["forever"] },
+        answers: { law: ["DE"] },
         today,
       })
     )

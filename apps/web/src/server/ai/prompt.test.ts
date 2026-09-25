@@ -94,6 +94,7 @@ describe("the chat's instructions", () => {
 
     expect(text).toMatch(/askQuestions/)
     expect(text).toMatch(/Each question asks for one thing/)
+    expect(text).toMatch(/the user can always type another answer/)
     expect(text).toMatch(/markComplete/)
   })
 

@@ -263,7 +263,6 @@ describe("the chat", () => {
             { value: "1y", label: "1 year" },
             { value: "2y", label: "2 years" },
           ],
-          allowOther: false,
           multiple: false,
         },
       ],

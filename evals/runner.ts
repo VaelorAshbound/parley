@@ -186,7 +186,7 @@ export async function userAnswers(
     .map(
       (question) =>
         `- ${question.name}: ${question.prompt}${question.required ? " (required)" : " (optional: leave it out to skip)"}${question.multiple ? " (several allowed)" : ""}${question.showIf ? ` (only if ${question.showIf.question} is one of ${question.showIf.answers.join(", ")})` : ""}
-  choices: ${question.choices.map((choice) => `${choice.value} = ${choice.label}`).join("; ") || "none"}${question.allowOther ? "\n  you may type your own answer instead" : ""}`
+  choices: ${question.choices.map((choice) => `${choice.value} = ${choice.label}`).join("; ") || "none"}; or type your own answer`
     )
     .join("\n")
   let reason = ""

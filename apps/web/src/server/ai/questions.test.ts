@@ -10,7 +10,6 @@ const term: Question = {
     { value: "1y", label: "1 year" },
     { value: "2y", label: "2 years" },
   ],
-  allowOther: false,
   multiple: false,
 }
 const law: Question = {
@@ -18,7 +17,6 @@ const law: Question = {
   prompt: "Which state's law applies?",
   required: true,
   choices: [{ value: "DE", label: "Delaware" }],
-  allowOther: true,
   multiple: false,
 }
 const hasSigner: Question = {
@@ -29,7 +27,6 @@ const hasSigner: Question = {
     { value: "yes", label: "Yes" },
     { value: "no", label: "Not yet" },
   ],
-  allowOther: false,
   multiple: false,
 }
 const signer: Question = {
@@ -37,7 +34,6 @@ const signer: Question = {
   prompt: "Who signs for Northwind?",
   required: true,
   choices: [],
-  allowOther: true,
   multiple: false,
   showIf: { question: "hasSigner", answers: ["yes"] },
 }
@@ -49,7 +45,6 @@ const extras: Question = {
     { value: "nonSolicit", label: "No hiring each other's staff" },
     { value: "return", label: "Return documents at the end" },
   ],
-  allowOther: true,
   multiple: true,
 }
 
@@ -91,17 +86,6 @@ describe("a question set from the model", () => {
     })
 
     expect(result.error?.issues[0]?.message).toMatch(/twice/)
-  })
-
-  test("needs choices, another answer, or both", () => {
-    const empty = { ...term, choices: [], allowOther: false }
-
-    const result = questionSet.safeParse({
-      title: "Key terms",
-      questions: [empty],
-    })
-
-    expect(result.error?.issues[0]?.message).toMatch(/choices or allowOther/)
   })
 
   test("shows a question only after the one it depends on", () => {
@@ -156,10 +140,10 @@ describe("the answers to a question set", () => {
     expect(result.success).toBe(true)
   })
 
-  test("refuse an answer that isn't one of the choices", () => {
-    const result = check({ term: ["forever"], law: ["DE"], hasSigner: ["no"] })
+  test("take the user's own words for any question, as Other is always there", () => {
+    const result = check({ term: ["3 years"], law: ["DE"], hasSigner: ["no"] })
 
-    expect(result.success).toBe(false)
+    expect(result.success).toBe(true)
   })
 
   test("refuse two answers to a single-answer question", () => {
