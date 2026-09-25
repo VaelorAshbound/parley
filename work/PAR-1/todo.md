@@ -668,7 +668,14 @@
     - e2e `test` makes a **fresh guest per test** (a guest's one draft can't be shared across tests). This also removes the order dependence in shell.spec "the new draft is in the sidebar's history" (PAR-8).
     - Worker tests with more than one draft use accounts; the long-chat test saves its first 14 turns directly instead of sending them in a burst; the 300-call test calls in-process (300 HTTP calls would each hold a test-Postgres connection until the file ends).
     - The evals' context gets open limiters (no binding in Node).
+  - Review fixes (2026-09-25; skills: test-driven-development, code-simplification, git-workflow-and-versioning):
+    - **Important:** Previews make at most 5 new guests per 10 s per network (was 30); Worker test at the edge, run red first. Owner step for a separate Preview OpenRouter key below.
+    - Spec §2 states the per-network rule as the code counts it; the carrier-NAT trade-off is in Decisions.
+    - Chat limit data is typed from the router (`InferClientErrors` + `isDefinedError`), no cast: renaming `resetsAt` on the server now fails the type check (tried). The unused TOO_MANY_REQUESTS message is gone (oRPC's own wins). Guest-network Worker tests use fixed, distinct IPs (no 1-in-100 flake).
+    - Simplified: the chat's `Quota` carries its limit and refusal (handlers keep their old shape); `withinLimit` takes the DRAFT_LIMIT error; one `ProblemNote` for the chat and the home page.
+    - Checked: `pnpm check`; `pnpm test` (1051, 1 skipped); `pnpm test:workers` (319); e2e Chromium + Firefox on port 3132, `--workers=2`, limits/shell/drafts/editing/export/auth/smoke: 67/68, then the one failure (drafts "Ctrl+K" as a signed-out visitor, a 30 s timeout on a cold dev server) 6/6 with `--repeat-each=3`.
   - For later:
+    - **T28/T35:** the 1-hour guest rule makes Better Auth keep every `rate_limit` row for an hour (was ~60 s), and its prune (`last_request < cutoff`) has no index. Fine at today's traffic; add an index on `rate_limit.last_request` or prune in the T28 cron.
     - **Lead:** the wave's worktree started from `main`'s first commit, not `PAR-1-parley`; I fast-forwarded my own branch to `PAR-1-parley` (630a811) before starting. Check the other wave worktrees.
     - **Lead/owner:** the Verify's manual burst test on the Preview after merge: 11 quick chat sends → the 11th shows "sending messages quickly"; a 2nd draft as a guest → "Guests keep one draft".
     - **T26:** `tierOf` must return "pro" for Pro users; `DAILY_MESSAGES.pro` (500) and the "Get Pro" link in the limit note are ready.
