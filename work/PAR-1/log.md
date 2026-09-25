@@ -85,3 +85,6 @@ T20 done (4308958..73290a7): pnpm evals, 16 real gpt-6-luna conversations throug
 
 ### 2026-09-25T09:20:00Z
 Demo: owner hit INVALID_ANSWERS (typed answers missing from a questionnaire). Not reproduced; added answers_refused log, recovery (chat reloads the server's copy, questionnaire comes back, typed progress kept until accepted), tests for mouse/Next paths (ae7c0e1, ca0c348). Root cause still open.
+
+### 2026-09-25T09:31:00Z
+Demo bug root cause: Firefox. The questionnaire library moves typed boxes in/out of the form via the form attribute; FormData follows the form owner, which Firefox didn't restore, so every typed answer was dropped (choices kept). Fixed by reading answers from the form's own inputs (d7a8545), with a test that drops a box's form owner. Found via the new answers_refused log + session user agent.
