@@ -13,6 +13,7 @@ import {
 
 import { authed, draftOwner, type BaseContext } from "../rpc/base"
 import { z } from "../zod"
+import { recent } from "./history"
 import { instructions } from "./prompt"
 import { chatTools, runningTools, type ChatTools } from "./tools"
 
@@ -23,8 +24,11 @@ import { chatTools, runningTools, type ChatTools } from "./tools"
 
 export type ChatMessage = UIMessage<unknown, UIDataTypes, ChatTools>
 
-/** Only the model's recent turns are sent; T19 sets the final limits. */
-const HISTORY = 40
+/**
+ * What the model sees of a long chat: its latest messages, up to about 12k
+ * tokens. With the instructions, a step stays under ~20k input tokens.
+ */
+const HISTORY = { messages: 40, characters: 48_000 }
 /** A turn may call tools a few times (pick, fill, fix a refusal, reply). */
 const STEPS = 8
 
@@ -75,10 +79,10 @@ export const chat = {
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const messages: ChatMessage[] = [
-        ...(await history(context, key)).slice(-HISTORY),
-        input.message,
-      ]
+      const messages = recent<ChatMessage>(
+        [...(await history(context, key)), input.message],
+        HISTORY
+      )
       await saveMessages(context.db, key, [input.message])
 
       const base: BaseContext = context
