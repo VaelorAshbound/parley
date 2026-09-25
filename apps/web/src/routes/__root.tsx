@@ -4,6 +4,7 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
+import { Toaster } from "@workspace/ui/components/toast"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import appCss from "@workspace/ui/globals.css?url"
 import { useEffect } from "react"
@@ -48,7 +49,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="theme">
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {/* Toasts (a delete's Undo, T22), in a landmark F6 jumps to. */}
+            <Toaster>{children}</Toaster>
+          </TooltipProvider>
         </ThemeProvider>
         <Scripts />
       </body>

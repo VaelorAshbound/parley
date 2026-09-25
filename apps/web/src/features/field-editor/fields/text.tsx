@@ -18,11 +18,14 @@ export function TextField({
   type = "text",
   autoComplete = "off",
   hideLabel,
+  selectOnFocus = false,
   ...labels
 }: Labels & {
   type?: "text" | "email" | "url" | "date"
   autoComplete?: string
   hideLabel?: boolean
+  /** Selects the text on focus, so typing replaces it (rename). */
+  selectOnFocus?: boolean
 }) {
   const { field, props } = useControl()
   return (
@@ -33,6 +36,9 @@ export function TextField({
         autoComplete={autoComplete}
         inputMode={type === "url" ? "url" : undefined}
         onChange={(event) => field.handleChange(event.target.value)}
+        onFocus={
+          selectOnFocus ? (event) => event.currentTarget.select() : undefined
+        }
       />
     </Control>
   )

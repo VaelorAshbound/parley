@@ -499,7 +499,34 @@
   - Files: `apps/web/src/server/auth.ts`, `src/routes/{_auth.tsx,_auth/sign-in.tsx,_auth/sign-up.tsx,_auth/verify-email.tsx,_app/_authed.tsx}`, `src/features/auth/*`, `emails/verify-email.tsx`, `test/link.test.ts`
   - Deps: T14 · Owner: Resend domain, OAuth apps · Skills: `create-auth`, `better-auth-security-best-practices`, `resend:resend`, `resend:react-email`
 
-- [ ] **T22: Sidebar history + search + draft actions** (M)
+- [x] **T22: Sidebar history + search + draft actions** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development, performance-optimization, git-workflow-and-versioning; neon:neon-postgres, shadcn (Sidebar, Command, Dialog, Item, Toast), vercel-react-best-practices. Checked:
+    - `pnpm check`; `pnpm test` (917, incl. component tests for the history, the menus and search); `pnpm test:workers` (175: list/search/filter/pages, rename, duplicate, delete, auth-matrix rows); e2e Chromium + Firefox 58: `drafts.spec.ts` 14/14. The full run had the known PAR-8 flakes (shell "a first visit" in Chromium, "doesn't shift the layout" in Firefox) and, at load 19, three Firefox click timeouts; `--last-failed` was green.
+    - **Query plans** (`packages/db/scripts/bench-history.ts`, 42k drafts, 5,001 users, Postgres 18): the sidebar and the next page read off the B-tree with no sort step, and search starts from the user's rows in an index, never a Seq Scan (tests check these plans). The search GIN index holds the user too (`btree_gin`): a common two-word search read 97 pages instead of 1,762.
+  - Decisions:
+    - **Search:** each word matched from its start (`acm:* & bol:*`); only letters and digits reach `to_tsquery`, so nothing typed is tsquery syntax. Debounce 150 ms in ⌘K, 250 ms on /drafts; the last results stay while the next load. Enter pressed before the results arrive waits and opens the top result for what was typed. The dialog and cmdk load on first use (hover or focus of Search starts the download).
+    - **Pages:** keyset on `(updated_at, id)`; `updated_at` is now `timestamp(3)`, so a page's last draft goes back from the browser exactly. Migration `0002_draft_history_pages` (with a hand-added `CREATE EXTENSION btree_gin`): the lead renumbers and applies it.
+    - **Days** in the user's time zone with Temporal. The browser saves its zone in a `tz` cookie, so the server groups the same way (no jump on hydration); UTC until then. The day rolls over at midnight.
+    - **Delete** hides the draft at once and reaches the server only when the Undo toast (6 s) closes; closing the tab before keeps the draft (the safe side). Base UI pauses the toast while the window is out of focus or the toast is hovered, so "delete, switch tab, close the tab" also keeps it (review, accepted; a `pagehide` flush is a later option). A copy keeps the agreement and answers, not the chat. Guests can rename and delete but not duplicate (one draft), and get no "View all".
+    - `/drafts` sits under `_app/_authed` (`requireAccount`); `q` and `type` are in the URL with `.catch()`. A new search on the open page doesn't wait in the loader (`cause === "stay"`): `useInfiniteQuery` + `keepPreviousData` keeps the old list (dimmed) until the new one arrives. The box's text is its own (`useSearchText`); it follows the URL only on Back/Forward.
+    - **Debounce** on /drafts is a small `useDebouncedCallback` (with `cancel`), not TanStack Pacer: Pacer is still 0.x and adds three packages.
+    - ⌘K sits beside the sidebar, not in it, and only when someone is signed in (a guest counts); a signed-out visitor keeps the browser's Ctrl+K.
+  - Found and fixed on the way:
+    - A deleted draft's link hung the page load in Chromium: the 404 was thrown while the chat query was still pending and got sent to the browser. The draft page's loader now lets both queries settle (still in parallel).
+    - `lib/cookies.ts` pulls TanStack Start's server runtime, which Vitest browser mode can't load; browser-only helpers moved to `lib/browser-cookies.ts`.
+    - shell.spec's history test assumed the worker's guest had no drafts; it now opens the sidebar only when collapsed.
+  - Review fixes (2026-09-25), each shown first by a failing test. Skills: test-driven-development, code-simplification, documentation-and-adrs, git-workflow-and-versioning:
+    - **/drafts dropped letters** typed while a search loaded, and Back or Clear could bring an old search back (a stale debounced value was sent again). `useSearchText` remembers what it sent; component tests cover late landing, Back, and Clear. The loading page no longer replaces the box mid-typing (e2e holds the request 1.2 s).
+    - **⌘K did nothing on a phone** (the dialog lived in the closed drawer) and popped up later. Opening search now closes the drawer; phone e2e for ⌘K and the drawer's Search.
+    - The /drafts loading view shares the page's frame (phone header row, two-row search bar): no jump on phones.
+    - A plan test now proves a rare match reads `draft_search_idx`. It flushes the GIN pending list first (`gin_clean_pending_list`), since rows added in a test's transaction all sit there and Postgres then skips the index; autovacuum does this in production.
+    - Spec §5 updated: the new B-tree with `id`, `timestamp(3)`, the `btree_gin` (user_id, search) index with its measured reason, and the shared Zod `draftTitle` instead of drizzle-zod.
+    - Simplified: one `todayKey` for server and browser, named day groups (`dayLabel`), `NoDrafts` for the empty states. Test hardening: e2e `startNda` waits for the draft page (Firefox aborted the next `goto`); the ⌘K debounce test allows a key after the pause on a busy machine.
+    - Gates: `pnpm check` clean; `pnpm test` 923 passed; `pnpm test:workers` 175 passed; e2e Chromium + Firefox, full run at load 18-22: the known PAR-8 flake (shell "a first visit", Chromium) and Firefox timeouts on a cold server; the Firefox ones passed on rerun, and "renames" + "fill a whole NDA" passed 2/2 serially. `drafts.spec.ts` has 10 tests per browser.
+  - For later:
+    - **Local dev DB:** `packages/db/.data` (shared by all worktrees) doesn't have `0002` yet. Not applied here so parallel tasks' migrations aren't skipped; apply after the merge renumbers it.
+    - A search of only punctuation ("(&)") lists every draft (tested choice: nothing to search for).
+    - **T35:** re-run `bench-history.ts` next to `neon inspect db`; cmdk brings `@radix-ui/react-dialog` into the lazy search chunk (not in the entry).
   - Accept:
     - The sidebar lists drafts grouped as Today / Yesterday / Last 7 days / Older (Temporal, in the user's time zone). "View all" leads to `/drafts`.
     - Search runs over titles, document types and party names, using the generated `tsvector` + GIN index with prefix matching, and debounce. `EXPLAIN` shows an index scan.

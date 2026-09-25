@@ -41,6 +41,13 @@ type UiState = {
   /** A first message typed on the home page, sent once its draft opens. */
   pending: { draftId: string; text: string } | null
   setPending: (pending: { draftId: string; text: string } | null) => void
+  /**
+   * Drafts deleted in this tab: hidden while their undo toast is open, and
+   * after, so a list fetched before the delete can't show them again (T22).
+   */
+  hidden: Record<string, true>
+  hide: (draftId: string) => void
+  unhide: (draftId: string) => void
 }
 
 export function createUiStore() {
@@ -74,6 +81,14 @@ export function createUiStore() {
     setRefused: (refused) => set({ refused }),
     pending: null,
     setPending: (pending) => set({ pending }),
+    hidden: {},
+    hide: (draftId) =>
+      set((state) => ({ hidden: { ...state.hidden, [draftId]: true } })),
+    unhide: (draftId) =>
+      set((state) => {
+        const { [draftId]: _, ...hidden } = state.hidden
+        return { hidden }
+      }),
   }))
 }
 

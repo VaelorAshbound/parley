@@ -19,6 +19,7 @@ import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as DevBrandRouteImport } from './routes/dev.brand'
+import { Route as AppAuthedDraftsRouteImport } from './routes/_app/_authed/drafts'
 import { Route as AppAuthedSettingsRouteImport } from './routes/_app/_authed/settings'
 import { Route as AppDDraftIdRouteImport } from './routes/_app/d.$draftId'
 
@@ -69,6 +70,11 @@ const DevBrandRoute = DevBrandRouteImport.update({
   path: '/dev/brand',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAuthedDraftsRoute = AppAuthedDraftsRouteImport.update({
+  id: '/drafts',
+  path: '/drafts',
+  getParentRoute: () => AppAuthedRoute,
+} as any)
 const AppAuthedSettingsRoute = AppAuthedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/drafts': typeof AppAuthedDraftsRoute
   '/settings': typeof AppAuthedSettingsRoute
   '/d/$draftId': typeof AppDDraftIdRoute
 }
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/drafts': typeof AppAuthedDraftsRoute
   '/settings': typeof AppAuthedSettingsRoute
   '/d/$draftId': typeof AppDDraftIdRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/_authed/drafts': typeof AppAuthedDraftsRoute
   '/_app/_authed/settings': typeof AppAuthedSettingsRoute
   '/_app/d/$draftId': typeof AppDDraftIdRoute
 }
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/dev/brand'
+    | '/drafts'
     | '/settings'
     | '/d/$draftId'
   fileRoutesByTo: FileRoutesByTo
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/dev/brand'
+    | '/drafts'
     | '/settings'
     | '/d/$draftId'
   id:
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_auth/verify-email'
     | '/dev/brand'
     | '/_app/'
+    | '/_app/_authed/drafts'
     | '/_app/_authed/settings'
     | '/_app/d/$draftId'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevBrandRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/_authed/drafts': {
+      id: '/_app/_authed/drafts'
+      path: '/drafts'
+      fullPath: '/drafts'
+      preLoaderRoute: typeof AppAuthedDraftsRouteImport
+      parentRoute: typeof AppAuthedRoute
+    }
     '/_app/_authed/settings': {
       id: '/_app/_authed/settings'
       path: '/settings'
@@ -252,10 +271,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAuthedRouteChildren {
+  AppAuthedDraftsRoute: typeof AppAuthedDraftsRoute
   AppAuthedSettingsRoute: typeof AppAuthedSettingsRoute
 }
 
 const AppAuthedRouteChildren: AppAuthedRouteChildren = {
+  AppAuthedDraftsRoute: AppAuthedDraftsRoute,
   AppAuthedSettingsRoute: AppAuthedSettingsRoute,
 }
 

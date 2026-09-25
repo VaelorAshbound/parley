@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Outlet } from "@tanstack/react-router"
 import { SidebarInset, SidebarProvider } from "@workspace/ui/components/sidebar"
 
+import {
+  readTimeZone,
+  timeZoneCookie,
+  todayKey,
+} from "@/features/drafts/calendar"
 import { readCookie } from "@/lib/cookies"
 import { viewerQuery } from "@/lib/session"
 import { UiStoreProvider } from "@/lib/ui-store"
@@ -22,16 +27,21 @@ export const Route = createFileRoute("/_app")({
       await context.queryClient.ensureQueryData(
         context.orpc.drafts.list.queryOptions({ input: {} })
       )
-    // shadcn's Sidebar saves open/closed here; read on the server so the
-    // first paint is already right.
-    return { sidebarCookie: readCookie("sidebar_state") }
+    return {
+      // shadcn's Sidebar saves open/closed here; read on the server so the
+      // first paint is already right.
+      sidebarCookie: readCookie("sidebar_state"),
+      // The history's days in the user's time zone, which the browser saved
+      // (UTC until it has): the server groups drafts as the browser will.
+      calendar: todayKey(readTimeZone(readCookie(timeZoneCookie))),
+    }
   },
   component: AppLayout,
 })
 
 function AppLayout() {
   const { viewer, orpc } = Route.useRouteContext()
-  const { sidebarCookie } = Route.useLoaderData()
+  const { sidebarCookie, calendar } = Route.useLoaderData()
   const drafts = useQuery({
     ...orpc.drafts.list.queryOptions({ input: {} }),
     enabled: viewer !== null,
@@ -47,7 +57,7 @@ function AppLayout() {
       {/* Motion follows the system's reduced-motion setting everywhere. */}
       <MotionConfig reducedMotion="user">
         <SidebarProvider defaultOpen={defaultOpen}>
-          <AppSidebar viewer={viewer} />
+          <AppSidebar viewer={viewer} orpc={orpc} calendarKey={calendar} />
           {/* min-w-0: a truncated row in the chat must not widen the page. */}
           <SidebarInset className="min-w-0">
             <Outlet />

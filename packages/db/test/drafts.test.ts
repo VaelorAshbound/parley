@@ -1,11 +1,14 @@
 import { eq, sql } from "drizzle-orm"
 import { test as base, describe, expect, inject } from "vite-plus/test"
 
+import type { SQLWrapper } from "drizzle-orm"
+
 import { user } from "../src/auth-schema.ts"
-import { connect } from "../src/client.ts"
+import { connect, type Db } from "../src/client.ts"
 import {
   createDraft,
   deleteDraft,
+  duplicateDraft,
   getDraft,
   listDrafts,
   listDraftsQuery,
@@ -18,6 +21,26 @@ const nda = {
   documentId: "mutual-nda",
   title: "NDA with Bolt",
 } as const
+
+/** The query's plan as text. */
+async function explain(db: Db, query: SQLWrapper) {
+  const plan = await db.execute<{ "QUERY PLAN": string }>(sql`EXPLAIN ${query}`)
+  return plan.rows.map((row) => row["QUERY PLAN"]).join("\n")
+}
+
+/**
+ * `count` drafts for the user, changed one minute apart, oldest first; their
+ * ids in that order.
+ */
+async function makeDrafts(db: Db, userId: string, count: number) {
+  const rows = await db.execute<{ id: string }>(sql`
+    INSERT INTO draft (user_id, document_id, title, updated_at)
+    SELECT ${userId}, 'mutual-nda', 'Draft ' || n,
+      timestamptz '2026-01-01' + n * interval '1 minute'
+    FROM generate_series(1, ${count}) AS n
+    RETURNING id`)
+  return rows.rows.map((row) => row.id)
+}
 
 describe("createDraft", () => {
   test("starts an empty draft owned by the user", async ({ db }) => {
@@ -149,13 +172,322 @@ describe("listDrafts", () => {
     await db.execute(sql`SET LOCAL enable_seqscan = off`)
     await db.execute(sql`SET LOCAL enable_bitmapscan = off`)
 
-    const plan = await db.execute<{ "QUERY PLAN": string }>(
-      sql`EXPLAIN ${listDraftsQuery(db, { userId: owner.id })}`
-    )
-    const text = plan.rows.map((row) => row["QUERY PLAN"]).join("\n")
+    const text = await explain(db, listDraftsQuery(db, { userId: owner.id }))
 
     expect(text).toContain("draft_user_id_updated_at_idx")
     expect(text).not.toContain("Sort")
+  })
+
+  test("reads the next page off the index too, with no sort step", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    await db.execute(sql`SET LOCAL enable_seqscan = off`)
+    await db.execute(sql`SET LOCAL enable_bitmapscan = off`)
+
+    const text = await explain(
+      db,
+      listDraftsQuery(db, {
+        userId: owner.id,
+        after: {
+          updatedAt: new Date("2026-01-01T00:00:00Z"),
+          id: "01920000-0000-7000-8000-000000000000",
+        },
+      })
+    )
+
+    expect(text).toMatch(/Index Cond: .*updated_at/)
+    expect(text).not.toContain("Sort")
+  })
+})
+
+describe("listDrafts pages", () => {
+  test("continues after the last draft of the page before", async ({ db }) => {
+    const owner = await makeUser(db)
+    const ids = await makeDrafts(db, owner.id, 5)
+
+    const first = await listDrafts(db, { userId: owner.id, limit: 2 })
+    const second = await listDrafts(db, {
+      userId: owner.id,
+      limit: 2,
+      after: first.at(-1),
+    })
+    const third = await listDrafts(db, {
+      userId: owner.id,
+      limit: 2,
+      after: second.at(-1),
+    })
+
+    expect([...first, ...second, ...third].map((each) => each.id)).toEqual(
+      ids.toReversed()
+    )
+  })
+
+  test("drafts changed in the same millisecond are neither skipped nor repeated", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const ids = await makeDrafts(db, owner.id, 4)
+    await db
+      .update(draft)
+      .set({ updatedAt: new Date("2026-03-01T00:00:00.123Z") })
+      .where(eq(draft.userId, owner.id))
+
+    const first = await listDrafts(db, { userId: owner.id, limit: 2 })
+    const second = await listDrafts(db, {
+      userId: owner.id,
+      limit: 2,
+      after: first.at(-1),
+    })
+
+    expect([...first, ...second].map((each) => each.id)).toEqual(
+      ids.toReversed()
+    )
+  })
+
+  test("keeps the database's time exact to the millisecond, so a page's last time finds its place", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const created = await createDraft(db, { userId: owner.id, ...nda })
+
+    const [row] = await db
+      .select({
+        exact: sql<boolean>`${draft.updatedAt} = ${created.updatedAt.toISOString()}::timestamptz`,
+      })
+      .from(draft)
+      .where(eq(draft.id, created.id))
+
+    expect(row?.exact).toBe(true)
+  })
+})
+
+describe("listDrafts search", () => {
+  async function seed(db: Db) {
+    const owner = await makeUser(db)
+    const acme = await createDraft(db, {
+      userId: owner.id,
+      documentId: "mutual-nda",
+      title: "Roadmap review",
+      fields: {
+        party1: { company: "Acme Analytics, Inc.", name: "Ana Diaz" },
+        party2: { company: "Bolt Retail LLC" },
+      },
+    })
+    const pilot = await createDraft(db, {
+      userId: owner.id,
+      documentId: "pilot-agreement",
+      title: "Pilot with Zenith",
+      fields: { provider: { company: "Zenith Labs" } },
+    })
+    return { owner, acme, pilot }
+  }
+  const search = async (db: Db, userId: string, query: string) =>
+    (await listDrafts(db, { userId, query })).map((each) => each.title)
+
+  test("finds a draft by the start of a word, as you type", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "roa")).toEqual(["Roadmap review"])
+    expect(await search(db, owner.id, "ZEN")).toEqual(["Pilot with Zenith"])
+  })
+
+  test("finds a draft by a party's company or name", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "bolt")).toEqual(["Roadmap review"])
+    expect(await search(db, owner.id, "diaz")).toEqual(["Roadmap review"])
+  })
+
+  test("finds a draft by its document type", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "pilot agree")).toEqual([
+      "Pilot with Zenith",
+    ])
+    expect(await search(db, owner.id, "nda")).toEqual(["Roadmap review"])
+  })
+
+  test("needs every word to match", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "acme bolt")).toEqual(["Roadmap review"])
+    expect(await search(db, owner.id, "acme zenith")).toEqual([])
+  })
+
+  test("reads punctuation and search syntax as plain text", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "Acme, Inc.")).toEqual(["Roadmap review"])
+    expect(await search(db, owner.id, "!acme | ' & :* (")).toEqual([
+      "Roadmap review",
+    ])
+    expect(await search(db, owner.id, "(&)")).toEqual([
+      "Pilot with Zenith",
+      "Roadmap review",
+    ])
+  })
+
+  test("never finds another user's drafts", async ({ db }) => {
+    await seed(db)
+    const other = await makeUser(db)
+
+    expect(await search(db, other.id, "acme")).toEqual([])
+  })
+
+  test("filters by document type, alone or with a search", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    const pilots = await listDrafts(db, {
+      userId: owner.id,
+      documentId: "pilot-agreement",
+    })
+    const none = await listDrafts(db, {
+      userId: owner.id,
+      documentId: "pilot-agreement",
+      query: "acme",
+    })
+
+    expect(pilots.map((each) => each.title)).toEqual(["Pilot with Zenith"])
+    expect(none).toEqual([])
+  })
+
+  /**
+   * Many users with many drafts, as in production, so the plan is the one
+   * Postgres would really choose (scripts/bench-history.ts measures more):
+   * the owner has 1,000 of 11,000, and one of theirs names Quokka Systems.
+   */
+  async function seedMany(db: Db) {
+    const owner = await makeUser(db)
+    await db.execute(sql`
+      INSERT INTO "user" (id, name, email)
+      SELECT 'many-' || n, 'Many ' || n, 'many-' || n || '@example.test'
+      FROM generate_series(1, 200) AS n`)
+    await db.execute(sql`
+      INSERT INTO draft (user_id, document_id, title)
+      SELECT 'many-' || (n % 200 + 1), 'mutual-nda', 'Draft ' || n
+      FROM generate_series(1, 10000) AS n`)
+    await makeDrafts(db, owner.id, 1000)
+    await createDraft(db, {
+      userId: owner.id,
+      ...nda,
+      fields: { party1: { company: "Quokka Systems" } },
+    })
+    // What autovacuum does in production: move the new rows out of the GIN
+    // index's pending list, which Postgres would otherwise scan in full.
+    await db.execute(sql`SELECT gin_clean_pending_list('draft_search_idx')`)
+    await db.execute(sql`ANALYZE draft`)
+    return owner
+  }
+
+  test("reads only this user's drafts off an index, never the whole table", async ({
+    db,
+  }) => {
+    const owner = await seedMany(db)
+
+    const text = await explain(
+      db,
+      listDraftsQuery(db, { userId: owner.id, query: "quok" })
+    )
+
+    // Postgres picks the user's B-tree or the search index, by the numbers;
+    // both start from this user's rows.
+    expect(text).toMatch(/Index Cond: \(+user_id = /)
+    expect(text).not.toContain("Seq Scan")
+  })
+
+  test("finds a rare match through the search index", async ({ db }) => {
+    const owner = await seedMany(db)
+
+    const text = await explain(
+      db,
+      listDraftsQuery(db, { userId: owner.id, query: "quokka systems" })
+    )
+
+    expect(text).toMatch(/Bitmap Index Scan on draft_search_idx/)
+    expect(text).not.toContain("Seq Scan")
+  })
+
+  test("keeps the user in the search index, so a search skips other users' matches", async ({
+    db,
+  }) => {
+    const [index] = (
+      await db.execute<{ indexdef: string }>(
+        sql`SELECT indexdef FROM pg_indexes WHERE indexname = 'draft_search_idx'`
+      )
+    ).rows
+
+    expect(index?.indexdef).toContain("USING gin (user_id, search)")
+  })
+})
+
+describe("duplicateDraft", () => {
+  test("copies the agreement, the answers and the status under a new title", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const original = await createDraft(db, {
+      userId: owner.id,
+      ...nda,
+      fields: { purpose: "Resale" },
+    })
+    await updateDraft(
+      db,
+      { id: original.id, userId: owner.id },
+      { status: "complete" }
+    )
+
+    const copy = await duplicateDraft(
+      db,
+      { id: original.id, userId: owner.id },
+      { title: "NDA with Bolt (copy)" }
+    )
+
+    expect(copy).toMatchObject({
+      userId: owner.id,
+      documentId: "mutual-nda",
+      title: "NDA with Bolt (copy)",
+      fields: { purpose: "Resale" },
+      status: "complete",
+      firstExportedAt: null,
+    })
+    expect(copy?.id).not.toBe(original.id)
+  })
+
+  test("leaves the chat behind", async ({ db }) => {
+    const owner = await makeUser(db)
+    const original = await createDraft(db, { userId: owner.id, ...nda })
+    await db.insert(message).values({
+      id: "m-dup",
+      draftId: original.id,
+      role: "user",
+      parts: [{ type: "text", text: "Hi" }],
+    })
+
+    const copy = await duplicateDraft(
+      db,
+      { id: original.id, userId: owner.id },
+      { title: "Copy" }
+    )
+
+    expect(
+      await db.select().from(message).where(eq(message.draftId, copy!.id))
+    ).toEqual([])
+  })
+
+  test("can't copy another user's draft", async ({ db }) => {
+    const owner = await makeUser(db)
+    const other = await makeUser(db)
+    const original = await createDraft(db, { userId: owner.id, ...nda })
+
+    expect(
+      await duplicateDraft(
+        db,
+        { id: original.id, userId: other.id },
+        { title: "Taken" }
+      )
+    ).toBeUndefined()
+    expect(await listDrafts(db, { userId: other.id })).toEqual([])
   })
 })
 

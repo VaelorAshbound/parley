@@ -4,7 +4,13 @@ import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
 import { describe, expect, it, vi } from "vitest"
 
-import { browserClient, call, signInGuest } from "./helpers"
+import {
+  browserClient,
+  call,
+  chatClient,
+  scriptedModel,
+  signInGuest,
+} from "./helpers"
 
 const today = "2026-09-24"
 
@@ -308,6 +314,187 @@ describe("drafts.list", () => {
     const listed = await mine.drafts.list({})
 
     expect(listed.map((draft) => draft.id)).toEqual([first.id, second.id])
+  })
+
+  it("searches titles, document types and party names from the start of each word", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const nda = await client.drafts.create({ documentId: "mutual-nda", today })
+    await client.drafts.create({ documentId: "csa", today })
+    await client.drafts.updateFields({
+      id: nda.id,
+      changes: [{ key: "party2", value: { company: "Northwind Labs" } }],
+    })
+
+    const byParty = await client.drafts.list({ query: "north" })
+    const byType = await client.drafts.list({ query: "Mutual nd" })
+
+    expect(byParty.map((draft) => draft.id)).toEqual([nda.id])
+    expect(byType.map((draft) => draft.id)).toEqual([nda.id])
+  })
+
+  it("filters by document type and goes on page by page", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const ndas = [
+      await client.drafts.create({ documentId: "mutual-nda", today }),
+      await client.drafts.create({ documentId: "mutual-nda", today }),
+      await client.drafts.create({ documentId: "mutual-nda", today }),
+    ]
+    await client.drafts.create({ documentId: "csa", today })
+
+    const first = await client.drafts.list({
+      documentId: "mutual-nda",
+      limit: 2,
+    })
+    const next = await client.drafts.list({
+      documentId: "mutual-nda",
+      limit: 2,
+      after: first.at(-1),
+    })
+
+    expect([...first, ...next].map((draft) => draft.id)).toEqual(
+      ndas.map((draft) => draft.id).toReversed()
+    )
+  })
+
+  it("refuses a search longer than a search box allows", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+
+    const { error } = await safe(client.drafts.list({ query: "a".repeat(101) }))
+
+    expect(error).toMatchObject({ code: "BAD_REQUEST" })
+  })
+})
+
+describe("drafts.rename", () => {
+  it("saves the new title, trimmed", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    const renamed = await client.drafts.rename({
+      id: draft.id,
+      title: "  NDA with Northwind  ",
+    })
+
+    expect(renamed.title).toBe("NDA with Northwind")
+    expect((await client.drafts.get({ id: draft.id })).title).toBe(
+      "NDA with Northwind"
+    )
+  })
+
+  it("keeps the title when switching agreements after a rename", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.rename({ id: draft.id, title: "Northwind" })
+
+    const switched = await client.drafts.chooseDocument({
+      id: draft.id,
+      documentId: "csa",
+      today,
+    })
+
+    expect(switched.title).toBe("Northwind")
+  })
+
+  it.each([
+    ["an empty title", "   "],
+    ["a title over 100 characters", "a".repeat(101)],
+  ])("refuses %s", async (_, title) => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    const { error } = await safe(client.drafts.rename({ id: draft.id, title }))
+
+    expect(error).toMatchObject({ code: "BAD_REQUEST" })
+  })
+})
+
+describe("drafts.duplicate", () => {
+  it("makes a copy with the same answers, marked as a copy, first in the list", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.updateFields({ id: draft.id, changes: ndaChanges })
+
+    const copy = await client.drafts.duplicate({ id: draft.id })
+
+    expect(copy).toMatchObject({
+      documentId: "mutual-nda",
+      title: "Mutual Non-Disclosure Agreement (copy)",
+      fields: (await client.drafts.get({ id: draft.id })).fields,
+    })
+    expect(copy.id).not.toBe(draft.id)
+    expect((await client.drafts.list({}))[0]?.id).toBe(copy.id)
+  })
+
+  it("starts the copy with an empty chat", async () => {
+    const { client, settle } = await chatClient(
+      (await signInGuest()).cookie,
+      scriptedModel([[{ text: "Noted." }]])
+    )
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const stream = await client.chat.send({
+      id: draft.id,
+      message: {
+        id: crypto.randomUUID(),
+        role: "user",
+        parts: [{ type: "text", text: "Hello" }],
+      },
+      today,
+    })
+    for await (const _ of stream);
+    await settle()
+    expect(await client.chat.messages({ id: draft.id })).toHaveLength(2)
+
+    const copy = await client.drafts.duplicate({ id: draft.id })
+
+    expect(await client.chat.messages({ id: copy.id })).toEqual([])
+  })
+
+  it("keeps a long title within the limit", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.rename({ id: draft.id, title: "a".repeat(100) })
+
+    const copy = await client.drafts.duplicate({ id: draft.id })
+
+    expect(copy.title).toHaveLength(100)
+    expect(copy.title.endsWith(" (copy)")).toBe(true)
+  })
+})
+
+describe("drafts.delete", () => {
+  it("deletes the draft: gone from the list and not found after", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const kept = await client.drafts.create({ documentId: "csa", today })
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    await client.drafts.delete({ id: draft.id })
+
+    expect((await client.drafts.list({})).map((each) => each.id)).toEqual([
+      kept.id,
+    ])
+    const { error } = await safe(client.drafts.get({ id: draft.id }))
+    expect(error).toMatchObject({ code: "NOT_FOUND" })
   })
 })
 
