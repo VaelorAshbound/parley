@@ -9,6 +9,7 @@ import { createElement } from "react"
 
 import { VerifyEmail } from "../emails/verify-email"
 
+import { auditHooks } from "./audit"
 import { createMailer } from "./email"
 import { logInfo } from "./log"
 
@@ -112,6 +113,8 @@ export function createAuth({
       // 5 minutes to reach other devices (spec §5 Auth).
       cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },
     },
+    // Who signed in, out, and changed what: IDs only (spec §5 Auth).
+    databaseHooks: auditHooks(),
     // Memory would reset per isolate on Workers.
     rateLimit: { enabled: true, storage: "database" },
     advanced: {
