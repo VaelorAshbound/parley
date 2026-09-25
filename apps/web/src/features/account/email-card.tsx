@@ -103,6 +103,7 @@ export function EmailCard({
       <CardContent className="flex flex-col gap-6">
         <LinkNotice account={account} email={linkEmail} error={linkError} />
         <form
+          method="post"
           noValidate
           onSubmit={(event) => {
             event.preventDefault()

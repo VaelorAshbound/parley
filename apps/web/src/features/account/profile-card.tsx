@@ -61,6 +61,7 @@ export function ProfileCard({ account }: { account: NonNullable<Viewer> }) {
       </CardHeader>
       <CardContent>
         <form
+          method="post"
           noValidate
           onSubmit={(event) => {
             event.preventDefault()
