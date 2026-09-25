@@ -3,7 +3,7 @@ import { env } from "cloudflare:workers"
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
 import { simulateReadableStream, type LanguageModel } from "ai"
 import { MockLanguageModelV4 } from "ai/test"
-import { expect } from "vitest"
+import { afterAll, expect, onTestFinished } from "vitest"
 
 import { api } from "../../web/src/server/api"
 import { createAuth } from "../../web/src/server/auth"
@@ -80,6 +80,16 @@ export async function chatClient(
     reqHeaders,
     resHeaders: new Headers(),
   })
+  // A real Worker's request ends and takes its socket with it; these
+  // in-process clients don't, and a run once ran the test Postgres out of
+  // connections. Each closes after its test (and its pending saves), or
+  // after its file when made while the file is collected (the auth matrix).
+  const close = async () => {
+    await Promise.allSettled(later)
+    await db.$client.end()
+  }
+  if (expect.getState().currentTestName === undefined) afterAll(close)
+  else onTestFinished(close)
   return { client, settle: () => Promise.all(later.splice(0)) }
 }
 
