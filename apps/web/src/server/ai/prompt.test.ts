@@ -1,9 +1,9 @@
-import { definitions, initialValues } from "@workspace/documents"
+import { type AnyField, definitions, initialValues } from "@workspace/documents"
 import { describe, expect, test } from "vite-plus/test"
 
 import { documentList } from "@/lib/documents"
 
-import { instructions, RELATED } from "./prompt"
+import { instructions, RELATED, wording } from "./prompt"
 
 const nda = definitions["mutual-nda"]
 
@@ -105,6 +105,24 @@ describe("the chat's instructions", () => {
 
     expect(provider).toMatch(/…$/)
     expect(provider?.length).toBeLessThanOrEqual(160)
+  })
+
+  test("keep two options of one choice apart after shortening", () => {
+    // If the words that tell two options apart came after the cut, the
+    // model would see the same text twice.
+    const alike = Object.values(definitions).flatMap((definition) =>
+      Object.entries<AnyField>(definition.fields).flatMap(([key, field]) => {
+        if (field.kind !== "choice" && field.kind !== "choices") return []
+        const seen = Object.values(field.options).map((option) =>
+          wording(option.label)
+        )
+        return new Set(seen).size === seen.length
+          ? []
+          : [`${definition.id}.${key}`]
+      })
+    )
+
+    expect(alike).toEqual([])
   })
 
   test("give the rules for parts the model tends to fill wrongly", () => {

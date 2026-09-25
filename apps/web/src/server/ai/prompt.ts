@@ -98,6 +98,14 @@ function shape(schema: z.ZodType) {
 /** The longest option wording the model reads; the start says what it is. */
 const WORDING = 160
 
+/** An option's wording on one line, cut to WORDING characters. */
+export function wording(label: string) {
+  const text = label.replaceAll(/\s+/g, " ")
+  return text.length > WORDING
+    ? `${text.slice(0, WORDING - 1).trimEnd()}…`
+    : text
+}
+
 /**
  * What each option of a choice says in the document. The schema has only
  * the option keys, and a key like "commonPaperCsa" misled the model (T30).
@@ -105,10 +113,7 @@ const WORDING = 160
 function options(field: AnyField) {
   if (field.kind !== "choice" && field.kind !== "choices") return ""
   return ` Options: ${Object.entries(field.options)
-    .map(([key, option]) => {
-      const text = option.label.replaceAll(/\s+/g, " ")
-      return `${key} = ${JSON.stringify(text.length > WORDING ? `${text.slice(0, WORDING - 1).trimEnd()}…` : text)}`
-    })
+    .map(([key, option]) => `${key} = ${JSON.stringify(wording(option.label))}`)
     .join("; ")}.`
 }
 
