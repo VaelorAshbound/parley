@@ -221,6 +221,7 @@ test("says the agreement is complete once nothing is missing", async () => {
         },
       ]}
       definition={nda}
+      download={<button type="button">Download PDF</button>}
     />
   )
 
@@ -228,5 +229,9 @@ test("says the agreement is complete once nothing is missing", async () => {
     .element(
       screen.getByText("Your Mutual Non-Disclosure Agreement is complete")
     )
+    .toBeVisible()
+  // The way to the file comes with the news.
+  await expect
+    .element(screen.getByRole("button", { name: "Download PDF" }))
     .toBeVisible()
 })

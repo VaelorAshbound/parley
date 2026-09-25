@@ -585,7 +585,39 @@
 
 ## Phase 4: Export, share, billing
 
-- [ ] **T24: Export PDF + DOCX with quota** (M)
+- [x] **T24: Export PDF + DOCX with quota** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development, doubt-driven-development (degraded: no nested reviewer in a sub-agent, cross-model skipped in a non-interactive run), observability-and-instrumentation, documentation-and-adrs, frontend-ui-engineering, git-workflow-and-versioning; cloudflare:cloudflare (Browser Run), anthropic-skills:pdf, anthropic-skills:docx, shadcn. Checked:
+    - `pnpm check`; `pnpm test` (935); `pnpm test:coverage` (thresholds met); `pnpm test:workers` (199: export 18, auth matrix with `export.pdf`/`export.docx` rows, verified); `pnpm db:check`.
+    - `test:workers:real` for `export.real.test.ts` only (no Resend): a real Browser Run PDF read back with unpdf (5 pages, the draft's words, "Page 1 of 5" … "Page 5 of 5", the demo note on every page, "Confidential Information" readable, no fallback serif) and a Word file built in workerd and read back.
+    - e2e Chromium + Firefox, port 3123: 41/46; the 5 failures were the 2 known PAR-8 ones and 3 load flakes (load average 11), green on rerun (`--repeat-each 2`, one worker). New `export.spec.ts`: a guest asks for the PDF and is sent to sign up, back to the draft.
+    - Through the UI in dev: sign up, confirm the email, fill the NDA, Download → PDF (a real file in 3.9–4.9 s); Word → the Pro note; screenshots at 1440 light and dark, and 375.
+    - Browser Run use: 5 real prints in all. Resend: no sends.
+  - Decisions:
+    - **Counted documents are rows in a new `counted_export` table** (migration `0003_counted_export`, additive), so deleting a downloaded draft doesn't give its place back. **ADR-0006**.
+    - **Order of work:** refuse early (plan, quota, unfinished draft: typed `INCOMPLETE` names what is missing, `NO_DOCUMENT`) before any Browser Run time; build the file; stop if the user left (`request.signal`); then count under a per-user `pg_advisory_xact_lock`. A failed print or a closed tab never costs a free document, and two downloads at once can't both take the last one (Worker test).
+    - **Choosing another agreement makes it a new document** (`firstExportedAt` reset); editing a counted draft and downloading it again stays free, as the spec says.
+    - **Typed errors drive the UI** (`exportProblem`): guest → "Create an account" (back to the draft), unconfirmed → confirm the email, `QUOTA_EXCEEDED` → "Get unlimited with Pro", `PRO_REQUIRED` → "Upgrade to Pro, you can still download a PDF", `EXPORT_FAILED` (503) → try again. Both paywall links go to `/pricing` (T26).
+    - **Download menu in the document panel** (PDF, Word with a Pro badge; a spinner while the file is made, no double start). A refused download's note floats over the document (nothing moves) and belongs to its own draft. The chat's "complete" card has **Download PDF**, and the model now points to it.
+    - **The file name travels in `Content-Disposition`** (oRPC sends a returned `File` as the body); a title with accents and a dash arrives whole (Worker test through real HTTP).
+    - **The fonts and the `docx` library load on first export**, so other requests don't pay to start them.
+    - One `export` log line per download (outcome, format, tier, counted, browserMs, bytes; never the draft's words): refusals too, since the paywall rate is the upgrade page's number.
+  - Found and fixed on the way:
+    - **The real PDF had no header or footer:** Browser Run doesn't draw CSS page margin boxes, so the demo note (spec: on every page), the name and "Page X of Y" were missing. The engine now gives them as Chrome header/footer templates (`printFrame`, documented Quick Action options) and the print page drops the margin boxes, so a Chrome that draws both can't print them twice (11 HTML snapshots lose those 3 lines).
+    - **Browser Run embeds the variable brand fonts as Type 3 fonts**, and their "fi"/"ff" ligatures came out as blanks ("Con dential" couldn't be found or copied). The print fonts use plain letters now.
+  - For later:
+    - **T26:** `planOf` returns "free" until it reads the Polar plan; `/pricing` doesn't exist yet, so the upgrade links 404 until then.
+    - **T27:** add `export.*` to the per-user RPC rate limit (re-exports are free but each prints with Browser Run).
+    - **T31:** consider static (non-variable) brand fonts for the PDF: real embedded TrueType subsets instead of Type 3, with ligatures kept. Look at one real PDF per agreement (the header/footer placement was checked in local Chromium with the same templates).
+    - **T37/T25:** the phone design has a Share + Download bar at the bottom of the document; Download is in the header for now.
+  - Review fixes (2026-09-25), each test-first:
+    - **A file name never ends in half an emoji.** It was cut by UTF-16 units, so an emoji across character 80 was split and the download header broke after the document was counted. It is now cut by grapheme (`Intl.Segmenter`), and a lone surrogate is left out (unit tests + a Worker test through the real header).
+    - **Switching back to a downloaded agreement stays free.** `counted_export` now has `document_id`, unique per (draft, agreement); `chooseDocument` sets `firstExportedAt` from that row. NDA → DPA by mistake → NDA no longer counts twice. Migration 0002 regenerated (still this branch's own); ADR-0006 updated. The switched-agreement Worker test now downloads again and sees 2 rows.
+    - **One download at a time per draft**, from the panel or the chat: a shared mutation key `['export', draftId]` (browser tests).
+    - **"Confirm your email" offers "Get a new link"** to T21's verify page, back to the draft. `exportProblem` drops its unused `format`.
+    - Simplified: one `ExportOutcome` arm for plain refusals; `useDownload` checks the draft where it uses it.
+    - Not changed: files are buffered, not streamed (fine at these sizes; the Accept's "stream" is wording). `/pricing` and Word for Pro wait for T26.
+    - **Lead: T27's Must/Accept needs "`export.pdf`/`export.docx` are in the per-user RPC rate limit, with a Worker test at the edge"** before the first production deploy: re-exports are free and each one is a Browser Run print. I may only edit this block, so it isn't in T27's yet.
+    - Gates: `pnpm check`; `pnpm test` (942); `pnpm test:workers` (201); `pnpm db:check`. e2e on port 3123 with a fresh local database `parley_t24b` (the old `parley_t24` has the first 0002): at load 20+ many timeouts; at low load, auth + export 12/12 in Chromium (`--repeat-each 2`), and Firefox auth/shell/editing/smoke 20/22. The 2 left: PAR-8's Firefox layout shift, and shell.spec "sidebar's history", which fails whenever the worker's shared guest already has drafts (the sidebar then starts open and the test's toggle closes it). It passes alone; not T24's (lead: file it).
   - Accept:
     - `export.pdf` (Browser Run from `toPrintHtml`) and `export.docx` stream a download named `<Title> – <Document>.pdf`.
     - The first export sets `firstExportedAt` and counts toward the 3 free documents a month. Re-exports are free. DOCX needs Pro.
@@ -621,6 +653,8 @@
 
 - [ ] **T27: Turnstile, rate limits, AI budgets** (M)
   - Must (T14 review): cap drafts per user (guest 1, spec §2 Limits) and new guests per IP, and rate-limit `/api/rpc` too: Better Auth's limiter only covers `/api/auth`.
+  - Must (T24 review): `export.pdf` and `export.docx` are in the per-user RPC rate limit (Rate Limiting binding), with a Worker test at the edge. Re-exports are free and each is a ~4 s Browser Run print. Before the first production deploy.
+  - Must (T21 notes): add `/sign-in/anonymous` to the captcha endpoints in auth.ts (same widget, action "auth"); guest sign-in then sends the Turnstile header (lib/auth-client.ts `signInGuest`, and the e2e guest fixture).
   - Accept:
     - Turnstile runs before a guest's first message through Better Auth's `captcha` plugin on `/sign-in/anonymous` (no separate siteverify code). The Rate Limiting binding allows 10 requests per 10 s on the AI routes, through `CloudflareRateLimiter` + the oRPC rate-limit middleware and headers plugin. The typed `RATE_LIMITED` / `DAILY_LIMIT` errors drive the UI.
     - Per-user daily message limits (guest 20, free 100, Pro 500) and cost tracking in `aiUsage`. Friendly messages when a limit is hit.

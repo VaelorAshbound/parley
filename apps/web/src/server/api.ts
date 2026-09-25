@@ -9,6 +9,7 @@ import { timing, type TimingVariables } from "hono/timing"
 
 import { createModel } from "./ai/model"
 import { createAuth } from "./auth"
+import { browserRunPrinter } from "./files"
 import { annotate, logError, type LogVariables } from "./log"
 import { requestLog } from "./middleware"
 import { rpcHandler } from "./rpc/router"
@@ -31,7 +32,12 @@ async function services(c: Context<AppEnv>) {
     env: c.env,
     waitUntil: (promise) => c.executionCtx.waitUntil(promise),
   })
-  return { db, auth, model: createModel(c.env) }
+  return {
+    db,
+    auth,
+    model: createModel(c.env),
+    printPdf: browserRunPrinter(c.env.BROWSER),
+  }
 }
 
 // Bodies are read in full, and one isolate serves many requests: cap them
@@ -46,13 +52,14 @@ const auth = new Hono<AppEnv>()
 const rpc = new Hono<AppEnv>()
   .use(bodyLimit({ maxSize: 128 * 1024 }))
   .use("/*", async (c, next) => {
-    const { db, auth, model } = await services(c)
+    const { db, auth, model, printPdf } = await services(c)
     const { matched, response } = await rpcHandler.handle(c.req.raw, {
       prefix: "/api/rpc",
       context: {
         db,
         auth,
         model,
+        printPdf,
         waitUntil: (promise) => c.executionCtx.waitUntil(promise),
       },
     })

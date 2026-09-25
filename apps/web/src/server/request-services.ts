@@ -4,6 +4,7 @@ import { env, waitUntil } from "cloudflare:workers"
 
 import { createModel } from "./ai/model"
 import { createAuth } from "./auth"
+import { browserRunPrinter } from "./files"
 
 // The database client and auth instance for the page request being rendered
 // (SSR loaders and server functions). One per request, made on first use;
@@ -17,6 +18,7 @@ async function create() {
     db,
     auth: createAuth({ db, env, waitUntil }),
     model: createModel(env),
+    printPdf: browserRunPrinter(env.BROWSER),
     waitUntil,
   }
 }

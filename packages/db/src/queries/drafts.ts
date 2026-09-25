@@ -109,7 +109,12 @@ function prefixQuery(text: string) {
 export async function updateDraft(
   db: Db,
   key: DraftKey,
-  changes: Partial<Pick<Draft, "documentId" | "title" | "fields" | "status">>
+  changes: Partial<
+    Pick<
+      Draft,
+      "documentId" | "title" | "fields" | "status" | "firstExportedAt"
+    >
+  >
 ) {
   const [row] = await db
     .update(draft)

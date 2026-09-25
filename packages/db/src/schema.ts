@@ -12,6 +12,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core"
 
@@ -143,6 +144,39 @@ export const aiUsage = pgTable(
   },
   // One row per user and day. The key doubles as the (user_id, day) index.
   (table) => [primaryKey({ columns: [table.userId, table.day] })]
+)
+
+/**
+ * One row per counted document (spec §2 Quota): a draft's first export. The
+ * monthly limit counts these rows, not the drafts, so deleting a downloaded
+ * draft doesn't give its place back (ADR-0006). No foreign key to the draft
+ * for that reason; the rows go with the user.
+ */
+export const countedExport = pgTable(
+  "counted_export",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    draftId: uuid("draft_id").notNull(),
+    // The agreement counted: switching a draft to another one and back
+    // doesn't count the first again (spec §2 Quota).
+    documentId: text("document_id").$type<DocumentId>().notNull(),
+    countedAt: timestamp("counted_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("counted_export_user_id_counted_at_idx").on(
+      table.userId,
+      table.countedAt
+    ),
+    uniqueIndex("counted_export_draft_id_document_id_idx").on(
+      table.draftId,
+      table.documentId
+    ),
+  ]
 )
 
 export const draftRelations = relations(draft, ({ one, many }) => ({

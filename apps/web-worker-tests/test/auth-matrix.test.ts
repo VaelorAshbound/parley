@@ -2,25 +2,36 @@ import { ORPCError, safe } from "@orpc/client"
 import { describe, expect, it } from "vitest"
 
 import { router } from "../../web/src/server/rpc/router"
-import { serverClient, signInGuest, signUpUser } from "./helpers"
+import {
+  serverClient,
+  signInGuest,
+  signUpUser,
+  signUpVerified,
+} from "./helpers"
 
 // Every procedure × every kind of caller gets exactly the allowed result
 // (spec §6 Auth matrix). A new procedure fails the completeness test below
-// until it has a row here. Owners and others are guests and signed-up
-// accounts (T21); T26 adds Pro. Settings (T23) are for accounts only.
+// until it has a row here. Owners and others are guests, signed-up
+// accounts (T21) and accounts with a confirmed email (T24); T26 adds Pro.
+// Settings (T23) are for accounts only.
 
 type Caller =
   | "nobody"
   | "otherGuest"
   | "otherAccount"
+  | "verifiedOther"
   | "owner"
   | "accountOwner"
+  | "verifiedOwner"
 type Outcome =
   | "OK"
   | "UNAUTHORIZED"
   | "NOT_FOUND"
   | "NOT_OPEN"
   | "PASSWORD_ALREADY_SET"
+  | "EMAIL_NOT_VERIFIED"
+  | "INCOMPLETE"
+  | "PRO_REQUIRED"
 type Client = Awaited<ReturnType<typeof serverClient>>
 
 const today = "2026-09-24"
@@ -30,8 +41,25 @@ const ownersOnly = {
   nobody: "UNAUTHORIZED",
   otherGuest: "NOT_FOUND",
   otherAccount: "NOT_FOUND",
+  verifiedOther: "NOT_FOUND",
   owner: "OK",
   accountOwner: "OK",
+  verifiedOwner: "OK",
+} as const satisfies Record<Caller, Outcome>
+
+/**
+ * Exports: a confirmed email first (guests sign up), then the draft's
+ * owner. The owners' drafts are empty, so they get past both and stop at
+ * the content.
+ */
+const verifiedOwnersOnly = {
+  nobody: "UNAUTHORIZED",
+  otherGuest: "UNAUTHORIZED",
+  otherAccount: "EMAIL_NOT_VERIFIED",
+  verifiedOther: "NOT_FOUND",
+  owner: "UNAUTHORIZED",
+  accountOwner: "EMAIL_NOT_VERIFIED",
+  verifiedOwner: "INCOMPLETE",
 } as const satisfies Record<Caller, Outcome>
 
 /** Anyone signed in, guest or account. */
@@ -39,8 +67,10 @@ const signedIn = {
   nobody: "UNAUTHORIZED",
   otherGuest: "OK",
   otherAccount: "OK",
+  verifiedOther: "OK",
   owner: "OK",
   accountOwner: "OK",
+  verifiedOwner: "OK",
 } as const satisfies Record<Caller, Outcome>
 
 /** Signed-up accounts only: settings (T23). The owner here is a guest. */
@@ -48,8 +78,10 @@ const accountsOnly = {
   nobody: "UNAUTHORIZED",
   otherGuest: "UNAUTHORIZED",
   otherAccount: "OK",
+  verifiedOther: "OK",
   owner: "UNAUTHORIZED",
   accountOwner: "OK",
+  verifiedOwner: "OK",
 } as const satisfies Record<Caller, Outcome>
 
 const matrix: Record<
@@ -109,7 +141,12 @@ const matrix: Record<
         today,
       }),
     // Owners get past the owner check; the draft asked nothing.
-    expect: { ...ownersOnly, owner: "NOT_OPEN", accountOwner: "NOT_OPEN" },
+    expect: {
+      ...ownersOnly,
+      owner: "NOT_OPEN",
+      accountOwner: "NOT_OPEN",
+      verifiedOwner: "NOT_OPEN",
+    },
   },
   "drafts.markComplete": {
     run: (client, id) => client.drafts.markComplete({ id }),
@@ -129,7 +166,9 @@ const matrix: Record<
     expect: {
       ...accountsOnly,
       otherAccount: "NOT_FOUND",
+      verifiedOther: "NOT_FOUND",
       accountOwner: "NOT_FOUND",
+      verifiedOwner: "NOT_FOUND",
     },
   },
   "account.setPassword": {
@@ -139,8 +178,19 @@ const matrix: Record<
     expect: {
       ...accountsOnly,
       otherAccount: "PASSWORD_ALREADY_SET",
+      verifiedOther: "PASSWORD_ALREADY_SET",
       accountOwner: "PASSWORD_ALREADY_SET",
+      verifiedOwner: "PASSWORD_ALREADY_SET",
     },
+  },
+  "export.pdf": {
+    run: (client, id) => client.export.pdf({ id }),
+    expect: verifiedOwnersOnly,
+  },
+  "export.docx": {
+    run: (client, id) => client.export.docx({ id }),
+    // Word files are for Pro, whatever the draft holds.
+    expect: { ...verifiedOwnersOnly, verifiedOwner: "PRO_REQUIRED" },
   },
   "drafts.rename": {
     run: (client, id) => client.drafts.rename({ id, title: "Matrix test" }),
@@ -167,6 +217,7 @@ async function withDraft(cookie: string) {
 describe("the auth matrix", async () => {
   const owner = await withDraft((await signInGuest()).cookie)
   const accountOwner = await withDraft((await signUpUser()).cookie)
+  const verifiedOwner = await withDraft((await signUpVerified()).cookie)
   // Everyone else tries the guest owner's draft.
   const other = async (cookie?: string) => ({
     client: await serverClient(cookie),
@@ -176,8 +227,10 @@ describe("the auth matrix", async () => {
     nobody: await other(),
     otherGuest: await other((await signInGuest()).cookie),
     otherAccount: await other((await signUpUser()).cookie),
+    verifiedOther: await other((await signUpVerified()).cookie),
     owner,
     accountOwner,
+    verifiedOwner,
   }
 
   describe.each(Object.entries(matrix))("%s", (_, row) => {

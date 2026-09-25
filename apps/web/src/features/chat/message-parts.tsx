@@ -38,6 +38,7 @@ export function MessageParts({
   definition,
   onUndo,
   onAnswer,
+  download,
   last = false,
 }: {
   parts: Part[]
@@ -47,6 +48,8 @@ export function MessageParts({
   onUndo?: (undo: { row: string; change: ChangeRequest }) => void
   /** Sends the answers to open questions; only the live turn has it. */
   onAnswer?: (answer: { toolCallId: string; answers: Answers }) => void
+  /** The way to download the finished agreement, on its "complete" card. */
+  download?: ReactNode
   /** The newest message: its open questions are still coming, not closed. */
   last?: boolean
 }) {
@@ -116,7 +119,7 @@ export function MessageParts({
       case "tool-markComplete":
         if (part.state === "output-available")
           return part.output.complete ? (
-            <Complete key={index} definition={definition} />
+            <Complete key={index} definition={definition} download={download} />
           ) : null
         if (part.state === "output-error") return null
         return <Working key={index}>Checking the document…</Working>
@@ -167,11 +170,14 @@ function Answered({
   )
 }
 
-/**
- * markComplete found nothing missing: the agreement is ready. T24 adds the
- * Export button here, once export exists.
- */
-function Complete({ definition }: { definition: DocumentDefinition | null }) {
+/** markComplete found nothing missing: the agreement is ready to download. */
+function Complete({
+  definition,
+  download,
+}: {
+  definition: DocumentDefinition | null
+  download: ReactNode
+}) {
   return (
     <div className="enter flex items-start gap-3 rounded-[14px] border bg-card px-3.5 py-3">
       <span
@@ -187,6 +193,7 @@ function Complete({ definition }: { definition: DocumentDefinition | null }) {
         <p className="text-small text-ink-2">
           Every required field is filled. Read it through before you use it.
         </p>
+        {download && <div className="mt-2.5">{download}</div>}
       </div>
     </div>
   )

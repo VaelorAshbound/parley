@@ -6,7 +6,13 @@ import { afterEach, describe, expect, it, onTestFinished } from "vitest"
 
 import { createAuth } from "../../web/src/server/auth"
 import { verified } from "../../web/src/server/rpc/base"
-import { call, cookiesFrom, scriptedModel, signInGuest } from "./helpers"
+import {
+  call,
+  cookiesFrom,
+  fakePrinter,
+  scriptedModel,
+  signInGuest,
+} from "./helpers"
 import { fakeResend } from "./resend"
 
 // Export, share and upgrade need a confirmed email (spec §2 Limits). They
@@ -25,6 +31,7 @@ async function probeClient(cookie?: string) {
       db,
       auth: createAuth({ db, env, waitUntil: () => {} }),
       model: scriptedModel([]),
+      printPdf: fakePrinter().printPdf,
       waitUntil: () => {},
       reqHeaders,
       resHeaders,

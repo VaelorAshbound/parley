@@ -7,6 +7,7 @@ import type {
 } from "@orpc/server/plugins"
 
 import type { Auth, Session } from "../auth"
+import type { PrintPdf } from "../files"
 import { annotate } from "../log"
 
 // Every procedure is built from one of these (spec §5 API): `pub` for
@@ -19,6 +20,8 @@ export type BaseContext = RequestHeadersPluginContext &
     auth: Auth
     /** The chat's model; tests pass a scripted one. */
     model: LanguageModel
+    /** Prints the PDFs: Browser Run in the Worker; tests pass a fake. */
+    printPdf: PrintPdf
     /** Keeps the Worker alive for work after the response (saving a reply). */
     waitUntil: (promise: Promise<unknown>) => void
   }

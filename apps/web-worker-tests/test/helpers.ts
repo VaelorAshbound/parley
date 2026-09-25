@@ -2,8 +2,9 @@ import { createORPCClient } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 import { SimpleCsrfProtectionLinkPlugin } from "@orpc/client/plugins"
 import type { RouterClient } from "@orpc/server"
-import { connect } from "@workspace/db"
+import { connect, schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
+import { eq } from "drizzle-orm"
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
 import { simulateReadableStream, type LanguageModel } from "ai"
 import { MockLanguageModelV4 } from "ai/test"
@@ -11,6 +12,7 @@ import { afterAll, expect, onTestFinished } from "vitest"
 
 import { api } from "../../web/src/server/api"
 import { createAuth } from "../../web/src/server/auth"
+import type { PrintFailed, PrintPdf } from "../../web/src/server/files"
 import type { Router } from "../../web/src/server/rpc/router"
 import { createServerClient } from "../../web/src/server/rpc/server-client"
 import { passingToken } from "./siteverify"
@@ -138,6 +140,63 @@ export async function signUpUser(guestCookie?: string) {
   return { email, cookie: cookiesFrom(response) }
 }
 
+/**
+ * A new email + password account with its email confirmed, as if the link
+ * in the email was opened: it may export (spec §2 Limits).
+ */
+export async function signUpVerified() {
+  const account = await signUpUser()
+  const db = await connect(env.HYPERDRIVE.connectionString)
+  try {
+    await db
+      .update(schema.user)
+      .set({ emailVerified: true })
+      .where(eq(schema.user.email, account.email))
+  } finally {
+    await db.$client.end()
+  }
+  return account
+}
+
+/** What the fake PDF printer answers with. */
+export const FAKE_PDF = "%PDF-1.7 fake"
+
+/**
+ * A stand-in for Browser Run in the RPC context: records each page it was
+ * asked to print, and answers with FAKE_PDF, or fails when told to.
+ */
+export function fakePrinter(fail?: PrintFailed) {
+  const pages: string[] = []
+  const printPdf: PrintPdf = async (html) => {
+    pages.push(html)
+    if (fail) throw fail
+    return { bytes: await new Response(FAKE_PDF).arrayBuffer(), browserMs: 180 }
+  }
+  return { printPdf, pages }
+}
+
+/**
+ * A stand-in for the Worker's BROWSER binding, for requests through the
+ * real /api app: Browser Run's quickAction() has no local simulator.
+ */
+export function fakeBrowserBinding(status = 200) {
+  const pages: string[] = []
+  const BROWSER = {
+    quickAction: async (_action: "pdf", options: { html: string }) => {
+      pages.push(options.html)
+      return status === 200
+        ? new Response(FAKE_PDF, {
+            headers: {
+              "content-type": "application/pdf",
+              "x-browser-ms-used": "180",
+            },
+          })
+        : Response.json({ success: false }, { status })
+    },
+  } as unknown as BrowserRun
+  return { bindings: { ...env, BROWSER }, pages }
+}
+
 /** Calls procedures in-process with the given cookie (or none), like SSR. */
 export async function serverClient(cookie?: string) {
   return (await chatClient(cookie, scriptedModel([[{ text: "Hi." }]]))).client
@@ -149,7 +208,8 @@ export async function serverClient(cookie?: string) {
  */
 export async function chatClient(
   cookie: string | undefined,
-  model: LanguageModel
+  model: LanguageModel,
+  printPdf: PrintPdf = fakePrinter().printPdf
 ) {
   const db = await connect(env.HYPERDRIVE.connectionString)
   const ctx = createExecutionContext()
@@ -165,6 +225,7 @@ export async function chatClient(
     db,
     auth: createAuth({ db, env, waitUntil }),
     model,
+    printPdf,
     waitUntil,
     reqHeaders,
     resHeaders: new Headers(),

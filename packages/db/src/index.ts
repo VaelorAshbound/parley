@@ -1,6 +1,7 @@
 export { connect, schema } from "./client.ts"
 export type { Db, Schema } from "./client.ts"
 export * from "./queries/drafts.ts"
+export * from "./queries/exports.ts"
 export type { JsonObject } from "./schema.ts"
 export * from "./queries/guests.ts"
 export * from "./queries/messages.ts"

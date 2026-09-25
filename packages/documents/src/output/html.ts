@@ -9,9 +9,10 @@ import type {
 } from "../render.ts"
 import { DISCLAIMER } from "../disclaimer.ts"
 
-// The print page Browser Run turns into the PDF (T24). Printed paper stays
-// light in both themes (brand.md → Color); filled-in values are blue ink,
-// like a pen on a form.
+// The print page Browser Run turns into the PDF (T24), and the header and
+// footer Chrome prints around it (printFrame). Printed paper stays light in
+// both themes (brand.md → Color); filled-in values are blue ink, like a pen
+// on a form.
 
 export type PrintOptions = {
   pageSize?: "Letter" | "A4"
@@ -64,7 +65,25 @@ export function toPrintHtml(
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escape(
     document.name
-  )}</title><style>${fontCss}${styles(document.name, pageSize)}</style></head><body>${body}</body></html>`
+  )}</title><style>${fontCss}${styles(pageSize)}</style></head><body>${body}</body></html>`
+}
+
+// Chrome's header and footer are small separate pages in the page margins
+// (0.9in top, 1in sides and bottom, from @page below): no web fonts, and no
+// readable default size. Chrome fills in `pageNumber` and `totalPages`.
+const MARGIN_TEXT =
+  "width:100%;margin:0 1in;font:8pt Arial,Helvetica,sans-serif;color:#6a665d;display:flex"
+
+/**
+ * The demo note on top of every page, and the document's name and "Page 1
+ * of 5" at the foot, as Chrome header and footer templates for the PDF
+ * printer. Not CSS page margin boxes: Browser Run doesn't draw those.
+ */
+export function printFrame(document: RenderedDocument) {
+  return {
+    header: `<div style="${MARGIN_TEXT};justify-content:center;padding-top:0.35in">${escape(DISCLAIMER)}</div>`,
+    footer: `<div style="${MARGIN_TEXT};justify-content:space-between;padding-bottom:0.4in"><span>${escape(document.name)}</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
+  }
 }
 
 type TermsBlock = RenderedDocument["standardTerms"]["children"][number]
@@ -192,23 +211,11 @@ function escape(text: string) {
     .replaceAll('"', "&quot;")
 }
 
-/** A CSS string literal, for the page margin boxes. */
-function cssString(text: string) {
-  // "<" as a CSS escape: a name with "</style>" can't close the style block.
-  return `"${text
-    .replaceAll("\\", "\\\\")
-    .replaceAll('"', '\\"')
-    .replaceAll("<", "\\3C ")}"`
-}
-
-function styles(name: string, pageSize: "Letter" | "A4") {
+function styles(pageSize: "Letter" | "A4") {
   return `
 @page {
   size: ${pageSize};
   margin: 0.9in 1in 1in;
-  @top-center { content: ${cssString(DISCLAIMER)}; font: 8pt var(--sans); color: #6a665d; }
-  @bottom-left { content: ${cssString(name)}; font: 8pt var(--sans); color: #6a665d; }
-  @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt var(--sans); color: #6a665d; }
 }
 :root {
   --serif: "Newsreader Variable", Georgia, "Times New Roman", serif;
