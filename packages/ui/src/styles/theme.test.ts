@@ -2,9 +2,13 @@ import { readFileSync } from "node:fs"
 
 import { createFontStack } from "@capsizecss/core"
 import arial from "@capsizecss/metrics/arial"
+import arimo from "@capsizecss/metrics/arimo"
 import instrumentSans from "@capsizecss/metrics/instrumentSans"
 import newsreader from "@capsizecss/metrics/newsreader"
+import notoSans from "@capsizecss/metrics/notoSans"
+import notoSerif from "@capsizecss/metrics/notoSerif"
 import timesNewRoman from "@capsizecss/metrics/timesNewRoman"
+import tinos from "@capsizecss/metrics/tinos"
 import { wcagContrast } from "culori"
 import postcss from "postcss"
 import { describe, expect, it } from "vite-plus/test"
@@ -79,32 +83,86 @@ describe.each(Object.entries(themes))("%s theme", (_name, theme) => {
 
 describe("font fallbacks", () => {
   // Metric-matched fallbacks keep the swap to the web font from shifting the
-  // layout (brand.md → Type). The CSS must match Capsize's current metrics.
-  it.each([
-    ["Newsreader Variable", newsreader, timesNewRoman],
-    ["Instrument Sans Variable", instrumentSans, arial],
-  ] as const)("%s has a metric-matched fallback", (_family, font, fallback) => {
-    const { fontFaces } = createFontStack([font, fallback], {
-      fontFaceFormat: "styleObject",
-    })
-    const face = fontFaces[0]!["@font-face"]
+  // layout (brand.md → Type). One per platform's usual font: Windows and
+  // macOS have Times New Roman and Arial; Linux has Liberation (the metrics
+  // of Tinos and Arimo) or Noto. A face whose font isn't installed is
+  // skipped, so the first one the system has is used. The CSS must match
+  // Capsize's current metrics.
+  const alsoLocal: Record<string, string[]> = {
+    Tinos: ["Liberation Serif", "LiberationSerif"],
+    Arimo: ["Liberation Sans", "LiberationSans"],
+  }
+  // oxfmt rewrites quotes and wraps long values, so compare without them.
+  const unquote = (value?: string) =>
+    value?.replaceAll(/["']/g, "").replaceAll(/\s+/g, " ").trim()
+
+  function declaredFace(family: string) {
     const declared = new Map<string, string>()
     root.walkAtRules("font-face", (rule) => {
       const decls = new Map<string, string>()
       rule.walkDecls((decl) => {
         decls.set(decl.prop, decl.value)
       })
-      if (decls.get("font-family")?.includes(face.fontFamily)) {
+      if (unquote(decls.get("font-family")) === family) {
         for (const [prop, value] of decls) declared.set(prop, value)
       }
     })
+    return declared
+  }
 
-    // oxfmt rewrites the quotes, so compare without them.
-    const unquote = (value?: string) => value?.replaceAll(/["']/g, "")
-    expect(unquote(declared.get("src"))).toBe(unquote(face.src))
-    expect(declared.get("ascent-override")).toBe(face.ascentOverride)
-    expect(declared.get("descent-override")).toBe(face.descentOverride)
-    expect(declared.get("line-gap-override")).toBe(face.lineGapOverride)
-    expect(declared.get("size-adjust")).toBe(face.sizeAdjust)
-  })
+  function stack(variable: string) {
+    let value = ""
+    root.walkDecls(variable, (decl) => {
+      value = decl.value
+    })
+    return unquote(value)!
+      .split(",")
+      .map((name) => name.trim())
+  }
+
+  it.each([
+    [
+      "--font-serif",
+      "Newsreader Variable",
+      newsreader,
+      [timesNewRoman, tinos, notoSerif],
+    ],
+    [
+      "--font-sans",
+      "Instrument Sans Variable",
+      instrumentSans,
+      [arial, arimo, notoSans],
+    ],
+  ] as const)(
+    "%s: %s has metric-matched fallbacks",
+    (variable, webFont, font, fallbacks) => {
+      const { fontFaces } = createFontStack([font, ...fallbacks], {
+        fontFaceFormat: "styleObject",
+      })
+      const families = fontFaces.map((face) =>
+        unquote(face["@font-face"].fontFamily)!
+      )
+
+      // The web font, then each fallback face in order.
+      expect(stack(variable).slice(0, families.length + 1)).toEqual([
+        webFont,
+        ...families,
+      ])
+      fallbacks.forEach((fallback, index) => {
+        const face = fontFaces[index]!["@font-face"]
+        const declared = declaredFace(unquote(face.fontFamily)!)
+        const extra = (alsoLocal[fallback.familyName] ?? []).map(
+          (name) => `local(${name})`
+        )
+
+        expect(unquote(declared.get("src"))).toBe(
+          [unquote(face.src), ...extra].join(", ")
+        )
+        expect(declared.get("ascent-override")).toBe(face.ascentOverride)
+        expect(declared.get("descent-override")).toBe(face.descentOverride)
+        expect(declared.get("line-gap-override")).toBe(face.lineGapOverride)
+        expect(declared.get("size-adjust")).toBe(face.sizeAdjust)
+      })
+    }
+  )
 })

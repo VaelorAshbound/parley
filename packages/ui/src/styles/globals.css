@@ -15,9 +15,12 @@
 @source "../**/*.{ts,tsx}";
 
 /* Metric-matched fallbacks from Capsize, so the font swap does not shift the
-   layout. theme.test.ts checks these values against @capsizecss/metrics. */
+   layout: one per platform's usual font (Times New Roman and Arial on Windows
+   and macOS; Liberation, which has Tinos's and Arimo's metrics, or Noto on
+   Linux). A face whose font isn't installed is skipped. theme.test.ts checks
+   these values against @capsizecss/metrics. */
 @font-face {
-  font-family: "Newsreader Fallback";
+  font-family: "Newsreader Fallback: Times New Roman";
   src: local("Times New Roman"), local("TimesNewRomanPSMT");
   ascent-override: 69.6835%;
   descent-override: 25.124%;
@@ -25,12 +28,46 @@
   size-adjust: 105.4769%;
 }
 @font-face {
-  font-family: "Instrument Sans Fallback";
+  font-family: "Newsreader Fallback: Tinos";
+  src:
+    local("Tinos Regular"), local("Tinos-Regular"), local("Liberation Serif"),
+    local("LiberationSerif");
+  ascent-override: 69.6835%;
+  descent-override: 25.124%;
+  line-gap-override: 0%;
+  size-adjust: 105.4769%;
+}
+@font-face {
+  font-family: "Newsreader Fallback: Noto Serif";
+  src: local("Noto Serif Regular"), local("NotoSerif-Regular");
+  ascent-override: 82.5053%;
+  descent-override: 29.7468%;
+  size-adjust: 89.0852%;
+}
+@font-face {
+  font-family: "Instrument Sans Fallback: Arial";
   src: local("Arial"), local("ArialMT");
   ascent-override: 94.4163%;
   descent-override: 24.3341%;
   line-gap-override: 0%;
   size-adjust: 102.7365%;
+}
+@font-face {
+  font-family: "Instrument Sans Fallback: Arimo";
+  src:
+    local("Arimo Regular"), local("Arimo-Regular"), local("Liberation Sans"),
+    local("LiberationSans");
+  ascent-override: 94.4163%;
+  descent-override: 24.3341%;
+  line-gap-override: 0%;
+  size-adjust: 102.7365%;
+}
+@font-face {
+  font-family: "Instrument Sans Fallback: Noto Sans";
+  src: local("Noto Sans Regular"), local("NotoSans-Regular");
+  ascent-override: 100.3886%;
+  descent-override: 25.8734%;
+  size-adjust: 96.6245%;
 }
 
 @theme {
@@ -67,10 +104,13 @@
 
 @theme inline {
   --font-sans:
-    "Instrument Sans Variable", "Instrument Sans Fallback", ui-sans-serif,
-    system-ui, sans-serif;
+    "Instrument Sans Variable", "Instrument Sans Fallback: Arial",
+    "Instrument Sans Fallback: Arimo", "Instrument Sans Fallback: Noto Sans",
+    ui-sans-serif, system-ui, sans-serif;
   --font-serif:
-    "Newsreader Variable", "Newsreader Fallback", ui-serif, Georgia, serif;
+    "Newsreader Variable", "Newsreader Fallback: Times New Roman",
+    "Newsreader Fallback: Tinos", "Newsreader Fallback: Noto Serif", ui-serif,
+    Georgia, serif;
   --font-heading: var(--font-serif);
   --shadow-sheet: var(--sheet-shadow);
 
