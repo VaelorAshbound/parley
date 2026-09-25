@@ -82,3 +82,6 @@ T19 done (73b99c7..cea178e): guardrails + history budget, markComplete (engine m
 
 ### 2026-09-25T08:51:03Z
 T20 done (4308958..73290a7): pnpm evals, 16 real gpt-6-luna conversations through the real chat procedure in Node (11 agreement picks, 3 full NDAs with a simulated user, 2 guardrails); report in evals/report.md. Baseline 93%/75%/12 invalid; after product fixes (party title missing from the model's schemas, silent defaults, key hints, Other always offered, dotted keys) two runs of 100%/100%/0, ~$0.001 per conversation. Review before Checkpoint 2: CI was red (test Postgres out of connections, fixed); 7 review issues fixed with tests (answer lock, multi-questionnaire answers, history budget per part, status on switch, reserved names, id takeover, eval counting). CI green on 73290a7+. STOP at Checkpoint 2: owner demo. Dev server on :3001 (priced holds :3000).
+
+### 2026-09-25T09:20:00Z
+Demo: owner hit INVALID_ANSWERS (typed answers missing from a questionnaire). Not reproduced; added answers_refused log, recovery (chat reloads the server's copy, questionnaire comes back, typed progress kept until accepted), tests for mouse/Next paths (ae7c0e1, ca0c348). Root cause still open.

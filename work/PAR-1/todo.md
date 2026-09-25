@@ -439,6 +439,9 @@
   - `folded()` no longer changes the model's own input, and keeps every explanation.
 - Not done (small, noted for later): cache the per-field JSON Schemas (T35); a trimmed history window may start with an assistant message (OpenRouter takes it today); stale `parley:questions:*` keys stay in localStorage when a questionnaire is closed from the chat; after an `INVALID_ANSWERS` refusal the card stays answered on the client (the client checks the same rules, so it needs a bug to happen). A separate `/code-simplify` pass was not run; the reviewer covered readability.
 
+### Demo findings (2026-09-25)
+- **Owner's demo: "Parley couldn't answer" after a questionnaire.** The browser sent the choice but not the two typed answers (company names), and the server rightly refused. Not reproduced yet (keyboard, mouse, Next, a reload with server rendering, typing before clicking the box: all send every answer). Done: `answers_refused` warn log (question names and reasons, never answers), the chat reloads the server's copy on INVALID_ANSWERS/NOT_OPEN so the questionnaire comes back, and typed progress is kept until the server takes it. Open: the root cause; the log will show it next time.
+
 ### Checkpoint 2: **stop for owner review (demo)**
 - [ ] On a local run, a guest drafts a complete NDA by chat and sees the live shimmer, the undo markers, and the inline questionnaire.
 - [ ] `pnpm check`, all tests and the evals are green. You have tried it yourself.
