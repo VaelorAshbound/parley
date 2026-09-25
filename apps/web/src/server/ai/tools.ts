@@ -170,9 +170,10 @@ export function runningTools({ context, draftId, today }: Turn) {
     askQuestions: tool(askQuestionsSpec),
     updateFields: tool({
       ...updateFieldsSpec,
-      execute: ({ changes }, options) =>
+      execute: ({ changes: sent }, options) =>
         inTurn(async () => {
           if (!update.execute) throw new Error("updateFields has no procedure")
+          const changes = folded(sent)
           const result = await last(
             update.execute(
               {
@@ -255,6 +256,35 @@ export function runningTools({ context, draftId, today }: Turn) {
       }),
     }),
   }
+}
+
+/**
+ * The changes with each part written as a path ("party1.company", the form
+ * the app's own field paths use, and one the model reaches for) folded
+ * into its field: { key: "party1", value: { company: … } }. Parts of one
+ * field in a row become one change, so they apply together.
+ */
+function folded(changes: z.infer<typeof change>[]) {
+  const out: z.infer<typeof change>[] = []
+  for (const each of changes) {
+    // One level only; anything deeper goes on as sent, for the engine to
+    // refuse with the list of real keys.
+    const [key = each.key, part, ...deeper] = each.key.split(".")
+    if (part === undefined || deeper.length > 0) {
+      out.push(each)
+      continue
+    }
+    const previous = out.at(-1)
+    const merged =
+      previous?.key === key &&
+      typeof previous.value === "object" &&
+      previous.value !== null
+        ? { ...previous.value, [part]: each.value }
+        : undefined
+    if (previous && merged) previous.value = merged
+    else out.push({ ...each, key, value: { [part]: each.value } })
+  }
+  return out
 }
 
 /**

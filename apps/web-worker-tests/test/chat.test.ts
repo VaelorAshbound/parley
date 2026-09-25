@@ -360,6 +360,51 @@ describe("a chat turn", () => {
     )
   })
 
+  it("takes a part written as a path, like party1.company", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([
+      [
+        {
+          tool: "updateFields",
+          input: {
+            changes: [
+              {
+                key: "party1.company",
+                value: "Acme Robotics",
+                explanation: "Party 1.",
+              },
+              { key: "party1.name", value: "Ana Diaz", explanation: "Signer." },
+            ],
+          },
+        },
+      ],
+      [{ text: "Added Acme Robotics." }],
+    ])
+    const { client } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    const chunks = await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("We're Acme Robotics; Ana Diaz signs."),
+        today,
+      })
+    )
+
+    expect((await client.drafts.get({ id: draft.id })).fields).toMatchObject({
+      party1: { company: "Acme Robotics", name: "Ana Diaz" },
+    })
+    expect(chunks).toContainEqual(
+      expect.objectContaining({
+        type: "tool-output-available",
+        output: expect.objectContaining({ rejected: [] }),
+      })
+    )
+  })
+
   it("gives the model the reason a value was refused", async () => {
     const { cookie } = await signInGuest()
     const model = scriptedModel([
