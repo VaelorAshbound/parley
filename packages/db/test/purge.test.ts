@@ -120,11 +120,65 @@ describe("deleteIdleGuests", () => {
     expect(await userExists(db, legacy.id)).toBe(true)
   })
 
-  test("keeps a guest idle for exactly 7 days", async ({ db }) => {
-    const guest = await makeIdle(db, inactiveSince)
+  // One time exactly on the cutoff, every other one long before it: only
+  // that one comparison can keep the guest, so an off-by-one in it fails.
+  describe("keeps a guest when one time is exactly on the cutoff", () => {
+    test("made exactly 7 days ago", async ({ db }) => {
+      const guest = await makeIdle(db, daysAgo(30))
+      await db
+        .update(user)
+        .set({ createdAt: inactiveSince, updatedAt: daysAgo(30) })
+        .where(eq(user.id, guest.id))
 
-    expect(await purge(db)).toBe(0)
-    expect(await userExists(db, guest.id)).toBe(true)
+      expect(await purge(db)).toBe(0)
+      expect(await userExists(db, guest.id)).toBe(true)
+    })
+
+    test("changed exactly 7 days ago", async ({ db }) => {
+      const guest = await makeIdle(db, daysAgo(30))
+      await db
+        .update(user)
+        .set({ updatedAt: inactiveSince })
+        .where(eq(user.id, guest.id))
+
+      expect(await purge(db)).toBe(0)
+      expect(await userExists(db, guest.id)).toBe(true)
+    })
+
+    test("a session used exactly 7 days ago", async ({ db }) => {
+      const guest = await makeIdle(db, daysAgo(30))
+      await makeSession(db, guest.id, {
+        updatedAt: inactiveSince,
+        expiresAt: daysAgo(1),
+      })
+
+      expect(await purge(db)).toBe(0)
+      expect(await userExists(db, guest.id)).toBe(true)
+    })
+
+    test("a session that runs out right now", async ({ db }) => {
+      const guest = await makeIdle(db, daysAgo(30))
+      // Better Auth still accepts it: a session is out only once expiresAt < now.
+      await makeSession(db, guest.id, {
+        updatedAt: daysAgo(30),
+        expiresAt: now,
+      })
+
+      expect(await purge(db)).toBe(0)
+      expect(await userExists(db, guest.id)).toBe(true)
+    })
+
+    test("a draft changed exactly 7 days ago", async ({ db }) => {
+      const guest = await makeIdle(db, daysAgo(30))
+      const made = await createDraft(db, { userId: guest.id, ...nda })
+      await db
+        .update(draft)
+        .set({ updatedAt: inactiveSince })
+        .where(eq(draft.id, made.id))
+
+      expect(await purge(db)).toBe(0)
+      expect(await userExists(db, guest.id)).toBe(true)
+    })
   })
 
   test("keeps a guest whose session is still valid", async ({ db }) => {

@@ -1,4 +1,4 @@
-import { and, eq, gt, gte, inArray, lt, notExists, or, sql } from "drizzle-orm"
+import { and, eq, gte, inArray, lt, notExists, or, sql } from "drizzle-orm"
 
 import { session, user } from "../auth-schema.ts"
 import type { Db } from "../client.ts"
@@ -49,7 +49,8 @@ export async function deleteIdleGuests(
               and(
                 eq(session.userId, user.id),
                 or(
-                  gt(session.expiresAt, now),
+                  // Still valid: Better Auth ends a session once expiresAt < now.
+                  gte(session.expiresAt, now),
                   gte(session.updatedAt, inactiveSince)
                 )
               )
