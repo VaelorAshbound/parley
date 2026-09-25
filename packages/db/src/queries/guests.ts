@@ -17,6 +17,8 @@ export async function moveGuestData(
   db: Db,
   { from, to }: { from: string; to: string }
 ): Promise<{ drafts: number }> {
+  // Merging a user's usage into itself would double it.
+  if (from === to) return { drafts: 0 }
   return db.transaction(async (tx) => {
     const [guest] = await tx
       .select({ id: user.id })

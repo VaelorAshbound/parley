@@ -94,6 +94,23 @@ describe("moveGuestData", () => {
     ])
   })
 
+  test("does nothing when both are the same user", async ({ db }) => {
+    const guest = await makeUser(db, { isAnonymous: true })
+    await createDraft(db, { userId: guest.id, ...nda })
+    await db
+      .insert(aiUsage)
+      .values({ userId: guest.id, day: "2026-09-25", messages: 2 })
+
+    const moved = await moveGuestData(db, { from: guest.id, to: guest.id })
+
+    expect(moved).toEqual({ drafts: 0 })
+    const [usage] = await db
+      .select()
+      .from(aiUsage)
+      .where(eq(aiUsage.userId, guest.id))
+    expect(usage?.messages).toBe(2)
+  })
+
   test("never moves anything away from a real account", async ({ db }) => {
     const victim = await makeUser(db)
     const attacker = await makeUser(db)
