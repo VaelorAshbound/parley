@@ -1,6 +1,7 @@
-import { Link, useRouteContext } from "@tanstack/react-router"
+import { CatchBoundary, Link, useRouteContext } from "@tanstack/react-router"
 import { DISCLAIMER, definitionOf, type DocumentId } from "@workspace/documents"
-import { buttonVariants } from "@workspace/ui/components/button"
+import { Alert, AlertDescription } from "@workspace/ui/components/alert"
+import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react"
 import { useState } from "react"
@@ -46,17 +47,33 @@ export function ChatColumn({
           {panelOpen ? <PanelRightCloseIcon /> : <PanelRightOpenIcon />}
         </Link>
       </header>
-      <ChatPanel
-        // A fresh chat per draft: useChat keeps its messages by id.
-        key={draft.id}
-        draftId={draft.id}
-        initialMessages={messages}
-        definition={
-          draft.documentId === null ? null : definitionOf(draft.documentId)
-        }
-        transport={transport}
-        orpc={orpc}
-      />
+      {/* A failure in the chat never takes the page down with it (spec §5
+          Routing); another draft starts clean. */}
+      <CatchBoundary
+        getResetKey={() => draft.id}
+        errorComponent={({ reset }) => (
+          <Alert variant="destructive" className="m-5 w-auto">
+            <AlertDescription className="flex items-center justify-between gap-3">
+              The chat stopped working.
+              <Button type="button" size="sm" variant="outline" onClick={reset}>
+                Try again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+      >
+        <ChatPanel
+          // A fresh chat per draft: useChat keeps its messages by id.
+          key={draft.id}
+          draftId={draft.id}
+          initialMessages={messages}
+          definition={
+            draft.documentId === null ? null : definitionOf(draft.documentId)
+          }
+          transport={transport}
+          orpc={orpc}
+        />
+      </CatchBoundary>
       <p className="shrink-0 px-6 pt-2 pb-4 text-center text-xs text-muted-foreground">
         {DISCLAIMER}
       </p>
