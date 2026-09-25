@@ -31,10 +31,12 @@ const change = z.object({
     .describe("What this value means, in one short plain sentence."),
 })
 
+// Stored as JSON, which drops an undefined value: an empty field's `before`
+// (or a cleared field's `after`) is simply missing.
 const applied = z.object({
   key: z.string(),
-  before: z.unknown(),
-  after: z.unknown(),
+  before: z.unknown().optional(),
+  after: z.unknown().optional(),
   explanation: z.string(),
 })
 const issue = z.object({
@@ -43,7 +45,7 @@ const issue = z.object({
 })
 const request = z.object({
   key: z.string(),
-  value: z.unknown(),
+  value: z.unknown().optional(),
   expected: z.unknown().optional(),
 })
 
@@ -54,7 +56,11 @@ const updateFieldsSpec = {
   outputSchema: z.object({
     applied: z.array(applied),
     rejected: z.array(
-      z.object({ key: z.string(), value: z.unknown(), issues: z.array(issue) })
+      z.object({
+        key: z.string(),
+        value: z.unknown().optional(),
+        issues: z.array(issue),
+      })
     ),
     /** Applying these undoes the applied changes (T18's Undo). */
     inverse: z.array(request),
@@ -95,31 +101,44 @@ type Turn = {
 export function runningTools({ context, draftId, today }: Turn) {
   const update = createTool(drafts.updateFields, { context })
   const choose = createTool(drafts.chooseDocument, { context })
+  // The AI SDK runs a step's tool calls side by side, but this request has
+  // one database connection: two transactions on it would interleave and
+  // each would overwrite the other's changes. So they take turns, in the
+  // order the model made them.
+  let queue: Promise<unknown> = Promise.resolve()
+  const inTurn = <T>(run: () => Promise<T>): Promise<T> => {
+    const next = queue.then(run, run)
+    queue = next.catch(() => undefined)
+    return next
+  }
 
   return {
     updateFields: tool({
       ...updateFieldsSpec,
-      execute: async ({ changes }, options) => {
-        if (!update.execute) throw new Error("updateFields has no procedure")
-        const result = await last(
-          update.execute(
-            {
-              id: draftId,
-              changes: changes.map(({ key, value }) => ({ key, value })),
-            },
-            options
+      execute: ({ changes }, options) =>
+        inTurn(async () => {
+          if (!update.execute) throw new Error("updateFields has no procedure")
+          const result = await last(
+            update.execute(
+              {
+                id: draftId,
+                changes: changes.map(({ key, value }) => ({ key, value })),
+              },
+              options
+            )
           )
-        )
-        const why = new Map(changes.map((each) => [each.key, each.explanation]))
-        return {
-          applied: result.applied.map((each) => ({
-            ...each,
-            explanation: why.get(each.key) ?? "",
-          })),
-          rejected: result.rejected,
-          inverse: result.inverse,
-        }
-      },
+          const why = new Map(
+            changes.map((each) => [each.key, each.explanation])
+          )
+          return {
+            applied: result.applied.map((each) => ({
+              ...each,
+              explanation: why.get(each.key) ?? "",
+            })),
+            rejected: result.rejected,
+            inverse: result.inverse,
+          }
+        }),
       // The model needs the new values and the refusals, not the undo data.
       // As text: field values are plain JSON, but typed as unknown.
       toModelOutput: ({ output }) => ({
@@ -138,15 +157,17 @@ export function runningTools({ context, draftId, today }: Turn) {
     }),
     chooseDocument: tool({
       ...chooseDocumentSpec,
-      execute: async ({ documentId }, options) => {
-        if (!choose.execute) throw new Error("chooseDocument has no procedure")
-        if (!isId(documentId))
-          throw new Error(`Unknown agreement ${documentId}`)
-        const draft = await last(
-          choose.execute({ id: draftId, documentId, today }, options)
-        )
-        return { documentId, title: draft.title }
-      },
+      execute: ({ documentId }, options) =>
+        inTurn(async () => {
+          if (!choose.execute)
+            throw new Error("chooseDocument has no procedure")
+          if (!isId(documentId))
+            throw new Error(`Unknown agreement ${documentId}`)
+          const draft = await last(
+            choose.execute({ id: draftId, documentId, today }, options)
+          )
+          return { documentId, title: draft.title }
+        }),
       toModelOutput: ({ output }) => ({
         type: "json",
         value: {

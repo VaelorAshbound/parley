@@ -66,7 +66,12 @@ export async function chatClient(
   const ctx = createExecutionContext()
   const reqHeaders = new Headers({ host: "localhost:3000" })
   if (cookie) reqHeaders.set("cookie", cookie)
-  const waitUntil = (promise: Promise<unknown>) => ctx.waitUntil(promise)
+  // Kept here too: an execution context can be waited on only once.
+  const later: Promise<unknown>[] = []
+  const waitUntil = (promise: Promise<unknown>) => {
+    later.push(promise)
+    ctx.waitUntil(promise)
+  }
   const client = createServerClient({
     db,
     auth: createAuth({ db, env, waitUntil }),
@@ -75,7 +80,7 @@ export async function chatClient(
     reqHeaders,
     resHeaders: new Headers(),
   })
-  return { client, settle: () => waitOnExecutionContext(ctx) }
+  return { client, settle: () => Promise.all(later.splice(0)) }
 }
 
 /** What a model streams, from the mock's own types (no provider package). */
