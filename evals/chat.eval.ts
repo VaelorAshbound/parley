@@ -380,8 +380,11 @@ Cost counts the chat's model only (not the simulated user), at OpenRouter's list
 |---|---|---|---|---|---|
 ${Object.values(definitions)
   .map((definition) => {
-    const one = summarize(results.filter((each) => each.want === definition.id))
-    return `| ${definition.name} | ${one.conversations} | ${percent(one.documents)} | ${percent(one.fields)} | ${percent(one.finished)} | ${dollars(one.costFinished)} |`
+    const set = results.filter((each) => each.want === definition.id)
+    const one = summarize(set)
+    // No whole draft of this agreement ran: no fields or drafts to score.
+    const drafted = set.some((each) => each.kind === "draft")
+    return `| ${definition.name} | ${one.conversations} | ${percent(one.documents)} | ${drafted ? percent(one.fields) : "—"} | ${drafted ? percent(one.finished) : "—"} | ${dollars(one.costFinished)} |`
   })
   .join("\n")}
 
