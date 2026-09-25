@@ -102,7 +102,7 @@ ${REST}`,
 - Whose data: the clinics' patients (end users) and employees. What data: names and contact details.
 - Special category data: yes, health data, protected by the provider's security policy.
 - The provider receives, stores, uses (analyzes) and erases the data. The customer sends it continuously.
-- The EU transfer clauses follow the law of Ireland. UK transfers: England and Wales.
+- The EU transfer clauses follow the law of Ireland. Personal data from the UK clinics goes to the provider too; the UK transfer clauses follow the laws of England and Wales.
 ${REST}`,
     expect: {
       customer: {
