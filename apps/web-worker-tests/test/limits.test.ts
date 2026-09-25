@@ -1,8 +1,11 @@
+import { schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
+import { eq } from "drizzle-orm"
 import { describe, expect, it } from "vitest"
 
 import { createAuth } from "../../web/src/server/auth"
 import {
+  DAILY_MESSAGES,
   GUEST_DRAFTS,
   GUESTS_PER_NETWORK,
   RATE_LIMITS,
@@ -117,6 +120,130 @@ describe("the AI routes", () => {
       expect(await answer()).toMatchObject({ code: "TOO_MANY_REQUESTS" })
     }
   )
+})
+
+describe("daily AI messages", () => {
+  /** Today in UTC, the day the limits count in. */
+  const utcToday = () => new Date().toISOString().slice(0, 10)
+  const nextUtcMidnight = () =>
+    new Date(`${utcToday()}T00:00:00Z`).getTime() + 24 * 60 * 60 * 1000
+
+  /** A draft whose owner has used `used` messages today. */
+  async function usedToday(
+    cookie: string,
+    used: number,
+    steps = [[{ text: "Noted." }]] as Parameters<typeof scriptedModel>[0]
+  ) {
+    const { client, settle } = await chatClient(cookie, scriptedModel(steps))
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const db = await database()
+    await db
+      .insert(schema.aiUsage)
+      .values({ userId: draft.userId, day: utcToday(), messages: used })
+    const usage = async () =>
+      (
+        await db
+          .select()
+          .from(schema.aiUsage)
+          .where(eq(schema.aiUsage.userId, draft.userId))
+      )[0]
+    return { client, settle, draft, usage }
+  }
+
+  it.each([
+    ["guest", DAILY_MESSAGES.guest, () => signInGuest()],
+    ["free", DAILY_MESSAGES.free, () => signUpUser()],
+  ] as const)(
+    "a %s's last message of the day goes through, the next says when they come back",
+    async (tier, limit, signIn) => {
+      const { client, settle, draft, usage } = await usedToday(
+        (await signIn()).cookie,
+        limit - 1
+      )
+
+      await read(
+        await client.chat.send({ id: draft.id, message: say("Last"), today })
+      )
+      await settle()
+      const error = await client.chat
+        .send({ id: draft.id, message: say("One more"), today })
+        .catch((each: unknown) => each)
+
+      expect(error).toMatchObject({
+        code: "DAILY_LIMIT",
+        status: 429,
+        defined: true,
+        data: {
+          limit,
+          tier,
+          resetsAt: new Date(nextUtcMidnight()).toISOString(),
+        },
+      })
+      // The refused message wasn't saved, and didn't count.
+      expect(await client.chat.messages({ id: draft.id })).toHaveLength(2)
+      expect((await usage())?.messages).toBe(limit)
+    }
+  )
+
+  it("counts answers to the AI's questions too", async () => {
+    const ask = {
+      tool: "askQuestions",
+      input: {
+        title: "Key terms",
+        questions: [
+          {
+            name: "term",
+            prompt: "How long should the NDA last?",
+            required: true,
+            choices: [{ value: "1y", label: "1 year" }],
+            multiple: false,
+          },
+        ],
+      },
+    }
+    const { client, settle, draft } = await usedToday(
+      (await signInGuest()).cookie,
+      DAILY_MESSAGES.guest - 1,
+      [[ask]]
+    )
+    await read(
+      await client.chat.send({ id: draft.id, message: say("Help"), today })
+    )
+    await settle()
+
+    const error = await client.chat
+      .answer({
+        id: draft.id,
+        calls: [{ toolCallId: "call-1-0", answers: { term: ["1y"] } }],
+        today,
+      })
+      .catch((each: unknown) => each)
+
+    expect(error).toMatchObject({ code: "DAILY_LIMIT", defined: true })
+  })
+
+  it("records each reply's tokens and cost for the day", async () => {
+    const { client, settle, draft, usage } = await usedToday(
+      (await signInGuest()).cookie,
+      0
+    )
+
+    await read(
+      await client.chat.send({ id: draft.id, message: say("Hi"), today })
+    )
+    await settle()
+
+    // The scripted model: 10 input and 5 output tokens, $0.00002 a call.
+    expect(await usage()).toMatchObject({
+      messages: 1,
+      inputTokens: 10,
+      outputTokens: 5,
+      costMicroUsd: 20,
+    })
+  })
 })
 
 describe("downloads", () => {
