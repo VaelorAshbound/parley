@@ -195,6 +195,52 @@ describe("the Download menu", () => {
   })
 })
 
+describe("the draft's download controls together", () => {
+  test("while the chat's button makes the PDF, the panel's menu waits too", async () => {
+    let finish: (file: File) => void = () => {}
+    const orpc = fakeServer({
+      pdf: () => new Promise((resolve) => (finish = resolve)),
+    })
+    const screen = await renderWith(
+      <>
+        <Panel orpc={orpc} />
+        <DownloadButton orpc={orpc} draftId={draftId} />
+      </>
+    )
+    savedFiles()
+
+    await screen.getByRole("button", { name: "Download PDF" }).click()
+
+    // One Browser Run print at a time for a draft, whichever control starts it.
+    const menu = screen.getByRole("button", { name: /Download$/ })
+    await expect.element(menu).toBeDisabled()
+    finish(pdfFile())
+    await expect.element(menu).toBeEnabled()
+  })
+
+  test("another draft's download doesn't hold this one up", async () => {
+    const orpc = fakeServer({ pdf: () => new Promise(() => {}) })
+    const screen = await renderWith(
+      <>
+        <Panel orpc={orpc} />
+        <DownloadButton
+          orpc={orpc}
+          draftId="0199c0de-0000-7000-8000-000000000025"
+        />
+      </>
+    )
+
+    await screen.getByRole("button", { name: "Download PDF" }).click()
+
+    await expect
+      .element(screen.getByRole("button", { name: /Download PDF$/ }))
+      .toBeDisabled()
+    await expect
+      .element(screen.getByRole("button", { name: /Download$/ }))
+      .toBeEnabled()
+  })
+})
+
 describe("the chat's Download PDF button", () => {
   test("saves the PDF", async () => {
     const saved = savedFiles()

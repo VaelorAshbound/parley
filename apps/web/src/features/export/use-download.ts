@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useMutationState } from "@tanstack/react-query"
 
 import type { Orpc } from "@/lib/orpc"
 import type { ExportFormat } from "@/server/quota"
@@ -32,18 +32,28 @@ function save(file: File) {
   setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
+type Variables = { format: ExportFormat; id: string }
+
 export function useDownload(orpc: Orpc, draftId: string): Download {
-  const { mutate, isPending, variables, error, reset } = useMutation({
-    mutationFn: ({ format, id }: { format: ExportFormat; id: string }) =>
-      orpc.export[format].call({ id }),
+  // Every download control of a draft (the panel's menu, the chat's
+  // buttons) shares this key, so while one makes the file all of them wait:
+  // one Browser Run print at a time.
+  const mutationKey = ["export", draftId]
+  const { mutate, variables, error, reset } = useMutation({
+    mutationKey,
+    mutationFn: ({ format, id }: Variables) => orpc.export[format].call({ id }),
     onSuccess: save,
+  })
+  const [pending] = useMutationState({
+    filters: { mutationKey, status: "pending" },
+    select: (mutation) => (mutation.state.variables as Variables).format,
   })
   // The draft page stays mounted when another draft opens: what happened to
   // the last draft's download isn't this one's.
   const current = variables?.id === draftId ? variables : undefined
   return {
     start: (format) => mutate({ format, id: draftId }),
-    pending: isPending ? current?.format : undefined,
+    pending,
     problem:
       error && current
         ? exportProblem(error, {
