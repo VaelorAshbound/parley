@@ -70,3 +70,6 @@ T14 done (eef11d7..a082a3c): Better Auth guest sessions + oRPC drafts with owner
 
 ### 2026-09-24T20:35:46Z
 Session end (context 70%). Finished: demo note on PDF/DOCX; T13 DB (Neon preview branch, Hyperdrive x2, real PG18 tests, ADR-0004); T14 guest auth + oRPC drafts (auth matrix, CSRF, limits, secrets set, live Preview check); T15 app shell (sidebar, resizable panel, phone tabs, SSR cookies, CLS 0, 14 e2e green in CI). Fixes on the way: exit-code bug from embedded-postgres, two Vite copies breaking the bundle, CI testing a stale Preview. Follow-up PAR-5. Next session: T16 live document preview + field editing via /build (load T16 skills from plan.md). Open for the owner: cross-model review offer for T14 auth (declined or not yet asked); look at the shell on the Preview.
+
+### 2026-09-25T06:32:04Z
+T16 done (inline editor, live preview, CI green). T17 done (AI chat over oRPC with tools, chooseDocument, drafts without an agreement via migration 0001 on Neon preview+production, OpenRouter secrets set). Real-model runs found and fixed: parallel tool calls overwriting, chat history dropped by validation, null parts wiping a party. Next: T18 wow motion.
