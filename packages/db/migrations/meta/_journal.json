@@ -15,6 +15,13 @@
       "when": 1790315565496,
       "tag": "0001_draft_without_document",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790341897303,
+      "tag": "0002_draft_history_pages",
+      "breakpoints": true
     }
   ]
 }

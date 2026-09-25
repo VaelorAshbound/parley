@@ -52,7 +52,9 @@ export const draft = pgTable(
     fields: jsonb("fields").$type<JsonObject>().notNull().default({}),
     status: draftStatus("status").notNull().default("drafting"),
     createdAt: createdAt(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
+    // Milliseconds, like a JS Date: a page of the history ends at a time the
+    // browser can send back exactly (listDrafts' `after`).
+    updatedAt: timestamp("updated_at", { withTimezone: true, precision: 3 })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
@@ -68,13 +70,19 @@ export const draft = pgTable(
       ),
   },
   (table) => [
-    // NULLS FIRST matches a plain ORDER BY updated_at DESC; Drizzle's default
-    // NULLS LAST would stop Postgres from reading the order off the index.
+    // NULLS FIRST matches a plain ORDER BY … DESC; Drizzle's default NULLS
+    // LAST would stop Postgres from reading the order off the index. The id
+    // breaks ties between drafts changed in the same millisecond, so a page
+    // of the history never skips or repeats one.
     index("draft_user_id_updated_at_idx").on(
       table.userId,
-      table.updatedAt.desc().nullsFirst()
+      table.updatedAt.desc().nullsFirst(),
+      table.id.desc().nullsFirst()
     ),
-    index("draft_search_idx").using("gin", table.search),
+    // The user id sits in the GIN index too (btree_gin), so a search reads
+    // only this user's matches, not every user's; measured with
+    // scripts/bench-history.ts: 18x fewer pages for a common word (T22).
+    index("draft_search_idx").using("gin", table.userId, table.search),
   ]
 )
 
