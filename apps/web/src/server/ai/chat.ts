@@ -90,27 +90,36 @@ async function history(db: Db, key: DraftKey) {
   return result.success ? result.data : []
 }
 
-/** Who is asking, and the day their messages count in (spec §2 Limits). */
-type Quota = { tier: Tier; day: string; resetsAt: string }
-
-function quotaOf(user: { isAnonymous?: boolean | null }): Quota {
-  return { tier: tierOf(user), ...usageDay() }
+/**
+ * The caller's messages today (spec §2 Limits): their tier, the UTC day they
+ * count in, and the typed DAILY_LIMIT once they're used up.
+ */
+type Quota = {
+  tier: Tier
+  day: string
+  limit: number
+  /**
+   * The error to throw, with one `ai_limit` line: how often each tier runs
+   * out is what the limits and Pro are judged by.
+   */
+  refuse: () => Error
 }
 
-/**
- * The typed DAILY_LIMIT for this caller, with one `ai_limit` line: how often
- * each tier runs out is what the limits and Pro are judged by.
- */
-function outOfMessages(
-  quota: Quota,
-  userId: string,
+function quotaOf(
+  user: { id: string; isAnonymous?: boolean | null },
   error: (options: { data: z.infer<typeof DAILY_LIMIT.data> }) => Error
-) {
-  return (limit: number) => {
-    logInfo("ai_limit", { userId, tier: quota.tier, limit })
-    return error({
-      data: { limit, tier: quota.tier, resetsAt: quota.resetsAt },
-    })
+): Quota {
+  const tier = tierOf(user)
+  const { day, resetsAt } = usageDay()
+  const limit = DAILY_MESSAGES[tier]
+  return {
+    tier,
+    day,
+    limit,
+    refuse: () => {
+      logInfo("ai_limit", { userId: user.id, tier, limit })
+      return error({ data: { limit, tier, resetsAt } })
+    },
   }
 }
 
@@ -131,13 +140,12 @@ const DAILY_LIMIT = {
  * message closes them). The model's reply streams after, outside the lock.
  *
  * The turn counts toward the day's messages once `change` has accepted it;
- * past the limit, `refuse` is thrown and nothing is saved or counted.
+ * past the limit, `quota.refuse()` is thrown and nothing is saved or counted.
  */
 function lockedChat(
   context: BaseContext,
   key: DraftKey,
   quota: Quota,
-  refuse: (limit: number) => Error,
   change: (stored: ChatMessage[]) => {
     save: ChatMessage[]
     chat: ChatMessage[]
@@ -146,11 +154,9 @@ function lockedChat(
   return context.db.transaction(async (tx) => {
     await getDraft(tx, key, { lock: true })
     const { save, chat } = change(await history(tx, key))
-    const limit = DAILY_MESSAGES[quota.tier]
-    if (
-      !(await claimMessage(tx, { userId: key.userId, day: quota.day, limit }))
-    )
-      throw refuse(limit)
+    const { day, limit } = quota
+    if (!(await claimMessage(tx, { userId: key.userId, day, limit })))
+      throw quota.refuse()
     await saveMessages(tx, key, save)
     return chat
   })
@@ -367,30 +373,23 @@ export const chat = {
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const quota = quotaOf(context.user)
-      const refuse = outOfMessages(quota, key.userId, errors.DAILY_LIMIT)
-      const messages = await lockedChat(
-        context,
-        key,
-        quota,
-        refuse,
-        (stored) => {
-          // Ids come from the browser (useChat makes them): one of Parley's
-          // own would let a message stand in for its reply.
-          if (
-            stored.some(
-              (each) => each.id === input.message.id && each.role !== "user"
-            )
+      const quota = quotaOf(context.user, errors.DAILY_LIMIT)
+      const messages = await lockedChat(context, key, quota, (stored) => {
+        // Ids come from the browser (useChat makes them): one of Parley's
+        // own would let a message stand in for its reply.
+        if (
+          stored.some(
+            (each) => each.id === input.message.id && each.role !== "user"
           )
-            throw errors.MESSAGE_ID_TAKEN()
-          const closed = closeQuestions(stored.at(-1))
-          const earlier = closed ? [...stored.slice(0, -1), closed] : stored
-          return {
-            save: closed ? [closed, input.message] : [input.message],
-            chat: [...earlier, input.message],
-          }
+        )
+          throw errors.MESSAGE_ID_TAKEN()
+        const closed = closeQuestions(stored.at(-1))
+        const earlier = closed ? [...stored.slice(0, -1), closed] : stored
+        return {
+          save: closed ? [closed, input.message] : [input.message],
+          chat: [...earlier, input.message],
         }
-      )
+      })
       return reply({
         context,
         key,
@@ -431,69 +430,60 @@ export const chat = {
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const quota = quotaOf(context.user)
-      const refuse = outOfMessages(quota, key.userId, errors.DAILY_LIMIT)
-      const messages = await lockedChat(
-        context,
-        key,
-        quota,
-        refuse,
-        (stored) => {
-          const last = stored.at(-1)
-          const open =
-            last?.role === "assistant" ? last.parts.filter(isOpen) : []
-          const byCall = new Map(
-            input.calls.map((each) => [each.toolCallId, each.answers])
+      const quota = quotaOf(context.user, errors.DAILY_LIMIT)
+      const messages = await lockedChat(context, key, quota, (stored) => {
+        const last = stored.at(-1)
+        const open = last?.role === "assistant" ? last.parts.filter(isOpen) : []
+        const byCall = new Map(
+          input.calls.map((each) => [each.toolCallId, each.answers])
+        )
+        if (
+          !last ||
+          open.length === 0 ||
+          input.calls.some(
+            (each) => !open.some((part) => part.toolCallId === each.toolCallId)
           )
-          if (
-            !last ||
-            open.length === 0 ||
-            input.calls.some(
-              (each) =>
-                !open.some((part) => part.toolCallId === each.toolCallId)
-            )
-          )
-            throw errors.NOT_OPEN()
-          const outputs = new Map(
-            open.map((part) => {
-              const checked = answersFor(part.input.questions).safeParse({
-                answers: byCall.get(part.toolCallId),
-              })
-              if (!checked.success) {
-                // Which question failed and why, never the answers: a refusal
-                // means the browser and the server disagree (a bug to find).
-                logWarn("answers_refused", {
-                  toolCallId: part.toolCallId,
-                  issues: checked.error.issues
-                    .map(
-                      ({ path, message }) =>
-                        `${path.filter((each) => each !== "answers").join(".")}: ${message}`
-                    )
-                    .join("; "),
-                })
-                throw errors.INVALID_ANSWERS()
-              }
-              return [part.toolCallId, answersShape.parse(checked.data)]
+        )
+          throw errors.NOT_OPEN()
+        const outputs = new Map(
+          open.map((part) => {
+            const checked = answersFor(part.input.questions).safeParse({
+              answers: byCall.get(part.toolCallId),
             })
-          )
-          const answered: ChatMessage = {
-            ...last,
-            parts: last.parts.map((part): Part => {
-              const output = isOpen(part) && outputs.get(part.toolCallId)
-              return output
-                ? {
-                    type: part.type,
-                    toolCallId: part.toolCallId,
-                    state: "output-available",
-                    input: part.input,
-                    output,
-                  }
-                : part
-            }),
-          }
-          return { save: [answered], chat: [...stored.slice(0, -1), answered] }
+            if (!checked.success) {
+              // Which question failed and why, never the answers: a refusal
+              // means the browser and the server disagree (a bug to find).
+              logWarn("answers_refused", {
+                toolCallId: part.toolCallId,
+                issues: checked.error.issues
+                  .map(
+                    ({ path, message }) =>
+                      `${path.filter((each) => each !== "answers").join(".")}: ${message}`
+                  )
+                  .join("; "),
+              })
+              throw errors.INVALID_ANSWERS()
+            }
+            return [part.toolCallId, answersShape.parse(checked.data)]
+          })
+        )
+        const answered: ChatMessage = {
+          ...last,
+          parts: last.parts.map((part): Part => {
+            const output = isOpen(part) && outputs.get(part.toolCallId)
+            return output
+              ? {
+                  type: part.type,
+                  toolCallId: part.toolCallId,
+                  state: "output-available",
+                  input: part.input,
+                  output,
+                }
+              : part
+          }),
         }
-      )
+        return { save: [answered], chat: [...stored.slice(0, -1), answered] }
+      })
       return reply({
         context,
         key,
