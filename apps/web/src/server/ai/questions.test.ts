@@ -68,6 +68,18 @@ describe("a question set from the model", () => {
     expect(isShown({ showIf: null }, {})).toBe(true)
   })
 
+  test.for(["constructor", "toString", "__proto__", "hasOwnProperty"])(
+    "refuses the name %s, which every object already has",
+    (name) => {
+      const result = questionSet.safeParse({
+        title: "Key terms",
+        questions: [{ ...term, name }],
+      })
+
+      expect(result.success).toBe(false)
+    }
+  )
+
   test("needs unique question names", () => {
     const result = questionSet.safeParse({
       title: "Key terms",

@@ -23,6 +23,11 @@ const question = z.object({
   name: z
     .string()
     .regex(/^[\w.-]{1,60}$/)
+    // The answers are an object keyed by name: a name every object already
+    // has (constructor, __proto__) would read as a built-in, not an answer.
+    .refine((name) => !(name in Object.prototype), {
+      message: "Pick another name: this one is reserved.",
+    })
     .describe("A short id for the question, like term or signer."),
   prompt: z.string().min(1).max(200).describe("The question, in plain words."),
   description: z
@@ -126,9 +131,10 @@ export function isShown(
 ): boolean {
   const condition = question.showIf
   if (!condition) return true
-  return (answers[condition.question] ?? []).some((value) =>
-    condition.answers.includes(value)
-  )
+  const given = Object.hasOwn(answers, condition.question)
+    ? answers[condition.question]
+    : undefined
+  return (given ?? []).some((value) => condition.answers.includes(value))
 }
 
 /** The answers to one question set, as the user may send them. */
