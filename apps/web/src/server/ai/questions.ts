@@ -45,8 +45,13 @@ const question = z.object({
         .min(1)
         .describe("Its choice values that make this question apply."),
     })
+    // Nullable, not only optional: models fill every key, and without null
+    // they invent a condition (the real model did, T19).
+    .nullable()
     .optional()
-    .describe("Ask only when an earlier question got one of these answers."),
+    .describe(
+      "Ask only when an earlier question got one of these answers. null to always ask."
+    ),
 })
 
 export type Question = z.input<typeof question>

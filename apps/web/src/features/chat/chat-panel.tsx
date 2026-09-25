@@ -21,10 +21,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@workspace/ui/components/message-scroller"
-import {
-  lastAssistantMessageIsCompleteWithToolCalls,
-  type ChatTransport,
-} from "ai"
+import type { ChatTransport } from "ai"
 import { useEffect, useState } from "react"
 
 import type { Orpc } from "@/lib/orpc"
@@ -34,6 +31,7 @@ import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
 import { MessageParts, PlainText } from "./message-parts"
+import { questionsAnswered } from "./transport"
 import { useDocumentSync } from "./use-document-sync"
 import { useUndo } from "./use-undo"
 
@@ -68,7 +66,7 @@ export function ChatPanel({
     messages: initialMessages,
     transport,
     // Answers to the AI's questions go back as soon as they are given.
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    sendAutomaticallyWhen: questionsAnswered,
     // The next visit to this draft starts from the whole chat, and the
     // sidebar's order from this turn.
     onFinish: ({ messages: all }) => {

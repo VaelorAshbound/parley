@@ -86,6 +86,7 @@ describe("the chat's instructions", () => {
     const text = instructions({ definition: nda, values: {} })
 
     expect(text).toMatch(/askQuestions/)
+    expect(text).toMatch(/Each question asks for one thing/)
     expect(text).toMatch(/markComplete/)
   })
 

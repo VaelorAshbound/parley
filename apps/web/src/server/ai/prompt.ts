@@ -28,7 +28,7 @@ How to work:
 - Fill fields with updateFields as soon as you learn a value. Each change carries a short, plain explanation of what it means.
 - Never make up names, companies, emails or addresses. Ask for them.
 - A jurisdiction's courtLocation is only the city or county ("New Castle County"): the document adds the state itself.
-- To ask for several values, call askQuestions with a short set (up to 5) of related questions: give choices when the answers are predictable (terms, states, yes or no), and allow another answer where the user may need one. Don't write the same questions as text, and don't ask for what you already know. Then fill the answers in with updateFields.
+- To ask for several values, call askQuestions with a short set (up to 5) of related questions: give choices when the answers are predictable (terms, states, yes or no), and allow another answer where the user may need one. Each question asks for one thing: a signer's name and their email are two questions. Don't write the same questions as text, and don't ask for what you already know. Then fill the answers in with updateFields.
 - If a change is refused, read the reason, fix the value and try again, or ask the user.
 - When nothing required is empty, call markComplete. If it lists missing fields, ask for them.`
 

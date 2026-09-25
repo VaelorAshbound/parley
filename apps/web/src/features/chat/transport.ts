@@ -1,5 +1,8 @@
 import { eventIteratorToUnproxiedDataStream } from "@orpc/client"
-import type { ChatTransport } from "ai"
+import {
+  lastAssistantMessageIsCompleteWithToolCalls,
+  type ChatTransport,
+} from "ai"
 import { Temporal } from "temporal-polyfill"
 
 import type { Orpc } from "@/lib/orpc"
@@ -54,4 +57,23 @@ function answered(message: ChatMessage) {
   if (part?.type !== "tool-askQuestions" || part.state !== "output-available")
     throw new Error("No answers to send")
   return { toolCallId: part.toolCallId, answers: part.output.answers }
+}
+
+/**
+ * useChat's sendAutomaticallyWhen: the AI's questions in the reply's last
+ * step were just answered. The AI SDK's helper alone would also fire when a
+ * turn stopped on a failed tool call, with no answers to send.
+ */
+export function questionsAnswered({ messages }: { messages: ChatMessage[] }) {
+  const message = messages.at(-1)
+  if (message?.role !== "assistant") return false
+  const step = message.parts.slice(
+    message.parts.findLastIndex((part) => part.type === "step-start") + 1
+  )
+  return (
+    step.some(
+      (part) =>
+        part.type === "tool-askQuestions" && part.state === "output-available"
+    ) && lastAssistantMessageIsCompleteWithToolCalls({ messages })
+  )
 }

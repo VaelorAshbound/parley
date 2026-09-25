@@ -63,6 +63,16 @@ describe("a question set from the model", () => {
     expect(result.success).toBe(true)
   })
 
+  test("takes null for a missing condition, as models fill every key", () => {
+    const result = questionSet.safeParse({
+      title: "Key terms",
+      questions: [{ ...term, showIf: null, description: "" }],
+    })
+
+    expect(result.success).toBe(true)
+    expect(isShown({ showIf: null }, {})).toBe(true)
+  })
+
   test("needs unique question names", () => {
     const result = questionSet.safeParse({
       title: "Key terms",
