@@ -15,6 +15,16 @@ let resend: ReturnType<typeof fakeResend>
 afterEach(() => resend?.restore())
 
 const password = "correct horse 1"
+/** The events audit.ts writes, each about one user. */
+const auditEvents = new Set([
+  "session_created",
+  "session_ended",
+  "login_method_added",
+  "email_changed",
+  "password_changed",
+  "password_reset",
+  "user_deleted",
+])
 const newPassword = "battery staple 2"
 
 function newEmail() {
@@ -202,6 +212,19 @@ describe("setting a new password with the link", () => {
       expect.objectContaining({ event: "password_reset", userId })
     )
     expect(JSON.stringify(info.mock.calls)).not.toContain(token)
+  })
+
+  it("names the user on every audit line it writes", async () => {
+    const { token, userId } = await resetFlow()
+    using info = vi.spyOn(console, "log").mockImplementation(() => {})
+
+    await post("/api/auth/reset-password", { token, newPassword })
+
+    const audit = info.mock.calls
+      .map(([line]) => line as { event?: string; userId?: unknown })
+      .filter((line) => auditEvents.has(line.event ?? ""))
+    expect(audit).not.toEqual([])
+    for (const line of audit) expect(line).toMatchObject({ userId })
   })
 })
 

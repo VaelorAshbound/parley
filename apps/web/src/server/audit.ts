@@ -53,8 +53,10 @@ export function auditHooks(): Hooks {
           if (ctx && typeof data.password === "string")
             changingPassword.add(ctx)
         },
-        after: async (account, ctx) => {
-          if (ctx && changingPassword.has(ctx))
+        // A reset sets the password with updateMany, whose after hook gets
+        // a row count, not the row: onPasswordReset writes that line.
+        after: async (account: unknown, ctx) => {
+          if (ctx && changingPassword.has(ctx) && isAccountRow(account))
             logInfo("password_changed", { userId: account.userId })
         },
       },
@@ -78,4 +80,14 @@ export function auditHooks(): Hooks {
       },
     },
   }
+}
+
+/** A saved account row, not updateMany's row count. */
+function isAccountRow(value: unknown): value is { userId: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "userId" in value &&
+    typeof value.userId === "string"
+  )
 }
