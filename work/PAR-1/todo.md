@@ -575,11 +575,18 @@
     - **Each choice lists its options' wording** (cut at 160 characters): the model read only keys and took the DPA's `commonPaperCsa` for "use the CSA's cap".
     - **Optional fields are marked** in the field list, with a rule to fill one when the deal calls for it. The DPA never got its UK clause before, even with UK clinics.
     - **Rules from what the runs refused or got wrong:** a jurisdiction takes state or region, never both, and a US state as its code; no empty strings; ask once for a legal name, then use what the user gives; don't guess a law, court or member state from where a party is based; $ means USD; when the user doesn't know, use the usual choice; call `markComplete` again after filling what it listed.
-    - **The engine refuses a US state written as a region** ("Oregon", "OR"), so the document can say "the State of Oregon".
+    - **The engine refuses a US state's full name written as a region** ("Oregon"), so the document can say "the State of Oregon". Only on writes (`changeSchema`), and not Georgia or the postal codes, which are also countries (see the review below).
     - Evals: scoring of multi-choice lists and durations of the same length (12 months = 1 year); "named a related agreement"; a per-agreement table; failed tool calls without a valid input show in the transcripts.
   - Found on the way:
     - **Naming a related agreement is not reliable: 40–100% across runs** (5 cases). The model skips it when it goes straight to a questionnaire. Spec §2 says it "can" mention them, so it has no bar. A reminder in `chooseDocument`'s result was tried and did no better (40%), so it was not kept. A card under the choice in the UI would make it certain; that is UI work, not T30.
     - Case facts were fixed only where a real user would know more than the simulated one did (the DPA's Annex I addresses, UK data, signers' emails for notices).
+  - Review and simplify (2026-09-25; code-review-and-quality by an independent reviewer, then test-driven-development and code-simplification). Fixed, each with a test that fails without the fix:
+    - **The region rule refused real countries:** Georgia, and ISO codes that are also state codes (CA Canada, DE Germany, IN India), with a message that pushed the model to write US Georgia law. Now only full state names, minus Georgia.
+    - **The region rule broke stored drafts:** it sat on `draftSchema` and `schema` too, so a draft saved with `{ region: "Oregon" }` would throw on every chat turn, edit, `markComplete` and preview. It is now on `changeSchema` only.
+    - **"Every draft finished" had no bar:** the DPA had finished on turn 12 of 12. The bars moved to `score.ts` with a tested `belowBar()`, which now also needs every whole draft finished, and `MAX_TURNS` is 16.
+    - A test checks that no two options of one choice read the same after the 160-character cut.
+    - Simplified: the related-agreements line, the list matcher in scoring, and each report row's outcome (its own function; the bar column reads from `BAR`).
+    - `pnpm evals` twice: the first run failed the gate with 1 invalid write (an `askQuestions` call whose input didn't fit, fixed by the model on the next call); the second passed: 100% right agreement, 99% right fields, 0 invalid writes, every draft finished (slowest 9 of 16 turns), NDA $0.0037. About $0.29 on the test key (with the simulated user); the key has used $1.62 of its $5.
   - Accept:
     - The prompt and tools cover all 12 documents, including suggestions of related documents (for example CSA → SLA / DPA / AI Addendum).
     - Evals grow to 30 or more cases with at least 2 per document. The bar is met: correct document ≥ 90%, correct fields ≥ 95%, invalid writes 0.
