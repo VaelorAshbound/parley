@@ -527,7 +527,30 @@
 
 ## Phase 4: Export, share, billing
 
-- [ ] **T24: Export PDF + DOCX with quota** (M)
+- [x] **T24: Export PDF + DOCX with quota** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development, doubt-driven-development (degraded: no nested reviewer in a sub-agent, cross-model skipped in a non-interactive run), observability-and-instrumentation, documentation-and-adrs, frontend-ui-engineering, git-workflow-and-versioning; cloudflare:cloudflare (Browser Run), anthropic-skills:pdf, anthropic-skills:docx, shadcn. Checked:
+    - `pnpm check`; `pnpm test` (935); `pnpm test:coverage` (thresholds met); `pnpm test:workers` (199: export 18, auth matrix with `export.pdf`/`export.docx` rows, verified); `pnpm db:check`.
+    - `test:workers:real` for `export.real.test.ts` only (no Resend): a real Browser Run PDF read back with unpdf (5 pages, the draft's words, "Page 1 of 5" … "Page 5 of 5", the demo note on every page, "Confidential Information" readable, no fallback serif) and a Word file built in workerd and read back.
+    - e2e Chromium + Firefox, port 3123: 41/46; the 5 failures were the 2 known PAR-8 ones and 3 load flakes (load average 11), green on rerun (`--repeat-each 2`, one worker). New `export.spec.ts`: a guest asks for the PDF and is sent to sign up, back to the draft.
+    - Through the UI in dev: sign up, confirm the email, fill the NDA, Download → PDF (a real file in 3.9–4.9 s); Word → the Pro note; screenshots at 1440 light and dark, and 375.
+    - Browser Run use: 5 real prints in all. Resend: no sends.
+  - Decisions:
+    - **Counted documents are rows in a new `counted_export` table** (migration `0002_counted_export`, additive, for the lead to renumber and apply), so deleting a downloaded draft doesn't give its place back. **ADR-0006** (lead: renumber).
+    - **Order of work:** refuse early (plan, quota, unfinished draft: typed `INCOMPLETE` names what is missing, `NO_DOCUMENT`) before any Browser Run time; build the file; stop if the user left (`request.signal`); then count under a per-user `pg_advisory_xact_lock`. A failed print or a closed tab never costs a free document, and two downloads at once can't both take the last one (Worker test).
+    - **Choosing another agreement makes it a new document** (`firstExportedAt` reset); editing a counted draft and downloading it again stays free, as the spec says.
+    - **Typed errors drive the UI** (`exportProblem`): guest → "Create an account" (back to the draft), unconfirmed → confirm the email, `QUOTA_EXCEEDED` → "Get unlimited with Pro", `PRO_REQUIRED` → "Upgrade to Pro, you can still download a PDF", `EXPORT_FAILED` (503) → try again. Both paywall links go to `/pricing` (T26).
+    - **Download menu in the document panel** (PDF, Word with a Pro badge; a spinner while the file is made, no double start). A refused download's note floats over the document (nothing moves) and belongs to its own draft. The chat's "complete" card has **Download PDF**, and the model now points to it.
+    - **The file name travels in `Content-Disposition`** (oRPC sends a returned `File` as the body); a title with accents and a dash arrives whole (Worker test through real HTTP).
+    - **The fonts and the `docx` library load on first export**, so other requests don't pay to start them.
+    - One `export` log line per download (outcome, format, tier, counted, browserMs, bytes; never the draft's words): refusals too, since the paywall rate is the upgrade page's number.
+  - Found and fixed on the way:
+    - **The real PDF had no header or footer:** Browser Run doesn't draw CSS page margin boxes, so the demo note (spec: on every page), the name and "Page X of Y" were missing. The engine now gives them as Chrome header/footer templates (`printFrame`, documented Quick Action options) and the print page drops the margin boxes, so a Chrome that draws both can't print them twice (11 HTML snapshots lose those 3 lines).
+    - **Browser Run embeds the variable brand fonts as Type 3 fonts**, and their "fi"/"ff" ligatures came out as blanks ("Con dential" couldn't be found or copied). The print fonts use plain letters now.
+  - For later:
+    - **T26:** `planOf` returns "free" until it reads the Polar plan; `/pricing` doesn't exist yet, so the upgrade links 404 until then.
+    - **T27:** add `export.*` to the per-user RPC rate limit (re-exports are free but each prints with Browser Run).
+    - **T31:** consider static (non-variable) brand fonts for the PDF: real embedded TrueType subsets instead of Type 3, with ligatures kept. Look at one real PDF per agreement (the header/footer placement was checked in local Chromium with the same templates).
+    - **T37/T25:** the phone design has a Share + Download bar at the bottom of the document; Download is in the header for now.
   - Accept:
     - `export.pdf` (Browser Run from `toPrintHtml`) and `export.docx` stream a download named `<Title> – <Document>.pdf`.
     - The first export sets `firstExportedAt` and counts toward the 3 free documents a month. Re-exports are free. DOCX needs Pro.
