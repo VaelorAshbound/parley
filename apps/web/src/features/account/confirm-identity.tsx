@@ -1,11 +1,16 @@
+import type { InferRouterOutputs } from "@orpc/server"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
+import type { Router } from "@/server/rpc/router"
 
-type Provider = "google" | "github"
+/** How the user signs in: account.get's answer. */
+export type Login = InferRouterOutputs<Router>["account"]["get"]
+
+type Provider = Login["providers"][number]
 const names: Record<Provider, string> = { google: "Google", github: "GitHub" }
 
 /**

@@ -18,7 +18,7 @@ import { authErrorMessage } from "@/features/auth/messages"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
-import { ConfirmIdentity, isFresh } from "./confirm-identity"
+import { ConfirmIdentity, isFresh, type Login } from "./confirm-identity"
 import { idle, SubmitRow, type Status } from "./form-status"
 
 const newPassword = z
@@ -26,14 +26,8 @@ const newPassword = z
   .min(10, "Use at least 10 characters.")
   .max(128, "Use at most 128 characters.")
 
-type Account = {
-  hasPassword: boolean
-  providers: ("google" | "github")[]
-  freshUntil: Date
-}
-
 /** Change the password, or add one to a Google or GitHub account. */
-export function PasswordCard({ account }: { account: Account }) {
+export function PasswordCard({ account }: { account: Login }) {
   // Adding a password turns the form below into "change password".
   const [added, setAdded] = useState(false)
   return (
@@ -148,7 +142,7 @@ function SetPasswordForm({
   account,
   onAdded,
 }: {
-  account: Account
+  account: Login
   onAdded: () => void
 }) {
   const { orpc } = useRouteContext({ from: "/_app" })

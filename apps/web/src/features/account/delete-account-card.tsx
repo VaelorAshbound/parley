@@ -29,19 +29,13 @@ import { reloadTo } from "@/features/auth/reload-to"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
-import { ConfirmIdentity, isFresh } from "./confirm-identity"
-
-type Account = {
-  hasPassword: boolean
-  providers: ("google" | "github")[]
-  freshUntil: Date
-}
+import { ConfirmIdentity, isFresh, type Login } from "./confirm-identity"
 
 /**
  * Deletes the account and all its data (spec §5 Auth), after the password,
  * or for a Google or GitHub account a sign-in in the last 15 minutes.
  */
-export function DeleteAccountCard({ account }: { account: Account }) {
+export function DeleteAccountCard({ account }: { account: Login }) {
   return (
     <Card className="ring-destructive/30">
       <CardHeader>
@@ -144,7 +138,7 @@ function DeleteWithPassword() {
   )
 }
 
-function DeleteAfterSignIn({ account }: { account: Account }) {
+function DeleteAfterSignIn({ account }: { account: Login }) {
   const [confirm, setConfirm] = useState(() => !isFresh(account.freshUntil))
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string>()
