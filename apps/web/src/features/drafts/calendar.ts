@@ -29,11 +29,20 @@ export function groupByDay<T extends { updatedAt: Date }>(
     { label: "Older", drafts: [] },
   ]
   for (const draft of drafts) {
-    const days = calendar.today.since(dayOf(draft.updatedAt, calendar)).days
-    const group = days <= 0 ? 0 : days === 1 ? 1 : days <= 7 ? 2 : 3
-    groups[group]?.drafts.push(draft)
+    const label = dayLabel(
+      calendar.today.since(dayOf(draft.updatedAt, calendar)).days
+    )
+    groups.find((group) => group.label === label)?.drafts.push(draft)
   }
   return groups.filter((group) => group.drafts.length > 0)
+}
+
+/** The group of a draft last changed `days` ago (0 or less: today). */
+function dayLabel(days: number): DayGroup<unknown>["label"] {
+  if (days <= 0) return "Today"
+  if (days === 1) return "Yesterday"
+  if (days <= 7) return "Last 7 days"
+  return "Older"
 }
 
 /** When a draft last changed, short: "9:05 AM", "Sep 2", "Dec 30, 2025". */
