@@ -1,5 +1,6 @@
 import { safe } from "@orpc/client"
 import { simulateReadableStream } from "ai"
+import { definitions } from "@workspace/documents"
 import { MockLanguageModelV4 } from "ai/test"
 import { describe, expect, it } from "vitest"
 
@@ -106,6 +107,85 @@ describe("a chat turn", () => {
     })
     const reply = await client.chat.messages({ id: draft.id })
     expect(reply.map((message) => message.role)).toEqual(["user", "assistant"])
+  })
+
+  it("drafts a whole NDA over two turns, ending with a complete document", async () => {
+    const { cookie } = await signInGuest()
+    const fill = (changes: [string, unknown][]) => ({
+      tool: "updateFields",
+      input: {
+        changes: changes.map(([key, value]) => ({
+          key,
+          value,
+          explanation: "From the chat.",
+        })),
+      },
+    })
+    const model = scriptedModel([
+      // Turn 1: pick, fill what the user said, ask for the rest.
+      [
+        {
+          tool: "chooseDocument",
+          input: { documentId: "mutual-nda", reason: "Both share plans." },
+        },
+      ],
+      [
+        fill([
+          ["purpose", "Evaluating a manufacturing partnership."],
+          ["party1", { company: "Acme Robotics" }],
+          ["party2", { company: "Northwind Labs" }],
+        ]),
+      ],
+      [{ text: "Who signs for each side, and which state's law applies?" }],
+      // Turn 2: the rest.
+      [
+        fill([
+          [
+            "party1",
+            { name: "Ana Diaz", title: "CEO", email: "ana@acme.test" },
+          ],
+          [
+            "party2",
+            {
+              name: "Bo Chen",
+              title: "Head of Partnerships",
+              email: "bo@northwind.test",
+            },
+          ],
+          ["governingLaw", { state: "DE", courtLocation: "New Castle" }],
+        ]),
+      ],
+      [{ text: "All set: the NDA is complete." }],
+    ])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({ today })
+
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say(
+          "We're Acme Robotics, sharing our roadmap with Northwind Labs."
+        ),
+        today,
+      })
+    )
+    await settle()
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say(
+          "Ana Diaz, CEO, ana@acme.test. Bo Chen, Head of Partnerships, bo@northwind.test. Delaware, New Castle."
+        ),
+        today,
+      })
+    )
+    await settle()
+
+    const done = await client.drafts.get({ id: draft.id })
+    expect(
+      definitions["mutual-nda"].schema.safeParse(done.fields).success
+    ).toBe(true)
+    expect(await client.chat.messages({ id: draft.id })).toHaveLength(4)
   })
 
   it("keeps every change when the model calls several tools at once", async () => {
