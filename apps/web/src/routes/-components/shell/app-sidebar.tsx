@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from "@workspace/ui/components/sidebar"
 import { PlusIcon, SearchIcon } from "lucide-react"
 import {
@@ -51,74 +52,78 @@ export function AppSidebar({
   const isAccount = viewer !== null && !viewer.isAnonymous
 
   return (
-    <Sidebar collapsible="icon" aria-label="Drafts">
-      <SidebarHeader className="flex-row items-center justify-between">
-        <Link
-          to="/"
-          aria-label="Parley home"
-          className="flex h-8 items-center px-1.5 text-xl group-data-[collapsible=icon]:hidden"
-        >
-          <Logo />
-        </Link>
-        <Link
-          to="/"
-          aria-label="Parley home"
-          className="hidden size-8 items-center justify-center group-data-[collapsible=icon]:flex"
-        >
-          <LogoMark className="size-5" />
-        </Link>
-        <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
-      </SidebarHeader>
+    <>
+      <Sidebar collapsible="icon" aria-label="Drafts">
+        <SidebarHeader className="flex-row items-center justify-between">
+          <Link
+            to="/"
+            aria-label="Parley home"
+            className="flex h-8 items-center px-1.5 text-xl group-data-[collapsible=icon]:hidden"
+          >
+            <Logo />
+          </Link>
+          <Link
+            to="/"
+            aria-label="Parley home"
+            className="hidden size-8 items-center justify-center group-data-[collapsible=icon]:flex"
+          >
+            <LogoMark className="size-5" />
+          </Link>
+          <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+        </SidebarHeader>
 
-      <SidebarContent className="scroll-fade-y">
-        <SidebarGroup>
-          <SidebarMenu>
-            {viewer && (
+        <SidebarContent className="scroll-fade-y">
+          <SidebarGroup>
+            <SidebarMenu>
+              {viewer && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Search"
+                    aria-keyshortcuts="Meta+K Control+K"
+                    onClick={() => search.setOpen(true)}
+                    onPointerEnter={() => void loadSearch()}
+                    onFocus={() => void loadSearch()}
+                  >
+                    <SearchIcon />
+                    <span>Search</span>
+                    <ShortcutHint />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Search"
-                  aria-keyshortcuts="Meta+K Control+K"
-                  onClick={() => search.setOpen(true)}
-                  onPointerEnter={() => void loadSearch()}
-                  onFocus={() => void loadSearch()}
-                >
-                  <SearchIcon />
-                  <span>Search</span>
-                  <ShortcutHint />
+                <SidebarMenuButton tooltip="New draft" render={<Link to="/" />}>
+                  <PlusIcon />
+                  <span>New draft</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            )}
+            </SidebarMenu>
+          </SidebarGroup>
+          {viewer && (
+            <DraftHistory
+              orpc={orpc}
+              calendarKey={calendarKey}
+              isAccount={isAccount}
+            />
+          )}
+        </SidebarContent>
+
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem className="hidden group-data-[collapsible=icon]:block">
+              <SidebarTrigger />
+            </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="New draft" render={<Link to="/" />}>
-                <PlusIcon />
-                <span>New draft</span>
-              </SidebarMenuButton>
+              <ThemeToggle />
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <AccountMenu viewer={viewer} />
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup>
-        {viewer && (
-          <DraftHistory
-            orpc={orpc}
-            calendarKey={calendarKey}
-            isAccount={isAccount}
-          />
-        )}
-      </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:block">
-            <SidebarTrigger />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <ThemeToggle />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <AccountMenu viewer={viewer} />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-      <SidebarRail />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+      {/* Beside the sidebar, not in it: on a phone the sidebar is a drawer,
+        and the search must open (and stay open) with the drawer closed. */}
       {viewer && search.used && (
         <Suspense fallback={null}>
           <SearchDialog
@@ -130,12 +135,16 @@ export function AppSidebar({
           />
         </Suspense>
       )}
-    </Sidebar>
+    </>
   )
 }
 
-/** The search dialog's state, and ⌘K / Ctrl+K from anywhere in the shell. */
+/**
+ * The search dialog's state, and ⌘K / Ctrl+K from anywhere in the shell.
+ * Opening it closes the phone drawer, so a picked draft isn't hidden.
+ */
 function useSearchDialog() {
+  const { setOpenMobile } = useSidebar()
   const [open, setOpen] = useState(false)
   // Loads the dialog's code only once someone searches.
   const [used, setUsed] = useState(false)
@@ -146,16 +155,20 @@ function useSearchDialog() {
         return
       event.preventDefault()
       setUsed(true)
+      setOpenMobile(false)
       setOpen((current) => !current)
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+  }, [setOpenMobile])
   return {
     open,
     used,
     setOpen: (next: boolean) => {
-      if (next) setUsed(true)
+      if (next) {
+        setUsed(true)
+        setOpenMobile(false)
+      }
       setOpen(next)
     },
   }

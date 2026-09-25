@@ -226,3 +226,42 @@ test("a guest is sent to sign in from /drafts, and back after", async ({
     "/drafts?q=acme"
   )
 })
+
+accountTest.describe("on a phone", () => {
+  accountTest.use({ viewport: { width: 390, height: 844 } })
+
+  accountTest(
+    "search opens with ⌘K and from the drawer, and closes both",
+    async ({ page }) => {
+      // Two drafts' pages, then the dialog's code on first use.
+      test.slow()
+      const draftPath = await startNda(page)
+      const company = `Nimbus${crypto.randomUUID().slice(0, 6)} Labs`
+      await setCompany(page, draftPath, company)
+      const toggle = page.getByRole("button", { name: "Toggle Sidebar" })
+      const drawer = page.getByRole("dialog", { name: "Sidebar" })
+      const dialog = page.getByRole("dialog", { name: "Search drafts" })
+      await toggle.first().click()
+      await drawer.getByRole("link", { name: "New draft" }).click()
+      await expect(page).toHaveURL("/")
+
+      await page.keyboard.press("ControlOrMeta+k")
+      await expect(dialog).toBeVisible({ timeout: 10_000 })
+      await expect(drawer).toBeHidden()
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeHidden()
+
+      await toggle.first().click()
+      await drawer.getByRole("button", { name: "Search" }).click()
+      await dialog.getByRole("combobox").fill(company.slice(0, 9))
+      await expect(
+        dialog.getByRole("option", { name: /Mutual Non-Disclosure Agreement/ })
+      ).toHaveCount(1)
+      await page.keyboard.press("Enter")
+
+      await expect(page).toHaveURL(draftPath)
+      await expect(dialog).toBeHidden()
+      await expect(drawer).toBeHidden()
+    }
+  )
+})
