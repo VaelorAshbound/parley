@@ -1,6 +1,8 @@
 import { connect } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
+import { simulateReadableStream, type LanguageModel } from "ai"
+import { MockLanguageModelV4 } from "ai/test"
 import { expect } from "vitest"
 
 import { api } from "../../web/src/server/api"
@@ -49,15 +51,94 @@ export async function signInGuest() {
 
 /** Calls procedures in-process with the given cookie (or none), like SSR. */
 export async function serverClient(cookie?: string) {
+  return (await chatClient(cookie, scriptedModel([[{ text: "Hi." }]]))).client
+}
+
+/**
+ * Like serverClient, with the chat's model given. `settle` waits for the
+ * work left after the response (saving the reply), as the Worker would.
+ */
+export async function chatClient(
+  cookie: string | undefined,
+  model: LanguageModel
+) {
   const db = await connect(env.HYPERDRIVE.connectionString)
   const ctx = createExecutionContext()
   const reqHeaders = new Headers({ host: "localhost:3000" })
   if (cookie) reqHeaders.set("cookie", cookie)
-  return createServerClient({
+  const waitUntil = (promise: Promise<unknown>) => ctx.waitUntil(promise)
+  const client = createServerClient({
     db,
-    auth: createAuth({ db, env, waitUntil: (p) => ctx.waitUntil(p) }),
+    auth: createAuth({ db, env, waitUntil }),
+    model,
+    waitUntil,
     reqHeaders,
     resHeaders: new Headers(),
+  })
+  return { client, settle: () => waitOnExecutionContext(ctx) }
+}
+
+/** What a model streams, from the mock's own types (no provider package). */
+type StreamPart =
+  Awaited<
+    ReturnType<MockLanguageModelV4["doStream"]>
+  >["stream"] extends ReadableStream<infer Part>
+    ? Part
+    : never
+
+/** One model step: some text and/or tool calls, in order. */
+export type Step = ({ text: string } | { tool: string; input: unknown })[]
+
+/**
+ * A scripted model (AI SDK MockLanguageModelV4): each call streams the next
+ * step. Its `doStreamCalls` show what the model was sent.
+ */
+export function scriptedModel(steps: Step[]) {
+  let call = 0
+  return new MockLanguageModelV4({
+    doStream: async () => {
+      const step = steps[Math.min(call, steps.length - 1)] ?? []
+      call += 1
+      const calls = step.some((part) => "tool" in part)
+      return {
+        stream: simulateReadableStream({
+          chunks: [
+            ...step.flatMap((part, index): StreamPart[] =>
+              "text" in part
+                ? [
+                    { type: "text-start", id: `t${index}` },
+                    { type: "text-delta", id: `t${index}`, delta: part.text },
+                    { type: "text-end", id: `t${index}` },
+                  ]
+                : [
+                    {
+                      type: "tool-call",
+                      toolCallId: `call-${call}-${index}`,
+                      toolName: part.tool,
+                      input: JSON.stringify(part.input),
+                    },
+                  ]
+            ),
+            {
+              type: "finish",
+              finishReason: {
+                unified: calls ? "tool-calls" : "stop",
+                raw: undefined,
+              },
+              usage: {
+                inputTokens: {
+                  total: 10,
+                  noCache: 10,
+                  cacheRead: undefined,
+                  cacheWrite: undefined,
+                },
+                outputTokens: { total: 5, text: 5, reasoning: undefined },
+              },
+            },
+          ],
+        }),
+      }
+    },
   })
 }
 

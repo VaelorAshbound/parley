@@ -1,5 +1,6 @@
 import { getDraft, type Db } from "@workspace/db"
 import { os } from "@orpc/server"
+import type { LanguageModel } from "ai"
 import type {
   RequestHeadersPluginContext,
   ResponseHeadersPluginContext,
@@ -12,7 +13,14 @@ import type { Auth, Session } from "../auth"
 // for anything that reads or writes a draft.
 
 export type BaseContext = RequestHeadersPluginContext &
-  ResponseHeadersPluginContext & { db: Db; auth: Auth }
+  ResponseHeadersPluginContext & {
+    db: Db
+    auth: Auth
+    /** The chat's model; tests pass a scripted one. */
+    model: LanguageModel
+    /** Keeps the Worker alive for work after the response (saving a reply). */
+    waitUntil: (promise: Promise<unknown>) => void
+  }
 type AuthedContext = BaseContext & Session
 
 const errors = {

@@ -22,8 +22,8 @@ const createClient = createIsomorphicFn()
     const resHeaders = new Headers()
     return createRouterClient(router, {
       context: async () => {
-        const { db, auth } = await requestServices()
-        return { db, auth, reqHeaders: getRequestHeaders(), resHeaders }
+        const services = await requestServices()
+        return { ...services, reqHeaders: getRequestHeaders(), resHeaders }
       },
       interceptors: [
         async (options) => {

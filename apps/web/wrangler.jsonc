@@ -20,7 +20,7 @@
   // fail when one is missing. Previews get theirs from the Previews base
   // config (`wrangler preview base-config secret put`).
   "secrets": {
-    "required": ["BETTER_AUTH_SECRET"],
+    "required": ["BETTER_AUTH_SECRET", "OPENROUTER_API_KEY"],
   },
   "vars": {
     "STAGE": "production",

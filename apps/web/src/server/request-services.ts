@@ -2,6 +2,7 @@ import { connect } from "@workspace/db"
 import { getRequest } from "@tanstack/react-start/server"
 import { env, waitUntil } from "cloudflare:workers"
 
+import { createModel } from "./ai/model"
 import { createAuth } from "./auth"
 
 // The database client and auth instance for the page request being rendered
@@ -12,7 +13,12 @@ const byRequest = new WeakMap<Request, ReturnType<typeof create>>()
 
 async function create() {
   const db = await connect(env.HYPERDRIVE.connectionString)
-  return { db, auth: createAuth({ db, env, waitUntil }) }
+  return {
+    db,
+    auth: createAuth({ db, env, waitUntil }),
+    model: createModel(env),
+    waitUntil,
+  }
 }
 
 export function requestServices() {

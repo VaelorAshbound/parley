@@ -354,6 +354,9 @@ importers:
       '@workspace/documents':
         specifier: workspace:*
         version: link:../../packages/documents
+      ai:
+        specifier: 7.0.112
+        version: 7.0.112(zod@4.6.5)
       drizzle-orm:
         specifier: ^0.45.3
         version: 0.45.3(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.0)

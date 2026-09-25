@@ -33,6 +33,23 @@ const matrix: Record<
     run: (client, id) => client.drafts.get({ id }),
     expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
   },
+  "chat.messages": {
+    run: (client, id) => client.chat.messages({ id }),
+    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+  },
+  "chat.send": {
+    run: (client, id) =>
+      client.chat.send({
+        id,
+        message: {
+          id: crypto.randomUUID(),
+          role: "user",
+          parts: [{ type: "text", text: "Matrix test" }],
+        },
+        today,
+      }),
+    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+  },
   "drafts.chooseDocument": {
     run: (client, id) =>
       client.drafts.chooseDocument({ id, documentId: "mutual-nda", today }),

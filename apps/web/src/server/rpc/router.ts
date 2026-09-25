@@ -7,9 +7,10 @@ import {
 } from "@orpc/server/plugins"
 
 import { logError } from "../log"
+import { chat } from "../ai/chat"
 import { drafts } from "./drafts"
 
-export const router = { drafts }
+export const router = { drafts, chat }
 export type Router = typeof router
 
 // Built once per isolate: it holds no request state.

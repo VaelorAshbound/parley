@@ -7,6 +7,7 @@ import { requestId, type RequestIdVariables } from "hono/request-id"
 import { secureHeaders } from "hono/secure-headers"
 import { timing, type TimingVariables } from "hono/timing"
 
+import { createModel } from "./ai/model"
 import { createAuth } from "./auth"
 import { logError } from "./log"
 import { rpcHandler } from "./rpc/router"
@@ -27,7 +28,7 @@ async function services(c: Context<AppEnv>) {
     env: c.env,
     waitUntil: (promise) => c.executionCtx.waitUntil(promise),
   })
-  return { db, auth }
+  return { db, auth, model: createModel(c.env) }
 }
 
 // Bodies are read in full, and one isolate serves many requests: cap them
@@ -42,10 +43,15 @@ const auth = new Hono<AppEnv>()
 const rpc = new Hono<AppEnv>()
   .use(bodyLimit({ maxSize: 128 * 1024 }))
   .use("/*", async (c, next) => {
-    const { db, auth } = await services(c)
+    const { db, auth, model } = await services(c)
     const { matched, response } = await rpcHandler.handle(c.req.raw, {
       prefix: "/api/rpc",
-      context: { db, auth },
+      context: {
+        db,
+        auth,
+        model,
+        waitUntil: (promise) => c.executionCtx.waitUntil(promise),
+      },
     })
     if (matched) return c.newResponse(response.body, response)
     await next()

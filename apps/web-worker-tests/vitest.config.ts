@@ -36,6 +36,8 @@ export default defineConfig({
         hyperdrives: { HYPERDRIVE: inject("databaseUrl") },
         bindings: {
           BETTER_AUTH_SECRET: "test-only-secret-that-is-long-enough-0123456789",
+          // Never used: the chat tests pass a scripted model (helpers.ts).
+          OPENROUTER_API_KEY: "test-only-no-real-calls",
         },
       },
     })),
