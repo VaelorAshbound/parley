@@ -139,6 +139,11 @@ export function createAuth({
       },
     },
     session: {
+      // Deleting the account without a password, or adding a password to a
+      // Google or GitHub account, needs a sign-in this recent (Better
+      // Auth's default is a day). Changing a password asks for the current
+      // one instead.
+      freshAge: 15 * 60,
       // Saves a database read on most requests. A revoke can take up to
       // 5 minutes to reach other devices (spec §5 Auth).
       cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },

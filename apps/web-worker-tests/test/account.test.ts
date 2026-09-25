@@ -1,0 +1,324 @@
+import { ORPCError, safe } from "@orpc/client"
+import { connect, schema } from "@workspace/db"
+import { and, eq } from "drizzle-orm"
+import { env } from "cloudflare:workers"
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
+
+import { browserClient, call, cookiesFrom } from "./helpers"
+import { fakeResend } from "./resend"
+
+// Account settings (spec §5 Auth, T23), through the real /api app: what the
+// settings page calls on Better Auth, and the audit lines they leave.
+
+let resend: ReturnType<typeof fakeResend> | undefined
+afterEach(() => resend?.restore())
+
+const password = "correct horse 1"
+const newPassword = "battery staple 2"
+
+function post(path: string, body: unknown, cookie?: string) {
+  return call(path, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(cookie && { cookie }),
+    },
+    body: JSON.stringify(body),
+  })
+}
+
+/** A new account, signed in; `email` on a test domain sends no email. */
+async function signUp(email = `ana-${crypto.randomUUID()}@example.test`) {
+  const response = await post("/api/auth/sign-up/email", {
+    name: "Ana",
+    email,
+    password,
+  })
+  expect(response.status).toBe(200)
+  const { user } = await response.json<{ user: { id: string } }>()
+  return { email, userId: user.id, cookie: cookiesFrom(response) }
+}
+
+/** The same account, signed in on a second device. */
+async function signIn(email: string, pass = password) {
+  const response = await post("/api/auth/sign-in/email", {
+    email,
+    password: pass,
+  })
+  return { status: response.status, cookie: cookiesFrom(response) }
+}
+
+/** The session behind a cookie, read from the database. */
+async function session(cookie: string) {
+  const response = await call("/api/auth/get-session?disableCookieCache=true", {
+    headers: { cookie },
+  })
+  return response.json<{
+    user: { name: string; email: string; emailVerified: boolean }
+  } | null>()
+}
+
+/** The audit lines written while `run` runs. */
+async function audited<T>(run: () => Promise<T>) {
+  using info = vi.spyOn(console, "log").mockImplementation(() => {})
+  const result = await run()
+  const lines = info.mock.calls.map(([line]) => line as { event?: string })
+  return { result, lines }
+}
+
+describe("changing the password", () => {
+  it("needs the current password", async () => {
+    const ana = await signUp()
+
+    const response = await post(
+      "/api/auth/change-password",
+      { currentPassword: "not my password", newPassword },
+      ana.cookie
+    )
+
+    expect(response.status).toBe(400)
+    expect((await signIn(ana.email)).status).toBe(200)
+  })
+
+  it("changes it, and writes an audit line", async () => {
+    const ana = await signUp()
+
+    const { result, lines } = await audited(() =>
+      post(
+        "/api/auth/change-password",
+        { currentPassword: password, newPassword },
+        ana.cookie
+      )
+    )
+
+    expect(result.status).toBe(200)
+    expect((await signIn(ana.email, newPassword)).status).toBe(200)
+    expect(lines).toContainEqual(
+      expect.objectContaining({ event: "password_changed", userId: ana.userId })
+    )
+  })
+
+  it("can sign every other device out, and keeps this one", async () => {
+    const ana = await signUp()
+    const phone = await signIn(ana.email)
+
+    const response = await post(
+      "/api/auth/change-password",
+      { currentPassword: password, newPassword, revokeOtherSessions: true },
+      ana.cookie
+    )
+
+    expect(await session(phone.cookie)).toBeNull()
+    // This device gets a new session cookie with the answer.
+    expect(await session(cookiesFrom(response))).not.toBeNull()
+  })
+})
+
+describe("changing the name", () => {
+  it("saves the new name", async () => {
+    const ana = await signUp()
+
+    const response = await post(
+      "/api/auth/update-user",
+      { name: "Ana María" },
+      ana.cookie
+    )
+
+    expect(response.status).toBe(200)
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { name: "Ana María" },
+    })
+  })
+
+  it("can't change the email that way", async () => {
+    const ana = await signUp()
+
+    const response = await post(
+      "/api/auth/update-user",
+      { email: "someone-else@acme.dev" },
+      ana.cookie
+    )
+
+    expect(response.status).toBe(400)
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: ana.email },
+    })
+  })
+})
+
+async function database() {
+  const db = await connect(env.HYPERDRIVE.connectionString)
+  onTestFinished(() => db.$client.end())
+  return db
+}
+
+/** Makes the account one that signs in with Google or GitHub only. */
+async function withoutPassword(userId: string) {
+  const db = await database()
+  await db
+    .delete(schema.account)
+    .where(
+      and(
+        eq(schema.account.userId, userId),
+        eq(schema.account.providerId, "credential")
+      )
+    )
+  await db.insert(schema.account).values({
+    id: crypto.randomUUID(),
+    userId,
+    providerId: "github",
+    accountId: `github-${userId}`,
+  })
+}
+
+/** Moves the user's sessions' start back, as if signed in long ago. */
+async function signedInLongAgo(userId: string) {
+  const db = await database()
+  await db
+    .update(schema.session)
+    .set({ createdAt: new Date(Date.now() - 60 * 60 * 1000) })
+    .where(eq(schema.session.userId, userId))
+}
+
+function codeOf(error: unknown) {
+  return error instanceof ORPCError ? error.code : error
+}
+
+describe("account.get", () => {
+  it("says how the user signs in", async () => {
+    const ana = await signUp()
+
+    const account = await browserClient(ana.cookie).account.get()
+
+    expect(account).toEqual({
+      hasPassword: true,
+      providers: [],
+      freshUntil: expect.any(Date),
+    })
+  })
+
+  it("knows an account with Google or GitHub only has no password", async () => {
+    const ana = await signUp()
+    await withoutPassword(ana.userId)
+
+    const account = await browserClient(ana.cookie).account.get()
+
+    expect(account).toMatchObject({ hasPassword: false, providers: ["github"] })
+  })
+
+  it("is for accounts, not guests", async () => {
+    const guest = await post("/api/auth/sign-in/anonymous", {})
+
+    const { error } = await safe(
+      browserClient(cookiesFrom(guest)).account.get()
+    )
+
+    expect(codeOf(error)).toBe("UNAUTHORIZED")
+  })
+})
+
+describe("account.sessions", () => {
+  it("lists each signed-in device, marks this one, and shows no tokens", async () => {
+    const ana = await signUp()
+    const phone = await signIn(ana.email)
+
+    const sessions = await browserClient(ana.cookie).account.sessions()
+
+    expect(sessions).toHaveLength(2)
+    expect(sessions.filter((each) => each.current)).toHaveLength(1)
+    expect(Object.keys(sessions[0] ?? {}).toSorted()).toEqual([
+      "createdAt",
+      "current",
+      "device",
+      "id",
+      "lastActiveAt",
+    ])
+    const text = JSON.stringify(sessions)
+    for (const cookie of [ana.cookie, phone.cookie]) {
+      const token = cookie.match(/session_token=([^.;]+)/)?.[1] ?? "missing"
+      expect(text).not.toContain(token)
+    }
+  })
+})
+
+describe("account.revokeSession", () => {
+  it("signs another device out, and writes an audit line", async () => {
+    const ana = await signUp()
+    const phone = await signIn(ana.email)
+    const client = browserClient(ana.cookie)
+    const other = (await client.account.sessions()).find(
+      (each) => !each.current
+    )
+
+    const { lines } = await audited(() =>
+      client.account.revokeSession({ id: other?.id ?? "" })
+    )
+
+    expect(await session(phone.cookie)).toBeNull()
+    expect(await session(ana.cookie)).not.toBeNull()
+    expect(lines).toContainEqual(
+      expect.objectContaining({ event: "session_ended", userId: ana.userId })
+    )
+  })
+
+  it("can't sign someone else out", async () => {
+    const ana = await signUp()
+    const bo = await signUp()
+    const [boSession] = await browserClient(bo.cookie).account.sessions()
+
+    const { error } = await safe(
+      browserClient(ana.cookie).account.revokeSession({
+        id: boSession?.id ?? "",
+      })
+    )
+
+    expect(codeOf(error)).toBe("NOT_FOUND")
+    expect(await session(bo.cookie)).not.toBeNull()
+  })
+})
+
+describe("account.setPassword", () => {
+  it("lets a Google or GitHub account add a password", async () => {
+    const ana = await signUp()
+    await withoutPassword(ana.userId)
+
+    await browserClient(ana.cookie).account.setPassword({ newPassword })
+
+    expect((await signIn(ana.email, newPassword)).status).toBe(200)
+  })
+
+  it("asks to sign in again when the session is old", async () => {
+    const ana = await signUp()
+    await withoutPassword(ana.userId)
+    await signedInLongAgo(ana.userId)
+
+    const { error } = await safe(
+      browserClient(ana.cookie).account.setPassword({ newPassword })
+    )
+
+    expect(codeOf(error)).toBe("SESSION_NOT_FRESH")
+    expect((await signIn(ana.email, newPassword)).status).toBe(401)
+  })
+
+  it("never replaces a password that is already set", async () => {
+    const ana = await signUp()
+
+    const { error } = await safe(
+      browserClient(ana.cookie).account.setPassword({ newPassword })
+    )
+
+    expect(codeOf(error)).toBe("PASSWORD_ALREADY_SET")
+    expect((await signIn(ana.email)).status).toBe(200)
+  })
+
+  it("refuses a password shorter than 10 characters", async () => {
+    const ana = await signUp()
+    await withoutPassword(ana.userId)
+
+    const { error } = await safe(
+      browserClient(ana.cookie).account.setPassword({ newPassword: "short" })
+    )
+
+    expect(codeOf(error)).toBe("BAD_REQUEST")
+  })
+})
