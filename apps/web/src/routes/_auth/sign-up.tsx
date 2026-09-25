@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, redirect } from "@tanstack/react-router"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import {
   Card,
   CardContent,
@@ -9,14 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { FieldSeparator } from "@workspace/ui/components/field"
-import { useState } from "react"
 
 import { authConfigQuery } from "@/features/auth/auth-config"
-import { oauthErrorMessage } from "@/features/auth/messages"
 import { authSearch } from "@/features/auth/redirect"
 import { SignUpForm } from "@/features/auth/sign-up-form"
-import { SocialButtons } from "@/features/auth/social-buttons"
+import { SocialSignIn } from "@/features/auth/social-buttons"
 
 export const Route = createFileRoute("/_auth/sign-up")({
   validateSearch: authSearch,
@@ -32,9 +28,6 @@ function SignUp() {
   const { redirect: returnTo = "/", error } = Route.useSearch()
   const { viewer } = Route.useRouteContext()
   const { data: config } = useSuspenseQuery(authConfigQuery)
-  const [socialError, setSocialError] = useState(
-    error ? oauthErrorMessage(error) : undefined
-  )
 
   return (
     <Card>
@@ -49,24 +42,12 @@ function SignUp() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        {socialError && (
-          <Alert variant="destructive">
-            <AlertDescription>{socialError}</AlertDescription>
-          </Alert>
-        )}
-        {config.providers.length > 0 && (
-          <>
-            <SocialButtons
-              providers={config.providers}
-              lastUsed={undefined}
-              returnTo={returnTo}
-              onError={setSocialError}
-            />
-            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-              or with email
-            </FieldSeparator>
-          </>
-        )}
+        <SocialSignIn
+          providers={config.providers}
+          lastUsed={undefined}
+          returnTo={returnTo}
+          error={error}
+        />
         <SignUpForm siteKey={config.turnstileSiteKey} returnTo={returnTo} />
       </CardContent>
       <CardFooter className="justify-center border-t text-sm text-muted-foreground">

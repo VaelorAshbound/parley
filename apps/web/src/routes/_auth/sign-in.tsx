@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, redirect } from "@tanstack/react-router"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import {
   Card,
   CardContent,
@@ -9,14 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { FieldSeparator } from "@workspace/ui/components/field"
-import { useState } from "react"
 
 import { authConfigQuery } from "@/features/auth/auth-config"
-import { oauthErrorMessage } from "@/features/auth/messages"
 import { authSearch } from "@/features/auth/redirect"
 import { SignInForm } from "@/features/auth/sign-in-form"
-import { SocialButtons } from "@/features/auth/social-buttons"
+import { SocialSignIn } from "@/features/auth/social-buttons"
 import { readCookie } from "@/lib/cookies"
 
 /** Set by Better Auth's lastLoginMethod plugin (readable by the page). */
@@ -39,9 +35,6 @@ function SignIn() {
   const { viewer } = Route.useRouteContext()
   const { lastUsed } = Route.useLoaderData()
   const { data: config } = useSuspenseQuery(authConfigQuery)
-  const [socialError, setSocialError] = useState(
-    error ? oauthErrorMessage(error) : undefined
-  )
 
   return (
     <Card>
@@ -56,24 +49,12 @@ function SignIn() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        {socialError && (
-          <Alert variant="destructive">
-            <AlertDescription>{socialError}</AlertDescription>
-          </Alert>
-        )}
-        {config.providers.length > 0 && (
-          <>
-            <SocialButtons
-              providers={config.providers}
-              lastUsed={lastUsed}
-              returnTo={returnTo}
-              onError={setSocialError}
-            />
-            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-              or with email
-            </FieldSeparator>
-          </>
-        )}
+        <SocialSignIn
+          providers={config.providers}
+          lastUsed={lastUsed}
+          returnTo={returnTo}
+          error={error}
+        />
         <SignInForm
           siteKey={config.turnstileSiteKey}
           returnTo={returnTo}

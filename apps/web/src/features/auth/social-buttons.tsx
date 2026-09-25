@@ -1,22 +1,70 @@
+import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { FieldSeparator } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 
 import type { AuthConfig } from "./auth-config"
+import { oauthErrorMessage } from "./messages"
 
 type Provider = AuthConfig["providers"][number]
 
 const names: Record<Provider, string> = { google: "Google", github: "GitHub" }
 
 /**
+ * The top of the sign-in and sign-up pages: the Google and GitHub buttons
+ * (where set up), and what went wrong if one of them sent the user back
+ * with `?error=`.
+ */
+export function SocialSignIn({
+  providers,
+  lastUsed,
+  returnTo,
+  error,
+}: {
+  providers: Provider[]
+  lastUsed: string | undefined
+  returnTo: string
+  /** The `?error=` code the page was opened with. */
+  error: string | undefined
+}) {
+  const [message, setMessage] = useState(
+    error ? oauthErrorMessage(error) : undefined
+  )
+
+  return (
+    <>
+      {message && (
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+      {providers.length > 0 && (
+        <>
+          <SocialButtons
+            providers={providers}
+            lastUsed={lastUsed}
+            returnTo={returnTo}
+            onError={setMessage}
+          />
+          <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+            or with email
+          </FieldSeparator>
+        </>
+      )}
+    </>
+  )
+}
+
+/**
  * "Continue with Google / GitHub". The browser leaves for the provider and
  * comes back to `returnTo`; a guest's drafts move to the account on the way
  * (onLinkAccount). The method used last gets a "Last used" badge.
  */
-export function SocialButtons({
+function SocialButtons({
   providers,
   lastUsed,
   returnTo,
