@@ -28,18 +28,18 @@ const BATCH = 500
  */
 const MAX_BATCHES = 20
 
-/** Deletes in batches until a batch comes back short, or the run's cap. */
+/**
+ * Deletes in batches until a batch comes back short (true: nothing left),
+ * or the run's cap (false: more for the next run).
+ */
 export async function inBatches(
   deleteBatch: (limit: number) => Promise<number>,
   { size = BATCH, max = MAX_BATCHES } = {}
 ) {
-  let deleted = 0
   for (let batch = 0; batch < max; batch += 1) {
-    const count = await deleteBatch(size)
-    deleted += count
-    if (count < size) return { deleted, complete: true }
+    if ((await deleteBatch(size)) < size) return true
   }
-  return { deleted, complete: false }
+  return false
 }
 
 /** What a run has deleted so far, counted batch by batch. */
@@ -61,17 +61,17 @@ export async function purgeOldData(
     now.subtract({ hours: GUEST_IDLE_DAYS * 24 }).epochMilliseconds
   )
   // Guests first: their sessions' times count as activity.
-  const guests = await inBatches(async (limit) => {
+  const guestsDone = await inBatches(async (limit) => {
     const count = await deleteIdleGuests(db, { now: at, inactiveSince, limit })
     purged.guests += count
     return count
   })
-  const sessions = await inBatches(async (limit) => {
+  const sessionsDone = await inBatches(async (limit) => {
     const count = await deleteExpiredSessions(db, { now: at, limit })
     purged.sessions += count
     return count
   })
-  return { ...purged, complete: guests.complete && sessions.complete }
+  return { ...purged, complete: guestsDone && sessionsDone }
 }
 
 /**
