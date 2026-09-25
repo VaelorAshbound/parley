@@ -350,7 +350,7 @@
   - Files: `apps/web/src/server/ai/{chat.ts,tools.ts,prompt.ts,model.ts}`, `src/features/chat/*`, `test/chat.test.ts`
   - Deps: T16 · Owner: OpenRouter keys · Skills: `ai-sdk`
 
-- [ ] **T18: Wow motion: shimmer, scroll-to-field, clause swap, undo markers** (M)
+- [x] **T18: Wow motion: shimmer, scroll-to-field, clause swap, undo markers** (M)
   - Accept:
     - The field shimmer is the shadcn `shimmer` utility tuned to the brand. `scroll-fade` is on the chat, the document and the sidebar.
     - A changed field shimmers (to the brand spec), the panel scrolls smoothly to it, and a choice swaps with a layout animation. There is no jank during streaming.
@@ -359,6 +359,19 @@
   - Verify: component tests + a DevTools performance trace (no long tasks over 50 ms while streaming) + a Claude in Chrome feel check.
   - Files: `apps/web/src/features/document-preview/motion.tsx`, `src/features/chat/change-marker.tsx`, `src/stores/ui.ts`
   - Deps: T17 · Skills: `emil-design-eng`, `find-animation-opportunities`, `review-animations`
+  - Done 2026-09-25. Skills: incremental-implementation, test-driven-development, frontend-ui-engineering, performance-optimization, git-workflow-and-versioning; emil-design-eng, find-animation-opportunities. Checked:
+    - `pnpm check`; `pnpm test:coverage` (705); `pnpm test:browser` (39, including reduced motion through CDP); `pnpm test:workers` (53); local e2e 17/17.
+    - Long tasks on a production build (`vp preview`), two real turns with `gpt-6-luna` (pick the NDA, then switch to a CSA): **none while streaming**. One 88–104 ms task comes when the draft route first opens, before the stream starts: that is the 1 MB draft chunk being parsed (left for T35's chunk split).
+    - Not done here: the Claude in Chrome feel check. It moves to the owner demo at Checkpoint 2.
+  - Decisions:
+    - **CSS animations for a field's life** (ink-in, change bar, check, enter), with brand.md's timings. They run off the main thread, so a busy stream doesn't stutter them. Motion only runs the section's `layout="position"` move when a choice swaps, with `MotionConfig reducedMotion="user"`.
+    - **Highlights last until the user's next message**, then settle. A second change to the same field replays its ink (a count per field in the UI store).
+    - **The panel scrolls to the first changed field only if it is out of view**: smooth scroll, or instant with reduced motion. The phone's Document tab shows a dot for changes not seen yet.
+    - **Undo is compare-and-set** with the change's inverse (ADR-0003). It checks locally first, so a stale row says "Changed since" at once. Then it saves in the draft's save queue.
+    - **Change rows are short:** a choice shows its blank ("2 years"), a party shows the parts that changed, and a state shows its name, not its code.
+    - **Rendering stays cheap while streaming:** the document renders from `useDeferredValue`, and the standard terms use `content-visibility: auto`.
+    - Files differ from the plan: the motion lives in `globals.css` and `document-preview/value.tsx`, the markers in `chat/message-parts.tsx`, and the store in `lib/ui-store.tsx`, where the code already was.
+  - Found and fixed on the way: the real model put the state in a court's location ("New Castle, Delaware"), so the document printed it twice. The prompt now says city or county only.
 
 - [ ] **T19: AI questionnaire, completion and guardrails** (M)
   - Accept:
