@@ -19,16 +19,19 @@ const TYPES = {
 
 /**
  * Characters no file name may hold on Windows, macOS or Linux: control
- * characters (\p{Cc}) and the ones Windows reserves.
+ * characters (\p{Cc}) and the ones Windows reserves. Also half of an emoji
+ * sent on its own (\p{Cs}): the download header can't encode it.
  */
-const UNSAFE = /[\p{Cc}/\\:*?"<>|]+/gu
+const UNSAFE = /[\p{Cc}\p{Cs}/\\:*?"<>|]+/gu
 
+const graphemes = new Intl.Segmenter("en", { granularity: "grapheme" })
+
+/** At most `max` characters as people see them, so no emoji is cut. */
 function clean(text: string, max: number) {
-  return text
-    .replace(UNSAFE, " ")
-    .replace(/\s+/g, " ")
-    .trim()
+  const tidy = text.replace(UNSAFE, " ").replace(/\s+/g, " ").trim()
+  return Array.from(graphemes.segment(tidy), ({ segment }) => segment)
     .slice(0, max)
+    .join("")
     .trim()
 }
 

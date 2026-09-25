@@ -104,6 +104,23 @@ describe("export.pdf", () => {
     )
   })
 
+  it("downloads a long title that ends in an emoji, never cut in half", async () => {
+    const { cookie } = await signUpVerified()
+    const client = browserClient(cookie, fakeBrowserBinding().bindings)
+    const id = await completeNda(client)
+    const db = await database()
+    await db
+      .update(schema.draft)
+      .set({ title: `${"a".repeat(79)}😀 deal` })
+      .where(eq(schema.draft.id, id))
+
+    const file = await client.export.pdf({ id })
+
+    expect(file.name).toBe(
+      `${"a".repeat(79)}😀 – Mutual Non-Disclosure Agreement.pdf`
+    )
+  })
+
   it("counts the first download of a document", async () => {
     const { cookie, email } = await signUpVerified()
     const client = await serverClient(cookie)

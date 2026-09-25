@@ -56,6 +56,33 @@ describe("fileName", () => {
     expect(name).toBe(`${"a".repeat(80)} – Pilot Agreement.pdf`)
   })
 
+  it("never cuts an emoji in half when it shortens a name", () => {
+    // Half an emoji makes the download's Content-Disposition header throw,
+    // after the document was already counted.
+    const name = fileName(`${"a".repeat(79)}😀 deal`, "Pilot Agreement", "pdf")
+
+    expect(name).toBe(`${"a".repeat(79)}😀 – Pilot Agreement.pdf`)
+    expect(() => encodeURIComponent(name)).not.toThrow()
+  })
+
+  it("keeps a family emoji whole when it shortens a name", () => {
+    const family = "👨‍👩‍👧"
+    const name = fileName(
+      `${"a".repeat(79)}${family}`,
+      "Pilot Agreement",
+      "pdf"
+    )
+
+    expect(name).toBe(`${"a".repeat(79)}${family} – Pilot Agreement.pdf`)
+  })
+
+  it("leaves out a broken character sent in the title", () => {
+    const name = fileName("Bolt \uD800deal", "Pilot Agreement", "pdf")
+
+    expect(name).toBe("Bolt deal – Pilot Agreement.pdf")
+    expect(() => encodeURIComponent(name)).not.toThrow()
+  })
+
   it("falls back to the agreement's name when nothing of the title is left", () => {
     expect(fileName(" /// ", "Pilot Agreement", "pdf")).toBe(
       "Pilot Agreement.pdf"
