@@ -10,8 +10,8 @@ async function startNda(page: Page) {
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
   await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
   // The draft page has loaded: going on from here won't cut its load short
-  // (Firefox then aborts the next page.goto).
-  await expect(titleMenu(page)).toBeVisible()
+  // (Firefox then aborts the next page.goto). A cold dev server is slow.
+  await expect(titleMenu(page)).toBeVisible({ timeout: 15_000 })
   return new URL(page.url()).pathname
 }
 
