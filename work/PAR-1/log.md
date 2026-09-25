@@ -109,3 +109,9 @@ Wave A done and merged (c97eeb8): T21 accounts, T29 observability, T30 AI for al
 
 ### 2026-09-25T13:03:18Z
 Owner approved T21's two spec changes: no tanstackStartCookies(); autoSignInAfterVerification false (confirming the email does not sign in on that device).
+
+### 2026-09-25T13:48:44Z
+Wave B1 paused (usage limit). Worktrees kept, base a18bfcf: .claude/worktrees/wf_a38fbbde-1d7-1=T22, -2=T23, -3=T24; uncommitted edits may exist. All three were still in build. Resume: new agents continue each from its worktree (build, review, fix), then merge one by one.
+
+### 2026-09-25T19:12:13Z
+Wave B1 merged (4fb2034): T22 history+search, T23 settings+password/email flows, T24 PDF/DOCX export with quota. Migrations: 0002_draft_history_pages (T22), 0003_counted_export (T24, renumbered). ADR-0006. Gate green: check, 1014 unit, 301 worker, db:check; e2e Chromium+Firefox 77/80, the 3 failures pass alone (shared test data, logged on PAR-8). Local dev DB migrated. T27 got Musts: export rate limit, guest captcha. Filed PAR-11 (Turnstile reset), PAR-12 (phone drawer). Neon migrations 0002+0003 not applied yet.
