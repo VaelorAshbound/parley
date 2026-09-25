@@ -302,11 +302,15 @@ function newEmailNeedsItsAccount(secret: string) {
     const payload = await verifyJWT<{ requestType?: unknown }>(token, secret)
     if (payload?.requestType !== "change-email-verification") return
     if (await getSessionFromCtx(ctx)) return
-    // Back to the page that asked, as Better Auth sends its own errors, but
-    // only to a path on Parley (this runs before its origin check).
+    // Back to the page that asked, as Better Auth sends its own errors. This
+    // runs before its origin check, so it makes the same one (the settings
+    // page sends a full URL), and redirects on this host only.
     const callbackURL: unknown = ctx.query?.callbackURL
-    if (typeof callbackURL === "string" && /^\/(?![/\\])/.test(callbackURL)) {
-      const url = new URL(callbackURL, "http://parley")
+    if (
+      typeof callbackURL === "string" &&
+      ctx.context.isTrustedOrigin(callbackURL, { allowRelativePaths: true })
+    ) {
+      const url = new URL(callbackURL, ctx.context.baseURL)
       url.searchParams.set("error", "SIGN_IN_FIRST")
       throw ctx.redirect(url.pathname + url.search)
     }

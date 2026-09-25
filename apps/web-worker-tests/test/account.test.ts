@@ -346,10 +346,14 @@ describe("changing the email", () => {
     return ana
   }
 
+  /** Where the links land, as the settings page asks (afterEmailLink). */
+  const settingsFor = (newEmail: string) =>
+    `/settings?${new URLSearchParams({ email: newEmail })}`
+
   function changeEmail(cookie: string, newEmail: string) {
     return post(
       "/api/auth/change-email",
-      { newEmail, callbackURL: "/settings" },
+      { newEmail, callbackURL: origin + settingsFor(newEmail) },
       cookie
     )
   }
@@ -428,7 +432,7 @@ describe("changing the email", () => {
 
     expect(elsewhere.status).toBe(302)
     expect(elsewhere.headers.get("location")).toBe(
-      "/settings?error=SIGN_IN_FIRST"
+      `${settingsFor(newEmail)}&error=SIGN_IN_FIRST`
     )
     expect(cookiesFrom(elsewhere)).not.toContain("session_token=")
     expect(await session(ana.cookie)).toMatchObject({
