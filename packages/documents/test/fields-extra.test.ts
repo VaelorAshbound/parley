@@ -193,6 +193,24 @@ describe("jurisdiction outside the US", () => {
     ).toBe(true)
   })
 
+  it("sends a US state to the state, not the province or country", () => {
+    // The model wrote { region: "Oregon" } in T30's evals: a US state
+    // must be a state, so the document says "the State of Oregon".
+    const oregon = law.changeSchema.safeParse({ region: " oregon " })
+    const code = law.draftSchema.safeParse({ region: "OR" })
+
+    expect(oregon.error?.issues).toEqual([
+      expect.objectContaining({
+        path: ["region"],
+        message: "That's a US state: pick it as the state.",
+      }),
+    ])
+    expect(code.success).toBe(false)
+    expect(
+      law.changeSchema.safeParse({ region: "Georgia (country)" }).success
+    ).toBe(true)
+  })
+
   it("swaps the place when a change picks the other kind", () => {
     expect(
       law.merge(

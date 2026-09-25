@@ -71,7 +71,17 @@ const stateCode = typed<StateCode>(
 )
 
 const courtLocation = plainText(100)
-const region = plainText(100)
+/** "Oregon" or "OR", in any case: a US state, which has its own part. */
+const usPlaces = new Set(
+  Object.entries(US_STATES).flatMap(([code, name]) => [
+    code.toLowerCase(),
+    name.toLowerCase(),
+  ])
+)
+const region = plainText(100).refine(
+  (value) => !usPlaces.has(value.toLowerCase()),
+  "That's a US state: pick it as the state."
+)
 
 type JurisdictionConfig = {
   label: string
