@@ -230,6 +230,26 @@ export function initialValues<F extends Fields>(
 }
 
 /**
+ * A draft's values moved to another document (the chat may pick a different
+ * agreement): each value is kept when the new document has that field and
+ * the value still fits it and its rules; every other field starts from the
+ * new document's defaults, as in a new draft.
+ */
+export function switchDocument<F extends Fields>(
+  values: Readonly<Record<string, unknown>>,
+  definition: DocumentDefinition<F>,
+  { today }: { today: string }
+): DraftValues<F> {
+  let result = initialValues(definition, { today })
+  for (const [key, value] of Object.entries(values)) {
+    if (!Object.hasOwn(definition.fields, key)) continue
+    const next = definition.draftSchema.safeParse({ ...result, [key]: value })
+    if (next.success) result = next.data
+  }
+  return result
+}
+
+/**
  * How well a definition covers its template (spec §2: every linked term maps
  * to a field, and every field is used). All three lists must be empty.
  */

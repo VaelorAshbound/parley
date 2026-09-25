@@ -11,7 +11,12 @@ export type {
   ChangeResult,
   RejectedChange,
 } from "./changes.ts"
-export { coverage, defineDocument, initialValues } from "./define.ts"
+export {
+  coverage,
+  defineDocument,
+  initialValues,
+  switchDocument,
+} from "./define.ts"
 export { definitionOf, definitions, isDocumentId } from "./definitions/index.ts"
 export type { DocumentId } from "./definitions/index.ts"
 export type {
