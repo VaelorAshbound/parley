@@ -309,6 +309,13 @@
     - **A linked term carries its value in its accessible name:** Base UI tooltips are visual only.
     - **Typeset** (shadcn) styles the document through a `typeset-contract` preset.
     - **Component tests run in Vitest browser mode on GitHub Actions**, not in Workers Builds (no browsers there, ADR-0001). The project is left out when `WORKERS_CI=1`, not with `--project`: any `--project` filter makes v8 coverage report no files (Vitest 5.0.1). Locally they need a Chromium (`PLAYWRIGHT_CHROMIUM_PATH` here, since Playwright's download is blocked).
+  - Review fixes (each test-first):
+    - The settings page sends a full callbackURL, so the new-address link opened signed out showed raw JSON; it now lands on `/settings?…&error=SIGN_IN_FIRST`.
+    - A reset wrote a `password_changed` line with no userId (`updateMany`); now only for a row.
+    - Turnstile on `/change-email`; the Email card solves it first.
+    - A reset of an unconfirmed account drops two-factor sign-in a squatter set up.
+    - `/delete-user` needs the password of an account that has one, on the server.
+    - /code-simplify: the settings cards' login type comes from `account.get`'s output; the account tests share `post`, `database` and the audit event list from `helpers.ts`.
   - Found and fixed on the way:
     - **The phone tabs were half width** (T15): a Panel's `className` lands on its inner div in react-resizable-panels v4, so the hidden pane still took its share. The phone e2e now checks the width.
     - **Edits showed late on a slow network** (found by CI on the Preview): a save took 0.8 s there, saves wait in line, and TanStack Query runs a queued save's `onMutate` only at its turn. The edit now shows when it is saved, "Saving…" shows while saves are pending, and leaving the page then asks first. The Worker runs next to Neon now (`placement.region`, as spec §5 chose; T35 still compares). A component test saves three edits against a slow fake server.
@@ -502,17 +509,17 @@
   - Deps: T21
 
 - [x] **T23: Account menu, settings and password/email flows** (M)
-  - Done 2026-09-25 (a stopped run, finished by a second agent). Skills: build, incremental-implementation, test-driven-development, source-driven-development, security-and-hardening, git-workflow-and-versioning; better-auth-best-practices, email-and-password-best-practices, better-auth-security-best-practices, resend:react-email, shadcn. Not run: a separate /review and /code-simplify pass (a self-review found the fixes below). Checked:
-    - `pnpm check` clean; `pnpm test` (904, 1 skipped); `pnpm test:workers` (204, 16 files: `password-reset`, `account`, `audit`, auth matrix rows for every `account.*` procedure).
-    - e2e Chromium + Firefox on PORT 3122: 60/62. `account.spec.ts` 9/9 in both, and 36/36 with `--repeat-each 2`. The 2 red are `shell.spec` "the new draft is in the sidebar's history" (see For later); it passes alone.
+  - Done 2026-09-25 (a stopped run, finished by a second agent; review fixes and /code-simplify by a third). Skills: build, incremental-implementation, test-driven-development, source-driven-development, security-and-hardening, git-workflow-and-versioning; better-auth-best-practices, email-and-password-best-practices, better-auth-security-best-practices, resend:react-email, shadcn; then test-driven-development and code-simplification for the review fixes. Checked:
+    - `pnpm check` clean; `pnpm test` (905, 1 skipped); `pnpm test:workers` (209, 16 files: `password-reset`, `account`, `audit`, auth matrix rows for every `account.*` procedure).
+    - e2e Chromium + Firefox on PORT 3122 after the review fixes: 59/62. `account.spec.ts` 9/9. The 3 red are not T23's: PAR-8's two known ones, and `editing.spec` "a whole NDA…" in Chromium, which runs past its 30 s on a busy machine (it passes with `--timeout 90000`, in 31–42 s; see For later).
     - Two real Resend sends (`test:workers:real -t "account emails"`): the reset and change-email emails to `delivered+parley-t23@resend.dev`, both **delivered**. 2 of 3 allowed.
     - Screenshots of settings, the account menu, the delete dialog, forgot and reset: 1440 light, 375 dark, no sideways scroll (a long email now shortens in its card).
   - Decisions:
-    - **Audit lines** through `databaseHooks` (`server/audit.ts`): `session_created`, `session_ended`, `login_method_added`, `email_changed`, `password_changed`, `user_deleted`. IDs and fixed names only. A before hook marks the endpoint context, because Better Auth 1.7's update-after hook gets no old row.
-    - **Reset:** `resetPasswordTokenExpiresIn` 30 min, single use, `revokeSessionsOnPasswordReset`. `sendResetPassword` builds its own link, `/reset-password?token=` (Better Auth's puts the token in the path; ADR-0005). Turnstile guards `/request-password-reset` (the form sends the header). A new password set with the link **confirms the email**: that is the way back for the real owner of an address someone else signed up with and never confirmed (their sessions end, their password is replaced; Worker test). The Google/GitHub "not linked" message now says "Forgot password?".
-    - **Change email** confirms with the current (confirmed) address first. The new address's link works only where the account is signed in (a `hooks.before` on `/verify-email`): it would otherwise sign in a browser with no session (login CSRF), like T21's confirm link.
+    - **Audit lines** through `databaseHooks` (`server/audit.ts`): `session_created`, `session_ended`, `login_method_added`, `email_changed`, `password_changed`, `user_deleted`. IDs and fixed names only. A before hook marks the endpoint context, because Better Auth 1.7's update-after hook gets no old row. A reset's `updateMany` hands the after hook a row count, so `password_changed` is only written for a row; the reset writes `password_reset`.
+    - **Reset:** `resetPasswordTokenExpiresIn` 30 min, single use, `revokeSessionsOnPasswordReset`. `sendResetPassword` builds its own link, `/reset-password?token=` (Better Auth's puts the token in the path; ADR-0005). Turnstile guards `/request-password-reset` (the form sends the header). A new password set with the link **confirms the email**: that is the way back for the real owner of an address someone else signed up with and never confirmed (their sessions end, their password is replaced, and their two-factor sign-in is dropped in one transaction with the confirm, `claimUnconfirmedAccount`; Worker test). A confirmed account keeps its two-factor sign-in. The Google/GitHub "not linked" message now says "Forgot password?".
+    - **Change email** confirms with the current (confirmed) address first. Turnstile guards `/change-email` (it can email any address typed in). The new address's link works only where the account is signed in (a `hooks.before` on `/verify-email`): it would otherwise sign in a browser with no session (login CSRF), like T21's confirm link. Opened signed out, it goes back to `/settings?…&error=SIGN_IN_FIRST`, for the full URL the page sends too (Better Auth's `isTrustedOrigin`).
     - **Devices list** from our own `account.sessions` (names and times, no tokens: Better Auth's `/list-sessions` sends every token to the browser). `account.revokeSession` finds the token on the server, only among the user's own sessions.
-    - **Set a password** (Google/GitHub only accounts) through `account.setPassword`, and **delete without a password**, need a sign-in in the last 15 min (`freshAge`). Delete with a password needs the password. All data goes (cascade; Worker test).
+    - **Set a password** (Google/GitHub only accounts) through `account.setPassword`, and **delete without a password**, need a sign-in in the last 15 min (`freshAge`). Delete with a password always needs the password, on the server too (a `hooks.before` on `/delete-user`; Better Auth alone takes a fresh sign-in instead). All data goes (cascade; Worker test).
     - **Theme switch** turns transitions off while it applies (an attribute + one CSS rule, CSP-safe). Browser test.
     - Account menu: name, email, "Free" badge, Settings, Billing ("Soon", T26), Sign out. `/settings` sits behind `_authed` (`requireAccount`).
     - Spec §5 Auth updated with these.
@@ -522,7 +529,9 @@
     - The account e2e now waits out the shared per-IP limits (3 sign-ins per 10 s, 3 reset emails per minute) and checks a deleted account through the API (Firefox's home page navigation cut off a `goto`).
   - For later:
     - **T22 / PAR-8:** `shell.spec` "the new draft is in the sidebar's history" depends on test order. The guest is shared per worker; if that guest already has a draft, the sidebar starts open, and the test's toggle closes it. Open the sidebar only when it is collapsed, or use a fresh guest.
-    - **T23b:** `twoFactor` is already in the config; the Settings page has room for a "Two-factor" card.
+    - **T23b:** `twoFactor` is already in the config; the Settings page has room for a "Two-factor" card. A reset of an unconfirmed account turns two-factor off (`claimUnconfirmedAccount`); keep that when T23b adds its card.
+    - **PAR-8:** `editing.spec` "a whole NDA can be filled by hand…" needs `test.slow()`: it takes 31–42 s in Chromium on a busy machine.
+    - **Turnstile hook (T21's `useTurnstile`):** `headers()` reads `ref.current` once, before waiting. If the form is sent before the Turnstile script loads, it holds the old handle, and its `reset()` does nothing ("Turnstile has not been loaded" in the console). A second send then reuses the spent token and fails. Fix: call `ref.current?.reset()` in `finally`.
     - **T26:** Billing in the account menu is a disabled "Soon" item, and the plan badge is the constant `plan = "Free"` in `account-menu.tsx`.
   - Accept:
     - The account menu has your name, a plan badge, settings, billing (a placeholder until T26), and sign out. The theme switch turns CSS transitions off while it applies (no color animation on switch, found in T4).

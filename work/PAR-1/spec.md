@@ -417,11 +417,11 @@ Rules:
   - Google + GitHub, with account linking for the same verified email. One Google client serves production + `http://localhost:3000`. GitHub has two apps (`GITHUB_CLIENT_ID` for production, `GITHUB_CLIENT_ID_DEV` for local), because GitHub allows only one callback URL per app. OAuth isn't available on PR preview URLs (their origin changes each time), so previews test email + password.
 - **Email verification rule.** Signing up gives a session right away, so the guest's draft links at once, even if the verify link is opened on another device. But **export, share and upgrade need a verified email**, which stops fake-email abuse of the quota.
 - **Account management.**
-  - `user.changeEmail.enabled`: it confirms with the current email first. The new address's link works only where the account is signed in (T23: it would sign in a browser with no session, which is login CSRF).
+  - `user.changeEmail.enabled`: it confirms with the current email first. Turnstile guards `/change-email`: an unconfirmed account's link goes to whatever address is typed. The new address's link works only where the account is signed in (T23: it would sign in a browser with no session, which is login CSRF).
   - `changePassword` with `revokeOtherSessions`, and setting a password for OAuth-only users (after a sign-in in the last 15 minutes, `freshAge`).
   - A session list with revoke. It comes from our own `account.sessions` procedure, because Better Auth's `/list-sessions` sends every session's token to the browser (T23).
-  - `user.deleteUser.enabled`, which needs the password (or, for an OAuth-only account, a sign-in in the last 15 minutes) and removes all data.
-  - The reset link goes to `/reset-password?token=`: the token in the query, never the path (ADR-0005). A new password set with it confirms the email, which is also the way back for the owner of an address someone else signed up with and never confirmed (T23).
+  - `user.deleteUser.enabled`, which needs the password (or, for an OAuth-only account, a sign-in in the last 15 minutes) and removes all data. Better Auth takes a fresh sign-in in place of the password for any account, so a `hooks.before` on `/delete-user` asks for the password whenever the account has one (T23).
+  - The reset link goes to `/reset-password?token=`: the token in the query, never the path (ADR-0005). A new password set with it confirms the email, which is also the way back for the owner of an address someone else signed up with and never confirmed. For such an account the reset also turns off two-factor sign-in, which the other person may have set up (T23).
 - **Plugins:**
   - `anonymous({ onLinkAccount })`;
   - `twoFactor({ issuer: "Parley" })`: TOTP with a QR code + 10 encrypted backup codes + trusted device for 30 days; only credential accounts can use it;
