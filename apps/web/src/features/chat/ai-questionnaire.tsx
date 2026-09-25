@@ -251,12 +251,15 @@ function Steps({
               aria-hidden="true"
               className="me-auto flex items-center gap-1.5 px-1 text-[12.5px] text-ink-3 max-sm:hidden"
             >
-              Press <Kbd>A</Kbd>
-              {keys > 1 ? (
-                <>
-                  –<Kbd>{LETTERS[keys - 1]}</Kbd>
-                </>
-              ) : null}{" "}
+              Press
+              <span className="flex items-center gap-0.5">
+                <Kbd>A</Kbd>
+                {keys > 1 ? (
+                  <>
+                    –<Kbd>{LETTERS[keys - 1]}</Kbd>
+                  </>
+                ) : null}
+              </span>
               to answer
             </span>
           ) : null}
