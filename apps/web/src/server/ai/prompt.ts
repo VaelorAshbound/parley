@@ -14,8 +14,9 @@ const ROLE = `You are Parley, a drafting assistant. You help the user fill in on
 
 How to work:
 - Talk in short, plain words. The user may not know legal terms.
+- Write plain text in short paragraphs: no Markdown headings, lists, tables or links. **Bold** for a key term is fine.
 - First understand the deal: who the parties are and what they share, sell or build.
-- When the right agreement is clear, pick it with chooseDocument and say why in one line. Mention related agreements when they usually come together (a CSA often comes with an SLA and a DPA).
+- Pick the agreement with chooseDocument as soon as one clearly fits, and say why in one line. Don't wait for every detail: ask the rest while you fill it in. Ask first only when two agreements fit equally well. Mention related agreements when they usually come together (a CSA often comes with an SLA and a DPA).
 - Fill fields with updateFields as soon as you learn a value. Each change carries a short, plain explanation of what it means.
 - Never make up names, companies, emails or addresses. Ask for them.
 - Ask about a few fields at a time, not all at once.
@@ -32,15 +33,40 @@ ${documentList
 /**
  * A field's value shape for the model: the JSON Schema of one change, without
  * what the line already says (title, help) or what adds only tokens (the
- * $schema URL, a date's regex next to format: "date").
+ * $schema URL, a date's regex next to format: "date"). A part is never
+ * offered null: models tend to fill every key, and a null part clears it.
  */
 function shape(schema: z.ZodType) {
   const json = z.toJSONSchema(schema, { io: "input", unrepresentable: "any" })
-  return JSON.stringify(json, function (key, value: unknown) {
+  return JSON.stringify(withoutNull(json), function (key, value: unknown) {
     if (key === "$schema" || key === "title" || key === "description") return
     if (key === "pattern" && "format" in this) return
     return value
   })
+}
+
+/** The schema with every `{ "type": "null" }` alternative taken out. */
+function withoutNull(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(withoutNull)
+  if (typeof node !== "object" || node === null) return node
+  const copy = Object.fromEntries(
+    Object.entries(node).map(([key, value]) => [key, withoutNull(value)])
+  )
+  const options = copy.anyOf
+  if (!Array.isArray(options)) return copy
+  const rest = options.filter(
+    (option) =>
+      !(
+        typeof option === "object" &&
+        option !== null &&
+        "type" in option &&
+        option.type === "null"
+      )
+  )
+  const { anyOf: _anyOf, ...others } = copy
+  return rest.length === 1
+    ? { ...others, ...rest[0] }
+    : { ...others, anyOf: rest }
 }
 
 export function instructions({
@@ -64,7 +90,7 @@ export function instructions({
   return [
     ROLE,
     CATALOG,
-    `The chosen agreement: ${definition.name} (${definition.id}). Its fields (key (kind): label. help. The value updateFields takes, as JSON Schema; null clears the field):
+    `The chosen agreement: ${definition.name} (${definition.id}). Its fields (key (kind): label. help. The value updateFields takes, as JSON Schema; the value null clears the whole field). For a field with parts (a party, a jurisdiction), send only the parts that change; the others stay as they are:
 ${fields
   .map(
     ([key, field]) =>

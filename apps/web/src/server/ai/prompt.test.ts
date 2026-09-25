@@ -31,6 +31,15 @@ describe("the chat's instructions", () => {
     expect(text).toMatch(/"email"/)
   })
 
+  test("never offer null for a part, so a filled part can't be wiped", () => {
+    const text = instructions({ definition: nda, values: {} })
+    const party = text.split("\n").find((line) => line.startsWith("- party1"))
+
+    expect(party).toContain('"company"')
+    expect(party).not.toContain("null")
+    expect(text).toMatch(/send only the parts that change/)
+  })
+
   test("show the current values, and which fields are still empty", () => {
     const text = instructions({
       definition: nda,
