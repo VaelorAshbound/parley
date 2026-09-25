@@ -386,8 +386,8 @@ Rules:
 - **Cost.** Scale-to-zero stays on (5 min). The cold start is a few hundred ms on the first request after idle, which is fine for a portfolio. Autoscaling and scale-to-zero use **the owner's settings on the Neon project. Don't change them.**
 - **Branches.** CI makes a Neon branch per PR with the Neon CLI, each with an **expiry time**, so forgotten branches clean themselves up. The branch is deleted when the PR closes.
 - **Indexes** (from Neon's index guide):
-  - B-tree `draft(user_id, updated_at desc nulls first)` for the sidebar. NULLS FIRST matches a plain `ORDER BY updated_at DESC`; Drizzle's default NULLS LAST would make Postgres sort (a test checks the plan);
-  - a generated `tsvector` column (title + document type + every party's company and name, found with the JSON path `$.**.company` / `$.**.name`, so it works for every document) with a **GIN** index for search, using prefix matching (`acme:*`) for search as you type;
+  - B-tree `draft(user_id, updated_at desc nulls first, id desc nulls first)` for the sidebar and its pages. NULLS FIRST matches a plain `ORDER BY … DESC`; Drizzle's default NULLS LAST would make Postgres sort (a test checks the plan). The `id` breaks ties, so keyset pages on `(updated_at, id)` never skip or repeat a draft. `draft.updated_at` is `timestamp(3)` (milliseconds, like a JS `Date`), so a page's last draft goes back from the browser exactly (T22);
+  - a generated `tsvector` column (title + document type + every party's company and name, found with the JSON path `$.**.company` / `$.**.name`, so it works for every document) with a **GIN** index on `(user_id, search)` for search, using prefix matching (`acme:*`) for search as you type. The user id is in the GIN index through the `btree_gin` extension (Neon supports it), so a search reads only this user's matches: at 42k drafts a common two-word search read 97 pages instead of 1,762 (`packages/db/scripts/bench-history.ts`, T22). Autovacuum keeps the GIN pending list short; a long one makes Postgres skip the index;
   - B-tree on `share(token)`, `message(draft_id, created_at)` and `ai_usage(user_id, day)`.
 
   Lakebase BM25 search is too much for searching one user's own drafts.
@@ -398,9 +398,9 @@ Rules:
 **Drizzle (the owner's notes + docs checked 2026-09-23)**
 
 - **Version.** Pin **stable `drizzle-orm` 0.45.x + `drizzle-kit`**. v1 is still RC (1.0.0-rc.4), and the docs site mostly shows v1 now. Like oRPC, we don't ship on pre-releases. PAR-4 tracks the upgrade when v1 goes GA (`defineRelations`, `drizzle-orm/zod`, `withRLS`, `drizzle-kit up`).
-- **Zod.** `drizzle-zod` (0.8, works with Zod 4) with `createSelectSchema` / `createInsertSchema` / `createUpdateSchema` for **row** shapes, for example the title in rename. `draft.fields` is `jsonb().$type<DraftValues>()`, and it is always checked by the document's own Zod schema, not by drizzle-zod.
+- **Zod.** `drizzle-zod` (0.8, works with Zod 4) with `createSelectSchema` / `createInsertSchema` / `createUpdateSchema` for **row** shapes when we need one. Not for the rename title: `title` is a plain `text` column, so drizzle-zod can't carry the 100-letter limit or the friendly message; one hand-written Zod `draftTitle` (`apps/web/src/lib/drafts.ts`) is shared by the rename form and the API instead, and drizzle-zod isn't installed yet (T22). `draft.fields` is `jsonb().$type<DraftValues>()`, and it is always checked by the document's own Zod schema, not by drizzle-zod.
 - **Driver.** `drizzle-orm/node-postgres` over Hyperdrive (see above). Not the `neon-http` / `neon-websockets` drivers: Neon's own Cloudflare guide says `pg` + Hyperdrive, and neon-http has no interactive transactions (which the DB tests need).
-- **Search column.** A custom `tsvector` type with `.generatedAlwaysAs(sql\`to_tsvector('simple', …)\`)` (STORED) and `index().using("gin", t.search)`.
+- **Search column.** A custom `tsvector` type with `.generatedAlwaysAs(sql\`to_tsvector('simple', …)\`)` (STORED) and `index().using("gin", t.userId, t.search)` (needs `CREATE EXTENSION btree_gin`, which drizzle-kit doesn't write: it is added to the migration by hand).
 - **Migrations.** `drizzle-kit generate` → review the SQL → `migrate` over the direct URL. `drizzle-kit check` runs in CI and catches migration conflicts between branches.
 - **Not used, and why:**
   - **Prepared statements** (`.prepare()` + `sql.placeholder()`): Drizzle's serverless guide says edge runtimes get "little to no" benefit, and our client is made per request, so the prepared statement doesn't outlive the request.
