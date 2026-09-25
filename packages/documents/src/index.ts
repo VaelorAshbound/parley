@@ -2,13 +2,14 @@
 // and not exported; the app reads the typed trees in generated/. The outputs
 // are separate entry points, "@workspace/documents/docx" and "/print", so
 // importing the engine doesn't load the `docx` library.
-export { applyFieldChanges } from "./changes.ts"
+export { applyFieldChanges, missingFields } from "./changes.ts"
 export { DISCLAIMER } from "./disclaimer.ts"
 export type {
   AppliedChange,
   ChangeIssue,
   ChangeRequest,
   ChangeResult,
+  MissingField,
   RejectedChange,
 } from "./changes.ts"
 export {

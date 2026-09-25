@@ -119,6 +119,24 @@ function partsToRestore(before: unknown, after: unknown) {
   )
 }
 
+/** What a field still needs before the document is complete. */
+export type MissingField = ChangeIssue & { key: string }
+
+/**
+ * What stops a draft from being a complete document (markComplete, export):
+ * each issue of the complete schema, named by its field. Empty when done.
+ */
+export function missingFields<F extends Fields>(
+  definition: DocumentDefinition<F>,
+  values: DraftValues<F>
+): MissingField[] {
+  const result = definition.schema.safeParse(values)
+  if (result.success) return []
+  return messages(result.error.issues, []).map(
+    ({ path: [key, ...path], message }) => ({ key: String(key), path, message })
+  )
+}
+
 /**
  * The issues, each with its path inside the field: "email" of a party, or
  * none for the whole field (a cross-field rule names the field it blames).

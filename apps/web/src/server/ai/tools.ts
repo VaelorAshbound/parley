@@ -10,10 +10,10 @@ import type { BaseContext } from "../rpc/base"
 import { drafts } from "../rpc/drafts"
 import { z } from "../zod"
 
-// The chat's tools (spec §2 AI design). Both run the draft procedures through
-// oRPC's createTool, so the AI and the manual editor share one input schema,
-// one ownership check and one applyFieldChanges. The model never sends the
-// draft id; the chat fills it in.
+// The chat's tools (spec §2 AI design). The server ones run the draft
+// procedures through oRPC's createTool, so the AI and the manual editor share
+// one input schema, one ownership check and one applyFieldChanges. The model
+// never sends the draft id; the chat fills it in.
 
 const ids = Object.keys(definitions)
 const isId = (id: string): id is DocumentId => ids.includes(id)
@@ -80,6 +80,23 @@ const chooseDocumentSpec = {
   outputSchema: z.object({ documentId: z.string(), title: z.string() }),
 }
 
+const markCompleteSpec = {
+  description:
+    "Check that every required field holds a valid value, and mark the agreement complete. Call it when nothing required is empty; otherwise it lists what is missing.",
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    complete: z.boolean(),
+    missing: z.array(
+      z.object({
+        key: z.string(),
+        label: z.string(),
+        path: z.array(z.union([z.string(), z.number()])),
+        message: z.string(),
+      })
+    ),
+  }),
+}
+
 /**
  * The tools' shapes, without their execution: stored chats are checked
  * against them, and the client's message type is inferred from them.
@@ -87,6 +104,7 @@ const chooseDocumentSpec = {
 export const chatTools = {
   updateFields: tool(updateFieldsSpec),
   chooseDocument: tool(chooseDocumentSpec),
+  markComplete: tool(markCompleteSpec),
 }
 
 export type ChatTools = InferUITools<typeof chatTools>
@@ -101,6 +119,7 @@ type Turn = {
 export function runningTools({ context, draftId, today }: Turn) {
   const update = createTool(drafts.updateFields, { context })
   const choose = createTool(drafts.chooseDocument, { context })
+  const complete = createTool(drafts.markComplete, { context })
   // The AI SDK runs a step's tool calls side by side, but this request has
   // one database connection: two transactions on it would interleave and
   // each would overwrite the other's changes. So they take turns, in the
@@ -174,6 +193,26 @@ export function runningTools({ context, draftId, today }: Turn) {
           ...output,
           note: "The agreement's fields and current values are now in your instructions.",
         },
+      }),
+    }),
+    markComplete: tool({
+      ...markCompleteSpec,
+      execute: (_input, options) =>
+        inTurn(async () => {
+          if (!complete.execute)
+            throw new Error("markComplete has no procedure")
+          return last(complete.execute({ id: draftId }, options))
+        }),
+      // "Party 2: Fill this in." for each gap, or the next step.
+      toModelOutput: ({ output }) => ({
+        type: "text",
+        value: output.complete
+          ? "The agreement is complete. Tell the user in one line that they can review it next to the chat and export it."
+          : `Not complete yet. Missing: ${output.missing
+              .map(({ label, path, message }) =>
+                [[label, ...path].join(" "), message].join(": ")
+              )
+              .join("; ")}`,
       }),
     }),
   }

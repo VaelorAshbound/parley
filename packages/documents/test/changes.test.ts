@@ -1,7 +1,10 @@
 import fc from "fast-check"
 import { describe, expect, it } from "vite-plus/test"
 
-import { applyFieldChanges } from "../src/changes.ts"
+import { applyFieldChanges, missingFields } from "../src/changes.ts"
+import { initialValues } from "../src/define.ts"
+import { definitions } from "../src/definitions/index.ts"
+import { examples } from "./examples.ts"
 import { annexDocument, nda } from "./fixtures.ts"
 
 const definition = nda()
@@ -366,5 +369,28 @@ describe("undo, for lists and groups", () => {
         }
       )
     )
+  })
+})
+
+describe("missingFields", () => {
+  const mutualNda = definitions["mutual-nda"]
+  const today = { today: "2026-09-25" }
+
+  it("lists what a complete document still needs, field by field", () => {
+    const values = {
+      ...initialValues(mutualNda, today),
+      party1: { company: "Acme Robotics" },
+    }
+
+    expect(missingFields(mutualNda, values)).toEqual([
+      { key: "governingLaw", path: [], message: "Fill this in." },
+      { key: "party1", path: ["name"], message: "Fill this in." },
+      { key: "party1", path: ["title"], message: "Fill this in." },
+      { key: "party2", path: [], message: "Fill this in." },
+    ])
+  })
+
+  it("is empty for a complete document", () => {
+    expect(missingFields(mutualNda, examples["mutual-nda"])).toEqual([])
   })
 })

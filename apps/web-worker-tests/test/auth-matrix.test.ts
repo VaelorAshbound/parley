@@ -63,6 +63,10 @@ const matrix: Record<
       }),
     expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
   },
+  "drafts.markComplete": {
+    run: (client, id) => client.drafts.markComplete({ id }),
+    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+  },
 }
 
 describe("the auth matrix", async () => {

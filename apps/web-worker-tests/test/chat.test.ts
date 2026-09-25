@@ -188,6 +188,38 @@ describe("a chat turn", () => {
     expect(await client.chat.messages({ id: draft.id })).toHaveLength(4)
   })
 
+  it("finishes the agreement with markComplete, or learns what is missing", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([
+      [{ tool: "markComplete", input: {} }],
+      [{ text: "Who signs for Northwind Labs?" }],
+    ])
+    const { client } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    const chunks = await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Is it done?"),
+        today,
+      })
+    )
+
+    expect(chunks).toContainEqual(
+      expect.objectContaining({
+        type: "tool-output-available",
+        output: expect.objectContaining({ complete: false }),
+      })
+    )
+    // The model hears what is missing, by label.
+    expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
+      "Party 2: Fill this in."
+    )
+  })
+
   it("keeps every change when the model calls several tools at once", async () => {
     const { cookie } = await signInGuest()
     const change = (key: string, value: unknown) => ({

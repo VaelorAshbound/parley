@@ -201,6 +201,101 @@ describe("drafts over /api/rpc", () => {
   })
 })
 
+/** The rest of a Mutual NDA, on top of its defaults. */
+const ndaChanges = [
+  { key: "purpose", value: "Evaluating a manufacturing partnership." },
+  {
+    key: "party1",
+    value: {
+      company: "Acme Robotics",
+      name: "Ana Diaz",
+      title: "CEO",
+      email: "ana@acme.test",
+    },
+  },
+  {
+    key: "party2",
+    value: {
+      company: "Northwind Labs",
+      name: "Bo Chen",
+      title: "Head of Partnerships",
+      email: "bo@northwind.test",
+    },
+  },
+  { key: "governingLaw", value: { state: "DE", courtLocation: "New Castle" } },
+]
+
+describe("drafts.markComplete", () => {
+  it("marks a finished draft complete", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.updateFields({ id: draft.id, changes: ndaChanges })
+
+    const result = await client.drafts.markComplete({ id: draft.id })
+
+    expect(result).toEqual({ complete: true, missing: [] })
+    expect(await client.drafts.get({ id: draft.id })).toMatchObject({
+      status: "complete",
+    })
+  })
+
+  it("lists what is missing, with each field's label, and keeps drafting", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.updateFields({
+      id: draft.id,
+      changes: [{ key: "party1", value: { company: "Acme Robotics" } }],
+    })
+
+    const result = await client.drafts.markComplete({ id: draft.id })
+
+    expect(result.complete).toBe(false)
+    expect(result.missing).toContainEqual({
+      key: "party1",
+      label: "Party 1",
+      path: ["name"],
+      message: "Fill this in.",
+    })
+    expect(await client.drafts.get({ id: draft.id })).toMatchObject({
+      status: "drafting",
+    })
+  })
+
+  it("goes back to drafting when a change leaves the document unfinished", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.updateFields({ id: draft.id, changes: ndaChanges })
+    await client.drafts.markComplete({ id: draft.id })
+
+    await client.drafts.updateFields({
+      id: draft.id,
+      changes: [{ key: "party2", value: null }],
+    })
+
+    expect(await client.drafts.get({ id: draft.id })).toMatchObject({
+      status: "drafting",
+    })
+  })
+
+  it("won't finish a draft before its agreement is chosen", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({ today })
+
+    const { error } = await safe(client.drafts.markComplete({ id: draft.id }))
+
+    expect(error).toMatchObject({ code: "NO_DOCUMENT" })
+  })
+})
+
 describe("drafts.list", () => {
   it("lists only the caller's own drafts, last changed first", async () => {
     const mine = browserClient((await signInGuest()).cookie)

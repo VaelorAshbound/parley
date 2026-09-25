@@ -4,6 +4,7 @@ import {
   definitionOf,
   initialValues,
   isDocumentId,
+  missingFields,
   switchDocument,
   type DocumentId,
 } from "@workspace/documents"
@@ -122,7 +123,14 @@ export const drafts = {
         )
         const saved =
           result.applied.length > 0
-            ? await updateDraft(tx, key, { fields: result.values })
+            ? await updateDraft(tx, key, {
+                fields: result.values,
+                // A finished draft stays finished only while it still is.
+                ...(draft.status === "complete" &&
+                  missingFields(definition, result.values).length > 0 && {
+                    status: "drafting" as const,
+                  }),
+              })
             : draft
         return {
           draft: saved ?? draft,
@@ -130,6 +138,34 @@ export const drafts = {
           rejected: result.rejected,
           inverse: result.inverse,
         }
+      })
+    ),
+  /**
+   * Marks the draft complete when every required field holds a valid value
+   * (the AI's markComplete, then export). Otherwise nothing changes and the
+   * missing fields come back, named, for the AI to ask about.
+   */
+  markComplete: authed
+    .input(draftId)
+    .errors({ NO_DOCUMENT: { message: "Pick an agreement first." } })
+    .use(draftOwner, (input) => input.id)
+    .handler(({ context, input, errors }) =>
+      context.db.transaction(async (tx) => {
+        const key = { id: input.id, userId: context.user.id }
+        const draft = await getDraft(tx, key, { lock: true })
+        if (!draft) throw errors.NOT_FOUND()
+        if (draft.documentId === null) throw errors.NO_DOCUMENT()
+        const definition = definitionOf(draft.documentId)
+        const missing = missingFields(
+          definition,
+          definition.draftSchema.parse(draft.fields)
+        ).map((each) => ({
+          ...each,
+          label: definition.fields[each.key]?.label ?? each.key,
+        }))
+        if (missing.length === 0 && draft.status !== "complete")
+          await updateDraft(tx, key, { status: "complete" })
+        return { complete: missing.length === 0, missing }
       })
     ),
 }
