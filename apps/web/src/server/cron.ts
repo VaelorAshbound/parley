@@ -54,7 +54,7 @@ export type Purged = { guests: number; sessions: number }
 export async function purgeOldData(
   db: Db,
   now: Temporal.Instant,
-  purged: Purged = { guests: 0, sessions: 0 }
+  purged: Purged
 ) {
   const at = new Date(now.epochMilliseconds)
   const inactiveSince = new Date(
