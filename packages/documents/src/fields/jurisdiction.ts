@@ -71,12 +71,15 @@ const stateCode = typed<StateCode>(
 )
 
 const courtLocation = plainText(100)
-/** "Oregon" or "OR", in any case: a US state, which has its own part. */
+/**
+ * A US state's full name, in any case: it has its own part. Not Georgia,
+ * which is also a country, and not the postal codes, which are also ISO
+ * country codes (CA Canada, DE Germany, IN India).
+ */
 const usPlaces = new Set(
-  Object.entries(US_STATES).flatMap(([code, name]) => [
-    code.toLowerCase(),
-    name.toLowerCase(),
-  ])
+  Object.values(US_STATES)
+    .map((name) => name.toLowerCase())
+    .filter((name) => name !== "georgia")
 )
 const region = plainText(100).refine(
   (value) => !usPlaces.has(value.toLowerCase()),

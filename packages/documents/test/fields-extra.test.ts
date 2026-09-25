@@ -197,7 +197,6 @@ describe("jurisdiction outside the US", () => {
     // The model wrote { region: "Oregon" } in T30's evals: a US state
     // must be a state, so the document says "the State of Oregon".
     const oregon = law.changeSchema.safeParse({ region: " oregon " })
-    const code = law.draftSchema.safeParse({ region: "OR" })
 
     expect(oregon.error?.issues).toEqual([
       expect.objectContaining({
@@ -205,10 +204,14 @@ describe("jurisdiction outside the US", () => {
         message: "That's a US state: pick it as the state.",
       }),
     ])
-    expect(code.success).toBe(false)
-    expect(
-      law.changeSchema.safeParse({ region: "Georgia (country)" }).success
-    ).toBe(true)
+  })
+
+  it("takes a country that shares a US state's name or code", () => {
+    // Georgia is a country too, and two-letter codes are also ISO country
+    // codes (IN India, DE Germany, CA Canada).
+    for (const region of ["Georgia", "IN", "DE", "CA", "Pennsylvania, USA"]) {
+      expect(law.changeSchema.safeParse({ region }).success, region).toBe(true)
+    }
   })
 
   it("swaps the place when a change picks the other kind", () => {
