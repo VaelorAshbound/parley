@@ -61,8 +61,12 @@ export async function saveMessages(
     .onConflictDoUpdate({
       target: message.id,
       set: { parts: sql`excluded.parts` },
-      // An id from another draft is never taken over.
-      setWhere: eq(message.draftId, key.id),
+      // An id from another draft is never taken over, and a message never
+      // changes speaker: a user's message can't rewrite the assistant's.
+      setWhere: and(
+        eq(message.draftId, key.id),
+        eq(message.role, sql`excluded.role`)
+      ),
     })
   return true
 }

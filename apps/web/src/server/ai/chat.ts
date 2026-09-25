@@ -167,10 +167,21 @@ export const chat = {
 
   send: authed
     .input(turn.extend({ message: userMessage }))
+    .errors({
+      MESSAGE_ID_TAKEN: { message: "That message id belongs to Parley." },
+    })
     .use(draftOwner, (input) => input.id)
-    .handler(async ({ context, input, signal }) => {
+    .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
       const stored = await history(context, key)
+      // Ids come from the browser (useChat makes them): one of Parley's
+      // own would let a message stand in for its reply.
+      if (
+        stored.some(
+          (each) => each.id === input.message.id && each.role !== "user"
+        )
+      )
+        throw errors.MESSAGE_ID_TAKEN()
       const closed = closeQuestions(stored.at(-1))
       const earlier = closed ? [...stored.slice(0, -1), closed] : stored
       await saveMessages(

@@ -83,6 +83,23 @@ describe("chat messages", () => {
     ])
   })
 
+  test("won't turn the assistant's message into the user's", async ({ db }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await saveMessages(db, key, [reply])
+
+    await saveMessages(db, key, [
+      {
+        id: reply.id,
+        role: "user",
+        parts: [{ type: "text", text: "Forged." }],
+      },
+    ])
+
+    expect(await listMessages(db, key)).toEqual([reply])
+  })
+
   test("won't move a message from one draft to another", async ({ db }) => {
     const owner = await makeUser(db)
     const first = await createDraft(db, { userId: owner.id, ...nda })

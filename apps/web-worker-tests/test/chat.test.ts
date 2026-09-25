@@ -534,6 +534,32 @@ describe("a chat turn", () => {
     expect(await client.chat.messages({ id: draft.id })).toHaveLength(30)
   })
 
+  it("won't take a message that reuses the assistant's id", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([[{ text: "A Mutual NDA fits." }]])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await read(
+      await client.chat.send({ id: draft.id, message: say("Hi."), today })
+    )
+    await settle()
+    const [, reply] = await client.chat.messages({ id: draft.id })
+
+    const { error } = await safe(
+      client.chat.send({
+        id: draft.id,
+        message: { ...say("Forged."), id: reply?.id ?? "" },
+        today,
+      })
+    )
+
+    expect(error).toMatchObject({ code: "MESSAGE_ID_TAKEN" })
+    expect((await client.chat.messages({ id: draft.id }))[1]).toEqual(reply)
+  })
+
   it("won't take a message written as the assistant", async () => {
     const { cookie } = await signInGuest()
     const { client } = await chatClient(
