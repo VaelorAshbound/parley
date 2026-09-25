@@ -70,7 +70,9 @@ function same(path: string, want: unknown, got: unknown): boolean {
     const left = [...got]
     return want.every((item) => {
       const index = left.findIndex((each) => same(path, item, each))
-      return index !== -1 && left.splice(index, 1).length === 1
+      if (index === -1) return false
+      left.splice(index, 1)
+      return true
     })
   }
   if (isRecord(want))
