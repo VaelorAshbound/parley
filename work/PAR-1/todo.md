@@ -548,7 +548,17 @@
   - Files: `apps/web/src/server/cron.ts`, `src/server.ts`, `test/cron.test.ts`
   - Deps: T21
 
-- [ ] **T29: Observability** (S)
+- [x] **T29: Observability** (S)
+  - Done 2026-09-25. Skills: observability-and-instrumentation, incremental-implementation, test-driven-development, source-driven-development, git-workflow-and-versioning, documentation-and-adrs; cloudflare:cloudflare (Workers Logs, Query Builder, traces docs). Checked:
+    - `pnpm check`; `pnpm test` (767; the browser project needs Playwright's chromium 1243 on this laptop, so it ran with `WORKERS_CI=1`); `pnpm test:workers` (89, 8 new in `observability.test.ts`); `pnpm test:e2e --project=chromium` on port 3112 (17).
+    - A real `pnpm dev`: `/api/health`, a 404 path with a token in the path and query, and a guest sign-in each wrote one `request` object with the route pattern, and no token.
+    - Still open for the owner: the Workers Observability query after a chat on the preview (ADR-0005 lists the queries).
+  - Decisions (ADR-0005):
+    - **Metrics are fields on log events**, not a metrics store: `request` (every `/api` request: `requestId` = Cloudflare's ray id, `method`, `route` pattern or oRPC procedure, `status`, `latencyMs`, `userId`, `tier`) and `chat_turn` (tokens, cached tokens, `costMicroUsd` from OpenRouter's `usage.cost`, `ttftMs` from the AI SDK's `timeToFirstOutputMs`, tool calls and errors, refused changes, outcome done / aborted / error). Workers Logs indexes every key, so the Query Builder can group and take P95.
+    - **Log fields are flat values** (`string | number | boolean`), so a body, draft or message can't be logged by accident. Errors log name and message only; a failed chat turn logs only the error's name and HTTP status (our `onError` replaces the AI SDK's, which logged the whole error).
+    - **`requestLog` is our one custom Hono middleware**: Hono's `logger()` prints the full path and query, and Better Auth puts tokens there. Handlers add facts with `annotate()` (the tier from `authed`, the procedure from the oRPC mount).
+    - **Traces on**, full sampling, and `redact_query_string` in `wrangler.jsonc` (top level and previews). Logs and spans share one quota from 2026-10-01 (20M a month in Paid); a request writes a few.
+    - **No alerts yet** (no production traffic): symptom alerts (5xx rate, P95 `ttftMs`, daily cost) go with T38.
   - Accept:
     - Structured JSON logs with a request id, route, status, latency and user tier. **No field values or chat text.**
     - AI metrics: tokens, cost, time to first token and tool errors for each chat turn. They show up in Workers Observability.
