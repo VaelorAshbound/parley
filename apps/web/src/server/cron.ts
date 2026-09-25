@@ -1,0 +1,96 @@
+import {
+  connect,
+  deleteExpiredSessions,
+  deleteIdleGuests,
+  type Db,
+} from "@workspace/db"
+import { Temporal } from "temporal-polyfill"
+
+import { logError, logInfo } from "./log"
+
+// The nightly cleanup (spec §2 Limits, T28): guests with no activity for 7
+// days go, with everything they own, and so do sessions that ran out.
+//
+// Once a day, at a quiet hour (UTC; `triggers` in wrangler.jsonc): each run
+// wakes the Neon compute, which then stays up about 5 minutes before it
+// scales to zero, so running more often would cost compute for nothing.
+// Cron Triggers run on production only; Previews never call scheduled().
+// https://developers.cloudflare.com/workers/previews/resources/#cron-triggers
+
+/** Guests are deleted after this long without activity (spec §2 Limits). */
+export const GUEST_IDLE_DAYS = 7
+
+/** Rows per DELETE: short locks, and a small cascade each. */
+const BATCH = 500
+/**
+ * Batches per kind per run: up to 10,000 rows. More waits for the next
+ * night, and the log line says so (`complete: false`).
+ */
+const MAX_BATCHES = 20
+
+/** Deletes in batches until a batch comes back short, or the run's cap. */
+export async function inBatches(
+  deleteBatch: (limit: number) => Promise<number>,
+  { size = BATCH, max = MAX_BATCHES } = {}
+) {
+  let deleted = 0
+  for (let batch = 0; batch < max; batch += 1) {
+    const count = await deleteBatch(size)
+    deleted += count
+    if (count < size) return { deleted, complete: true }
+  }
+  return { deleted, complete: false }
+}
+
+/**
+ * One purge at `now`. Safe to run again at any time: it deletes only what
+ * is still out of date, and a failed run leaves the rest for the next one.
+ */
+export async function purgeOldData(db: Db, now: Temporal.Instant) {
+  const at = new Date(now.epochMilliseconds)
+  const inactiveSince = new Date(
+    now.subtract({ hours: GUEST_IDLE_DAYS * 24 }).epochMilliseconds
+  )
+  // Guests first: their sessions' times count as activity.
+  const guests = await inBatches((limit) =>
+    deleteIdleGuests(db, { now: at, inactiveSince, limit })
+  )
+  const sessions = await inBatches((limit) =>
+    deleteExpiredSessions(db, { now: at, limit })
+  )
+  return {
+    guests: guests.deleted,
+    sessions: sessions.deleted,
+    complete: guests.complete && sessions.complete,
+  }
+}
+
+/**
+ * The Worker's scheduled() handler. The time comes from the controller,
+ * never the clock, so tests can set it. A failure is logged and thrown, so
+ * the Cron Events list shows the run as failed.
+ * https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/
+ */
+export const scheduled: ExportedHandlerScheduledHandler<Env> = async (
+  controller,
+  env
+) => {
+  const started = Date.now()
+  const now = Temporal.Instant.fromEpochMilliseconds(controller.scheduledTime)
+  try {
+    const db = await connect(env.HYPERDRIVE.connectionString)
+    try {
+      const purged = await purgeOldData(db, now)
+      logInfo("purge_done", {
+        cron: controller.cron,
+        ...purged,
+        durationMs: Date.now() - started,
+      })
+    } finally {
+      await db.$client.end()
+    }
+  } catch (error) {
+    logError("purge_failed", error, { cron: controller.cron })
+    throw error
+  }
+}
