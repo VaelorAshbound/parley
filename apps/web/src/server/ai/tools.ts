@@ -281,7 +281,13 @@ function folded(changes: z.infer<typeof change>[]) {
       previous.value !== null
         ? { ...previous.value, [part]: each.value }
         : undefined
-    if (previous && merged) previous.value = merged
+    // New objects each time: the model's own input is kept as it sent it.
+    if (previous && merged)
+      out[out.length - 1] = {
+        key,
+        value: merged,
+        explanation: `${previous.explanation} ${each.explanation}`.trim(),
+      }
     else out.push({ ...each, key, value: { [part]: each.value } })
   }
   return out

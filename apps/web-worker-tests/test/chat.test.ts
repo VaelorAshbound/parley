@@ -400,7 +400,24 @@ describe("a chat turn", () => {
     expect(chunks).toContainEqual(
       expect.objectContaining({
         type: "tool-output-available",
-        output: expect.objectContaining({ rejected: [] }),
+        output: expect.objectContaining({
+          rejected: [],
+          applied: [
+            expect.objectContaining({ explanation: "Party 1. Signer." }),
+          ],
+        }),
+      })
+    )
+    // The call as the model made it is kept, paths and all.
+    expect(chunks).toContainEqual(
+      expect.objectContaining({
+        type: "tool-input-available",
+        input: expect.objectContaining({
+          changes: [
+            expect.objectContaining({ key: "party1.company" }),
+            expect.objectContaining({ key: "party1.name" }),
+          ],
+        }),
       })
     )
   })
