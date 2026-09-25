@@ -14,7 +14,7 @@ export function Inline({
   onEdit,
 }: {
   nodes: RenderedInline[]
-  onEdit: (path: string) => void
+  onEdit?: ((path: string) => void) | undefined
 }) {
   return nodes.map((node, index) => {
     switch (node.type) {
@@ -50,11 +50,13 @@ function LinkedTerm({
   onEdit,
 }: {
   node: Extract<RenderedInline, { type: "linkedTerm" }>
-  onEdit: (path: string) => void
+  onEdit?: ((path: string) => void) | undefined
 }) {
   const [first] = node.values
-  // A term no field fills (none today: a coverage test) stays plain text.
-  if (!first) return node.text
+  // A term no field fills (none today: a coverage test) stays plain text,
+  // and so does every term of a read-only document: the cover page above
+  // shows its value.
+  if (!first || !onEdit) return node.text
   const shown = node.values.map(
     (value) => `${value.label}: ${value.text ?? "not filled yet"}`
   )
