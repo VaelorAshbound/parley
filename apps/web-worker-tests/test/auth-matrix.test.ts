@@ -73,6 +73,20 @@ const signedIn = {
   verifiedOwner: "OK",
 } as const satisfies Record<Caller, Outcome>
 
+/** Everyone, signed in or not: a share link's page (T25). */
+const anyone = {
+  nobody: "OK",
+  otherGuest: "OK",
+  otherAccount: "OK",
+  verifiedOther: "OK",
+  owner: "OK",
+  accountOwner: "OK",
+  verifiedOwner: "OK",
+} as const satisfies Record<Caller, Outcome>
+
+/** A link the confirmed owner made, for share.view (set up below). */
+let sharedToken = ""
+
 /** Signed-up accounts only: settings (T23). The owner here is a guest. */
 const accountsOnly = {
   nobody: "UNAUTHORIZED",
@@ -200,6 +214,24 @@ const matrix: Record<
     run: (client, id) => client.drafts.duplicate({ id }),
     expect: ownersOnly,
   },
+  "share.get": {
+    run: (client, id) => client.share.get({ id }),
+    expect: ownersOnly,
+  },
+  "share.create": {
+    run: (client, id) => client.share.create({ id }),
+    // Like export, a confirmed email; an unfinished draft may be shared.
+    expect: { ...verifiedOwnersOnly, verifiedOwner: "OK" },
+  },
+  "share.view": {
+    run: (client) => client.share.view({ token: sharedToken }),
+    expect: anyone,
+  },
+  // After share.view: the confirmed owner's link is off after it.
+  "share.revoke": {
+    run: (client, id) => client.share.revoke({ id }),
+    expect: ownersOnly,
+  },
   // Last: the owners' own drafts are gone after it.
   "drafts.delete": {
     run: (client, id) => client.drafts.delete({ id }),
@@ -218,6 +250,9 @@ describe("the auth matrix", async () => {
   const owner = await withDraft((await signInGuest()).cookie)
   const accountOwner = await withDraft((await signUpUser()).cookie)
   const verifiedOwner = await withDraft((await signUpVerified()).cookie)
+  sharedToken = (
+    await verifiedOwner.client.share.create({ id: verifiedOwner.draftId })
+  ).token
   // Everyone else tries the guest owner's draft.
   const other = async (cookie?: string) => ({
     client: await serverClient(cookie),
