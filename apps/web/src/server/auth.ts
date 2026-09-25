@@ -1,4 +1,4 @@
-import { moveGuestData, schema, type Db } from "@workspace/db"
+import { confirmEmail, moveGuestData, schema, type Db } from "@workspace/db"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { betterAuth } from "better-auth/minimal"
 // captcha and lastLoginMethod have no path of their own in 1.7.5.
@@ -7,6 +7,7 @@ import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
 import { createElement } from "react"
 
+import { ResetPassword } from "../emails/reset-password"
 import { VerifyEmail } from "../emails/verify-email"
 
 import { auditHooks } from "./audit"
@@ -72,6 +73,35 @@ export function createAuth({
       enabled: true,
       minPasswordLength: 10,
       maxPasswordLength: 128,
+      // "Forgot password?": a single-use link that works for 30 minutes and
+      // signs every device out (spec §5 Auth). Better Auth sends it after
+      // the response (backgroundTasks), and answers the same for an address
+      // with no account.
+      resetPasswordTokenExpiresIn: 30 * 60,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url, token }) => {
+        // Better Auth's own link puts the token in the path
+        // (/reset-password/<token>), and Cloudflare's invocation log keeps
+        // full paths (ADR-0005). Ours goes straight to the page, with the
+        // token in the query, which the logs redact.
+        const link = new URL("/reset-password", url)
+        link.searchParams.set("token", token)
+        await sendEmail({
+          event: "reset_password",
+          to: user.email,
+          subject: "Reset your Parley password",
+          react: createElement(ResetPassword, { url: link.href }),
+          idempotencyKey: `reset-password/${user.id}/${await digest(token)}`,
+        })
+      },
+      onPasswordReset: async ({ user }) => {
+        // Only the owner of the inbox could open the link: their email is
+        // confirmed. This is also the way back for someone whose address
+        // another person signed up with and never confirmed: the reset ends
+        // that person's sessions and replaces the password they chose.
+        await confirmEmail(db, user.id)
+        logInfo("password_reset", { userId: user.id })
+      },
     },
     // Google and GitHub, where their apps are set up (spec §5 Auth).
     socialProviders: socialProviders(env),
