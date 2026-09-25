@@ -1,6 +1,7 @@
 import {
   definitions,
   isDocumentId,
+  type AnyField,
   type DocumentDefinition,
   type DocumentId,
 } from "@workspace/documents"
@@ -32,8 +33,11 @@ How to work:
 - First understand the deal: who the parties are and what they share, sell or build.
 - Pick the agreement with chooseDocument as soon as one clearly fits, and say why in one line. Don't wait for every detail: ask the rest while you fill it in. Ask first only when two agreements fit equally well.
 - Fill fields with updateFields as soon as you learn a value. Each change carries a short, plain explanation of what it means.
-- Never make up names, companies, emails or addresses. Ask for them.
-- A jurisdiction's courtLocation is only the city or county ("New Castle County"): the document adds the state itself.
+- Don't guess a value from context (a country's law because a company is based there, a start date, a payment term): ask, with your guess as the first choice.
+- Never make up names, companies, emails or addresses. Ask for them. A party's company is its full legal name with its ending (Inc., LLC, GmbH): if the user gave a short name, ask for the legal name.
+- Send only the parts and blanks you have values for: leave one out rather than guess, and never send an empty string.
+- A jurisdiction takes either state (a US state) or region (a province or country outside the US), never both. Its courtLocation is only the city or county ("New Castle County"): the document adds the state itself.
+- An option's wording, with its blanks in braces, is what the document will say. For a field where several options can apply, ask with multiple: true and offer its options.
 - To ask for several values, call askQuestions with a short set (up to 5) of related questions: give choices when the answers are predictable (terms, states, yes or no); the user can always type another answer. Each question asks for one thing: a signer's name and their email are two questions. Don't write the same questions as text, and don't ask for what you already know. Then fill the answers in with updateFields.
 - If a change is refused, read the reason, fix the value and try again, or ask the user.
 - A value still on its default was not chosen by the user. Before markComplete, confirm those in one questionnaire (the default as the first choice), unless the user already answered them.
@@ -88,6 +92,23 @@ function shape(schema: z.ZodType) {
   return JSON.stringify(
     clean(z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }))
   )
+}
+
+/** The longest option wording the model reads; the start says what it is. */
+const WORDING = 160
+
+/**
+ * What each option of a choice says in the document. The schema has only
+ * the option keys, and a key like "commonPaperCsa" misled the model (T30).
+ */
+function options(field: AnyField) {
+  if (field.kind !== "choice" && field.kind !== "choices") return ""
+  return ` Options: ${Object.entries(field.options)
+    .map(([key, option]) => {
+      const text = option.label.replaceAll(/\s+/g, " ")
+      return `${key} = ${JSON.stringify(text.length > WORDING ? `${text.slice(0, WORDING - 1).trimEnd()}…` : text)}`
+    })
+    .join("; ")}.`
 }
 
 /** Schema keywords the field's line already says, or that add only tokens. */
@@ -167,7 +188,7 @@ Its fields (key (kind): label. help. The value updateFields takes, as JSON Schem
 ${fields
   .map(
     ([key, field]) =>
-      `- ${key} (${field.kind}): ${field.label}. ${field.help} Value: ${shape(field.changeSchema)}`
+      `- ${key} (${field.kind}): ${field.label}. ${field.help}${options(field)} Value: ${shape(field.changeSchema)}`
   )
   .join("\n")}`,
     // One JSON line: a value can't start a line that reads as a new rule.

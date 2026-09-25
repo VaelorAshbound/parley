@@ -63,6 +63,43 @@ describe("the chat's instructions", () => {
     expect(text).toMatch(/"email"/)
   })
 
+  test("say what each option of a choice means, not only its key", () => {
+    const text = instructions({ definition: definitions.dpa, values: {} })
+    const cap = text
+      .split("\n")
+      .find((line) => line.startsWith("- liabilityCap"))
+
+    // The key alone ("commonPaperCsa") misled the model in T30's evals.
+    expect(cap).toContain(
+      'Options: none = "None"; commonPaperCsa = "The Agreement includes an additional Increased Claim'
+    )
+    expect(cap).toContain("{amount}")
+  })
+
+  test("shorten a long option's wording", () => {
+    const text = instructions({
+      definition: definitions["ai-addendum"],
+      values: {},
+    })
+    const claims = text
+      .split("\n")
+      .find((line) => line.startsWith("- coveredClaims"))
+    const provider = /provider = "([^"]*)"/.exec(claims ?? "")?.[1]
+
+    expect(provider).toMatch(/…$/)
+    expect(provider?.length).toBeLessThanOrEqual(160)
+  })
+
+  test("give the rules for parts the model tends to fill wrongly", () => {
+    const text = instructions({ definition: definitions.csa, values: {} })
+
+    // Each rule answers a refused or wrong write in T30's evals.
+    expect(text).toMatch(/either state .* or region .*, never both/)
+    expect(text).toMatch(/never send an empty string/)
+    expect(text).toMatch(/full legal name/)
+    expect(text).toMatch(/Don't guess a value from context/)
+  })
+
   test("keep a part named title, while dropping the schema's own titles", () => {
     const text = instructions({ definition: nda, values: {} })
     const party = text.split("\n").find((line) => line.startsWith("- party1"))
