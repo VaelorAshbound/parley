@@ -66,10 +66,30 @@
         "localConnectionString": "postgres://postgres:postgres@localhost:54320/parley",
       },
     ],
+    // Previews keep their own telemetry settings, set here:
+    // https://developers.cloudflare.com/workers/previews/test-and-debug/
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": true,
+      "traces": { "enabled": true, "head_sampling_rate": 1 },
+    },
   },
+  // Workers Logs + traces (T29). Our own lines are in src/server/log.ts;
+  // traces show where a request's time went (the OpenRouter and database
+  // calls). Both are billed as events from 2026-10-01: 20M a month are in
+  // Workers Paid, then $0.60 per million. A request writes a few (its
+  // invocation log, our lines, a span per outbound call), so full sampling
+  // stays in the free part far past our traffic; lower the rates if not.
+  // https://developers.cloudflare.com/workers/observability/traces/#limits--pricing
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,
+    // Query strings carry Better Auth's tokens (?token=) and OAuth codes;
+    // keep them out of invocation logs and traces. (Wrangler's config
+    // schema, 4.136; not on the docs page yet.)
+    "redact_query_string": true,
+    "traces": { "enabled": true, "head_sampling_rate": 1 },
   },
   "upload_source_maps": true,
 }
