@@ -36,14 +36,17 @@ export function useTurnstile(siteKey: string) {
      * the widget starts a new check straight after.
      */
     async headers() {
-      const turnstile = ref.current
-      if (!turnstile) return undefined
+      if (!ref.current) return undefined
       try {
-        return { "x-captcha-response": await turnstile.getResponsePromise() }
+        return {
+          "x-captcha-response": await ref.current.getResponsePromise(),
+        }
       } catch {
         return undefined
       } finally {
-        turnstile.reset()
+        // The handle as it is now: one read before the wait belongs to the
+        // widget before Cloudflare's script loaded, and can't reset (PAR-11).
+        ref.current?.reset()
       }
     },
   }
