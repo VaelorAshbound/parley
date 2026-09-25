@@ -220,6 +220,62 @@ describe("a chat turn", () => {
     )
   })
 
+  it("tells the model a finished agreement is complete, and not to offer export yet", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([
+      [{ tool: "markComplete", input: {} }],
+      [{ text: "Your NDA is complete." }],
+    ])
+    const { client } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.updateFields({
+      id: draft.id,
+      changes: [
+        { key: "purpose", value: "Evaluating a partnership." },
+        {
+          key: "party1",
+          value: {
+            company: "Acme Robotics",
+            name: "Ana Diaz",
+            title: "CEO",
+            email: "ana@acme.test",
+          },
+        },
+        {
+          key: "party2",
+          value: {
+            company: "Northwind Labs",
+            name: "Bo Chen",
+            title: "Head of Partnerships",
+            email: "bo@northwind.test",
+          },
+        },
+        {
+          key: "governingLaw",
+          value: { state: "DE", courtLocation: "New Castle" },
+        },
+      ],
+    })
+
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Is it done?"),
+        today,
+      })
+    )
+
+    const heard = JSON.stringify(model.doStreamCalls[1]?.prompt)
+    expect(heard).toContain("The agreement is complete.")
+    expect(heard).toContain("Export is not available yet")
+    expect(await client.drafts.get({ id: draft.id })).toMatchObject({
+      status: "complete",
+    })
+  })
+
   it("keeps every change when the model calls several tools at once", async () => {
     const { cookie } = await signInGuest()
     const change = (key: string, value: unknown) => ({
