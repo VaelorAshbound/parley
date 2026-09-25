@@ -12,6 +12,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core"
 
@@ -153,12 +154,19 @@ export const countedExport = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     draftId: uuid("draft_id").notNull(),
+    // The agreement counted: switching a draft to another one and back
+    // doesn't count the first again (spec §2 Quota).
+    documentId: text("document_id").$type<DocumentId>().notNull(),
     countedAt: timestamp("counted_at", { withTimezone: true }).notNull(),
   },
   (table) => [
     index("counted_export_user_id_counted_at_idx").on(
       table.userId,
       table.countedAt
+    ),
+    uniqueIndex("counted_export_draft_id_document_id_idx").on(
+      table.draftId,
+      table.documentId
     ),
   ]
 )

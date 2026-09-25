@@ -31,13 +31,17 @@ const filled = examples["mutual-nda"]
 
 type Client = RouterClient<Router>
 
+async function fill(client: Client, id: string, values: object) {
+  await client.drafts.updateFields({
+    id,
+    changes: Object.entries(values).map(([key, value]) => ({ key, value })),
+  })
+}
+
 /** A draft of a whole Mutual NDA, ready to export. */
 async function completeNda(client: Client) {
   const draft = await client.drafts.create({ documentId: "mutual-nda", today })
-  await client.drafts.updateFields({
-    id: draft.id,
-    changes: Object.entries(filled).map(([key, value]) => ({ key, value })),
-  })
+  await fill(client, draft.id, filled)
   return draft.id
 }
 
@@ -198,6 +202,7 @@ describe("export.pdf", () => {
       [1, 2, 3].map(() => ({
         userId,
         draftId: crypto.randomUUID(),
+        documentId: "mutual-nda" as const,
         countedAt: new Date(lastMonth.epochMilliseconds),
       }))
     )
@@ -358,8 +363,34 @@ describe("export.pdf", () => {
       documentId: "pilot-agreement",
       today,
     })
-
     expect((await client.drafts.get({ id })).firstExportedAt).toBeNull()
+    await fill(client, id, examples["pilot-agreement"])
+    await client.export.pdf({ id })
+
+    expect((await countedFor(email)).rows).toMatchObject([
+      { draftId: id, documentId: "mutual-nda" },
+      { draftId: id, documentId: "pilot-agreement" },
+    ])
+  })
+
+  it("keeps a counted agreement free after switching away and back", async () => {
+    const { cookie, email } = await signUpVerified()
+    const client = await serverClient(cookie)
+    const id = await completeNda(client)
+    await client.export.pdf({ id })
+    const counted = (await client.drafts.get({ id })).firstExportedAt
+
+    // A wrong pick in the agreement list, then back.
+    await client.drafts.chooseDocument({
+      id,
+      documentId: "pilot-agreement",
+      today,
+    })
+    await client.drafts.chooseDocument({ id, documentId: "mutual-nda", today })
+    await fill(client, id, filled)
+    await client.export.pdf({ id })
+
+    expect((await client.drafts.get({ id })).firstExportedAt).toEqual(counted)
     expect((await countedFor(email)).rows).toHaveLength(1)
   })
 })

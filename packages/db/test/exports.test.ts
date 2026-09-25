@@ -5,6 +5,7 @@ import { user } from "../src/auth-schema.ts"
 import { connect } from "../src/client.ts"
 import { createDraft, deleteDraft, getDraft } from "../src/queries/drafts.ts"
 import {
+  countedAt,
   countExportsSince,
   lockExports,
   recordExport,
@@ -31,6 +32,24 @@ describe("recordExport", () => {
     expect(
       await countExportsSince(db, { userId: owner.id, since: september })
     ).toBe(1)
+  })
+
+  test("counts the agreement the draft is on", async ({ db }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+
+    await recordExport(
+      db,
+      { id: draft.id, userId: owner.id },
+      new Date("2026-09-10T12:00:00Z")
+    )
+
+    expect(
+      await db
+        .select({ documentId: countedExport.documentId })
+        .from(countedExport)
+        .where(eq(countedExport.draftId, draft.id))
+    ).toEqual([{ documentId: "mutual-nda" }])
   })
 
   test("keeps the first export's time", async ({ db }) => {
@@ -73,6 +92,24 @@ describe("recordExport", () => {
     expect(
       await countExportsSince(db, { userId: other.id, since: september })
     ).toBe(0)
+  })
+})
+
+describe("countedAt", () => {
+  test("gives when a draft's agreement was counted, or null", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const at = new Date("2026-09-10T12:00:00Z")
+    await recordExport(db, { id: draft.id, userId: owner.id }, at)
+
+    expect(
+      await countedAt(db, { draftId: draft.id, documentId: "mutual-nda" })
+    ).toEqual(at)
+    expect(
+      await countedAt(db, { draftId: draft.id, documentId: "pilot-agreement" })
+    ).toBeNull()
   })
 })
 

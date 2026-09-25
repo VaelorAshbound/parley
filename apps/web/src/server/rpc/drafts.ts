@@ -1,4 +1,10 @@
-import { createDraft, getDraft, listDrafts, updateDraft } from "@workspace/db"
+import {
+  countedAt,
+  createDraft,
+  getDraft,
+  listDrafts,
+  updateDraft,
+} from "@workspace/db"
 import {
   applyFieldChanges,
   definitionOf,
@@ -69,10 +75,14 @@ export const drafts = {
           }),
           // Another agreement is drafted from here: markComplete checks it
           // again before anything trusts it as finished, and its first
-          // download counts as a new document (spec §2 Quota).
+          // download counts as a new document, unless this draft was
+          // downloaded as it before (spec §2 Quota).
           ...(input.documentId !== draft.documentId && {
             status: "drafting" as const,
-            firstExportedAt: null,
+            firstExportedAt: await countedAt(tx, {
+              draftId: draft.id,
+              documentId: input.documentId,
+            }),
           }),
         })
         return saved ?? draft

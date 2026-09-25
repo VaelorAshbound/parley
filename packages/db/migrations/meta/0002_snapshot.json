@@ -1,5 +1,5 @@
 {
-  "id": "0845b3e6-f3ee-432b-893a-20e0f78ee996",
+  "id": "0eaa4f0e-3965-4a3c-902d-0d37a5f99772",
   "prevId": "2a00feb5-287a-41b7-8a27-9020ea4fd95d",
   "version": "7",
   "dialect": "postgresql",
@@ -618,6 +618,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "document_id": {
+          "name": "document_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "counted_at": {
           "name": "counted_at",
           "type": "timestamp with time zone",
@@ -643,6 +649,27 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "counted_export_draft_id_document_id_idx": {
+          "name": "counted_export_draft_id_document_id_idx",
+          "columns": [
+            {
+              "expression": "draft_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "document_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}

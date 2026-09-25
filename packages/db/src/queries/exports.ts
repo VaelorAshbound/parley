@@ -1,4 +1,5 @@
-import { and, count, eq, gte, isNull, sql } from "drizzle-orm"
+import type { DocumentId } from "@workspace/documents"
+import { and, count, eq, gte, isNotNull, isNull, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
 import { countedExport, draft } from "../schema.ts"
@@ -34,9 +35,30 @@ export async function countExportsSince(
 }
 
 /**
- * Counts the draft's first export: sets `firstExportedAt` and adds a counted
- * row. Does nothing (false) when the draft was counted already or isn't the
- * user's. Run it in a transaction with `lockExports`.
+ * When the draft's agreement was counted, or null. A draft switched back to
+ * an agreement it was downloaded as keeps that count (spec §2 Quota).
+ */
+export async function countedAt(
+  db: Db,
+  { draftId, documentId }: { draftId: string; documentId: DocumentId }
+) {
+  const [row] = await db
+    .select({ countedAt: countedExport.countedAt })
+    .from(countedExport)
+    .where(
+      and(
+        eq(countedExport.draftId, draftId),
+        eq(countedExport.documentId, documentId)
+      )
+    )
+  return row?.countedAt ?? null
+}
+
+/**
+ * Counts the draft's first export as its current agreement: sets
+ * `firstExportedAt` and adds a counted row. Does nothing (false) when the
+ * draft was counted already, has no agreement or isn't the user's. Run it in
+ * a transaction with `lockExports`.
  */
 export async function recordExport(db: Db, key: DraftKey, at: Date) {
   const marked = await db
@@ -47,13 +69,15 @@ export async function recordExport(db: Db, key: DraftKey, at: Date) {
       and(
         eq(draft.id, key.id),
         eq(draft.userId, key.userId),
-        isNull(draft.firstExportedAt)
+        isNull(draft.firstExportedAt),
+        isNotNull(draft.documentId)
       )
     )
-    .returning({ id: draft.id })
-  if (marked.length === 0) return false
+    .returning({ documentId: draft.documentId })
+  const documentId = marked[0]?.documentId
+  if (!documentId) return false
   await db
     .insert(countedExport)
-    .values({ userId: key.userId, draftId: key.id, countedAt: at })
+    .values({ userId: key.userId, draftId: key.id, documentId, countedAt: at })
   return true
 }
