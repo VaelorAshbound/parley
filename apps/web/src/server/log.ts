@@ -33,6 +33,16 @@ export function logError(
   )
 }
 
+/** A business event worth counting; fields as for logError. */
+export function logInfo(
+  event: string,
+  fields: Record<string, string | number | boolean> = {}
+) {
+  console.info(
+    JSON.stringify({ level: "info", event, requestId: requestId(), ...fields })
+  )
+}
+
 /** Something refused but handled; fields as for logError. */
 export function logWarn(
   event: string,
