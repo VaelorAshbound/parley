@@ -30,17 +30,21 @@ export const Route = createFileRoute("/_app/d/$draftId")({
     stringify: ({ draftId }) => ({ draftId }),
   },
   loader: async ({ context, params }) => {
-    try {
-      const input = { input: { id: params.draftId } }
-      await Promise.all([
-        context.queryClient.ensureQueryData(
-          context.orpc.drafts.get.queryOptions(input)
-        ),
-        context.queryClient.ensureQueryData(
-          context.orpc.chat.messages.queryOptions(input)
-        ),
-      ])
-    } catch (error) {
+    const input = { input: { id: params.draftId } }
+    // Both at once, and both settled before the page renders: a query left
+    // pending would be sent to the browser and fail there after the 404
+    // (a deleted draft's link hung the page load).
+    const loaded = await Promise.allSettled([
+      context.queryClient.ensureQueryData(
+        context.orpc.drafts.get.queryOptions(input)
+      ),
+      context.queryClient.ensureQueryData(
+        context.orpc.chat.messages.queryOptions(input)
+      ),
+    ])
+    for (const result of loaded) {
+      if (result.status === "fulfilled") continue
+      const error: unknown = result.reason
       // Not yours, not there, or not signed in: all the same friendly 404.
       if (error instanceof ORPCError && error.status < 500) throw notFound()
       throw error
