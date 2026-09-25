@@ -16,6 +16,8 @@ import { usePanelRef, type Layout } from "react-resizable-panels"
 
 import { writeCookie } from "@/lib/cookies"
 
+import type { ChatMessage } from "@/server/ai/chat"
+
 import { ChatColumn } from "./chat-column"
 import { DocumentPanel } from "./document-panel"
 import { layoutCookie } from "./layout"
@@ -29,6 +31,7 @@ export function DraftWorkspace({
   title,
   documentName,
   draft,
+  messages,
   editing,
   panelOpen,
   tab,
@@ -37,6 +40,7 @@ export function DraftWorkspace({
   title: string
   documentName: string
   draft: ComponentProps<typeof DocumentPanel>["draft"]
+  messages: ChatMessage[]
   editing: string | undefined
   panelOpen: boolean
   tab: "chat" | "document"
@@ -99,7 +103,12 @@ export function DraftWorkspace({
         )}
       >
         <ResizablePanel id="chat" minSize={isMobile ? undefined : 360}>
-          <ChatColumn title={title} panelOpen={panelOpen} />
+          <ChatColumn
+            title={title}
+            panelOpen={panelOpen}
+            draft={draft}
+            messages={messages}
+          />
         </ResizablePanel>
         <ResizableHandle className="max-md:hidden" />
         <ResizablePanel

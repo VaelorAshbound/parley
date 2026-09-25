@@ -24,6 +24,9 @@ type UiState = {
   highlightField: (field: string | null) => void
   refused: Refused | null
   setRefused: (refused: Refused | null) => void
+  /** A first message typed on the home page, sent once its draft opens. */
+  pending: { draftId: string; text: string } | null
+  setPending: (pending: { draftId: string; text: string } | null) => void
 }
 
 export function createUiStore() {
@@ -32,6 +35,8 @@ export function createUiStore() {
     highlightField: (field) => set({ highlightedField: field }),
     refused: null,
     setRefused: (refused) => set({ refused }),
+    pending: null,
+    setPending: (pending) => set({ pending }),
   }))
 }
 

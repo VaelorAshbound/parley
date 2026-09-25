@@ -31,9 +31,15 @@ export const Route = createFileRoute("/_app/d/$draftId")({
   },
   loader: async ({ context, params }) => {
     try {
-      await context.queryClient.ensureQueryData(
-        context.orpc.drafts.get.queryOptions({ input: { id: params.draftId } })
-      )
+      const input = { input: { id: params.draftId } }
+      await Promise.all([
+        context.queryClient.ensureQueryData(
+          context.orpc.drafts.get.queryOptions(input)
+        ),
+        context.queryClient.ensureQueryData(
+          context.orpc.chat.messages.queryOptions(input)
+        ),
+      ])
     } catch (error) {
       // Not yours, not there, or not signed in: all the same friendly 404.
       if (error instanceof ORPCError && error.status < 500) throw notFound()
@@ -57,12 +63,16 @@ function DraftPage() {
   const { data: draft } = useSuspenseQuery(
     orpc.drafts.get.queryOptions({ input: { id: draftId } })
   )
+  const { data: messages } = useSuspenseQuery(
+    orpc.chat.messages.queryOptions({ input: { id: draftId } })
+  )
 
   return (
     <DraftWorkspace
       title={draft.title}
       documentName={documentName(draft.documentId)}
       draft={draft}
+      messages={messages}
       editing={search.field}
       panelOpen={search.panel !== "closed"}
       tab={search.tab ?? "chat"}

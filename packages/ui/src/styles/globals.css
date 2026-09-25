@@ -275,4 +275,11 @@
     --typeset-flow: 0.8em;
     font-optical-sizing: auto;
   }
+
+  /* The assistant's replies: the brand's Body type, a tight chat rhythm. */
+  .typeset-chat {
+    --typeset-size: 15px;
+    --typeset-leading: 1.6;
+    --typeset-flow: 0.65em;
+  }
 }
