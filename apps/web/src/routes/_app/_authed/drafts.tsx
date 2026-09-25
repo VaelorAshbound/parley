@@ -34,6 +34,7 @@ import { SidebarTrigger } from "@workspace/ui/components/sidebar"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { MoreHorizontalIcon, SearchIcon } from "lucide-react"
+import type { ComponentProps } from "react"
 import { z } from "zod"
 
 import { updatedLabel } from "@/features/drafts/calendar"
@@ -123,161 +124,169 @@ function DraftsPage() {
 
   const filtered = Boolean(search.q || search.type)
   return (
+    <DraftsFrame>
+      <h1 className="font-serif text-4xl leading-none tracking-[-0.02em]">
+        Drafts
+      </h1>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <InputGroup className="sm:flex-1">
+          <InputGroupInput
+            type="search"
+            value={box.text}
+            onChange={(event) => box.setText(event.target.value)}
+            maxLength={QUERY_MAX}
+            placeholder="Search by name, agreement or party"
+            aria-label="Search drafts"
+          />
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+        </InputGroup>
+        <Select
+          items={typeItems}
+          value={search.type ?? null}
+          onValueChange={(value: DocumentId | null) =>
+            void navigate({
+              search: (prev) => ({ ...prev, type: value ?? undefined }),
+            })
+          }
+        >
+          <SelectTrigger aria-label="Agreement" className="sm:w-60">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {typeItems.map((item) => (
+                <SelectItem key={item.label} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {!shown ? (
+        <DraftsSkeleton />
+      ) : shown.length === 0 ? (
+        filtered ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyTitle>No drafts match</EmptyTitle>
+              <EmptyDescription>
+                Try another word, or look in all agreements.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Link
+                to="."
+                search={{}}
+                onClick={box.clear}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Clear the search
+              </Link>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyTitle>No drafts yet</EmptyTitle>
+              <EmptyDescription>
+                Describe a deal and Parley drafts the agreement with you.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Link to="/" className={buttonVariants()}>
+                Start a draft
+              </Link>
+            </EmptyContent>
+          </Empty>
+        )
+      ) : (
+        <ItemGroup
+          aria-label="Drafts"
+          aria-busy={drafts.isPlaceholderData}
+          className="gap-1 transition-opacity aria-busy:opacity-60"
+        >
+          {shown.map((draft) => (
+            // shadcn's ItemGroup is a <div role="list">, so its rows
+            // take the role too (an <li> needs a <ul>).
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
+            <Item key={draft.id} role="listitem" className="relative">
+              <ItemContent className="min-w-0">
+                <ItemTitle className="w-full">
+                  {/* The whole row opens the draft; the menu sits above. */}
+                  <Link
+                    to="/d/$draftId"
+                    params={{ draftId: draft.id }}
+                    className="truncate outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                  >
+                    {draft.title}
+                  </Link>
+                </ItemTitle>
+                <ItemDescription>
+                  {documentName(draft.documentId)} · Edited{" "}
+                  {updatedLabel(draft.updatedAt, calendar)}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions className="relative">
+                <DraftMenu
+                  draft={draft}
+                  orpc={orpc}
+                  canDuplicate
+                  align="end"
+                  render={<Button variant="ghost" size="icon-sm" />}
+                  label={`More for ${draft.title}`}
+                >
+                  <MoreHorizontalIcon />
+                </DraftMenu>
+              </ItemActions>
+            </Item>
+          ))}
+        </ItemGroup>
+      )}
+
+      {drafts.hasNextPage && (
+        <Button
+          variant="outline"
+          className="self-center"
+          disabled={drafts.isFetchingNextPage || drafts.isPlaceholderData}
+          onClick={() => void drafts.fetchNextPage()}
+        >
+          {drafts.isFetchingNextPage && <Spinner data-icon="inline-start" />}
+          Show more
+        </Button>
+      )}
+    </DraftsFrame>
+  )
+}
+
+/** The page's frame, which the loading view shares: nothing moves. */
+function DraftsFrame(props: ComponentProps<"main">) {
+  return (
     <div className="flex min-h-svh flex-col">
       <div className="flex h-14 items-center px-3 md:hidden">
         <SidebarTrigger />
       </div>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8 md:py-14">
-        <h1 className="font-serif text-4xl leading-none tracking-[-0.02em]">
-          Drafts
-        </h1>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <InputGroup className="sm:flex-1">
-            <InputGroupInput
-              type="search"
-              value={box.text}
-              onChange={(event) => box.setText(event.target.value)}
-              maxLength={QUERY_MAX}
-              placeholder="Search by name, agreement or party"
-              aria-label="Search drafts"
-            />
-            <InputGroupAddon>
-              <SearchIcon />
-            </InputGroupAddon>
-          </InputGroup>
-          <Select
-            items={typeItems}
-            value={search.type ?? null}
-            onValueChange={(value: DocumentId | null) =>
-              void navigate({
-                search: (prev) => ({ ...prev, type: value ?? undefined }),
-              })
-            }
-          >
-            <SelectTrigger aria-label="Agreement" className="sm:w-60">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {typeItems.map((item) => (
-                  <SelectItem key={item.label} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {!shown ? (
-          <DraftsSkeleton />
-        ) : shown.length === 0 ? (
-          filtered ? (
-            <Empty className="border">
-              <EmptyHeader>
-                <EmptyTitle>No drafts match</EmptyTitle>
-                <EmptyDescription>
-                  Try another word, or look in all agreements.
-                </EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Link
-                  to="."
-                  search={{}}
-                  onClick={box.clear}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  Clear the search
-                </Link>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <Empty className="border">
-              <EmptyHeader>
-                <EmptyTitle>No drafts yet</EmptyTitle>
-                <EmptyDescription>
-                  Describe a deal and Parley drafts the agreement with you.
-                </EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Link to="/" className={buttonVariants()}>
-                  Start a draft
-                </Link>
-              </EmptyContent>
-            </Empty>
-          )
-        ) : (
-          <ItemGroup
-            aria-label="Drafts"
-            aria-busy={drafts.isPlaceholderData}
-            className="gap-1 transition-opacity aria-busy:opacity-60"
-          >
-            {shown.map((draft) => (
-              // shadcn's ItemGroup is a <div role="list">, so its rows
-              // take the role too (an <li> needs a <ul>).
-              // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
-              <Item key={draft.id} role="listitem" className="relative">
-                <ItemContent className="min-w-0">
-                  <ItemTitle className="w-full">
-                    {/* The whole row opens the draft; the menu sits above. */}
-                    <Link
-                      to="/d/$draftId"
-                      params={{ draftId: draft.id }}
-                      className="truncate outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
-                    >
-                      {draft.title}
-                    </Link>
-                  </ItemTitle>
-                  <ItemDescription>
-                    {documentName(draft.documentId)} · Edited{" "}
-                    {updatedLabel(draft.updatedAt, calendar)}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions className="relative">
-                  <DraftMenu
-                    draft={draft}
-                    orpc={orpc}
-                    canDuplicate
-                    align="end"
-                    render={<Button variant="ghost" size="icon-sm" />}
-                    label={`More for ${draft.title}`}
-                  >
-                    <MoreHorizontalIcon />
-                  </DraftMenu>
-                </ItemActions>
-              </Item>
-            ))}
-          </ItemGroup>
-        )}
-
-        {drafts.hasNextPage && (
-          <Button
-            variant="outline"
-            className="self-center"
-            disabled={drafts.isFetchingNextPage || drafts.isPlaceholderData}
-            onClick={() => void drafts.fetchNextPage()}
-          >
-            {drafts.isFetchingNextPage && <Spinner data-icon="inline-start" />}
-            Show more
-          </Button>
-        )}
-      </main>
+      <main
+        className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8 md:py-14"
+        {...props}
+      />
     </div>
   )
 }
 
-// The same frame as the page, so nothing moves when it arrives.
 function DraftsPending() {
   return (
-    <div
-      className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-8 md:py-14"
-      aria-busy="true"
-      aria-label="Loading drafts"
-    >
+    <DraftsFrame aria-busy="true" aria-label="Loading drafts">
       <Skeleton className="h-9 w-40" />
-      <Skeleton className="h-9 w-full" />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Skeleton className="h-8 sm:flex-1" />
+        <Skeleton className="h-8 sm:w-60" />
+      </div>
       <DraftsSkeleton />
-    </div>
+    </DraftsFrame>
   )
 }
 
