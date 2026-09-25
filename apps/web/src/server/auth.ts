@@ -1,7 +1,8 @@
 import { moveGuestData, schema, type Db } from "@workspace/db"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { betterAuth } from "better-auth/minimal"
-import { captcha } from "better-auth/plugins"
+// captcha and lastLoginMethod have no path of their own in 1.7.5.
+import { captcha, lastLoginMethod } from "better-auth/plugins"
 import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
 import { createElement } from "react"
@@ -39,7 +40,7 @@ export function createAuth({
   env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE" | "TURNSTILE_SECRET_KEY"> & {
     /** Missing on Previews and in local dev: no email is sent there. */
     RESEND_API_KEY?: string | undefined
-  }
+  } & OAuthApps
   /** ctx.waitUntil: work that may finish after the response. */
   waitUntil: (promise: Promise<unknown>) => void
 }) {
@@ -54,6 +55,17 @@ export function createAuth({
       enabled: true,
       minPasswordLength: 10,
       maxPasswordLength: 128,
+    },
+    // Google and GitHub, where their apps are set up (spec §5 Auth).
+    socialProviders: socialProviders(env),
+    account: {
+      // Better Auth joins a Google or GitHub sign-in to the account with
+      // the same email only when both sides confirmed that email (its
+      // default), so nobody can claim an address first and wait.
+      accountLinking: { enabled: true },
+      // Parley never calls Google or GitHub for the user: if the database
+      // leaks, the stored tokens are useless.
+      encryptOAuthTokens: true,
     },
     emailVerification: {
       // Signing up gives a session at once, so the guest's draft links right
@@ -110,8 +122,42 @@ export function createAuth({
       // settings screen comes in T23b.
       twoFactor({ issuer: "Parley" }),
       turnstile(env),
+      // A cookie only: "Last used" on the sign-in buttons.
+      lastLoginMethod(),
+      // No tanstackStartCookies() (spec §5 Auth asked for it; T21 found it
+      // does nothing here and breaks things): sign-in, sign-up and sign-out
+      // go through /api/auth, whose responses carry their own cookies, and
+      // the two server-side session reads (getViewer, the oRPC `authed`
+      // base) copy refreshed cookies themselves. The plugin would import
+      // Start's server runtime on every auth call, also from Hono and the
+      // Worker tests, where there is no Start request to set cookies on.
     ],
   })
+}
+
+/**
+ * OAuth apps. Production has its own; local dev uses the "(dev)" GitHub app
+ * (GitHub allows one callback URL per app) and the shared Google client.
+ * Previews have none: their hosts change, so no callback URL can match.
+ */
+type OAuthApps = {
+  [key in `${"GOOGLE" | "GITHUB"}_CLIENT_${"ID" | "SECRET"}`]?:
+    | string
+    | undefined
+}
+
+function socialProviders(env: OAuthApps) {
+  const google = app(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET)
+  const github = app(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET)
+  return {
+    // People often have a work and a personal Google account.
+    ...(google && { google: { ...google, prompt: "select_account" as const } }),
+    ...(github && { github }),
+  }
+}
+
+function app(clientId?: string, clientSecret?: string) {
+  return clientId && clientSecret ? { clientId, clientSecret } : undefined
 }
 
 /**

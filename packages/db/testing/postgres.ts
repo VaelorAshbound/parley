@@ -16,6 +16,11 @@ const server = new EmbeddedPostgres({
   user: "postgres",
   password: "postgres",
   persistent: false,
+  // The Worker tests call the app inside the test's own request, so each
+  // call's database socket stays open until its test file ends (a real
+  // request closes it). Postgres's default of 100 ran out once the auth
+  // tests grew (T21).
+  postgresFlags: ["-c", "max_connections=400"],
   onLog: () => {},
 })
 await server.initialise()

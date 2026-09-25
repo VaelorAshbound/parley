@@ -408,7 +408,7 @@ Rules:
 
 ### Auth (Better Auth, the owner's rules + docs checked 2026-09-23)
 
-- **Server-side sessions with cookies.** The `session_token` cookie is the server-side session id. The session is **fetched on the server**, in the `_app` `beforeLoad`, through a `createServerFn` `getSession` (the official TanStack Start pattern), put in the router context, and used as the client's initial value, so no signed-in/signed-out flash. `tanstackStartCookies()` is the **last** plugin, so cookies set during SSR/server functions reach the browser.
+- **Server-side sessions with cookies.** The `session_token` cookie is the server-side session id. The session is **fetched on the server**, in the `_app` `beforeLoad`, through a `createServerFn` `getSession` (the official TanStack Start pattern), put in the router context, and used as the client's initial value, so no signed-in/signed-out flash. No `tanstackStartCookies()` (T21): sign-in, sign-up and sign-out go through `/api/auth`, whose responses carry their cookies, and the two server-side session reads copy refreshed cookies themselves; the plugin would load Start's server runtime on every auth call, also in Hono and the Worker tests.
 - **Mounting.** Hono `app.all("/api/auth/*", c => auth.handler(c.req.raw))`, registered before any catch-all. The `nodejs_compat` flag is on (Better Auth uses `AsyncLocalStorage`). The auth instance is built per request (the DB client is per request), with `advanced.backgroundTasks.handler = ctx.waitUntil`, so emails and cleanup run after the response.
 - **Bundle.** Import `betterAuth` from **`better-auth/minimal`** (we use the Drizzle adapter, so Kysely isn't needed). Plugins come from their own paths for tree-shaking.
 - **Methods.**
@@ -426,8 +426,7 @@ Rules:
   - `twoFactor({ issuer: "Parley" })`: TOTP with a QR code + 10 encrypted backup codes + trusted device for 30 days; only credential accounts can use it;
   - `captcha({ provider: "cloudflare-turnstile", endpoints: [sign-up, sign-in, forgot-password, /sign-in/anonymous] })`;
   - `lastLoginMethod()` (cookie only), which shows "Last used" on the sign-in buttons;
-  - Polar;
-  - `tanstackStartCookies()` last.
+  - Polar.
 - **Rate limit.** Better Auth's own limiter with `storage: "database"` (memory resets per isolate on Workers) and `ipAddressHeaders: ["cf-connecting-ip"]`. It uses the stricter built-in rules on sign-in, sign-up, change-password and change-email, plus 2FA's 3 requests per 10 s.
 - **Session cache.** `session.cookieCache` (`compact`, 5 min) saves a DB read on most requests. A revoke can take up to 5 min to reach other devices; bump `cookieCache.version` to force it everywhere.
 - **Base URL.** No `BETTER_AUTH_URL`: `baseURL: { allowedHosts }` builds it from the request's host (Better Auth 1.5+). Production allows `parley.runtimedrift.dev` (+ `localhost:*` for dev and tests); previews allow `*-parley.vaelorashbound.workers.dev`. Production refuses workers.dev, because old versions stay reachable there. Any other host is refused. (T14)

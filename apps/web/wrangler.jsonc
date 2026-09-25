@@ -32,6 +32,12 @@
       // Turnstile's widget "parley-auth". Local dev and Previews use
       // Cloudflare's test secret 1x0000000000000000000000000000000AA.
       "TURNSTILE_SECRET_KEY",
+      // OAuth apps "Parley" (GitHub) and the Google client. Local dev uses
+      // the "Parley (dev)" GitHub app; Previews have none (spec §5 Auth).
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "GITHUB_CLIENT_ID",
+      "GITHUB_CLIENT_SECRET",
     ],
   },
   "vars": {

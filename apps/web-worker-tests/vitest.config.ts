@@ -43,6 +43,11 @@ export default defineConfig({
           // Cloudflare's "always passes" test secret; siteverify is faked
           // anyway (test/siteverify.ts).
           TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+          // OAuth apps that don't exist: the tests fake GitHub's endpoints.
+          GITHUB_CLIENT_ID: "test-github-client",
+          GITHUB_CLIENT_SECRET: "test-github-secret",
+          GOOGLE_CLIENT_ID: "test-google-client",
+          GOOGLE_CLIENT_SECRET: "test-google-secret",
         },
       },
     })),
