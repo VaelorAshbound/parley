@@ -11,11 +11,11 @@ export const meta = {
 const REPO = '/home/velkyr/Projects/parley'
 // Workflow script for wave B2 (see plan.md "Parallel run"). A new session:
 // set SCRATCH to its own scratchpad dir and BASE to the branch HEAD first.
-const SCRATCH = '/tmp/claude-1000/-home-velkyr-Projects-parley/15d60ad3-a382-4fc7-9f39-0f6d71832404/scratchpad'
+const SCRATCH = '/tmp/claude-1000/-home-velkyr-Projects-parley/84376620-febc-4fce-8e8c-4c08ef8cdad2/scratchpad'
 const LOCK = `${SCRATCH}/heavy.lock`
 const ALERTS = `${SCRATCH}/owner-alerts.txt`
 
-const BASE = '8c5d22f'
+const BASE = 'fb92e5f'
 const TASKS = [
   { id: 'T25', port: 3131, reviewSkills: 'agent-skills:security-and-hardening, since share links expose data',  focus: 'share links: security matters most (load agent-skills:security-and-hardening). Read-only links must never leak other drafts, the chat, or who owns them; think about token guessing, revocation, caching (no shared cache of private pages), and noindex.' },
   { id: 'T27', port: 3132, reviewSkills: 'agent-skills:security-and-hardening and better-auth-security-best-practices, since this is abuse protection',  focus: 'Turnstile, rate limits, AI budgets. Read the two extra Musts in the T27 block (export rate limit from T24; /sign-in/anonymous in the captcha endpoints from T21). Also fix PAR-11 on the way, test first: useTurnstile().headers() in apps/web/src/features/auth/turnstile.tsx must reset the live widget after each send (call ref.current?.reset() in finally), so a second send gets a new token. The Rate Limiting binding is config in wrangler.jsonc (a dev/test resource on previews).' },
