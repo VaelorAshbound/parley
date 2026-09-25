@@ -17,13 +17,14 @@ import { useDownload } from "@/features/export/use-download"
 import { DocumentView } from "@/features/document-preview/document-view"
 import { FieldEditor } from "@/features/field-editor/field-editor"
 import { useSaveField } from "@/features/field-editor/use-save-field"
+import { ShareMenu } from "@/features/share/share-menu"
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
 
 // The right panel (spec §1 Layout): the live document, where any value can be
 // clicked and edited in place. The field being edited is in the URL
 // (`?field=party1.email`), so a reload or a shared link opens the same
-// editor. The header has Download (T24); T25 adds Share.
+// editor. The header has Share (T25) and Download (T24).
 
 type Draft = {
   id: string
@@ -56,7 +57,12 @@ export function DocumentPanel({
           {name}
         </h2>
         <SaveStatus />
-        {draft.documentId !== null && <DownloadMenu download={download} />}
+        {draft.documentId !== null && (
+          <>
+            <ShareMenu orpc={orpc} draftId={draft.id} />
+            <DownloadMenu download={download} />
+          </>
+        )}
         <Link
           to="."
           search={(prev) => ({ ...prev, panel: "closed" })}
