@@ -1,3 +1,7 @@
+import { createORPCClient } from "@orpc/client"
+import { RPCLink } from "@orpc/client/fetch"
+import { SimpleCsrfProtectionLinkPlugin } from "@orpc/client/plugins"
+import type { RouterClient } from "@orpc/server"
 import { connect } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
@@ -7,6 +11,7 @@ import { afterAll, expect, onTestFinished } from "vitest"
 
 import { api } from "../../web/src/server/api"
 import { createAuth } from "../../web/src/server/auth"
+import type { Router } from "../../web/src/server/rpc/router"
 import { createServerClient } from "../../web/src/server/rpc/server-client"
 
 export const origin = "http://localhost:3000"
@@ -28,6 +33,23 @@ export async function call(path: string, init: RequestInit = {}) {
   )
   await waitOnExecutionContext(ctx)
   return response
+}
+
+/** The browser's client, over HTTP through the real /api app. */
+export function browserClient(cookie: string): RouterClient<Router> {
+  return createORPCClient(
+    new RPCLink({
+      url: `${origin}/api/rpc`,
+      headers: { cookie },
+      plugins: [new SimpleCsrfProtectionLinkPlugin()],
+      fetch: async (request) =>
+        call(new URL(request.url).pathname + new URL(request.url).search, {
+          method: request.method,
+          headers: request.headers,
+          body: request.method === "GET" ? null : await request.text(),
+        }),
+    })
+  )
 }
 
 /** The Cookie header a browser would send back after this response. */

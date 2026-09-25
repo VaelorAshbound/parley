@@ -7,6 +7,7 @@ import type {
 } from "@orpc/server/plugins"
 
 import type { Auth, Session } from "../auth"
+import { annotate } from "../log"
 
 // Every procedure is built from one of these (spec §5 API): `pub` for
 // anyone, `authed` for a signed-in user or guest, and `authed` + `draftOwner`
@@ -42,8 +43,14 @@ export const authed = pub.use(async ({ context, next, errors }) => {
   for (const cookie of headers.getSetCookie())
     context.resHeaders?.append("set-cookie", cookie)
   if (!response) throw errors.UNAUTHORIZED()
+  annotate({ userId: response.user.id, tier: tierOf(response.user) })
   return next({ context: { user: response.user, session: response.session } })
 })
+
+/** A user's plan, for logs and metrics (T29). T26 adds "pro". */
+export function tierOf(user: { isAnonymous?: boolean | null }) {
+  return user.isAnonymous ? ("guest" as const) : ("free" as const)
+}
 
 /**
  * Loads the draft named by the input and checks the user owns it. Use with
