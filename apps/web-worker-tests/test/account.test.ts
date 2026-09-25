@@ -406,6 +406,31 @@ describe("changing the email", () => {
     })
   })
 
+  // It sends email to any address typed in (for an unconfirmed account),
+  // so a bot must not be able to use it to send spam.
+  it("needs a solved Turnstile challenge", async () => {
+    resend = fakeResend()
+    const ana = await signUp(address())
+    const sent = resend.sent.length
+
+    const response = await call("/api/auth/change-email", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: ana.cookie,
+        "x-captcha-response": "",
+      },
+      body: JSON.stringify({
+        newEmail: address(),
+        callbackURL: origin + settingsFor(ana.email),
+      }),
+    })
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ code: "MISSING_RESPONSE" })
+    expect(resend.sent.length).toBe(sent)
+  })
+
   it("answers the same for an address that has an account, and sends nothing", async () => {
     const ana = await confirmedAccount()
     const bo = await signUp(address())

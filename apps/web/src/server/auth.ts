@@ -274,6 +274,8 @@ function turnstile(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
       "/sign-in/email",
       "/request-password-reset",
       "/send-verification-email",
+      // An unconfirmed account's link goes to whatever address is typed.
+      "/change-email",
     ],
     ...(real && {
       expectedAction: "auth",

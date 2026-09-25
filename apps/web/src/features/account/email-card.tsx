@@ -10,13 +10,17 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { FieldGroup } from "@workspace/ui/components/field"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { z } from "zod"
 
+import { authConfigQuery } from "@/features/auth/auth-config"
 import {
   authErrorMessage,
   emailLinkErrorMessage,
+  humanCheckFailed,
 } from "@/features/auth/messages"
+import { useTurnstile } from "@/features/auth/turnstile"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 import type { Viewer } from "@/lib/session"
@@ -49,6 +53,8 @@ export function EmailCard({
   linkError: string | undefined
 }) {
   const [status, setStatus] = useState<Status>(idle)
+  const { data: config } = useSuspenseQuery(authConfigQuery)
+  const turnstile = useTurnstile(config.turnstileSiteKey)
 
   const schema = z.object({
     email: z
@@ -66,10 +72,16 @@ export function EmailCard({
     onSubmit: async ({ value }) => {
       setStatus(idle)
       const newEmail = value.email.toLowerCase()
-      const { error } = await authClient.changeEmail({
-        newEmail,
-        callbackURL: afterEmailLink(newEmail),
-      })
+      // It sends an email: Turnstile first (spec §5 Auth).
+      const headers = await turnstile.headers()
+      if (!headers) {
+        setStatus({ kind: "error", message: humanCheckFailed })
+        return
+      }
+      const { error } = await authClient.changeEmail(
+        { newEmail, callbackURL: afterEmailLink(newEmail) },
+        { headers }
+      )
       if (error) {
         setStatus({ kind: "error", message: authErrorMessage(error) })
         return
@@ -125,6 +137,7 @@ export function EmailCard({
                 />
               )}
             </form.AppField>
+            {turnstile.widget}
             <form.Subscribe selector={(state) => state.isSubmitting}>
               {(submitting) => (
                 <SubmitRow status={status} submitting={submitting}>

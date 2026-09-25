@@ -10,6 +10,7 @@ import { EmailCard } from "@/features/account/email-card"
 import { PasswordCard } from "@/features/account/password-card"
 import { ProfileCard } from "@/features/account/profile-card"
 import { SessionsCard } from "@/features/account/sessions-card"
+import { authConfigQuery } from "@/features/auth/auth-config"
 
 // Settings (spec §5 Auth, T23): name, email, password, signed-in devices,
 // theme, and deleting the account. `?email=` and `?error=` come back from
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/_app/_authed/settings")({
       context.queryClient.ensureQueryData(
         context.orpc.account.sessions.queryOptions()
       ),
+      // Turnstile's site key, for changing the email.
+      context.queryClient.ensureQueryData(authConfigQuery),
     ]),
   head: () => ({ meta: [{ title: "Settings · Parley" }] }),
   component: Settings,
