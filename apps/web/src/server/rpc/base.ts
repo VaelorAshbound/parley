@@ -37,11 +37,9 @@ const errors = {
   // probed.
   NOT_FOUND: { message: "We couldn't find that draft." },
   // oRPC's rate-limit middleware throws this code; declared so it is typed
-  // for the browser.
-  TOO_MANY_REQUESTS: {
-    status: 429,
-    message: "You're going a little fast. Please wait a few seconds.",
-  },
+  // for the browser. No message: the middleware's own ("Too Many Requests")
+  // wins, and the UI words it from the code.
+  TOO_MANY_REQUESTS: { status: 429 },
 }
 
 export const pub = os.$context<BaseContext>().errors(errors)
