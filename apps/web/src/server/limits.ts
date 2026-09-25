@@ -36,13 +36,8 @@ export function limitersFrom(env: Pick<Env, Binding>): Limiters {
   }
 }
 
-/**
- * AI messages a day (spec §2 Limits): each message or set of answers to the
- * AI's questions is one, since each is a model reply. Counted per UTC day in
- * `ai_usage`. T26 gives Pro users "pro".
- */
-export const DAILY_MESSAGES = { guest: 20, free: 100, pro: 500 } as const
-export type LimitTier = keyof typeof DAILY_MESSAGES
+/** AI messages a day, counted per UTC day in `ai_usage` (shared with the UI). */
+export { DAILY_MESSAGES, type LimitTier } from "../lib/limits"
 
 /** The UTC day the daily limits count in, and when the next one starts. */
 export function usageDay(now: Temporal.Instant = Temporal.Now.instant()) {

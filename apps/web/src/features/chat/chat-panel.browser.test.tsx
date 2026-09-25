@@ -366,4 +366,67 @@ describe("the chat", () => {
       screen.getByText("Parley couldn’t answer.", { exact: false }).query()
     ).toBeNull()
   })
+
+  /** A chat whose sends the server refuses with `error`. */
+  function refusing(error: ORPCError<string, unknown>) {
+    return show({
+      transport: (base) => ({
+        ...base,
+        sendMessages: async () => {
+          throw error
+        },
+      }),
+    })
+  }
+
+  test("says when a guest has used the day's messages, and offers an account", async () => {
+    const { screen } = await refusing(
+      new ORPCError("DAILY_LIMIT", {
+        defined: true,
+        status: 429,
+        data: { limit: 20, tier: "guest", resetsAt: "2026-09-26T00:00:00Z" },
+      })
+    )
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "One more thing{Enter}"
+    )
+
+    await expect
+      .element(
+        screen.getByText("You’ve used today’s 20 messages.", { exact: false })
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole("link", { name: "Create an account" }))
+      .toHaveAttribute(
+        "href",
+        `/sign-up?redirect=${encodeURIComponent(`/d/${draftId}`)}`
+      )
+    expect(screen.getByRole("button", { name: "Try again" }).query()).toBeNull()
+    expect(
+      screen.getByText("Parley couldn’t answer.", { exact: false }).query()
+    ).toBeNull()
+  })
+
+  test("asks to slow down after a burst, and can try again", async () => {
+    const { screen } = await refusing(
+      new ORPCError("TOO_MANY_REQUESTS", { defined: true, status: 429 })
+    )
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "Quick{Enter}"
+    )
+
+    await expect
+      .element(
+        screen.getByText("You’re sending messages quickly.", { exact: false })
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole("button", { name: "Try again" }))
+      .toBeVisible()
+  })
 })
