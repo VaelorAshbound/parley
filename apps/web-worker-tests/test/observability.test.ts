@@ -282,6 +282,7 @@ async function turn(model: MockLanguageModelV4, text: string) {
   return {
     draft,
     logged,
+    lines,
     turns: lines.filter((line) => line.event === "chat_turn"),
   }
 }
@@ -421,6 +422,26 @@ describe("the chat's metrics", () => {
         event: "chat_turn",
         outcome: "error",
         errorName: "TypeError",
+      })
+    )
+    expect(logged).not.toContain("Nightingale")
+  })
+})
+
+describe("a reply that can't be saved", () => {
+  it("is logged by its draft and the error's code, with none of the chat", async () => {
+    // Postgres can't store a NUL character in jsonb, so the save after the
+    // reply fails, with the whole reply in Drizzle's error message.
+    const model = scriptedModel([[{ text: "Nightingale\u0000 is next." }]])
+
+    const { draft, lines, logged } = await turn(model, "Who's next?")
+
+    expect(lines).toContainEqual(
+      expect.objectContaining({
+        level: "error",
+        event: "chat_save_failed",
+        draftId: draft.id,
+        error: expect.objectContaining({ code: "22P05" }),
       })
     )
     expect(logged).not.toContain("Nightingale")

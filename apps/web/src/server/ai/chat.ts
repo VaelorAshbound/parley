@@ -12,7 +12,13 @@ import {
   type UIMessage,
 } from "ai"
 
-import { currentRequestId, log, logWarn, type LogFields } from "../log"
+import {
+  currentRequestId,
+  log,
+  logError,
+  logWarn,
+  type LogFields,
+} from "../log"
 import {
   authed,
   draftOwner,
@@ -223,8 +229,15 @@ async function reply({
       originalMessages: all,
       generateMessageId: () => crypto.randomUUID(),
       onEnd: ({ responseMessage }) => {
-        // After the response too: the save outlives a closed tab.
-        context.waitUntil(saveMessages(context.db, key, [responseMessage]))
+        // After the response too: the save outlives a closed tab. A failure
+        // is logged here: uncaught, Workers would log Drizzle's message,
+        // which holds the whole reply.
+        context.waitUntil(
+          saveMessages(context.db, key, [responseMessage]).catch(
+            (error: unknown) =>
+              logError("chat_save_failed", error, { draftId: key.id })
+          )
+        )
       },
     })
   )
