@@ -33,6 +33,7 @@ export function scoreFields(
 function same(path: string, want: unknown, got: unknown) {
   if (typeof want !== "string" || typeof got !== "string") return want === got
   const [a, b] = [normal(want), normal(got)]
-  if (path.endsWith(".courtLocation")) return a.includes(b) || b.includes(a)
+  if (path.endsWith(".courtLocation"))
+    return a !== "" && b !== "" && (a.includes(b) || b.includes(a))
   return a === b
 }

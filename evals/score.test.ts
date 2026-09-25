@@ -44,4 +44,13 @@ describe("scoring an eval's fields", () => {
 
     expect(result).toEqual({ path: "party2.name", ok: false, got: undefined })
   })
+
+  test("doesn't take an empty court location as a match", () => {
+    const [result] = scoreFields(
+      { law: { courtLocation: "New Castle County" } },
+      { law: { courtLocation: "" } }
+    )
+
+    expect(result?.ok).toBe(false)
+  })
 })

@@ -47,7 +47,7 @@ export const ndaCases: NdaCase[] = [
     facts: `- Party 1: Helix Bio. Signer: Priya Raman, COO, priya@helixbio.test.
 - Party 2: Pinecrest Pharma. Signer: Marcus Lee, VP Business Development, marcus@pinecrest.test.
 - Purpose: evaluating a possible research partnership.
-- The NDA lasts 1 year. Secrets stay protected forever.
+- The NDA lasts 18 months. Secrets stay protected forever.
 - California law. Courts in San Francisco.`,
     expect: {
       party1: {
@@ -62,7 +62,8 @@ export const ndaCases: NdaCase[] = [
         title: "VP Business Development",
         email: "marcus@pinecrest.test",
       },
-      mndaTerm: { option: "expires", value: { amount: 1, unit: "years" } },
+      // Not the default (1 year): a model that never asks can't pass.
+      mndaTerm: { option: "expires", value: { amount: 18, unit: "months" } },
       confidentialityTerm: { option: "perpetual" },
       governingLaw: { state: "CA", courtLocation: "San Francisco" },
     },
