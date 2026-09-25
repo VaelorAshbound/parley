@@ -322,7 +322,25 @@
   - Files: `apps/web/src/lib/form.ts`, `src/features/document-preview/*`, `src/features/field-editor/{fields/*,groups/*}`
   - Deps: T15, T7
 
-- [ ] **T17: AI chat streaming with tools** (M)
+- [x] **T17: AI chat streaming with tools** (M)
+  - Done 2026-09-25. Skills: incremental-implementation, test-driven-development, source-driven-development, api-and-interface-design, frontend-ui-engineering, git-workflow-and-versioning; ai-sdk, shadcn, cloudflare:workers-best-practices, cloudflare:wrangler, neon:neon-postgres. Checked:
+    - `pnpm check`; `pnpm test:coverage` (100% on `packages/documents` and `packages/db`); `pnpm test:browser` (29); `pnpm test:workers` (53, including a whole scripted NDA over two turns, abort, a refusal, parallel tool calls and history); local e2e 17/17.
+    - Two real chats with `openai/gpt-6-luna` on the test key through the browser: it picked the Mutual NDA, filled fields live, and the chat came back after a reload.
+  - Owner decisions (2026-09-25): **a draft can start with no agreement** (the chat picks it), and **OpenRouter keys as secrets**: the test key for local dev and Previews, the app key for production, now a required secret.
+  - Decisions:
+    - **Migration 0001** makes `draft.document_id` nullable. It changes the search column in place (`SET EXPRESSION`): Drizzle's drop-and-add would also drop its GIN index. A test checks that every declared index exists after all migrations. Applied on the Neon `preview` branch, checked, then on `production`.
+    - **`drafts.chooseDocument`** picks or switches the agreement; `switchDocument` (engine) keeps each value that still fits, and a title the user chose stays. `updateFields` on a draft with no agreement is the typed `NO_DOCUMENT`.
+    - **One tool loop per turn.** `prepareStep` can change the instructions but not the tools, so `updateFields` keeps the procedure's own input (key and value, checked by the engine) and each field's JSON Schema goes into the instructions, refreshed each step from the database (a switch mid-turn shows the new fields). The stable part (role, catalog, the agreement's fields) comes before the current values, for the provider's cache.
+    - **The browser sends only its new message;** the server keeps the history (checked with `validateUIMessages`, the last 40 to the model). The reply is saved in `onEnd` through `waitUntil`.
+    - **Replies are plain text with `**bold**`,** rendered as React text: no Markdown dependency, and nothing the model writes becomes HTML.
+    - **A turn's tool calls take turns** on the request's one database connection (see below).
+    - **Pinned `ai` 7.0.112 and `@ai-sdk/react` 4.0.115**, older than pnpm's one-day release-age policy, instead of adding exceptions to it.
+  - Found and fixed on the way (the real model found the first three):
+    - **Parallel tool calls overwrote each other:** the AI SDK runs a step's calls side by side, and their transactions interleaved on one connection.
+    - **The chat vanished after a reload, and the model lost it too:** an empty field's `before` isn't stored in JSON, and the output schema required it, so validation dropped the whole history.
+    - **The model wiped a party's parts** by sending null for every part it didn't know. The shapes in its instructions no longer offer null for parts.
+    - **Editable rows had no hover** (T16): the brand's hover is shadcn's `accent`; `bg-hover` isn't a utility.
+  - For later: T18's markers need the before value for Undo (it's in `inverse`). The change row shows a whole choice's text; T18 may shorten it.
   - Accept:
     - The chat uses `MessageScroller`, `Message`, `Bubble` and `Marker`, and assistant text uses `typeset-chat`. Component tests use `@shadcn/helpers/ai-sdk` `createChat()` scripts, including tool parts.
     - `chat.send` streams AI SDK v7 `streamText` over oRPC (`streamToEventIterator`). The client uses `useChat` with an oRPC transport (`eventIteratorToUnproxiedDataStream`). Messages are saved.
