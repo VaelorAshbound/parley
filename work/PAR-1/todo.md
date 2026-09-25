@@ -451,7 +451,31 @@
 
 ## Phase 3: Accounts
 
-- [ ] **T21: Sign up / sign in / sign out + guest → account linking** (M)
+- [x] **T21: Sign up / sign in / sign out + guest → account linking** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development, security-and-hardening, doubt-driven-development (degraded: no nested reviewer in a sub-agent, no cross-model in a non-interactive run), git-workflow-and-versioning, frontend-ui-engineering; better-auth-best-practices, create-auth, email-and-password-best-practices, better-auth-security-best-practices, cloudflare:turnstile-spin, cloudflare:wrangler, resend:resend, resend:react-email, resend:email-best-practices, shadcn. Checked:
+    - `pnpm check`; `pnpm test` (833); `pnpm test:workers` (134, 11 files: link, email-password, verified, turnstile, oauth, auth matrix …); e2e on the dev server, Chromium: `auth.spec.ts` 4/4 (guest → draft → sign up → same draft → confirm email; sign out → wrong password → sign in; form errors; open redirect), whole suite 19/21 then the 2 shell timing flakes green on rerun.
+    - **The Must:** `onLinkAccount` shipped in the same commit that turned email + password on. Without the hook the Worker test loses the draft. Tested for email sign-up, email sign-in to an existing account, and GitHub (faked GitHub endpoints).
+    - One real Resend send (`test:workers:real`, `email.real.test.ts`) to `delivered+parley-t21@resend.dev`: delivered. 1 of 3 allowed.
+    - Screenshots of sign-in, sign-up (with errors), confirm email: 1440 light, 375 dark.
+  - Decisions:
+    - **Sign-up signs in at once; confirm later.** The confirmation link goes out in the background (`waitUntil`, same reply time for known and new addresses). The `verified` oRPC base answers typed `EMAIL_NOT_VERIFIED` (guests `UNAUTHORIZED`) and asks the database before saying no, so a link opened on a phone counts at once despite the 5-minute cookie cache. T24–T26 build export, share and upgrade on it; a probe procedure tests it now.
+    - **Mailer** (`server/email.ts`): Resend from `no-reply@mail.runtimedrift.dev`, HTML + text, idempotency key `verify-email/<user>/<token hash>`, `{ error }` logged without address or link. It never sends to test/placeholder domains (`.test`, `.invalid`, example.com …), and sends nothing without `RESEND_API_KEY`: local dev and Previews never spend the quota. `RESEND_API_KEY` is now a required secret.
+    - **Turnstile** through Better Auth's `captcha` on sign-up, sign-in, `request-password-reset` and `send-verification-email` (emails cost quota). New widget **"parley-auth"** (`0x4AAAAAAFDRY50F_vQ9qvx3`, parley.runtimedrift.dev + localhost) in `vars`; with its real secret a token must be solved on parley.runtimedrift.dev for action `auth`. Local dev, tests and Previews use Cloudflare's test keys (Preview base config secret set). Worker tests fake siteverify (`test/siteverify.ts`), offline.
+    - **Google + GitHub** only where their apps are set (`secrets.required`; Previews have none). Local dev's `.dev.vars` holds the "Parley (dev)" GitHub app under the normal names. Joining an existing account needs both sides to have confirmed the email (Better Auth's default, now tested: an unconfirmed pre-registered address is never joined). `encryptOAuthTokens` on.
+    - **No `tanstackStartCookies()`** (spec updated): every cookie-setting call goes through `/api/auth` or copies cookies itself, and the plugin loaded Start's server runtime in Hono and broke the Worker tests.
+    - **After sign-in, sign-up or sign-out the next page loads afresh** (`reloadTo`). Pruning TanStack Query's cache in place raced with fetches in flight (CancelledError), and a fresh load leaves nothing of the last person in memory on a shared computer.
+    - **The shell reads the viewer with `fetchQuery`**, not `ensureQueryData`: after a new guest or a sign-in, `ensureQueryData` still returned the old viewer.
+    - **Forms post by default** (`method="post"`): a submit before hydration never puts the password in the URL. Zod issues from a form-level schema now show on their fields (`errorsOf`).
+    - **`?redirect=`** only follows a path on Parley (`//x` and `/\x` refused).
+    - **"Last used"** reads the `lastLoginMethod` cookie in the loader (no flash); shown on Google, GitHub and the email Sign in button.
+    - Sign-up with a taken email says so ("Sign in instead"): enumeration is possible, accepted for clear words; Turnstile and the per-IP limits slow it.
+  - Found and fixed on the way:
+    - The test Postgres ran out of connections (Worker-test calls keep theirs until the file ends): `max_connections=400` for tests.
+  - For later:
+    - **T22:** add `_app/_authed.tsx` with `/drafts` and use `requireAccount` (`features/auth/require-account.ts`); a pathless route with no pages clashes with "/" in the route tree.
+    - **T23:** audit logs through `databaseHooks` (the link logs `guest_linked` now); `resetPasswordTokenExpiresIn` + `revokeSessionsOnPasswordReset` with `sendResetPassword` (captcha already covers `/request-password-reset`); the account menu has name, email and sign-out today.
+    - **T27:** add `/sign-in/anonymous` to the captcha endpoints (same widget, action `auth`).
+    - **Owner:** a Google sign-in can't run on a Preview (no callback URL) or on local ports other than 3000; check it on production after T38.
   - Must (T14 review): `anonymous()` deletes the guest user when it links, and drafts cascade with it. Set `onLinkAccount` to move the guest's drafts **before** any sign-in method is turned on, with a test that a guest's draft survives sign-up.
   - Accept:
     - Following spec §5 Auth: `better-auth/minimal`, email + password with a verification email, Google and GitHub, `lastLoginMethod` ("Last used" badge), `captcha` with Turnstile on sign-up and sign-in, the DB rate limiter with `cf-connecting-ip`, `backgroundTasks` → `waitUntil`, and `tanstackStartCookies` last. The session is fetched on the server through a `createServerFn` in the `_app` `beforeLoad`.
