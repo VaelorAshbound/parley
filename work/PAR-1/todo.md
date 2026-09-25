@@ -551,6 +551,15 @@
     - **T27:** add `export.*` to the per-user RPC rate limit (re-exports are free but each prints with Browser Run).
     - **T31:** consider static (non-variable) brand fonts for the PDF: real embedded TrueType subsets instead of Type 3, with ligatures kept. Look at one real PDF per agreement (the header/footer placement was checked in local Chromium with the same templates).
     - **T37/T25:** the phone design has a Share + Download bar at the bottom of the document; Download is in the header for now.
+  - Review fixes (2026-09-25), each test-first:
+    - **A file name never ends in half an emoji.** It was cut by UTF-16 units, so an emoji across character 80 was split and the download header broke after the document was counted. It is now cut by grapheme (`Intl.Segmenter`), and a lone surrogate is left out (unit tests + a Worker test through the real header).
+    - **Switching back to a downloaded agreement stays free.** `counted_export` now has `document_id`, unique per (draft, agreement); `chooseDocument` sets `firstExportedAt` from that row. NDA → DPA by mistake → NDA no longer counts twice. Migration 0002 regenerated (still this branch's own); ADR-0006 updated. The switched-agreement Worker test now downloads again and sees 2 rows.
+    - **One download at a time per draft**, from the panel or the chat: a shared mutation key `['export', draftId]` (browser tests).
+    - **"Confirm your email" offers "Get a new link"** to T21's verify page, back to the draft. `exportProblem` drops its unused `format`.
+    - Simplified: one `ExportOutcome` arm for plain refusals; `useDownload` checks the draft where it uses it.
+    - Not changed: files are buffered, not streamed (fine at these sizes; the Accept's "stream" is wording). `/pricing` and Word for Pro wait for T26.
+    - **Lead: T27's Must/Accept needs "`export.pdf`/`export.docx` are in the per-user RPC rate limit, with a Worker test at the edge"** before the first production deploy: re-exports are free and each one is a Browser Run print. I may only edit this block, so it isn't in T27's yet.
+    - Gates: `pnpm check`; `pnpm test` (942); `pnpm test:workers` (201); `pnpm db:check`. e2e on port 3123 with a fresh local database `parley_t24b` (the old `parley_t24` has the first 0002): at load 20+ many timeouts; at low load, auth + export 12/12 in Chromium (`--repeat-each 2`), and Firefox auth/shell/editing/smoke 20/22. The 2 left: PAR-8's Firefox layout shift, and shell.spec "sidebar's history", which fails whenever the worker's shared guest already has drafts (the sidebar then starts open and the test's toggle closes it). It passes alone; not T24's (lead: file it).
   - Accept:
     - `export.pdf` (Browser Run from `toPrintHtml`) and `export.docx` stream a download named `<Title> – <Document>.pdf`.
     - The first export sets `firstExportedAt` and counts toward the 3 free documents a month. Re-exports are free. DOCX needs Pro.
