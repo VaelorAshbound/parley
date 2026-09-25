@@ -209,9 +209,11 @@ describe("jurisdiction outside the US", () => {
   it("takes a country that shares a US state's name or code", () => {
     // Georgia is a country too, and two-letter codes are also ISO country
     // codes (IN India, DE Germany, CA Canada).
-    for (const region of ["Georgia", "IN", "DE", "CA", "Pennsylvania, USA"]) {
-      expect(law.changeSchema.safeParse({ region }).success, region).toBe(true)
-    }
+    const refused = ["Georgia", "IN", "DE", "CA", "Pennsylvania, USA"].filter(
+      (region) => !law.changeSchema.safeParse({ region }).success
+    )
+
+    expect(refused).toEqual([])
   })
 
   it("still reads a stored draft whose region names a US state", () => {
