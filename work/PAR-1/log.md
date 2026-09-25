@@ -73,3 +73,6 @@ Session end (context 70%). Finished: demo note on PDF/DOCX; T13 DB (Neon preview
 
 ### 2026-09-25T06:32:04Z
 T16 done (inline editor, live preview, CI green). T17 done (AI chat over oRPC with tools, chooseDocument, drafts without an agreement via migration 0001 on Neon preview+production, OpenRouter secrets set). Real-model runs found and fixed: parallel tool calls overwriting, chat history dropped by validation, null parts wiping a party. Next: T18 wow motion.
+
+### 2026-09-25T06:59:03Z
+T18 done (6469449..342a87b, CI green): ink-in and change bars for AI changes, scroll to the changed field, choice swap with layout motion, Undo from the chat (compare-and-set, 'Changed since'), phone tab dot, reduced motion = color only. No long tasks while streaming; one 88-104 ms task on first draft-route open is the 1 MB draft chunk parse, left for T35. Not done: the Claude in Chrome feel check, moved to the Checkpoint 2 demo. Next session: T19 questionnaire + guardrails via /build (@shadcn/react already installed; add @shadcn/questionnaire in packages/ui with 'yes n |'), then T20 evals, then STOP at Checkpoint 2.
