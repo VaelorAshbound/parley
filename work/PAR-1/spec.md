@@ -194,7 +194,7 @@ This is the core. It is pure TypeScript with no I/O, so it is easy to test.
 | Signed up, email not verified | Can draft and save. **Export, share and upgrade need a verified email** (typed `EMAIL_NOT_VERIFIED`). |
 | Free | 100 AI messages a day. 3 counted documents a month. PDF only. |
 | Pro | 500 AI messages a day. Unlimited documents. PDF + DOCX. |
-| Everyone | 10 requests per 10 s per user on AI routes; 10 downloads a minute; 300 calls a minute on any procedure (Rate Limiting bindings, T27). At most 10 new guests an hour per network in production. Hard monthly credit limit on the OpenRouter key. |
+| Everyone | 10 requests per 10 s per user on AI routes; 10 downloads a minute; 300 calls a minute on any procedure (Rate Limiting bindings, T27). New guests per network: in production 10, then none until an hour after the last one; on Previews 5 per 10 s. A hard credit limit on the OpenRouter key; Previews use their own key, so they can't spend production's. |
 
 Guest users and their data are deleted after 7 days without activity (cron).
 

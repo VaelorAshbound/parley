@@ -8,6 +8,7 @@ import {
   DAILY_MESSAGES,
   GUEST_DRAFTS,
   GUESTS_PER_NETWORK,
+  PREVIEW_GUESTS_PER_NETWORK,
   RATE_LIMITS,
 } from "../../web/src/server/limits"
 import {
@@ -412,7 +413,29 @@ describe("new guests from one network", () => {
     expect((await newGuest(auth, randomIp())).status).toBe(200)
   })
 
-  it("test deployments (local, Previews) let the e2e runs through", async () => {
+  it(`Previews let ${PREVIEW_GUESTS_PER_NETWORK.max} in quickly, then ask the next to wait`, async () => {
+    // Previews pass every Turnstile token (test keys) and anyone can guess
+    // their URL, so they get far fewer new guests than local dev.
+    const auth = createAuth({
+      db: await database(),
+      // `wrangler types` reads only the top-level vars ("production");
+      // wrangler.jsonc `previews.vars` sets "preview".
+      env: { ...env, STAGE: "preview" as Env["STAGE"] },
+      waitUntil: () => {},
+    })
+    const ip = randomIp()
+
+    for (let guest = 1; guest <= PREVIEW_GUESTS_PER_NETWORK.max; guest++)
+      expect((await newGuest(auth, ip)).status).toBe(200)
+    const refused = await newGuest(auth, ip)
+
+    expect(refused.status).toBe(429)
+    expect(Number(refused.headers.get("x-retry-after"))).toBeLessThanOrEqual(
+      PREVIEW_GUESTS_PER_NETWORK.window
+    )
+  })
+
+  it("local dev and the Worker tests let the e2e runs through", async () => {
     const ip = randomIp()
     const newTestGuest = () =>
       call("/api/auth/sign-in/anonymous", {
