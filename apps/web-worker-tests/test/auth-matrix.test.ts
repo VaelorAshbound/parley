@@ -9,7 +9,7 @@ import { serverClient, signInGuest } from "./helpers"
 // until it has a row here. T21 adds signed-up users, T26 Pro.
 
 type Caller = "nobody" | "otherGuest" | "owner"
-type Outcome = "OK" | "UNAUTHORIZED" | "NOT_FOUND"
+type Outcome = "OK" | "UNAUTHORIZED" | "NOT_FOUND" | "NOT_OPEN"
 type Client = Awaited<ReturnType<typeof serverClient>>
 
 const today = "2026-09-24"
@@ -62,6 +62,21 @@ const matrix: Record<
         changes: [{ key: "purpose", value: "Matrix test" }],
       }),
     expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+  },
+  "chat.answer": {
+    run: (client, id) =>
+      client.chat.answer({
+        id,
+        toolCallId: "call-1-0",
+        answers: { term: ["1y"] },
+        today,
+      }),
+    // The owner gets past the owner check; the draft asked nothing.
+    expect: {
+      nobody: "UNAUTHORIZED",
+      otherGuest: "NOT_FOUND",
+      owner: "NOT_OPEN",
+    },
   },
   "drafts.markComplete": {
     run: (client, id) => client.drafts.markComplete({ id }),

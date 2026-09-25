@@ -575,3 +575,218 @@ describe("the guardrails", () => {
     expect(instructions).not.toMatch(/^SYSTEM:/m)
   })
 })
+
+describe("the AI's questionnaire", () => {
+  const questions = [
+    {
+      name: "term",
+      prompt: "How long should the NDA last?",
+      required: true,
+      choices: [
+        { value: "1y", label: "1 year" },
+        { value: "2y", label: "2 years" },
+      ],
+      allowOther: false,
+      multiple: false,
+    },
+    {
+      name: "law",
+      prompt: "Which state's law applies?",
+      required: false,
+      choices: [{ value: "DE", label: "Delaware" }],
+      allowOther: true,
+      multiple: false,
+    },
+  ]
+  const ask = { tool: "askQuestions", input: { questions } }
+
+  /** A draft whose chat waits on the questionnaire above. */
+  async function asked(steps: Parameters<typeof scriptedModel>[0] = []) {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([[ask], ...steps])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const chunks = await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Help me with the terms."),
+        today,
+      })
+    )
+    await settle()
+    return { client, settle, model, draft, chunks }
+  }
+
+  it("waits for the user's answers, then goes on with them", async () => {
+    const { client, settle, model, draft, chunks } = await asked([
+      [
+        {
+          tool: "updateFields",
+          input: {
+            changes: [
+              {
+                key: "mndaTerm",
+                value: {
+                  option: "expires",
+                  value: { amount: 2, unit: "years" },
+                },
+                explanation: "The NDA lasts two years.",
+              },
+            ],
+          },
+        },
+      ],
+      [{ text: "Set to 2 years, under Texas law." }],
+    ])
+    expect(chunks).toContainEqual(
+      expect.objectContaining({
+        type: "tool-input-available",
+        toolName: "askQuestions",
+      })
+    )
+    expect(model.doStreamCalls).toHaveLength(1)
+
+    await read(
+      await client.chat.answer({
+        id: draft.id,
+        toolCallId: "call-1-0",
+        answers: { term: ["2y"], law: ["Texas"] },
+        today,
+      })
+    )
+    await settle()
+
+    // The model hears which choice was picked and what was typed.
+    const heard = JSON.stringify(model.doStreamCalls[1]?.prompt)
+    expect(heard).toContain(`"picked":["2 years"]`)
+    expect(heard).toContain(`"typed":["Texas"]`)
+    // One reply that grew: the answers are saved in its questionnaire.
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user", "assistant"])
+    expect(saved[1]?.parts).toContainEqual(
+      expect.objectContaining({
+        type: "tool-askQuestions",
+        state: "output-available",
+        output: { answers: { term: ["2y"], law: ["Texas"] } },
+      })
+    )
+    expect((await client.drafts.get({ id: draft.id })).fields).toMatchObject({
+      mndaTerm: { option: "expires", value: { amount: 2, unit: "years" } },
+    })
+  })
+
+  it("refuses answers that don't fit the questions, without the model", async () => {
+    const { client, model, draft } = await asked()
+
+    const { error } = await safe(
+      client.chat.answer({
+        id: draft.id,
+        toolCallId: "call-1-0",
+        answers: { term: ["forever"] },
+        today,
+      })
+    )
+
+    expect(error).toMatchObject({ code: "INVALID_ANSWERS" })
+    expect(model.doStreamCalls).toHaveLength(1)
+  })
+
+  it("won't take answers twice, or for questions that were never asked", async () => {
+    const { client, settle, draft } = await asked([[{ text: "Thanks." }]])
+    const answer = (toolCallId: string) =>
+      safe(
+        client.chat
+          .answer({
+            id: draft.id,
+            toolCallId,
+            answers: { term: ["1y"] },
+            today,
+          })
+          .then(read)
+      )
+
+    expect((await answer("call-1-0")).error).toBeNull()
+    await settle()
+
+    expect((await answer("call-1-0")).error).toMatchObject({
+      code: "NOT_OPEN",
+    })
+    expect((await answer("call-9-9")).error).toMatchObject({
+      code: "NOT_OPEN",
+    })
+  })
+
+  it("refuses a typed answer over 500 characters", async () => {
+    const { client, draft } = await asked()
+
+    const { error } = await safe(
+      client.chat.answer({
+        id: draft.id,
+        toolCallId: "call-1-0",
+        answers: { term: ["1y"], law: ["x".repeat(501)] },
+        today,
+      })
+    )
+
+    expect(error).toMatchObject({ code: "BAD_REQUEST" })
+  })
+
+  it("closes open questions when the user replies in the chat instead", async () => {
+    const { client, settle, model, draft } = await asked([
+      [{ text: "Two years it is." }],
+    ])
+
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Just make it two years."),
+        today,
+      })
+    )
+    await settle()
+
+    expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
+      "replied in the chat instead"
+    )
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved[1]?.parts).toContainEqual(
+      expect.objectContaining({
+        type: "tool-askQuestions",
+        state: "output-error",
+      })
+    )
+  })
+
+  it("tells the model when its questions break the rules", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([
+      [
+        {
+          tool: "askQuestions",
+          input: { questions: [...questions, questions[0]] },
+        },
+      ],
+      [{ text: "Let me ask that again." }],
+    ])
+    const { client } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Ask me about the terms."),
+        today,
+      })
+    )
+
+    expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
+      "used twice"
+    )
+  })
+})

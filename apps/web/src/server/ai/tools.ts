@@ -9,6 +9,7 @@ import { tool, type InferUITools } from "ai"
 import type { BaseContext } from "../rpc/base"
 import { drafts } from "../rpc/drafts"
 import { z } from "../zod"
+import { answersShape, isShown, questionSet } from "./questions"
 
 // The chat's tools (spec §2 AI design). The server ones run the draft
 // procedures through oRPC's createTool, so the AI and the manual editor share
@@ -97,6 +98,39 @@ const markCompleteSpec = {
   }),
 }
 
+// Runs in the browser: no execute here. The turn pauses on the call, the
+// questionnaire shows it, and chat.answer brings the checked answers back.
+const askQuestionsSpec = {
+  description:
+    "Ask the user a short set of related questions as a questionnaire card in the chat. The answers come back as this tool's result.",
+  inputSchema: questionSet,
+  outputSchema: answersShape,
+  // Each question with the labels picked, the words typed, or a skip. The
+  // user's words stay JSON strings, so they read as data.
+  toModelOutput: ({
+    input,
+    output,
+  }: {
+    input: z.input<typeof questionSet>
+    output: z.infer<typeof answersShape>
+  }) => ({
+    type: "json" as const,
+    value: input.questions
+      .filter((question) => isShown(question, output.answers))
+      .map((question) => {
+        const values = output.answers[question.name]
+        if (!values) return { question: question.name, skipped: true }
+        const label = (value: string) =>
+          question.choices.find((option) => option.value === value)?.label
+        return {
+          question: question.name,
+          picked: values.flatMap((value) => label(value) ?? []),
+          typed: values.filter((value) => label(value) === undefined),
+        }
+      }),
+  }),
+}
+
 /**
  * The tools' shapes, without their execution: stored chats are checked
  * against them, and the client's message type is inferred from them.
@@ -105,6 +139,7 @@ export const chatTools = {
   updateFields: tool(updateFieldsSpec),
   chooseDocument: tool(chooseDocumentSpec),
   markComplete: tool(markCompleteSpec),
+  askQuestions: tool(askQuestionsSpec),
 }
 
 export type ChatTools = InferUITools<typeof chatTools>
@@ -132,6 +167,7 @@ export function runningTools({ context, draftId, today }: Turn) {
   }
 
   return {
+    askQuestions: tool(askQuestionsSpec),
     updateFields: tool({
       ...updateFieldsSpec,
       execute: ({ changes }, options) =>
