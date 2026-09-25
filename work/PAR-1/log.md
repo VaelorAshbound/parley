@@ -76,3 +76,6 @@ T16 done (inline editor, live preview, CI green). T17 done (AI chat over oRPC wi
 
 ### 2026-09-25T06:59:03Z
 T18 done (6469449..342a87b, CI green): ink-in and change bars for AI changes, scroll to the changed field, choice swap with layout motion, Undo from the chat (compare-and-set, 'Changed since'), phone tab dot, reduced motion = color only. No long tasks while streaming; one 88-104 ms task on first draft-route open is the 1 MB draft chunk parse, left for T35. Not done: the Claude in Chrome feel check, moved to the Checkpoint 2 demo. Next session: T19 questionnaire + guardrails via /build (@shadcn/react already installed; add @shadcn/questionnaire in packages/ui with 'yes n |'), then T20 evals, then STOP at Checkpoint 2.
+
+### 2026-09-25T07:48:00Z
+T19 done (73b99c7..cea178e): guardrails + history budget, markComplete (engine missingFields, draft status), askQuestions browser tool + chat.answer with checked answers, the Paper & Ink questionnaire inline (letter keys, Other, skip, follow-ups, resume after reload). Real gpt-6-luna: full NDA via questionnaires, off-topic/injection/advice handled, prompt cache ~99.8%. Real-model fixes: nullable showIf, auto-send only after answers, page widening from truncated rows. Filed PAR-6, PAR-7. Next: T20 evals.
