@@ -128,7 +128,8 @@ export type Step = ({ text: string } | { tool: string; input: unknown })[]
 
 /**
  * A scripted model (AI SDK MockLanguageModelV4): each call streams the next
- * step. Its `doStreamCalls` show what the model was sent.
+ * step, using 10 input and 5 output tokens and costing $0.00002. Its
+ * `doStreamCalls` show what the model was sent.
  */
 export function scriptedModel(steps: Step[]) {
   let call = 0
@@ -171,6 +172,9 @@ export function scriptedModel(steps: Step[]) {
                 },
                 outputTokens: { total: 5, text: 5, reasoning: undefined },
               },
+              // What OpenRouter charged for the call, in dollars, as its
+              // provider reports it.
+              providerMetadata: { openrouter: { usage: { cost: 0.00002 } } },
             },
           ],
         }),

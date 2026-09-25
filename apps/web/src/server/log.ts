@@ -56,14 +56,25 @@ function line(level: string, event: string, fields: LogFields) {
   return out
 }
 
+const method = { info: "log", warn: "warn", error: "error" } as const
+
+/** An event at a level chosen at run time (a chat turn that failed). */
+export function log(
+  level: keyof typeof method,
+  event: string,
+  fields: LogFields = {}
+) {
+  console[method[level]](line(level, event, fields))
+}
+
 /** Something happened that on-call may ask about (a request, a chat turn). */
 export function logInfo(event: string, fields: LogFields = {}) {
-  console.log(line("info", event, fields))
+  log("info", event, fields)
 }
 
 /** Something refused but handled. */
 export function logWarn(event: string, fields: LogFields = {}) {
-  console.warn(line("warn", event, fields))
+  log("warn", event, fields)
 }
 
 /** Something broke that someone may need to fix. */

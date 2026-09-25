@@ -2,6 +2,7 @@ import { streamToEventIterator } from "@orpc/server"
 import { getDraft, listMessages, saveMessages, type Db } from "@workspace/db"
 import { definitionOf, type DocumentDefinition } from "@workspace/documents"
 import {
+  APICallError,
   convertToModelMessages,
   isStepCount,
   safeValidateUIMessages,
@@ -11,10 +12,17 @@ import {
   type UIMessage,
 } from "ai"
 
-import { logWarn } from "../log"
-import { authed, draftOwner, type BaseContext } from "../rpc/base"
+import { currentRequestId, log, logWarn, type LogFields } from "../log"
+import {
+  authed,
+  draftOwner,
+  tierOf,
+  type BaseContext,
+  type Tier,
+} from "../rpc/base"
 import { z } from "../zod"
 import { recent } from "./history"
+import { turnMetrics, type TurnStep } from "./metrics"
 import { instructions } from "./prompt"
 import { answersFor, answersShape } from "./questions"
 import { chatTools, runningTools, type ChatTools } from "./tools"
@@ -115,20 +123,68 @@ function closeQuestions(message: ChatMessage | undefined) {
   }
 }
 
+/**
+ * Logs one `chat_turn` line when the turn ends, is left or fails (T29):
+ * tokens, cost, time to first token and tool errors, never text. Set up in
+ * the request, since the stream's callbacks can run outside its context.
+ */
+function turnLog(key: DraftKey, tier: Tier) {
+  const started = Date.now()
+  const fields = {
+    requestId: currentRequestId(),
+    draftId: key.id,
+    userId: key.userId,
+    tier,
+  }
+  const steps: TurnStep[] = []
+  let ended = false
+  const end = (outcome: "done" | "aborted" | "error", more: LogFields = {}) => {
+    if (ended) return
+    ended = true
+    log(outcome === "error" ? "error" : "info", "chat_turn", {
+      ...fields,
+      ...turnMetrics(steps),
+      outcome,
+      durationMs: Date.now() - started,
+      ...more,
+    })
+  }
+  return {
+    onStepEnd: (step: TurnStep) => {
+      steps.push(step)
+    },
+    onEnd: () => end("done"),
+    onAbort: () => end("aborted"),
+    // Replaces the AI SDK's default, which logs the whole error: its
+    // message can hold what the model wrote. The name (and an HTTP status)
+    // is enough to find the cause.
+    onError: ({ error }: { error: unknown }) =>
+      end("error", {
+        errorName: error instanceof Error ? error.name : typeof error,
+        errorStatus: APICallError.isInstance(error)
+          ? error.statusCode
+          : undefined,
+      }),
+  }
+}
+
 /** Streams the model's reply to the chat so far, and saves it when done. */
 async function reply({
   context,
   key,
+  tier,
   messages: all,
   today,
   signal,
 }: {
   context: BaseContext
   key: DraftKey
+  tier: Tier
   messages: ChatMessage[]
   today: string
   signal: AbortSignal | undefined
 }) {
+  const metrics = turnLog(key, tier)
   const messages = recent(all, HISTORY)
   const current = async () => {
     const draft = await getDraft(context.db, key)
@@ -154,6 +210,7 @@ async function reply({
     // chosen agreement's fields.
     prepareStep: async ({ stepNumber }) =>
       stepNumber === 0 ? {} : { instructions: instructions(await current()) },
+    ...metrics,
   })
 
   return streamToEventIterator(
@@ -212,7 +269,14 @@ export const chat = {
           chat: [...earlier, input.message],
         }
       })
-      return reply({ context, key, messages, today: input.today, signal })
+      return reply({
+        context,
+        key,
+        tier: tierOf(context.user),
+        messages,
+        today: input.today,
+        signal,
+      })
     }),
 
   /**
@@ -296,6 +360,13 @@ export const chat = {
         }
         return { save: [answered], chat: [...stored.slice(0, -1), answered] }
       })
-      return reply({ context, key, messages, today: input.today, signal })
+      return reply({
+        context,
+        key,
+        tier: tierOf(context.user),
+        messages,
+        today: input.today,
+        signal,
+      })
     }),
 }

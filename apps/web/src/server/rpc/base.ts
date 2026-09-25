@@ -51,6 +51,7 @@ export const authed = pub.use(async ({ context, next, errors }) => {
 export function tierOf(user: { isAnonymous?: boolean | null }) {
   return user.isAnonymous ? ("guest" as const) : ("free" as const)
 }
+export type Tier = ReturnType<typeof tierOf>
 
 /**
  * Loads the draft named by the input and checks the user owns it. Use with
