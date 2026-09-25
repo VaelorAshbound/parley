@@ -352,12 +352,12 @@ describe("listDrafts search", () => {
     expect(none).toEqual([])
   })
 
-  test("reads only this user's drafts off an index, never the whole table", async ({
-    db,
-  }) => {
-    // Many users with many drafts, as in production, so the plan is the one
-    // Postgres would really choose (scripts/bench-history.ts measures more):
-    // this user has 1,000 of 11,000.
+  /**
+   * Many users with many drafts, as in production, so the plan is the one
+   * Postgres would really choose (scripts/bench-history.ts measures more):
+   * the owner has 1,000 of 11,000, and one of theirs names Quokka Systems.
+   */
+  async function seedMany(db: Db) {
     const owner = await makeUser(db)
     await db.execute(sql`
       INSERT INTO "user" (id, name, email)
@@ -373,7 +373,17 @@ describe("listDrafts search", () => {
       ...nda,
       fields: { party1: { company: "Quokka Systems" } },
     })
+    // What autovacuum does in production: move the new rows out of the GIN
+    // index's pending list, which Postgres would otherwise scan in full.
+    await db.execute(sql`SELECT gin_clean_pending_list('draft_search_idx')`)
     await db.execute(sql`ANALYZE draft`)
+    return owner
+  }
+
+  test("reads only this user's drafts off an index, never the whole table", async ({
+    db,
+  }) => {
+    const owner = await seedMany(db)
 
     const text = await explain(
       db,
@@ -383,6 +393,18 @@ describe("listDrafts search", () => {
     // Postgres picks the user's B-tree or the search index, by the numbers;
     // both start from this user's rows.
     expect(text).toMatch(/Index Cond: \(+user_id = /)
+    expect(text).not.toContain("Seq Scan")
+  })
+
+  test("finds a rare match through the search index", async ({ db }) => {
+    const owner = await seedMany(db)
+
+    const text = await explain(
+      db,
+      listDraftsQuery(db, { userId: owner.id, query: "quokka systems" })
+    )
+
+    expect(text).toMatch(/Bitmap Index Scan on draft_search_idx/)
     expect(text).not.toContain("Seq Scan")
   })
 
