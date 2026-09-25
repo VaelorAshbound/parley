@@ -106,3 +106,6 @@ T29 + T30 merged (cff6c77), gate green, pushed. Owner approved setting T21's pro
 
 ### 2026-09-25T13:00:53Z
 Wave A done and merged (c97eeb8): T21 accounts, T29 observability, T30 AI for all 12. Review caught a critical T21 bug (a confirmation link could move a guest's drafts to an attacker), fixed with a test. Gate green: check, 878 unit, 149 worker, e2e Chromium. Production secrets set (new sending-only Resend key parley-production-sending). Filed PAR-8 (local e2e fails), PAR-9 (NUL in replies), PAR-10 (related-agreements card). Next: wave B (T22, T23, T24, T25, T27, T28).
+
+### 2026-09-25T13:03:18Z
+Owner approved T21's two spec changes: no tanstackStartCookies(); autoSignInAfterVerification false (confirming the email does not sign in on that device).
