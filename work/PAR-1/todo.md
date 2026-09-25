@@ -677,6 +677,12 @@
     - **Never an account**: only `is_anonymous = true` (null is not a guest). **Never a guest who is signing in**: `moveGuestData` holds the guest row `FOR UPDATE`, and the purge's `SKIP LOCKED` passes over it (two-connection test). Drafts moved to an account keep their old time and stay (tested with real Better Auth rows).
     - **Once a day, 03:17 UTC** (`triggers` in `wrangler.jsonc`): each run wakes Neon for about 5 minutes, so more often would cost compute for nothing. Cron Triggers run on production only; Previews never call `scheduled()`.
     - Expired sessions are deleted without Better Auth's hooks, so there's no `session_ended` audit line for them; the nightly count is in `purge_done`.
+  - Review (APPROVE, 4 suggestions, all fixed test-first; then code-simplification):
+    - **Session that runs out right now**: Better Auth ends a session only once `expiresAt < now`, so the purge now keeps its guest (`gte`, was `gt`). Each cutoff also has its own boundary test (one time on it, the rest long before); 5 of 5 off-by-one mutations caught.
+    - The Worker's "less than 7 days" test now lets the session run out, so only the 6-day-old activity keeps the guest (a 5-day cutoff fails it).
+    - `purge_failed` carries the `guests` and `sessions` a failed run already deleted (counted batch by batch; unit test fakes a failure after 503 guests).
+    - `server.test.ts` checks the Worker entry exports `scheduled` (dropping it fails the test).
+    - Re-checked: `pnpm check`; `pnpm test` (1039); `pnpm test:workers` (309); e2e `smoke.spec.ts` on Chromium + Firefox, PORT=3133 (6).
   - Accept:
     - `scheduled()` deletes guests (and their data) after 7 days without activity, and expired sessions. It is idempotent and batched.
     - A Worker test uses a fake clock.
