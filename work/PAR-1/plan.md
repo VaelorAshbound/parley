@@ -130,6 +130,7 @@ Rules:
 - Resend: the free plan can run out. Tests use a fake sender; at most 3 real sends per task. A quota error stops all sends and is reported to the owner at once.
 - The laptop has 16 GB RAM. Heavy commands (dev server, e2e, test runs, `vp check`, builds) run under one shared lock (`flock`), so only one runs at a time; a dev server is stopped right after its e2e run. Each worktree uses its own `PORT` (3000 belongs to another app locally).
 - After each merge push, the lead checks CI (Workers Builds + GitHub Actions E2E) is green before starting the next wave. Wave A's merge went red on the Preview (a base-config secret that existing Previews don't get) and it was seen only a wave later.
+- Speed (from wave B2, owner OK): agents run only related tests per slice and the full gate once per stage; local e2e only for the task's own specs; reviewers read only and list the skills they loaded; the lead runs the whole e2e suite after merge. Cloud e2e per task waits for T33 (all Previews share one Neon branch, so a task's new migration would break its Preview).
 
 ## What you need to do (owner actions)
 
