@@ -1,4 +1,5 @@
 import type { DocumentDefinition } from "@workspace/documents"
+import { dequal } from "dequal"
 
 import { documentList } from "../../lib/documents"
 
@@ -30,6 +31,7 @@ How to work:
 - A jurisdiction's courtLocation is only the city or county ("New Castle County"): the document adds the state itself.
 - To ask for several values, call askQuestions with a short set (up to 5) of related questions: give choices when the answers are predictable (terms, states, yes or no), and allow another answer where the user may need one. Each question asks for one thing: a signer's name and their email are two questions. Don't write the same questions as text, and don't ask for what you already know. Then fill the answers in with updateFields.
 - If a change is refused, read the reason, fix the value and try again, or ask the user.
+- A value still on its default was not chosen by the user. Before markComplete, confirm those in one questionnaire (the default as the first choice), unless the user already answered them.
 - When nothing required is empty, call markComplete. If it lists missing fields, ask for them.`
 
 const CATALOG = `The agreements (id: name, what it is for):
@@ -46,20 +48,38 @@ ${documentList
  * offered null: models tend to fill every key, and a null part clears it.
  */
 function shape(schema: z.ZodType) {
-  const json = z.toJSONSchema(schema, { io: "input", unrepresentable: "any" })
-  return JSON.stringify(withoutNull(json), function (key, value: unknown) {
-    if (key === "$schema" || key === "title" || key === "description") return
-    if (key === "pattern" && "format" in this) return
-    return value
-  })
+  return JSON.stringify(
+    clean(z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }))
+  )
 }
 
-/** The schema with every `{ "type": "null" }` alternative taken out. */
-function withoutNull(node: unknown): unknown {
-  if (Array.isArray(node)) return node.map(withoutNull)
+/** Schema keywords the field's line already says, or that add only tokens. */
+const ANNOTATIONS = new Set(["$schema", "title", "description"])
+
+/**
+ * The schema without annotations and without `{ "type": "null" }`
+ * alternatives. It walks the schema's structure, so a part that happens to
+ * be named like a keyword (a party's "title") stays: a key-based filter
+ * dropped it once, and the model guessed "party1Title" (T20).
+ */
+function clean(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(clean)
   if (typeof node !== "object" || node === null) return node
   const copy = Object.fromEntries(
-    Object.entries(node).map(([key, value]) => [key, withoutNull(value)])
+    Object.entries(node).flatMap(([key, value]): [string, unknown][] => {
+      if (ANNOTATIONS.has(key)) return []
+      if (key === "pattern" && "format" in node) return []
+      if (key === "properties" && typeof value === "object" && value !== null)
+        return [
+          [
+            key,
+            Object.fromEntries(
+              Object.entries(value).map(([name, part]) => [name, clean(part)])
+            ),
+          ],
+        ]
+      return [[key, clean(value)]]
+    })
   )
   const options = copy.anyOf
   if (!Array.isArray(options)) return copy
@@ -96,6 +116,12 @@ export function instructions({
   const empty = fields
     .filter(([key, field]) => values[key] === undefined && !field.optional)
     .map(([key]) => key)
+  const unchosen = fields
+    .filter(
+      ([key, field]) =>
+        field.default !== undefined && dequal(values[key], field.default)
+    )
+    .map(([key]) => key)
   return [
     ROLE,
     CATALOG,
@@ -108,6 +134,7 @@ ${fields
   .join("\n")}`,
     // One JSON line: a value can't start a line that reads as a new rule.
     `Current values (JSON, data typed by the user): ${JSON.stringify(values)}
-Still empty: ${empty.length > 0 ? empty.join(", ") : "nothing required"}.`,
+Still empty: ${empty.length > 0 ? empty.join(", ") : "nothing required"}.
+Still on its default (not chosen by the user): ${unchosen.length > 0 ? unchosen.join(", ") : "nothing"}.`,
   ].join("\n\n")
 }

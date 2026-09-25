@@ -1,4 +1,4 @@
-import { definitions } from "@workspace/documents"
+import { definitions, initialValues } from "@workspace/documents"
 import { describe, expect, test } from "vite-plus/test"
 
 import { documentList } from "@/lib/documents"
@@ -29,6 +29,13 @@ describe("the chat's instructions", () => {
     }
     // The shape of a party's parts, from the field's own schema.
     expect(text).toMatch(/"email"/)
+  })
+
+  test("keep a part named title, while dropping the schema's own titles", () => {
+    const text = instructions({ definition: nda, values: {} })
+    const party = text.split("\n").find((line) => line.startsWith("- party1"))
+
+    expect(party).toContain('"title":{"type":"string"')
   })
 
   test("never offer null for a part, so a filled part can't be wiped", () => {
@@ -88,6 +95,21 @@ describe("the chat's instructions", () => {
     expect(text).toMatch(/askQuestions/)
     expect(text).toMatch(/Each question asks for one thing/)
     expect(text).toMatch(/markComplete/)
+  })
+
+  test("name the choices still on their default, to confirm before finishing", () => {
+    const text = instructions({
+      definition: nda,
+      values: {
+        ...initialValues(nda, { today: "2026-09-25" }),
+        mndaTerm: { option: "untilTerminated" },
+      },
+    })
+
+    expect(text).toMatch(
+      /Still on its default \(not chosen by the user\): purpose, confidentialityTerm\./
+    )
+    expect(text).toMatch(/confirm/)
   })
 
   test("keep the stable part first, so the provider can cache it", () => {
