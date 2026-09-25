@@ -72,6 +72,11 @@ export function exportProblem(
       return { message: "Pick an agreement first." }
     case "NOT_FOUND":
       return { message: "We couldn't find that draft." }
+    // The per-user download limit (T27: 10 a minute).
+    case "TOO_MANY_REQUESTS":
+      return {
+        message: "That's a lot of downloads at once. Please wait a minute.",
+      }
     default:
       return TRY_AGAIN
   }
