@@ -194,6 +194,29 @@ describe("the AI's questionnaire", () => {
       })
   })
 
+  test("reads typed answers even if the browser loses their form owner", async () => {
+    const { screen, onAnswer } = await show()
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Another answer" }),
+      "3 years"
+    )
+    // Firefox (the owner's demo) sent choices but no typed answers: the
+    // questionnaire moves a typed box in and out of its form with the form
+    // attribute, and browsers differ on resetting a form owner
+    // (whatwg/html#2928). Pointing it at no form does the same here.
+    screen
+      .getByRole("textbox", { name: "Another answer" })
+      .element()
+      .setAttribute("form", "lost")
+    await userEvent.keyboard("{Enter}")
+    await userEvent.keyboard("b")
+    await screen.getByRole("button", { name: "Skip" }).click()
+
+    await expect
+      .poll(() => onAnswer.mock.calls[0]?.[0])
+      .toEqual({ term: ["3 years"], hasSigner: ["no"] })
+  })
+
   test("keeps a typed answer across a reload", async () => {
     const typed: QuestionSet = {
       title: "Deal parties",

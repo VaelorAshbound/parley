@@ -278,17 +278,30 @@ function Steps({
 /**
  * The answers in the form now: each shown question's picks and typed words.
  * A skipped question, or one not shown, has no controls with its name.
+ *
+ * Read from the form's own elements, not FormData: FormData follows each
+ * control's form owner, and the questionnaire moves a typed box in and out
+ * of its form with the form attribute. Browsers differ on resetting that
+ * owner (whatwg/html#2928); in Firefox every typed answer went missing.
+ * A control the questionnaire counts as an answer carries its name.
  */
 function read(form: HTMLFormElement, questions: readonly Question[]) {
-  const data = new FormData(form)
+  const given = new Map<string, string[]>()
+  for (const control of form.querySelectorAll<HTMLInputElement>(
+    "input[name]"
+  )) {
+    // Disabled covers a question not shown (its fieldset is disabled).
+    if (control.matches(":disabled")) continue
+    const picked = control.type === "radio" || control.type === "checkbox"
+    if (picked && !control.checked) continue
+    const value = control.value.trim()
+    if (value === "") continue
+    given.set(control.name, [...(given.get(control.name) ?? []), value])
+  }
   return Object.fromEntries(
     questions.flatMap((question) => {
-      const values = data
-        .getAll(question.name)
-        .flatMap((value) =>
-          typeof value === "string" && value.trim() !== "" ? [value.trim()] : []
-        )
-      return values.length > 0 ? [[question.name, values]] : []
+      const values = given.get(question.name)
+      return values ? [[question.name, values]] : []
     })
   ) satisfies Answers
 }
