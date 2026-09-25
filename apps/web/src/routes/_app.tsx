@@ -46,7 +46,8 @@ function AppLayout() {
       <MotionConfig reducedMotion="user">
         <SidebarProvider defaultOpen={defaultOpen}>
           <AppSidebar viewer={viewer} />
-          <SidebarInset>
+          {/* min-w-0: a truncated row in the chat must not widen the page. */}
+          <SidebarInset className="min-w-0">
             <Outlet />
           </SidebarInset>
         </SidebarProvider>
