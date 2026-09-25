@@ -12,10 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAuthedRouteImport } from './routes/_app/_authed'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as DevBrandRouteImport } from './routes/dev.brand'
+import { Route as AppAuthedSettingsRouteImport } from './routes/_app/_authed/settings'
 import { Route as AppDDraftIdRouteImport } from './routes/_app/d.$draftId'
 
 const AppRoute = AppRouteImport.update({
@@ -30,6 +34,20 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppAuthedRoute = AppAuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => AppRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthSignInRoute = AuthSignInRouteImport.update({
   id: '/sign-in',
@@ -51,6 +69,11 @@ const DevBrandRoute = DevBrandRouteImport.update({
   path: '/dev/brand',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAuthedSettingsRoute = AppAuthedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppAuthedRoute,
+} as any)
 const AppDDraftIdRoute = AppDDraftIdRouteImport.update({
   id: '/d/$draftId',
   path: '/d/$draftId',
@@ -59,57 +82,77 @@ const AppDDraftIdRoute = AppDDraftIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
   '/sign-in': typeof AuthSignInRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/settings': typeof AppAuthedSettingsRoute
   '/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
   '/sign-in': typeof AuthSignInRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/settings': typeof AppAuthedSettingsRoute
   '/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_app/_authed': typeof AppAuthedRouteWithChildren
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/_authed/settings': typeof AppAuthedSettingsRoute
   '/_app/d/$draftId': typeof AppDDraftIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
     | '/dev/brand'
+    | '/settings'
     | '/d/$draftId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
     | '/dev/brand'
+    | '/settings'
     | '/d/$draftId'
   id:
     | '__root__'
     | '/_app'
     | '/_auth'
+    | '/_app/_authed'
+    | '/_auth/forgot-password'
+    | '/_auth/reset-password'
     | '/_auth/sign-in'
     | '/_auth/sign-up'
     | '/_auth/verify-email'
     | '/dev/brand'
     | '/_app/'
+    | '/_app/_authed/settings'
     | '/_app/d/$draftId'
   fileRoutesById: FileRoutesById
 }
@@ -142,6 +185,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/_authed': {
+      id: '/_app/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppAuthedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/sign-in': {
       id: '/_auth/sign-in'
       path: '/sign-in'
@@ -170,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevBrandRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/_authed/settings': {
+      id: '/_app/_authed/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppAuthedSettingsRouteImport
+      parentRoute: typeof AppAuthedRoute
+    }
     '/_app/d/$draftId': {
       id: '/_app/d/$draftId'
       path: '/d/$draftId'
@@ -180,12 +251,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAuthedRouteChildren {
+  AppAuthedSettingsRoute: typeof AppAuthedSettingsRoute
+}
+
+const AppAuthedRouteChildren: AppAuthedRouteChildren = {
+  AppAuthedSettingsRoute: AppAuthedSettingsRoute,
+}
+
+const AppAuthedRouteWithChildren = AppAuthedRoute._addFileChildren(
+  AppAuthedRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppAuthedRoute: typeof AppAuthedRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppDDraftIdRoute: typeof AppDDraftIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAuthedRoute: AppAuthedRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppDDraftIdRoute: AppDDraftIdRoute,
 }
@@ -193,12 +278,16 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,

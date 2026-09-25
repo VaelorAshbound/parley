@@ -1,4 +1,5 @@
 import { revalidateLogic } from "@tanstack/react-form"
+import { Link } from "@tanstack/react-router"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -81,6 +82,15 @@ export function SignInForm({
             />
           )}
         </form.AppField>
+        {/* Also the way back for someone whose address another person
+            signed up with and never confirmed (server/auth.ts). */}
+        <Link
+          to="/forgot-password"
+          search={{ redirect: returnTo }}
+          className="-mt-3 self-end text-sm font-medium text-blue-ink underline-offset-4 hover:underline"
+        >
+          Forgot password?
+        </Link>
         {turnstile.widget}
         {error && (
           <Alert variant="destructive">
