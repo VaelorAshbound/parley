@@ -1,4 +1,9 @@
-import { confirmEmail, moveGuestData, schema, type Db } from "@workspace/db"
+import {
+  claimUnconfirmedAccount,
+  moveGuestData,
+  schema,
+  type Db,
+} from "@workspace/db"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import {
   APIError,
@@ -103,8 +108,10 @@ export function createAuth({
         // Only the owner of the inbox could open the link: their email is
         // confirmed. This is also the way back for someone whose address
         // another person signed up with and never confirmed: the reset ends
-        // that person's sessions and replaces the password they chose.
-        await confirmEmail(db, user.id)
+        // that person's sessions, replaces the password they chose, and
+        // drops any two-factor sign-in they set up. (`user` is as it was
+        // before the reset.)
+        if (!user.emailVerified) await claimUnconfirmedAccount(db, user.id)
         logInfo("password_reset", { userId: user.id })
       },
     },

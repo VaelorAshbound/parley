@@ -231,19 +231,87 @@ describe("setting a new password with the link", () => {
 // Someone signed up with an address that isn't theirs and never confirmed
 // it. The real owner gets the account back through "Forgot password?": the
 // link goes to their inbox, and the other person's sessions end.
-it("gives an unconfirmed address back to the owner of its inbox", async () => {
-  resend = fakeResend()
-  const email = newEmail()
-  const squatter = await signUp(email)
+describe("an unconfirmed address", () => {
+  /**
+   * Turns on two-factor sign-in (TOTP) for the signed-in account: Better
+   * Auth makes the secret, then the rows are marked as its first code
+   * check would (verify-totp), as there is no authenticator app here.
+   */
+  async function turnOnTwoFactor(userId: string, cookie: string) {
+    const enable = await post(
+      "/api/auth/two-factor/enable",
+      { password },
+      cookie
+    )
+    expect(enable.status).toBe(200)
+    const db = await database()
+    await db
+      .update(schema.twoFactor)
+      .set({ verified: true })
+      .where(eq(schema.twoFactor.userId, userId))
+    await db
+      .update(schema.user)
+      .set({ twoFactorEnabled: true })
+      .where(eq(schema.user.id, userId))
+  }
 
-  await requestReset(email)
-  const token = resetLink(email).searchParams.get("token") ?? ""
-  await post("/api/auth/reset-password", { token, newPassword })
+  /** Sets a new password with a reset link from the inbox. */
+  async function resetBy(email: string) {
+    await requestReset(email)
+    const token = resetLink(email).searchParams.get("token") ?? ""
+    const response = await post("/api/auth/reset-password", {
+      token,
+      newPassword,
+    })
+    expect(response.status).toBe(200)
+  }
 
-  expect(await session(squatter.cookie)).toBeNull()
-  const owner = await post("/api/auth/sign-in/email", {
-    email,
-    password: newPassword,
+  function signInWithNew(email: string) {
+    return post("/api/auth/sign-in/email", { email, password: newPassword })
+  }
+
+  it("goes back to the owner of its inbox", async () => {
+    resend = fakeResend()
+    const email = newEmail()
+    const squatter = await signUp(email)
+
+    await resetBy(email)
+
+    expect(await session(squatter.cookie)).toBeNull()
+    expect((await signInWithNew(email)).status).toBe(200)
   })
-  expect(owner.status).toBe(200)
+
+  it("goes back even when the squatter turned on two-factor sign-in", async () => {
+    resend = fakeResend()
+    const email = newEmail()
+    const squatter = await signUp(email)
+    await turnOnTwoFactor(squatter.userId, squatter.cookie)
+
+    await resetBy(email)
+
+    const owner = await signInWithNew(email)
+    expect(await owner.json()).not.toHaveProperty("twoFactorRedirect")
+    expect(await session(cookiesFrom(owner))).not.toBeNull()
+  })
+
+  it("keeps two-factor sign-in once the email was confirmed", async () => {
+    resend = fakeResend()
+    const email = newEmail()
+    const ana = await signUp(email)
+    const confirm = resend.sent.findLast((each) => each.to === email)
+    const link = new URL(
+      confirm?.text.match(/https?:\/\/\S+verify-email\?\S+/)?.[0] ?? ""
+    )
+    await call(link.pathname + link.search, {
+      headers: { cookie: ana.cookie },
+      redirect: "manual",
+    })
+    await turnOnTwoFactor(ana.userId, ana.cookie)
+
+    await resetBy(email)
+
+    expect(await (await signInWithNew(email)).json()).toMatchObject({
+      twoFactorRedirect: true,
+    })
+  })
 })

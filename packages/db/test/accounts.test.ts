@@ -1,10 +1,10 @@
-import { eq } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { describe, expect } from "vite-plus/test"
 
-import { session, user } from "../src/auth-schema.ts"
+import { session, twoFactor, user } from "../src/auth-schema.ts"
 import type { Db } from "../src/client.ts"
 import {
-  confirmEmail,
+  claimUnconfirmedAccount,
   listSessions,
   sessionToken,
 } from "../src/queries/accounts.ts"
@@ -34,14 +34,51 @@ async function makeSession(
   return row
 }
 
-describe("confirmEmail", () => {
-  test("marks the user's email as confirmed", async ({ db }) => {
+describe("claimUnconfirmedAccount", () => {
+  test("confirms the email", async ({ db }) => {
     const ana = await makeUser(db)
 
-    await confirmEmail(db, ana.id)
+    await claimUnconfirmedAccount(db, ana.id)
 
     const [row] = await db.select().from(user).where(eq(user.id, ana.id))
     expect(row?.emailVerified).toBe(true)
+  })
+
+  test("turns off two-factor sign-in someone else may have set up", async ({
+    db,
+  }) => {
+    const ana = await makeUser(db)
+    const bo = await makeUser(db)
+    for (const each of [ana, bo]) {
+      await db
+        .update(user)
+        .set({ twoFactorEnabled: true })
+        .where(eq(user.id, each.id))
+      await db.insert(twoFactor).values({
+        id: `two-factor-${each.id}`,
+        userId: each.id,
+        secret: "encrypted",
+        backupCodes: "encrypted",
+      })
+    }
+
+    await claimUnconfirmedAccount(db, ana.id)
+
+    const users = await db
+      .select({ id: user.id, twoFactorEnabled: user.twoFactorEnabled })
+      .from(user)
+      .where(inArray(user.id, [ana.id, bo.id]))
+    expect(users).toEqual(
+      expect.arrayContaining([
+        { id: ana.id, twoFactorEnabled: false },
+        { id: bo.id, twoFactorEnabled: true },
+      ])
+    )
+    const secrets = await db
+      .select({ userId: twoFactor.userId })
+      .from(twoFactor)
+      .where(inArray(twoFactor.userId, [ana.id, bo.id]))
+    expect(secrets).toEqual([{ userId: bo.id }])
   })
 })
 
