@@ -471,9 +471,16 @@
     - Sign-up with a taken email says so ("Sign in instead"): enumeration is possible, accepted for clear words; Turnstile and the per-IP limits slow it.
   - Found and fixed on the way:
     - The test Postgres ran out of connections (Worker-test calls keep theirs until the file ends): `max_connections=400` for tests.
+  - Review fixes (2026-09-25), test-first:
+    - **Critical, login CSRF:** `autoSignInAfterVerification` made the confirmation link sign in, and the anonymous plugin then moved the guest's drafts to the link's owner. It is off now (spec updated); the link only confirms. Worker test: a guest who opens someone else's link keeps their draft and session, no `guest_linked`. The `/verify-email` page reads the viewer from the database, so the same browser sees "confirmed" at once (e2e).
+    - **/sign-up showed nothing** when Google or GitHub came back with `?error=`. Sign-in and sign-up now share `SocialSignIn` and one `authSearch` schema (e2e).
+    - The link in the delivered Resend email is the one we render (checked in Resend; click tracking is off on mail.runtimedrift.dev), and the Worker tests follow that rendered link. No new real sends.
+    - Simplified: `turnstile.headers()` returns undefined on failure (no try/catch in three forms).
+    - Gates: `pnpm check`; `pnpm test` (833); `pnpm test:workers` (135); e2e Chromium 20/22, then the 2 known shell timing flakes green on rerun (`shell.spec.ts --repeat-each 2`, 22/22); `auth.spec.ts` 5/5.
   - For later:
     - **T22:** add `_app/_authed.tsx` with `/drafts` and use `requireAccount` (`features/auth/require-account.ts`); a pathless route with no pages clashes with "/" in the route tree.
-    - **T23:** audit logs through `databaseHooks` (the link logs `guest_linked` now); `resetPasswordTokenExpiresIn` + `revokeSessionsOnPasswordReset` with `sendResetPassword` (captcha already covers `/request-password-reset`); the account menu has name, email and sign-out today.
+    - **T23:** audit logs through `databaseHooks` (the link logs `guest_linked` now); `resetPasswordTokenExpiresIn` + `revokeSessionsOnPasswordReset` with `sendResetPassword` (captcha already covers `/request-password-reset`); the account menu has name, email and sign-out today. Also a way back for the real owner of an address someone else signed up with and never confirmed: "Forgot password?" on /sign-in, and consider clearing the unconfirmed password when a confirmed Google/GitHub identity arrives. Ship it before real users (T21 review).
+    - **T38:** a smoke check that a forged Turnstile token gets 403 on production (nothing stops the "always passes" test secret from being set there by mistake).
     - **T27:** add `/sign-in/anonymous` to the captcha endpoints (same widget, action `auth`).
     - **Owner:** a Google sign-in can't run on a Preview (no callback URL) or on local ports other than 3000; check it on production after T38.
   - Must (T14 review): `anonymous()` deletes the guest user when it links, and drafts cascade with it. Set `onLinkAccount` to move the guest's drafts **before** any sign-in method is turned on, with a test that a guest's draft survives sign-up.
