@@ -94,3 +94,6 @@ Owner confirmed the Firefox questionnaire fix works.
 
 ### 2026-09-25T09:39:55Z
 Checkpoint 2 passed (owner demo in Firefox). Decisions: complete card without Export until T24; Other always offered; component tests in Chromium + Firefox on PRs (110 green, 018bd18). Next: Phase 3, T21 sign up/in + guest linking (auth: owner sign-off first).
+
+### 2026-09-25T09:46:35Z
+Session end. Finished: T19, T20, the pre-checkpoint review fixes, the Firefox questionnaire fix, Firefox in CI, Checkpoint 2 passed. 21 of 42 tasks done. Next session: T21 via /build (auth: get owner sign-off first; load its skills from plan.md). Open follow-ups: PAR-6, PAR-7.
