@@ -148,6 +148,9 @@ accountTest(
 accountTest(
   "lists every draft on /drafts, with search and a filter in the URL",
   async ({ page }) => {
+    // Two drafts to start, and a wait past the search box's pause.
+    test.slow()
+    const otherPath = await startNda(page)
     const draftPath = await startNda(page)
     const company = `Quasar${crypto.randomUUID().slice(0, 6)} Labs`
     await setCompany(page, draftPath, company)
@@ -171,10 +174,45 @@ accountTest(
       company.slice(0, 9)
     )
     await page.getByRole("link", { name: "Clear the search" }).click()
+    // Past the search box's pause: the old search must not come back.
+    await page.waitForTimeout(600)
     await expect(page).toHaveURL("/drafts")
+    await expect(page.getByLabel("Search drafts")).toHaveValue("")
     await expect(
-      results.getByRole("link").and(page.locator(`[href="${draftPath}"]`))
+      results.getByRole("link").and(page.locator(`[href="${otherPath}"]`))
     ).toBeVisible()
+  }
+)
+
+accountTest(
+  "keeps what you type on /drafts while the last search loads",
+  async ({ page }) => {
+    // Holds the request for "acme" until more has been typed.
+    let release = () => {}
+    const held = new Promise<void>((resolve) => (release = resolve))
+    let onHeld = () => {}
+    const requested = new Promise<void>((resolve) => (onHeld = resolve))
+    await page.route("**/api/rpc/drafts/list", async (route) => {
+      const body = route.request().postData() ?? ""
+      if (body.includes('"acme"')) {
+        onHeld()
+        await held
+      }
+      await route.continue()
+    })
+    await open(page, "/drafts")
+    const box = page.getByLabel("Search drafts")
+
+    await box.pressSequentially("acme")
+    await requested
+    // Longer than the router waits before it shows a loading page.
+    await page.waitForTimeout(1_200)
+    await expect(box).toBeVisible()
+    await box.pressSequentially(" bol")
+    release()
+
+    await expect(page).toHaveURL(/[?&]q=acme(\+|%20)bol/)
+    await expect(box).toHaveValue("acme bol")
   }
 )
 

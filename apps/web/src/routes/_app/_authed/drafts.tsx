@@ -1,4 +1,4 @@
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query"
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, getRouteApi, Link } from "@tanstack/react-router"
 import type { DocumentId } from "@workspace/documents"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
@@ -34,13 +34,12 @@ import { SidebarTrigger } from "@workspace/ui/components/sidebar"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { MoreHorizontalIcon, SearchIcon } from "lucide-react"
-import { useEffect, useState } from "react"
 import { z } from "zod"
 
 import { updatedLabel } from "@/features/drafts/calendar"
 import { DraftMenu } from "@/features/drafts/draft-menu"
 import { useCalendar } from "@/features/drafts/use-calendar"
-import { useDebouncedValue } from "@/features/drafts/use-debounced-value"
+import { useSearchText } from "@/features/drafts/use-search-text"
 import { documentList, documentName } from "@/lib/documents"
 import { QUERY_MAX } from "@/lib/drafts"
 import type { Orpc } from "@/lib/orpc"
@@ -84,10 +83,14 @@ function draftsQuery(orpc: Orpc, { q, type }: Search) {
 export const Route = createFileRoute("/_app/_authed/drafts")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: ({ context, deps }) =>
-    context.queryClient.ensureInfiniteQueryData(
+  loader: async ({ context, deps, cause }) => {
+    // A new search on the open page doesn't wait here: the page keeps the
+    // last results (placeholderData) and the box keeps what is being typed.
+    if (cause === "stay") return
+    await context.queryClient.ensureInfiniteQueryData(
       draftsQuery(context.orpc, deps)
-    ),
+    )
+  },
   head: () => ({ meta: [{ title: "Drafts · Parley" }] }),
   component: DraftsPage,
   pendingComponent: DraftsPending,
@@ -109,25 +112,14 @@ function DraftsPage() {
   const navigate = Route.useNavigate()
   const calendar = useCalendar(appRoute.useLoaderData().calendar)
   const hidden = useUiStore((state) => state.hidden)
-  const drafts = useSuspenseInfiniteQuery(draftsQuery(orpc, search))
-  const shown = drafts.data.pages.flat().filter((draft) => !hidden[draft.id])
-
-  // What is typed shows at once; the URL (and the search) follows a pause.
-  const [text, setText] = useState(search.q ?? "")
-  const [urlQuery, setUrlQuery] = useState(search.q)
-  if (search.q !== urlQuery) {
-    // Back or forward changed the search: the box follows.
-    setUrlQuery(search.q)
-    if ((search.q ?? "") !== text.trim()) setText(search.q ?? "")
-  }
-  const typed = useDebouncedValue(text.trim(), 250)
-  useEffect(() => {
-    if ((typed || undefined) === search.q) return
-    void navigate({
-      search: (prev) => ({ ...prev, q: typed || undefined }),
-      replace: true,
-    })
-  }, [typed, search.q, navigate])
+  const drafts = useInfiniteQuery({
+    ...draftsQuery(orpc, search),
+    placeholderData: keepPreviousData,
+  })
+  const shown = drafts.data?.pages.flat().filter((draft) => !hidden[draft.id])
+  const box = useSearchText(search.q, (q) => {
+    void navigate({ search: (prev) => ({ ...prev, q }), replace: true })
+  })
 
   const filtered = Boolean(search.q || search.type)
   return (
@@ -143,8 +135,8 @@ function DraftsPage() {
           <InputGroup className="sm:flex-1">
             <InputGroupInput
               type="search"
-              value={text}
-              onChange={(event) => setText(event.target.value)}
+              value={box.text}
+              onChange={(event) => box.setText(event.target.value)}
               maxLength={QUERY_MAX}
               placeholder="Search by name, agreement or party"
               aria-label="Search drafts"
@@ -177,7 +169,9 @@ function DraftsPage() {
           </Select>
         </div>
 
-        {shown.length === 0 ? (
+        {!shown ? (
+          <DraftsSkeleton />
+        ) : shown.length === 0 ? (
           filtered ? (
             <Empty className="border">
               <EmptyHeader>
@@ -190,7 +184,7 @@ function DraftsPage() {
                 <Link
                   to="."
                   search={{}}
-                  onClick={() => setText("")}
+                  onClick={box.clear}
                   className={buttonVariants({ variant: "outline" })}
                 >
                   Clear the search
@@ -213,7 +207,11 @@ function DraftsPage() {
             </Empty>
           )
         ) : (
-          <ItemGroup aria-label="Drafts" className="gap-1">
+          <ItemGroup
+            aria-label="Drafts"
+            aria-busy={drafts.isPlaceholderData}
+            className="gap-1 transition-opacity aria-busy:opacity-60"
+          >
             {shown.map((draft) => (
               // shadcn's ItemGroup is a <div role="list">, so its rows
               // take the role too (an <li> needs a <ul>).
@@ -256,7 +254,7 @@ function DraftsPage() {
           <Button
             variant="outline"
             className="self-center"
-            disabled={drafts.isFetchingNextPage}
+            disabled={drafts.isFetchingNextPage || drafts.isPlaceholderData}
             onClick={() => void drafts.fetchNextPage()}
           >
             {drafts.isFetchingNextPage && <Spinner data-icon="inline-start" />}
@@ -278,6 +276,15 @@ function DraftsPending() {
     >
       <Skeleton className="h-9 w-40" />
       <Skeleton className="h-9 w-full" />
+      <DraftsSkeleton />
+    </div>
+  )
+}
+
+/** Rows the size of a draft's, while the list loads. */
+function DraftsSkeleton() {
+  return (
+    <div className="flex flex-col gap-1">
       {Array.from({ length: 6 }, (_, index) => (
         <Skeleton key={index} className="h-14 w-full" />
       ))}
