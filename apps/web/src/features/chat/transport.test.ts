@@ -2,7 +2,7 @@ import { describe, expect, test } from "vite-plus/test"
 
 import type { ChatMessage } from "@/server/ai/chat"
 
-import { questionsAnswered } from "./transport"
+import { answeredCalls, questionsAnswered } from "./transport"
 
 const set = {
   title: "Key terms",
@@ -81,5 +81,26 @@ describe("sending automatically", () => {
     )
 
     expect(questionsAnswered(later)).toBe(false)
+  })
+
+  test("sends the answers to every questionnaire in the last step", () => {
+    const answer = (toolCallId: string, term: string) => ({
+      type: "tool-askQuestions" as const,
+      toolCallId,
+      state: "output-available" as const,
+      input: set,
+      output: { answers: { term: [term] } },
+    })
+    const [message] = reply(
+      answer("q0", "old"),
+      { type: "step-start" },
+      answer("q1", "1y"),
+      answer("q2", "2y")
+    ).messages
+
+    expect(message && answeredCalls(message)).toEqual([
+      { toolCallId: "q1", answers: { term: ["1y"] } },
+      { toolCallId: "q2", answers: { term: ["2y"] } },
+    ])
   })
 })

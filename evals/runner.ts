@@ -126,14 +126,15 @@ export function say(text: string) {
   }
 }
 
-/** The questions the AI is waiting on, if any. */
+/** Every questionnaire the AI is waiting on (one step may ask two). */
 export function openQuestions(messages: ChatMessage[]) {
   const last = messages.at(-1)
-  if (last?.role !== "assistant") return null
-  for (const part of last.parts)
-    if (part.type === "tool-askQuestions" && part.state === "input-available")
-      return { toolCallId: part.toolCallId, questions: part.input.questions }
-  return null
+  if (last?.role !== "assistant") return []
+  return last.parts.flatMap((part) =>
+    part.type === "tool-askQuestions" && part.state === "input-available"
+      ? [{ toolCallId: part.toolCallId, questions: part.input.questions }]
+      : []
+  )
 }
 
 /** The chat as plain lines, for the simulated user to read. */

@@ -1,5 +1,5 @@
 import { streamToEventIterator } from "@orpc/server"
-import { getDraft, listMessages, saveMessages } from "@workspace/db"
+import { getDraft, listMessages, saveMessages, type Db } from "@workspace/db"
 import { definitionOf, type DocumentDefinition } from "@workspace/documents"
 import {
   convertToModelMessages,
@@ -57,12 +57,33 @@ const userMessage = z.object({
 })
 
 /** The stored chat, checked against the current tools; unfit chats start fresh. */
-async function history(context: BaseContext, key: DraftKey) {
+async function history(db: Db, key: DraftKey) {
   const result = await safeValidateUIMessages<ChatMessage>({
-    messages: await listMessages(context.db, key),
+    messages: await listMessages(db, key),
     tools: chatTools,
   })
   return result.success ? result.data : []
+}
+
+/**
+ * Reads the chat and saves what `change` returns under the draft's row lock,
+ * so two tabs can't both answer the same questions (or answer while a
+ * message closes them). The model's reply streams after, outside the lock.
+ */
+function lockedChat(
+  context: BaseContext,
+  key: DraftKey,
+  change: (stored: ChatMessage[]) => {
+    save: ChatMessage[]
+    chat: ChatMessage[]
+  }
+) {
+  return context.db.transaction(async (tx) => {
+    await getDraft(tx, key, { lock: true })
+    const { save, chat } = change(await history(tx, key))
+    await saveMessages(tx, key, save)
+    return chat
+  })
 }
 
 function isOpen(part: Part): part is OpenQuestions {
@@ -162,7 +183,7 @@ export const chat = {
     .input(z.object({ id: z.uuid() }))
     .use(draftOwner, (input) => input.id)
     .handler(({ context, input }) =>
-      history(context, { id: input.id, userId: context.user.id })
+      history(context.db, { id: input.id, userId: context.user.id })
     ),
 
   send: authed
@@ -173,41 +194,44 @@ export const chat = {
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const stored = await history(context, key)
-      // Ids come from the browser (useChat makes them): one of Parley's
-      // own would let a message stand in for its reply.
-      if (
-        stored.some(
-          (each) => each.id === input.message.id && each.role !== "user"
+      const messages = await lockedChat(context, key, (stored) => {
+        // Ids come from the browser (useChat makes them): one of Parley's
+        // own would let a message stand in for its reply.
+        if (
+          stored.some(
+            (each) => each.id === input.message.id && each.role !== "user"
+          )
         )
-      )
-        throw errors.MESSAGE_ID_TAKEN()
-      const closed = closeQuestions(stored.at(-1))
-      const earlier = closed ? [...stored.slice(0, -1), closed] : stored
-      await saveMessages(
-        context.db,
-        key,
-        closed ? [closed, input.message] : [input.message]
-      )
-      return reply({
-        context,
-        key,
-        messages: [...earlier, input.message],
-        today: input.today,
-        signal,
+          throw errors.MESSAGE_ID_TAKEN()
+        const closed = closeQuestions(stored.at(-1))
+        const earlier = closed ? [...stored.slice(0, -1), closed] : stored
+        return {
+          save: closed ? [closed, input.message] : [input.message],
+          chat: [...earlier, input.message],
+        }
       })
+      return reply({ context, key, messages, today: input.today, signal })
     }),
 
   /**
-   * The user's answers to the AI's open questionnaire (askQuestions, a
-   * browser tool). They are checked against the questions asked, saved in
-   * that tool call, and the model goes on in the same reply.
+   * The user's answers to the AI's open questionnaires (askQuestions, a
+   * browser tool; one step may ask more than one). They are checked against
+   * the questions asked, saved in those tool calls, and the model goes on in
+   * the same reply. Every open questionnaire needs its answers: the model
+   * can't see a tool call without a result.
    */
   answer: authed
     .input(
       turn.extend({
-        toolCallId: z.string().min(1).max(100),
-        answers: answersShape.shape.answers,
+        calls: z
+          .array(
+            z.object({
+              toolCallId: z.string().min(1).max(100),
+              answers: answersShape.shape.answers,
+            })
+          )
+          .min(1)
+          .max(5),
       })
     )
     .errors({
@@ -217,39 +241,46 @@ export const chat = {
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
-      const stored = await history(context, key)
-      const last = stored.at(-1)
-      const open = last?.parts.find(
-        (part) => isOpen(part) && part.toolCallId === input.toolCallId
-      )
-      if (last?.role !== "assistant" || !open || !isOpen(open))
-        throw errors.NOT_OPEN()
-      const checked = answersFor(open.input.questions).safeParse({
-        answers: input.answers,
+      const messages = await lockedChat(context, key, (stored) => {
+        const last = stored.at(-1)
+        const open = last?.role === "assistant" ? last.parts.filter(isOpen) : []
+        const byCall = new Map(
+          input.calls.map((each) => [each.toolCallId, each.answers])
+        )
+        if (
+          !last ||
+          open.length === 0 ||
+          input.calls.some(
+            (each) => !open.some((part) => part.toolCallId === each.toolCallId)
+          )
+        )
+          throw errors.NOT_OPEN()
+        const outputs = new Map(
+          open.map((part) => {
+            const checked = answersFor(part.input.questions).safeParse({
+              answers: byCall.get(part.toolCallId),
+            })
+            if (!checked.success) throw errors.INVALID_ANSWERS()
+            return [part.toolCallId, answersShape.parse(checked.data)]
+          })
+        )
+        const answered: ChatMessage = {
+          ...last,
+          parts: last.parts.map((part): Part => {
+            const output = isOpen(part) && outputs.get(part.toolCallId)
+            return output
+              ? {
+                  type: part.type,
+                  toolCallId: part.toolCallId,
+                  state: "output-available",
+                  input: part.input,
+                  output,
+                }
+              : part
+          }),
+        }
+        return { save: [answered], chat: [...stored.slice(0, -1), answered] }
       })
-      if (!checked.success) throw errors.INVALID_ANSWERS()
-
-      const answered: ChatMessage = {
-        ...last,
-        parts: last.parts.map((part): Part =>
-          part === open
-            ? {
-                type: open.type,
-                toolCallId: open.toolCallId,
-                state: "output-available",
-                input: open.input,
-                output: answersShape.parse(checked.data),
-              }
-            : part
-        ),
-      }
-      await saveMessages(context.db, key, [answered])
-      return reply({
-        context,
-        key,
-        messages: [...stored.slice(0, -1), answered],
-        today: input.today,
-        signal,
-      })
+      return reply({ context, key, messages, today: input.today, signal })
     }),
 }

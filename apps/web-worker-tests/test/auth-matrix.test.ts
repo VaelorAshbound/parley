@@ -67,8 +67,7 @@ const matrix: Record<
     run: (client, id) =>
       client.chat.answer({
         id,
-        toolCallId: "call-1-0",
-        answers: { term: ["1y"] },
+        calls: [{ toolCallId: "call-1-0", answers: { term: ["1y"] } }],
         today,
       }),
     // The owner gets past the owner check; the draft asked nothing.

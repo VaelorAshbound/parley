@@ -741,7 +741,7 @@ describe("the AI's questionnaire", () => {
       })
     )
     await settle()
-    return { client, settle, model, draft, chunks }
+    return { client, settle, model, draft, chunks, cookie }
   }
 
   it("waits for the user's answers, then goes on with them", async () => {
@@ -776,8 +776,9 @@ describe("the AI's questionnaire", () => {
     await read(
       await client.chat.answer({
         id: draft.id,
-        toolCallId: "call-1-0",
-        answers: { term: ["2y"], law: ["Texas"] },
+        calls: [
+          { toolCallId: "call-1-0", answers: { term: ["2y"], law: ["Texas"] } },
+        ],
         today,
       })
     )
@@ -808,8 +809,7 @@ describe("the AI's questionnaire", () => {
     const { error } = await safe(
       client.chat.answer({
         id: draft.id,
-        toolCallId: "call-1-0",
-        answers: { law: ["DE"] },
+        calls: [{ toolCallId: "call-1-0", answers: { law: ["DE"] } }],
         today,
       })
     )
@@ -825,8 +825,7 @@ describe("the AI's questionnaire", () => {
         client.chat
           .answer({
             id: draft.id,
-            toolCallId,
-            answers: { term: ["1y"] },
+            calls: [{ toolCallId, answers: { term: ["1y"] } }],
             today,
           })
           .then(read)
@@ -843,14 +842,101 @@ describe("the AI's questionnaire", () => {
     })
   })
 
+  it("takes the answers to two questionnaires asked in one step", async () => {
+    const { cookie } = await signInGuest()
+    const second = {
+      tool: "askQuestions",
+      input: {
+        title: "Signers",
+        questions: [
+          {
+            name: "signer",
+            prompt: "Who signs for Northwind?",
+            required: true,
+            choices: [],
+            multiple: false,
+          },
+        ],
+      },
+    }
+    const model = scriptedModel([[ask, second], [{ text: "Got both." }]])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await read(
+      await client.chat.send({ id: draft.id, message: say("Ask me."), today })
+    )
+    await settle()
+
+    const unanswered = await safe(
+      client.chat.answer({
+        id: draft.id,
+        calls: [{ toolCallId: "call-1-0", answers: { term: ["1y"] } }],
+        today,
+      })
+    )
+    await read(
+      await client.chat.answer({
+        id: draft.id,
+        calls: [
+          { toolCallId: "call-1-0", answers: { term: ["1y"] } },
+          { toolCallId: "call-1-1", answers: { signer: ["Bo Chen"] } },
+        ],
+        today,
+      })
+    )
+
+    // Every open questionnaire needs its answers, or the model would see
+    // a call with no result.
+    expect(unanswered.error).toMatchObject({ code: "INVALID_ANSWERS" })
+    const heard = JSON.stringify(model.doStreamCalls[1]?.prompt)
+    expect(heard).toContain(`"picked":["1 year"]`)
+    expect(heard).toContain(`"typed":["Bo Chen"]`)
+  })
+
+  it("takes only the first of two answers sent at the same moment", async () => {
+    const { client, draft, model, cookie } = await asked([
+      [{ text: "Thanks." }],
+    ])
+    // Two tabs: two connections, so the answers really race.
+    const other = (await chatClient(cookie, model)).client
+    const answer = (from: typeof client) =>
+      safe(
+        from.chat
+          .answer({
+            id: draft.id,
+            calls: [{ toolCallId: "call-1-0", answers: { term: ["1y"] } }],
+            today,
+          })
+          .then(read)
+      )
+
+    const results = await Promise.all([answer(client), answer(other)])
+
+    expect(
+      results
+        .map(({ error }) =>
+          error && "code" in error ? String(error.code) : "OK"
+        )
+        .toSorted()
+    ).toEqual(["NOT_OPEN", "OK"])
+    expect(model.doStreamCalls).toHaveLength(2)
+  })
+
   it("refuses a typed answer over 500 characters", async () => {
     const { client, draft } = await asked()
 
     const { error } = await safe(
       client.chat.answer({
         id: draft.id,
-        toolCallId: "call-1-0",
-        answers: { term: ["1y"], law: ["x".repeat(501)] },
+        calls: [
+          {
+            toolCallId: "call-1-0",
+            answers: { term: ["1y"], law: ["x".repeat(501)] },
+          },
+        ],
         today,
       })
     )

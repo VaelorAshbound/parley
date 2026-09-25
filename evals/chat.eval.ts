@@ -154,20 +154,29 @@ describe("drafting a whole NDA", () => {
           break
         const messages = await chat.client.chat.messages({ id: draft.id })
         const open = openQuestions(messages)
-        const reply = open
-          ? chat.client.chat.answer({
-              id: draft.id,
-              toolCallId: open.toolCallId,
-              answers: await userAnswers(user, each.facts, open.questions),
-              today,
-            })
-          : chat.client.chat.send({
-              id: draft.id,
-              message: say(
-                await userReply(user, each.facts, transcript(messages))
-              ),
-              today,
-            })
+        const reply =
+          open.length > 0
+            ? chat.client.chat.answer({
+                id: draft.id,
+                calls: await Promise.all(
+                  open.map(async (call) => ({
+                    toolCallId: call.toolCallId,
+                    answers: await userAnswers(
+                      user,
+                      each.facts,
+                      call.questions
+                    ),
+                  }))
+                ),
+                today,
+              })
+            : chat.client.chat.send({
+                id: draft.id,
+                message: say(
+                  await userReply(user, each.facts, transcript(messages))
+                ),
+                today,
+              })
         await chat.finish(await reply)
         turns += 1
       }

@@ -22,7 +22,7 @@ export function chatTransport(orpc: Orpc): ChatTransport<ChatMessage> {
         message?.role === "assistant"
           ? // Sent by sendAutomaticallyWhen once the questions are answered.
             await orpc.chat.answer.call(
-              { id: chatId, today, ...answered(message) },
+              { id: chatId, today, calls: answeredCalls(message) },
               { signal: abortSignal }
             )
           : await orpc.chat.send.call(
@@ -48,15 +48,22 @@ function userMessage(message: ChatMessage | undefined) {
   }
 }
 
-/** The questions just answered: the last ones answered in the reply. */
-function answered(message: ChatMessage) {
-  const part = message.parts.findLast(
-    (each) =>
-      each.type === "tool-askQuestions" && each.state === "output-available"
+/**
+ * The questionnaires just answered: every one in the reply's last step (a
+ * step may ask more than one; chat.answer needs them all).
+ */
+export function answeredCalls(message: ChatMessage) {
+  return lastStep(message).flatMap((part) =>
+    part.type === "tool-askQuestions" && part.state === "output-available"
+      ? [{ toolCallId: part.toolCallId, answers: part.output.answers }]
+      : []
   )
-  if (part?.type !== "tool-askQuestions" || part.state !== "output-available")
-    throw new Error("No answers to send")
-  return { toolCallId: part.toolCallId, answers: part.output.answers }
+}
+
+function lastStep(message: ChatMessage) {
+  return message.parts.slice(
+    message.parts.findLastIndex((part) => part.type === "step-start") + 1
+  )
 }
 
 /**
@@ -67,13 +74,8 @@ function answered(message: ChatMessage) {
 export function questionsAnswered({ messages }: { messages: ChatMessage[] }) {
   const message = messages.at(-1)
   if (message?.role !== "assistant") return false
-  const step = message.parts.slice(
-    message.parts.findLastIndex((part) => part.type === "step-start") + 1
-  )
   return (
-    step.some(
-      (part) =>
-        part.type === "tool-askQuestions" && part.state === "output-available"
-    ) && lastAssistantMessageIsCompleteWithToolCalls({ messages })
+    answeredCalls(message).length > 0 &&
+    lastAssistantMessageIsCompleteWithToolCalls({ messages })
   )
 }
