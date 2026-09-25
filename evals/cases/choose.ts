@@ -39,7 +39,7 @@ export const chooseCases: ChooseCase[] = [
   {
     name: "health data",
     situation:
-      "We're building scheduling software for a dental clinic in the US, and we'll store patients' health information.",
+      "We already have a service contract with a US dental clinic for our scheduling software. Now, because we store their patients' health information, they need us to sign the HIPAA agreement.",
     expect: "baa",
   },
   {
