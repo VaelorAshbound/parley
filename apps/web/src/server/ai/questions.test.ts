@@ -56,6 +56,7 @@ const extras: Question = {
 describe("a question set from the model", () => {
   test("takes a short set of related questions", () => {
     const result = questionSet.safeParse({
+      title: "Key terms",
       questions: [term, law, hasSigner, signer, extras],
     })
 
@@ -63,7 +64,10 @@ describe("a question set from the model", () => {
   })
 
   test("needs unique question names", () => {
-    const result = questionSet.safeParse({ questions: [term, term] })
+    const result = questionSet.safeParse({
+      title: "Key terms",
+      questions: [term, term],
+    })
 
     expect(result.error?.issues[0]?.message).toMatch(/twice/)
   })
@@ -71,7 +75,10 @@ describe("a question set from the model", () => {
   test("needs unique answer values within a question", () => {
     const repeated = { ...term, choices: [term.choices[0], term.choices[0]] }
 
-    const result = questionSet.safeParse({ questions: [repeated] })
+    const result = questionSet.safeParse({
+      title: "Key terms",
+      questions: [repeated],
+    })
 
     expect(result.error?.issues[0]?.message).toMatch(/twice/)
   })
@@ -79,14 +86,21 @@ describe("a question set from the model", () => {
   test("needs choices, another answer, or both", () => {
     const empty = { ...term, choices: [], allowOther: false }
 
-    const result = questionSet.safeParse({ questions: [empty] })
+    const result = questionSet.safeParse({
+      title: "Key terms",
+      questions: [empty],
+    })
 
     expect(result.error?.issues[0]?.message).toMatch(/choices or allowOther/)
   })
 
   test("shows a question only after the one it depends on", () => {
-    const early = questionSet.safeParse({ questions: [signer, hasSigner] })
+    const early = questionSet.safeParse({
+      title: "Key terms",
+      questions: [signer, hasSigner],
+    })
     const unknownAnswer = questionSet.safeParse({
+      title: "Key terms",
       questions: [
         hasSigner,
         { ...signer, showIf: { question: "hasSigner", answers: ["maybe"] } },
@@ -97,13 +111,21 @@ describe("a question set from the model", () => {
     expect(unknownAnswer.error?.issues[0]?.message).toMatch(/maybe/)
   })
 
+  test("needs a short title for the set", () => {
+    const result = questionSet.safeParse({ title: "", questions: [term] })
+
+    expect(result.success).toBe(false)
+  })
+
   test("keeps sets short", () => {
     const many = Array.from({ length: 6 }, (_, index) => ({
       ...term,
       name: `q${index}`,
     }))
 
-    expect(questionSet.safeParse({ questions: many }).success).toBe(false)
+    expect(
+      questionSet.safeParse({ title: "Key terms", questions: many }).success
+    ).toBe(false)
   })
 })
 

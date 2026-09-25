@@ -598,7 +598,7 @@ describe("the AI's questionnaire", () => {
       multiple: false,
     },
   ]
-  const ask = { tool: "askQuestions", input: { questions } }
+  const ask = { tool: "askQuestions", input: { title: "Key terms", questions } }
 
   /** A draft whose chat waits on the questionnaire above. */
   async function asked(steps: Parameters<typeof scriptedModel>[0] = []) {
@@ -766,7 +766,10 @@ describe("the AI's questionnaire", () => {
       [
         {
           tool: "askQuestions",
-          input: { questions: [...questions, questions[0]] },
+          input: {
+            title: "Key terms",
+            questions: [...questions, questions[0]],
+          },
         },
       ],
       [{ text: "Let me ask that again." }],

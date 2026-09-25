@@ -52,7 +52,14 @@ const question = z.object({
 export type Question = z.input<typeof question>
 
 export const questionSet = z
-  .object({ questions: z.array(question).min(1).max(5) })
+  .object({
+    title: z
+      .string()
+      .min(1)
+      .max(40)
+      .describe("A name for the set in 1 to 3 words, like Key terms."),
+    questions: z.array(question).min(1).max(5),
+  })
   .superRefine(({ questions }, ctx) => {
     const seen = new Map<string, Question>()
     questions.forEach((each, index) => {
@@ -103,8 +110,6 @@ export const questionSet = z
  * Each question's answers: choice values, or the user's own words. A
  * skipped question (or one not shown) is left out.
  */
-export type Answers = Readonly<Record<string, readonly string[]>>
-
 export const answersShape = z.object({
   answers: z.record(
     z.string().max(60),
@@ -112,10 +117,12 @@ export const answersShape = z.object({
   ),
 })
 
+export type Answers = z.infer<typeof answersShape>["answers"]
+
 /** Whether a question applies, given the answers so far. */
 export function isShown(
   question: Pick<Question, "showIf">,
-  answers: Answers
+  answers: Readonly<Record<string, readonly string[]>>
 ): boolean {
   const condition = question.showIf
   if (!condition) return true
