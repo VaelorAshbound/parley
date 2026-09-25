@@ -14,7 +14,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, type ComponentProps } from "react"
 import { usePanelRef, type Layout } from "react-resizable-panels"
 
-import { writeCookie } from "@/lib/cookies"
+import { writeCookie } from "@/lib/browser-cookies"
 import { useUiStore } from "@/lib/ui-store"
 
 import type { ChatMessage } from "@/server/ai/chat"
