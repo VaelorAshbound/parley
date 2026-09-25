@@ -101,6 +101,19 @@ const matrix: Record<
     run: (client, id) => client.drafts.markComplete({ id }),
     expect: ownersOnly,
   },
+  "drafts.rename": {
+    run: (client, id) => client.drafts.rename({ id, title: "Matrix test" }),
+    expect: ownersOnly,
+  },
+  "drafts.duplicate": {
+    run: (client, id) => client.drafts.duplicate({ id }),
+    expect: ownersOnly,
+  },
+  // Last: the owners' own drafts are gone after it.
+  "drafts.delete": {
+    run: (client, id) => client.drafts.delete({ id }),
+    expect: ownersOnly,
+  },
 }
 
 /** A caller with a draft of their own. */

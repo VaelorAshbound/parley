@@ -1,4 +1,11 @@
-import { createDraft, getDraft, listDrafts, updateDraft } from "@workspace/db"
+import {
+  createDraft,
+  deleteDraft,
+  duplicateDraft,
+  getDraft,
+  listDrafts,
+  updateDraft,
+} from "@workspace/db"
 import {
   applyFieldChanges,
   definitionOf,
@@ -8,6 +15,8 @@ import {
   switchDocument,
   type DocumentId,
 } from "@workspace/documents"
+
+import { copyTitle, draftTitle, QUERY_MAX } from "../../lib/drafts"
 
 import { z } from "../zod"
 import { authed, draftOwner } from "./base"
@@ -77,12 +86,63 @@ export const drafts = {
       })
     ),
 
-  /** The sidebar's history: the caller's drafts, last changed first. */
+  /**
+   * The history (sidebar, search, /drafts): the caller's drafts, last
+   * changed first. `query` matches titles, document types and party names
+   * from the start of each word; `after` is the last draft of the page
+   * before.
+   */
   list: authed
-    .input(z.object({ limit: z.int().min(1).max(100).optional() }))
+    .input(
+      z.object({
+        query: z.string().max(QUERY_MAX).optional(),
+        documentId: documentId.optional(),
+        after: z.object({ id: z.uuid(), updatedAt: z.date() }).optional(),
+        limit: z.int().min(1).max(100).optional(),
+      })
+    )
     .handler(({ context, input }) =>
       listDrafts(context.db, { userId: context.user.id, ...input })
     ),
+
+  rename: authed
+    .input(draftId.extend({ title: draftTitle }))
+    .use(draftOwner, (input) => input.id)
+    .handler(async ({ context, input, errors }) => {
+      const saved = await updateDraft(
+        context.db,
+        { id: input.id, userId: context.user.id },
+        { title: input.title }
+      )
+      // Deleted between the owner check and the update.
+      if (!saved) throw errors.NOT_FOUND()
+      return saved
+    }),
+
+  /** A copy with the same agreement and answers, and an empty chat. */
+  duplicate: authed
+    .input(draftId)
+    .use(draftOwner, (input) => input.id)
+    .handler(async ({ context, input, errors }) => {
+      const copy = await duplicateDraft(
+        context.db,
+        { id: input.id, userId: context.user.id },
+        { title: copyTitle(context.draft.title) }
+      )
+      if (!copy) throw errors.NOT_FOUND()
+      return copy
+    }),
+
+  /**
+   * Deletes the draft with its chat and share links. The app waits out its
+   * undo toast before it calls this, so an undo never needs the server.
+   */
+  delete: authed
+    .input(draftId)
+    .use(draftOwner, (input) => input.id)
+    .handler(async ({ context, input }) => {
+      await deleteDraft(context.db, { id: input.id, userId: context.user.id })
+    }),
 
   get: authed
     .input(draftId)
