@@ -564,7 +564,22 @@
 
 ## Phase 6: All 12 documents in chat
 
-- [ ] **T30: AI across all 12 documents** (M)
+- [x] **T30: AI across all 12 documents** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development (AI SDK's bundled docs: `toModelOutput`, `isToolUIPart`, `getToolName`), git-workflow-and-versioning; ai-sdk, dataviz (the report stays tables, as T20). Checked:
+    - `pnpm evals`: **36 conversations** (2 situations per agreement, a whole draft of each of the 11 agreements plus 2 more NDAs, 2 guardrails). Last run: **100% right agreement, 100% right field values, 0 invalid writes, every draft finished, on task 2/2.** The run before: 100% / 99% / 0 (one design-partner commitment missed). `evals/report.md`.
+    - **Cost per finished draft** is in the report's per-agreement table: the NDA $0.0036 (goal under $0.02), the cheapest the pilot $0.0031, the most costly the DPA $0.0195 and the CSA $0.0165.
+    - `pnpm check`; `pnpm test` (825; browser tests need `PLAYWRIGHT_CHROMIUM_PATH` here); `pnpm test:workers` (81); `pnpm test:e2e` on PORT=3113: 19/19 in Chromium (Firefox and WebKit aren't installed locally).
+    - Spend on the OpenRouter test key: $0.54 in the finishing session (3 full runs, 4 single-case runs); the key has used $1.33 of its $5 in all (T20 and T30).
+  - Built:
+    - **Related agreements** (spec §2 example): `RELATED` in `prompt.ts`; the catalog says what often comes with each, and the chosen agreement's section tells the model to name them once as new drafts, never to switch.
+    - **Each choice lists its options' wording** (cut at 160 characters): the model read only keys and took the DPA's `commonPaperCsa` for "use the CSA's cap".
+    - **Optional fields are marked** in the field list, with a rule to fill one when the deal calls for it. The DPA never got its UK clause before, even with UK clinics.
+    - **Rules from what the runs refused or got wrong:** a jurisdiction takes state or region, never both, and a US state as its code; no empty strings; ask once for a legal name, then use what the user gives; don't guess a law, court or member state from where a party is based; $ means USD; when the user doesn't know, use the usual choice; call `markComplete` again after filling what it listed.
+    - **The engine refuses a US state written as a region** ("Oregon", "OR"), so the document can say "the State of Oregon".
+    - Evals: scoring of multi-choice lists and durations of the same length (12 months = 1 year); "named a related agreement"; a per-agreement table; failed tool calls without a valid input show in the transcripts.
+  - Found on the way:
+    - **Naming a related agreement is not reliable: 40–100% across runs** (5 cases). The model skips it when it goes straight to a questionnaire. Spec §2 says it "can" mention them, so it has no bar. A reminder in `chooseDocument`'s result was tried and did no better (40%), so it was not kept. A card under the choice in the UI would make it certain; that is UI work, not T30.
+    - Case facts were fixed only where a real user would know more than the simulated one did (the DPA's Annex I addresses, UK data, signers' emails for notices).
   - Accept:
     - The prompt and tools cover all 12 documents, including suggestions of related documents (for example CSA → SLA / DPA / AI Addendum).
     - Evals grow to 30 or more cases with at least 2 per document. The bar is met: correct document ≥ 90%, correct fields ≥ 95%, invalid writes 0.
