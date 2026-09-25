@@ -38,6 +38,8 @@ export default defineConfig({
           BETTER_AUTH_SECRET: "test-only-secret-that-is-long-enough-0123456789",
           // Never used: the chat tests pass a scripted model (helpers.ts).
           OPENROUTER_API_KEY: "test-only-no-real-calls",
+          // Never reaches Resend: the email tests fake fetch (resend.ts).
+          RESEND_API_KEY: "re_test_only_no_real_sends",
         },
       },
     })),

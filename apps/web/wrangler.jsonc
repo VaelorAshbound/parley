@@ -18,9 +18,18 @@
   "placement": { "region": "aws:eu-central-1" },
   // Declared so `wrangler types` works without .dev.vars (CI), and deploys
   // fail when one is missing. Previews get theirs from the Previews base
-  // config (`wrangler preview base-config secret put`).
+  // config (`wrangler preview base-config secret put`); `wrangler preview`
+  // doesn't check this list, so a Preview may run without some (wrangler
+  // 4.136). The code handles a missing one where that is safe.
   "secrets": {
-    "required": ["BETTER_AUTH_SECRET", "OPENROUTER_API_KEY"],
+    "required": [
+      "BETTER_AUTH_SECRET",
+      "OPENROUTER_API_KEY",
+      // Production: the sending-only key for mail.runtimedrift.dev (T38).
+      // Previews and local dev have none, so they send no email and never
+      // spend the Resend quota (the mailer logs email_not_configured).
+      "RESEND_API_KEY",
+    ],
   },
   "vars": {
     "STAGE": "production",

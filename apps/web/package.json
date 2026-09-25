@@ -35,7 +35,9 @@
     "motion": "13.4.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-email": "6.11.0",
     "react-resizable-panels": "^4.13.2",
+    "resend": "6.28.1",
     "temporal-polyfill": "^1.0.5",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
