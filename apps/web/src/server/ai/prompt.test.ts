@@ -57,10 +57,27 @@ describe("the chat's instructions", () => {
     const text = instructions({ definition: nda, values: {} })
 
     for (const [key, field] of Object.entries(nda.fields)) {
-      expect(text).toContain(`- ${key} (${field.kind}): ${field.label}`)
+      expect(text).toContain(
+        `- ${key} (${field.kind}${field.optional ? ", optional" : ""}): ${field.label}`
+      )
     }
     // The shape of a party's parts, from the field's own schema.
     expect(text).toMatch(/"email"/)
+  })
+
+  test("mark optional fields, to fill only when the deal calls for them", () => {
+    const text = instructions({ definition: definitions.dpa, values: {} })
+    const lines = text.split("\n")
+
+    // T30's evals: the model never asked for the DPA's UK transfers, even
+    // for a customer with UK clinics; nothing said the field was there to fill.
+    expect(lines.find((line) => line.startsWith("- ukTransfers"))).toMatch(
+      /^- ukTransfers \(select, optional\): UK transfers\./
+    )
+    expect(
+      lines.find((line) => line.startsWith("- governingMemberState"))
+    ).toMatch(/^- governingMemberState \(select\):/)
+    expect(text).toMatch(/fill an optional field when the deal calls for it/)
   })
 
   test("say what each option of a choice means, not only its key", () => {
@@ -104,6 +121,8 @@ describe("the chat's instructions", () => {
     // every NDA unfinished.
     expect(text).toMatch(/ask once .* then use what they give/)
     expect(text).toMatch(/Don't guess a value from context/)
+    // It took Germany for the DPA's EU member state from "clinics in Germany".
+    expect(text).toMatch(/a country's law, courts or member state because/)
     expect(text).toMatch(/choices field .* multiple: true .* all its options/)
     expect(text).toMatch(/call markComplete again/)
   })
