@@ -7,8 +7,9 @@ import { defineConfig, lazyPlugins } from "vite-plus"
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
-  // Port 3000: the Google and GitHub dev OAuth apps redirect here.
-  server: { port: 3000, strictPort: true },
+  // Port 3000: the Google and GitHub dev OAuth apps redirect here. PORT lets
+  // parallel worktrees run their own server (OAuth only works on 3000).
+  server: { port: Number(process.env.PORT ?? 3000), strictPort: true },
   plugins: lazyPlugins(() => [
     // https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
     cloudflare({ viteEnvironment: { name: "ssr" } }),

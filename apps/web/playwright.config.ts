@@ -4,6 +4,8 @@ import { defineConfig, devices } from "@playwright/test"
 // Playwright starts the local dev server.
 const previewUrl = process.env.PREVIEW_URL
 const isCI = Boolean(process.env.CI)
+// PORT matches the dev server's (vite.config.ts), for parallel worktrees.
+const localUrl = `http://localhost:${process.env.PORT ?? 3000}`
 
 export default defineConfig({
   testDir: "./e2e",
@@ -12,7 +14,7 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   reporter: isCI ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
-    baseURL: previewUrl ?? "http://localhost:3000",
+    baseURL: previewUrl ?? localUrl,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -35,7 +37,7 @@ export default defineConfig({
     : {
         webServer: {
           command: "pnpm dev",
-          url: "http://localhost:3000/api/health",
+          url: `${localUrl}/api/health`,
           reuseExistingServer: !isCI,
         },
       }),

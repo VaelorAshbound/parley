@@ -110,6 +110,26 @@ Skills that aren't used, and why:
 - `resend:agent-email-inbox`: there is no inbound email.
 - `pick-ui-library` / `prototype`: only when you ask for them.
 
+## Parallel run (owner decision, 2026-09-25)
+
+Tasks T21–T40 run as parallel sub-agents, in waves that follow the dependency graph. Spec and plan stay as approved; each task goes /build → /test → /review → /code-simplify, and /ship runs once at T40.
+
+| Wave | Tasks | Starts after |
+|---|---|---|
+| A | T21, T29, T30 | now |
+| B | T22, T23, T24, T25, T27, T28 | T21 merged |
+| C | T23b, T26, T31, T37 | wave B merged |
+| Stop | Checkpoint 6: owner review | |
+| D | T32, then T33–T36 | Checkpoint 6 |
+| E | T38 → T39 → T40 | wave D + owner OK for production |
+
+Rules:
+- One git worktree per task. The lead merges tasks one at a time into `PAR-1-parley` and runs the full gate after each merge. Migrations and ADR numbers are renumbered at merge.
+- Stops: only the plan's (Checkpoint 6, production). Green, reviewed tasks merge without asking.
+- Cloud: dev/test resources may be created without asking. Anything in production, and any delete, needs the owner's OK. Agents never migrate Neon; the lead does it after merge.
+- Resend: the free plan can run out. Tests use a fake sender; at most 3 real sends per task. A quota error stops all sends and is reported to the owner at once.
+- Each worktree runs its dev server on its own `PORT` (3000 belongs to another app locally).
+
 ## What you need to do (owner actions)
 
 | When | What |
