@@ -19,6 +19,7 @@ import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as DevBrandRouteImport } from './routes/dev.brand'
+import { Route as STokenRouteImport } from './routes/s.$token'
 import { Route as AppAuthedDraftsRouteImport } from './routes/_app/_authed/drafts'
 import { Route as AppAuthedSettingsRouteImport } from './routes/_app/_authed/settings'
 import { Route as AppDDraftIdRouteImport } from './routes/_app/d.$draftId'
@@ -70,6 +71,11 @@ const DevBrandRoute = DevBrandRouteImport.update({
   path: '/dev/brand',
   getParentRoute: () => rootRouteImport,
 } as any)
+const STokenRoute = STokenRouteImport.update({
+  id: '/s/$token',
+  path: '/s/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAuthedDraftsRoute = AppAuthedDraftsRouteImport.update({
   id: '/drafts',
   path: '/drafts',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/s/$token': typeof STokenRoute
   '/drafts': typeof AppAuthedDraftsRoute
   '/settings': typeof AppAuthedSettingsRoute
   '/d/$draftId': typeof AppDDraftIdRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/s/$token': typeof STokenRoute
   '/drafts': typeof AppAuthedDraftsRoute
   '/settings': typeof AppAuthedSettingsRoute
   '/d/$draftId': typeof AppDDraftIdRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
+  '/s/$token': typeof STokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/_authed/drafts': typeof AppAuthedDraftsRoute
   '/_app/_authed/settings': typeof AppAuthedSettingsRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/dev/brand'
+    | '/s/$token'
     | '/drafts'
     | '/settings'
     | '/d/$draftId'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/dev/brand'
+    | '/s/$token'
     | '/drafts'
     | '/settings'
     | '/d/$draftId'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-up'
     | '/_auth/verify-email'
     | '/dev/brand'
+    | '/s/$token'
     | '/_app/'
     | '/_app/_authed/drafts'
     | '/_app/_authed/settings'
@@ -172,6 +184,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   DevBrandRoute: typeof DevBrandRoute
+  STokenRoute: typeof STokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/dev/brand'
       fullPath: '/dev/brand'
       preLoaderRoute: typeof DevBrandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$token': {
+      id: '/s/$token'
+      path: '/s/$token'
+      fullPath: '/s/$token'
+      preLoaderRoute: typeof STokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/_authed/drafts': {
@@ -320,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   DevBrandRoute: DevBrandRoute,
+  STokenRoute: STokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

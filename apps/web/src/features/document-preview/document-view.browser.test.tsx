@@ -40,6 +40,43 @@ async function show(
   }
 }
 
+describe("a read-only document (a share link, T25)", () => {
+  async function showReadOnly(values: typeof filled) {
+    return render(
+      <TooltipProvider>
+        <DocumentView document={renderDocument(nda, values)} />
+      </TooltipProvider>
+    )
+  }
+
+  test("shows the values in the document's words", async () => {
+    const screen = await showReadOnly(filled)
+
+    await expect
+      .element(screen.getByText("courts located in New Castle, DE"))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText("Expires 2 years from Effective Date."))
+      .toBeVisible()
+  })
+
+  test("has nothing to click or edit", async () => {
+    const screen = await showReadOnly(filled)
+    await expect.element(screen.getByText("Ana Diaz").first()).toBeVisible()
+
+    expect(screen.getByRole("button").all()).toEqual([])
+  })
+
+  test("still names each empty field", async () => {
+    const screen = await showReadOnly({})
+
+    await expect.element(screen.getByText("Purpose").first()).toBeVisible()
+    expect(
+      screen.container.querySelectorAll('[data-empty][data-field="purpose"]')
+    ).toHaveLength(1)
+  })
+})
+
 describe("the live document", () => {
   test("shows each empty field as a named chip, not a blank", async () => {
     const { screen } = await show({})

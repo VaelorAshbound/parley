@@ -15,15 +15,17 @@ import { ChangedContext, spoken, useChanged, Value } from "./value"
 // The live document (spec §1): the render model as a page. Every value can be
 // clicked to edit its field; the editor opens in place of the row it edits
 // (brand.md → "Editing"). The same model feeds the PDF and DOCX, so what you
-// see is what prints.
+// see is what prints. Without `onEdit` it is read-only (a share link, T25):
+// the same page with nothing to click.
 
 type Props = {
   document: RenderedDocument
   /** The field being edited, maybe with a part: "party1.email". */
   editing?: string | undefined
-  onEdit: (path: string) => void
+  /** Opens a field's editor; leave it out for a read-only document. */
+  onEdit?: ((path: string) => void) | undefined
   /** The editor for a field, shown where that field's row is. */
-  renderEditor: (key: string) => ReactNode
+  renderEditor?: (key: string) => ReactNode
   /** Fields the AI changed this turn (UI store `changed`). */
   changed?: Readonly<Record<string, number>>
 }
@@ -74,7 +76,7 @@ export function DocumentView({
               onEdit={onEdit}
               editor={
                 editingKey !== undefined && fieldsOf(section).has(editingKey)
-                  ? renderEditor(editingKey)
+                  ? renderEditor?.(editingKey)
                   : undefined
               }
             />
@@ -91,7 +93,7 @@ export function DocumentView({
             <h3 className="font-sans text-[0.8em] font-semibold">
               {partyLabel(document, editingKey)}
             </h3>
-            <div className="not-typeset mt-2">{renderEditor(editingKey)}</div>
+            <div className="not-typeset mt-2">{renderEditor?.(editingKey)}</div>
           </section>
         )}
         {coverPage.footer.map((paragraph, index) => (
@@ -167,7 +169,7 @@ function Section({
   editor,
 }: {
   section: RenderedSection
-  onEdit: (path: string) => void
+  onEdit?: ((path: string) => void) | undefined
   editor: ReactNode
 }) {
   const { field } = section
@@ -228,6 +230,9 @@ function Section({
       )}
       {editor ? (
         <div className="not-typeset mt-2">{editor}</div>
+      ) : !onEdit ? (
+        // Read-only: the same spacing as the edit button's.
+        <div className="mt-1 py-1">{body}</div>
       ) : field === undefined ? (
         // Lines from several fields: each line edits its own.
         section.lines.map((line, index) => (
@@ -367,7 +372,7 @@ function Signatures({
   onEdit,
 }: {
   document: RenderedDocument
-  onEdit: (path: string) => void
+  onEdit?: ((path: string) => void) | undefined
 }) {
   const { parties, rows } = document.coverPage.signatures
   if (parties.length === 0) return null
@@ -393,7 +398,8 @@ function Signatures({
             </th>
             {row.cells.map((cell, index) => (
               <td key={parties[index]?.field ?? index} className="h-9">
-                {cell && (
+                {cell && !onEdit && <Value value={cell} />}
+                {cell && onEdit && (
                   <button
                     type="button"
                     data-edit={cell.field}
@@ -418,7 +424,7 @@ function Clause({
   onEdit,
 }: {
   clause: RenderedClause
-  onEdit: (path: string) => void
+  onEdit?: ((path: string) => void) | undefined
 }) {
   return (
     <>
