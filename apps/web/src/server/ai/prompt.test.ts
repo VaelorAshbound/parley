@@ -97,7 +97,12 @@ describe("the chat's instructions", () => {
     expect(text).toMatch(/either state .* or region .*, never both/)
     expect(text).toMatch(/never send an empty string/)
     expect(text).toMatch(/full legal name/)
+    // Asking again and again for an ending the user doesn't know left
+    // every NDA unfinished.
+    expect(text).toMatch(/ask once .* then use what they give/)
     expect(text).toMatch(/Don't guess a value from context/)
+    expect(text).toMatch(/choices field .* multiple: true .* all its options/)
+    expect(text).toMatch(/call markComplete again/)
   })
 
   test("keep a part named title, while dropping the schema's own titles", () => {
