@@ -1,5 +1,39 @@
+import type { Ratelimiter } from "@orpc/experimental-ratelimit"
+import { CloudflareRatelimiter } from "@orpc/experimental-ratelimit/cloudflare-ratelimit"
+
 // Who may do how much (spec §2 Limits, T27). The first values; change them
 // here. Each limit guards something that costs money or can be abused.
+
+/**
+ * The Rate Limiting bindings, per user: `limit` calls every `period`
+ * seconds. The numbers live in wrangler.jsonc (top level and `previews`);
+ * this copy is for the tests and messages, and a test keeps the two equal.
+ */
+export const RATE_LIMITS = {
+  /** Every procedure: far above what a person clicks. */
+  RPC_RATE_LIMITER: { limit: 300, period: 60 },
+  /** The AI routes (chat.send, chat.answer): each is a model call. */
+  AI_RATE_LIMITER: { limit: 10, period: 10 },
+  /** Downloads: each PDF is a ~4 s Browser Run print, re-exports too. */
+  EXPORT_RATE_LIMITER: { limit: 10, period: 60 },
+} as const
+
+type Binding = keyof typeof RATE_LIMITS
+
+/** The per-user limiters, on the procedures' context. */
+export type Limiters = {
+  rpc: Ratelimiter
+  ai: Ratelimiter
+  export: Ratelimiter
+}
+
+export function limitersFrom(env: Pick<Env, Binding>): Limiters {
+  return {
+    rpc: new CloudflareRatelimiter(env.RPC_RATE_LIMITER),
+    ai: new CloudflareRatelimiter(env.AI_RATE_LIMITER),
+    export: new CloudflareRatelimiter(env.EXPORT_RATE_LIMITER),
+  }
+}
 
 /**
  * Drafts a guest may keep (spec §2 Limits). An account has no limit; signing
