@@ -5,6 +5,7 @@ import { env } from "cloudflare:workers"
 import { afterEach, describe, expect, it, onTestFinished } from "vitest"
 
 import { createAuth } from "../../web/src/server/auth"
+import { limitersFrom } from "../../web/src/server/limits"
 import { verified } from "../../web/src/server/rpc/base"
 import {
   call,
@@ -33,6 +34,7 @@ async function probeClient(cookie?: string) {
       model: scriptedModel([]),
       printPdf: fakePrinter().printPdf,
       waitUntil: () => {},
+      limiters: limitersFrom(env),
       reqHeaders,
       resHeaders,
     },

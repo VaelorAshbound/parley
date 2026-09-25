@@ -28,10 +28,12 @@ import { useEffect, useState } from "react"
 import { DownloadButton } from "@/features/export/download"
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
+import { ProblemNote } from "@/components/problem-note"
 import type { ChatMessage } from "@/server/ai/chat"
 import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
+import { limitProblem } from "./limit-problem"
 import { MessageParts, PlainText } from "./message-parts"
 import { forgetSettledQuestions } from "./ai-questionnaire"
 import { questionsAnswered } from "./transport"
@@ -101,6 +103,8 @@ export function ChatPanel({
     },
   })
   const busy = status === "submitted" || status === "streaming"
+  // A limit reached (spec §2 Limits) says so, with the way past it.
+  const limit = error ? limitProblem(error, `/d/${draftId}`) : null
   const pending = useUiStore((state) => state.pending)
   const setPending = useUiStore((state) => state.setPending)
   const settle = useUiStore((state) => state.settle)
@@ -200,7 +204,12 @@ export function ChatPanel({
                   <MarkerContent className="shimmer">Thinking…</MarkerContent>
                 </Marker>
               )}
-              {error && (
+              {limit ? (
+                <ProblemNote
+                  problem={limit}
+                  onRetry={limit.retry ? () => void regenerate() : undefined}
+                />
+              ) : error ? (
                 <Alert variant="destructive">
                   <AlertDescription className="flex items-center justify-between gap-3">
                     Parley couldn’t answer. Please try again.
@@ -214,7 +223,7 @@ export function ChatPanel({
                     </Button>
                   </AlertDescription>
                 </Alert>
-              )}
+              ) : null}
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />

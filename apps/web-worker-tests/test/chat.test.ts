@@ -4,7 +4,15 @@ import { definitions } from "@workspace/documents"
 import { MockLanguageModelV4 } from "ai/test"
 import { describe, expect, it, vi } from "vitest"
 
-import { chatClient, scriptedModel, serverClient, signInGuest } from "./helpers"
+import { saveMessages } from "@workspace/db"
+
+import {
+  chatClient,
+  database,
+  scriptedModel,
+  serverClient,
+  signInGuest,
+} from "./helpers"
 
 // The chat (T17) with a scripted model: the real procedure, tools, engine and
 // database, with the model's replies written out in each test.
@@ -530,18 +538,27 @@ describe("a chat turn", () => {
       documentId: "mutual-nda",
       today,
     })
+    // 15 turns of 3,900 characters each: about 120,000 in all. The first 14
+    // are saved straight away: sent one by one, they would hit the AI's
+    // rate limit (T27).
+    const turn = (n: number) => say(`Turn ${n}. ${"x".repeat(3900)}`)
+    await saveMessages(
+      await database(),
+      { id: draft.id, userId: draft.userId },
+      Array.from({ length: 14 }, (_, n) => [
+        turn(n),
+        {
+          id: crypto.randomUUID(),
+          role: "assistant" as const,
+          parts: [{ type: "text" as const, text: "Noted." }],
+        },
+      ]).flat()
+    )
 
-    // 15 turns of 3,900 characters each: about 120,000 in all.
-    for (let turn = 0; turn < 15; turn += 1) {
-      await read(
-        await client.chat.send({
-          id: draft.id,
-          message: say(`Turn ${turn}. ${"x".repeat(3900)}`),
-          today,
-        })
-      )
-      await settle()
-    }
+    await read(
+      await client.chat.send({ id: draft.id, message: turn(14), today })
+    )
+    await settle()
 
     const last = JSON.stringify(model.doStreamCalls.at(-1)?.prompt)
     expect(last).toContain("Turn 14.")

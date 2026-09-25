@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import type { DocumentId } from "@workspace/documents"
 import { Button } from "@workspace/ui/components/button"
@@ -7,7 +11,11 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { ArrowRightIcon } from "lucide-react"
 import { Temporal } from "temporal-polyfill"
 
+import { ProblemNote } from "@/components/problem-note"
+import { authConfigQuery } from "@/features/auth/auth-config"
+import { useTurnstile } from "@/features/auth/turnstile"
 import { Composer } from "@/features/chat/composer"
+import { startProblem } from "@/features/drafts/start-problem"
 import { signInGuest } from "@/lib/auth-client"
 import { documentList } from "@/lib/documents"
 import { viewerQuery } from "@/lib/session"
@@ -15,6 +23,8 @@ import { useUiStore } from "@/lib/ui-store"
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [{ title: "Parley" }] }),
+  // The Turnstile site key, for the first visit's guest (spec §2 Limits).
+  loader: ({ context }) => context.queryClient.ensureQueryData(authConfigQuery),
   component: Home,
 })
 
@@ -32,15 +42,18 @@ function Home() {
   const { viewer, orpc } = Route.useRouteContext()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { data: config } = useSuspenseQuery(authConfigQuery)
+  const turnstile = useTurnstile(config.turnstileSiteKey)
 
   const setPending = useUiStore((state) => state.setPending)
   const start = useMutation({
     // A draft from an agreement picked in the list, or from a first message:
     // then the chat picks the agreement (T17).
     mutationFn: async (from: { documentId: DocumentId } | { text: string }) => {
-      // The first action that needs a session makes a guest (spec §5 Auth).
+      // The first action that needs a session makes a guest (spec §5 Auth),
+      // after a Turnstile check (spec §2 Limits).
       if (!viewer) {
-        await signInGuest()
+        await signInGuest(() => turnstile.headers())
         await queryClient.invalidateQueries({ queryKey: viewerQuery.queryKey })
       }
       return orpc.drafts.create.call({
@@ -105,6 +118,8 @@ function Home() {
               </li>
             ))}
           </ul>
+          {/* Shows only when Cloudflare wants a click. */}
+          {!viewer && turnstile.widget}
         </div>
 
         <h2
@@ -148,9 +163,7 @@ function Home() {
           ))}
         </ol>
         {start.isError && (
-          <p role="alert" className="mt-4 text-sm text-destructive">
-            We couldn’t start that draft. Please try again.
-          </p>
+          <ProblemNote problem={startProblem(start.error)} className="mt-4" />
         )}
 
         <p className="mt-12 text-[12.5px] text-muted-foreground">

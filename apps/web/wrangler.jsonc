@@ -59,6 +59,32 @@
     "binding": "BROWSER",
     "remote": true,
   },
+  // Per-user limits on /api/rpc (spec §2 Limits, T27; src/server/limits.ts
+  // uses them). Counted per Cloudflare location and roughly, which is fine
+  // for stopping floods. `period` is 10 or 60 seconds. A namespace_id is
+  // shared by every Worker on the account, so Previews use their own.
+  // https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+  "ratelimits": [
+    // Every procedure: far above what a person clicks.
+    {
+      "name": "RPC_RATE_LIMITER",
+      "namespace_id": "2701",
+      "simple": { "limit": 300, "period": 60 },
+    },
+    // The AI routes (chat.send, chat.answer): each one is a model call.
+    {
+      "name": "AI_RATE_LIMITER",
+      "namespace_id": "2702",
+      "simple": { "limit": 10, "period": 10 },
+    },
+    // Downloads: a PDF is a ~4 s Browser Run print, even when re-exports
+    // are free.
+    {
+      "name": "EXPORT_RATE_LIMITER",
+      "namespace_id": "2703",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
   // Neon through Hyperdrive with query caching OFF: a cached SELECT would
   // show a stale draft or a revoked share link (spec §5 Database). Local dev
   // uses the Postgres from `pnpm db:dev`.
@@ -91,6 +117,24 @@
     "browser": {
       "binding": "BROWSER",
     },
+    // The same limits as production, counted apart from it.
+    "ratelimits": [
+      {
+        "name": "RPC_RATE_LIMITER",
+        "namespace_id": "2711",
+        "simple": { "limit": 300, "period": 60 },
+      },
+      {
+        "name": "AI_RATE_LIMITER",
+        "namespace_id": "2712",
+        "simple": { "limit": 10, "period": 10 },
+      },
+      {
+        "name": "EXPORT_RATE_LIMITER",
+        "namespace_id": "2713",
+        "simple": { "limit": 10, "period": 60 },
+      },
+    ],
     // Previews never touch production data. "parley-preview" → the Neon
     // "preview" branch, until T33 gives each PR its own branch.
     "hyperdrive": [
