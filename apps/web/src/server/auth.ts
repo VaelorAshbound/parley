@@ -19,9 +19,7 @@ import { VerifyEmail } from "../emails/verify-email"
 
 import { auditHooks } from "./audit"
 import { createMailer } from "./email"
-import { logInfo } from "./log"
-
-import { log } from "./log"
+import { log, logInfo } from "./log"
 
 // Better Auth, built per request because the database client is per request
 // (spec §5 Auth).
