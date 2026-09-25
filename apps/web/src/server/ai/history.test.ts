@@ -36,4 +36,35 @@ describe("the history the model sees", () => {
 
     expect(kept.map((each) => each.id)).toEqual(["new"])
   })
+
+  test("trims the oldest parts of one reply that grew too big on its own", () => {
+    const reply = {
+      id: "reply",
+      role: "assistant" as const,
+      parts: [
+        { type: "text" as const, text: "a".repeat(400) },
+        { type: "text" as const, text: "b".repeat(400) },
+        { type: "text" as const, text: "c".repeat(400) },
+      ],
+    }
+
+    const [kept] = recent([reply], { messages: 10, characters: 1000 })
+
+    expect(kept?.parts.map((part) => part.text[0])).toEqual(["b", "c"])
+  })
+
+  test("keeps the newest part of a reply, even a big one", () => {
+    const reply = {
+      id: "reply",
+      role: "assistant" as const,
+      parts: [
+        { type: "text" as const, text: "a" },
+        { type: "text" as const, text: "z".repeat(5000) },
+      ],
+    }
+
+    const [kept] = recent([reply], { messages: 10, characters: 100 })
+
+    expect(kept?.parts).toHaveLength(1)
+  })
 })

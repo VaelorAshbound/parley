@@ -925,6 +925,48 @@ describe("the AI's questionnaire", () => {
     expect(model.doStreamCalls).toHaveLength(2)
   })
 
+  it("shows the model only the end of a very long reply, and saves it whole", async () => {
+    const { cookie } = await signInGuest()
+    const first = `FIRST ${"a".repeat(30_000)}`
+    const second = `SECOND ${"b".repeat(30_000)}`
+    const model = scriptedModel([
+      [{ text: first }, ask],
+      [{ text: second }, ask],
+      [{ text: "Done." }],
+    ])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const answer = async (toolCallId: string) => {
+      await read(
+        await client.chat.answer({
+          id: draft.id,
+          calls: [{ toolCallId, answers: { term: ["1y"] } }],
+          today,
+        })
+      )
+      await settle()
+    }
+    await read(
+      await client.chat.send({ id: draft.id, message: say("Ask."), today })
+    )
+    await settle()
+
+    await answer("call-1-1")
+    await answer("call-2-1")
+
+    // The last call sees the newest parts only, within the budget.
+    const seen = JSON.stringify(model.doStreamCalls[2]?.prompt)
+    expect(seen).toContain("SECOND")
+    expect(seen).not.toContain("FIRST")
+    // The reply is stored whole.
+    const stored = JSON.stringify(await client.chat.messages({ id: draft.id }))
+    expect(stored).toContain("FIRST")
+    expect(stored).toContain("Done.")
+  })
+
   it("refuses a typed answer over 500 characters", async () => {
     const { client, draft } = await asked()
 

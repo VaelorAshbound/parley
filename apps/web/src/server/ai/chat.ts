@@ -160,8 +160,9 @@ async function reply({
       stream: result.stream,
       tools,
       // Ending with the assistant's message (after answers), the reply
-      // continues that message instead of starting a new one.
-      originalMessages: messages,
+      // continues that message instead of starting a new one: the whole
+      // stored one, not the model's trimmed view, or the save would cut it.
+      originalMessages: all,
       generateMessageId: () => crypto.randomUUID(),
       onEnd: ({ responseMessage }) => {
         // After the response too: the save outlives a closed tab.
