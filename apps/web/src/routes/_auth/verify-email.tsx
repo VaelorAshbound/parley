@@ -15,6 +15,7 @@ import { useState } from "react"
 import { authConfigQuery } from "@/features/auth/auth-config"
 import {
   authErrorMessage,
+  humanCheckFailed,
   verifyLinkErrorMessage,
 } from "@/features/auth/messages"
 import { authSearch } from "@/features/auth/redirect"
@@ -132,14 +133,9 @@ function ResendLink({
 
   async function resend() {
     setState({ kind: "sending" })
-    let headers: Record<string, string>
-    try {
-      headers = await turnstile.headers()
-    } catch {
-      setState({
-        kind: "error",
-        message: authErrorMessage({ code: "MISSING_RESPONSE", status: 400 }),
-      })
+    const headers = await turnstile.headers()
+    if (!headers) {
+      setState({ kind: "error", message: humanCheckFailed })
       return
     }
     const here = `/verify-email?${new URLSearchParams({ redirect: returnTo })}`

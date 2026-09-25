@@ -4,6 +4,10 @@
 /** A failed auth call, as the Better Auth client reports it. */
 export type AuthError = { code?: string | undefined; status: number }
 
+/** Turnstile didn't finish in the browser, or the server refused it. */
+export const humanCheckFailed =
+  "We couldn’t check that you’re a person. Please try again."
+
 export function authErrorMessage(error: AuthError) {
   if (error.status === 429)
     return "Too many tries. Please wait a minute, then try again."
@@ -22,7 +26,7 @@ export function authErrorMessage(error: AuthError) {
     // Turnstile (Better Auth's captcha plugin).
     case "MISSING_RESPONSE":
     case "VERIFICATION_FAILED":
-      return "We couldn’t check that you’re a person. Please try again."
+      return humanCheckFailed
     default:
       return "Something went wrong. Please try again."
   }

@@ -31,15 +31,17 @@ export function useTurnstile(siteKey: string) {
   return {
     widget,
     /**
-     * The headers for one auth request. Waits for the check to finish (up
-     * to 30 s). A token works once, so the widget starts a new check
-     * straight after.
+     * The headers for one auth request, or undefined if the check failed.
+     * Waits for the check to finish (up to 30 s). A token works once, so
+     * the widget starts a new check straight after.
      */
     async headers() {
       const turnstile = ref.current
-      if (!turnstile) throw new Error("Turnstile isn't ready")
+      if (!turnstile) return undefined
       try {
         return { "x-captcha-response": await turnstile.getResponsePromise() }
+      } catch {
+        return undefined
       } finally {
         turnstile.reset()
       }

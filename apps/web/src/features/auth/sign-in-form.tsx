@@ -10,7 +10,7 @@ import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
-import { authErrorMessage } from "./messages"
+import { authErrorMessage, humanCheckFailed } from "./messages"
 import { reloadTo } from "./reload-to"
 import { useTurnstile } from "./turnstile"
 
@@ -42,11 +42,9 @@ export function SignInForm({
     validators: { onDynamic: schema },
     onSubmit: async ({ value }) => {
       setError(undefined)
-      let headers: Record<string, string>
-      try {
-        headers = await turnstile.headers()
-      } catch {
-        setError(authErrorMessage({ code: "MISSING_RESPONSE", status: 400 }))
+      const headers = await turnstile.headers()
+      if (!headers) {
+        setError(humanCheckFailed)
         return
       }
       const { error } = await authClient.signIn.email(value, { headers })
