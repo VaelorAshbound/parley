@@ -214,10 +214,9 @@ describe("a chat turn", () => {
         output: expect.objectContaining({ complete: false }),
       })
     )
-    // The model hears what is missing, by label.
-    expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
-      "Party 2: Fill this in."
-    )
+    // The model hears what is missing, and the key and part to write.
+    const heard = JSON.stringify(model.doStreamCalls[1]?.prompt)
+    expect(heard).toContain(String.raw`Party 2: Fill this in. (key \"party2\")`)
   })
 
   it("tells the model a finished agreement is complete, and not to offer export yet", async () => {

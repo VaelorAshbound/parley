@@ -245,8 +245,11 @@ export function runningTools({ context, draftId, today }: Turn) {
         value: output.complete
           ? "The agreement is complete. Tell the user in one line that it is complete and they can read it through next to the chat. Export is not available yet: never offer it."
           : `Not complete yet. Missing: ${output.missing
-              .map(({ label, path, message }) =>
-                [[label, ...path].join(" "), message].join(": ")
+              .map(
+                ({ key, label, path, message }) =>
+                  // The key and part to write, not only the label: the
+                  // model guessed keys like "party1Title" without them.
+                  `${[label, ...path].join(" ")}: ${message} (key "${key}"${path.length > 0 ? ` with {"${path[0]}": …}` : ""})`
               )
               .join("; ")}`,
       }),

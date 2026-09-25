@@ -60,7 +60,10 @@ export function applyFieldChanges<F extends Fields>(
       ? definition.fields[key]
       : undefined
     if (!field) {
-      refuse(`There is no field "${key}".`)
+      // Listed, so whoever guessed a key (the AI, T20) can pick a real one.
+      refuse(
+        `There is no field "${key}". The fields are: ${Object.keys(definition.fields).join(", ")}.`
+      )
       continue
     }
 

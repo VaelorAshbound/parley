@@ -140,7 +140,12 @@ describe("applyFieldChanges", () => {
         {
           key,
           value: "x",
-          issues: [{ path: [], message: `There is no field "${key}".` }],
+          issues: [
+            {
+              path: [],
+              message: `There is no field "${key}". The fields are: ${Object.keys(definition.fields).join(", ")}.`,
+            },
+          ],
         },
       ])
     }
