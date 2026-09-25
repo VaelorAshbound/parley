@@ -133,6 +133,9 @@ function closeQuestions(message: ChatMessage | undefined) {
  * Logs one `chat_turn` line when the turn ends, is left or fails (T29):
  * tokens, cost, time to first token and tool errors, never text. Set up in
  * the request, since the stream's callbacks can run outside its context.
+ *
+ * `callbacks` go to streamText. `close` runs when the reply stream ends: a
+ * turn that failed before any step finished gets no onEnd.
  */
 function turnLog(key: DraftKey, tier: Tier) {
   const started = Date.now()
@@ -143,34 +146,40 @@ function turnLog(key: DraftKey, tier: Tier) {
     tier,
   }
   const steps: TurnStep[] = []
+  let failure: LogFields | undefined
   let ended = false
-  const end = (outcome: "done" | "aborted" | "error", more: LogFields = {}) => {
+  const end = (how: "done" | "aborted") => {
     if (ended) return
     ended = true
-    log(outcome === "error" ? "error" : "info", "chat_turn", {
+    log(failure ? "error" : "info", "chat_turn", {
       ...fields,
       ...turnMetrics(steps),
-      outcome,
+      outcome: failure ? "error" : how,
       durationMs: Date.now() - started,
-      ...more,
+      ...failure,
     })
   }
   return {
-    onStepEnd: (step: TurnStep) => {
-      steps.push(step)
+    callbacks: {
+      onStepEnd: (step: TurnStep) => {
+        steps.push(step)
+      },
+      onEnd: () => end("done"),
+      onAbort: () => end("aborted"),
+      // Replaces the AI SDK's default, which logs the whole error: its
+      // message can hold what the model wrote. The name (and an HTTP
+      // status) is enough to find the cause. It runs before the failing
+      // step is counted, so the line waits for the end.
+      onError: ({ error }: { error: unknown }) => {
+        failure ??= {
+          errorName: error instanceof Error ? error.name : typeof error,
+          errorStatus: APICallError.isInstance(error)
+            ? error.statusCode
+            : undefined,
+        }
+      },
     },
-    onEnd: () => end("done"),
-    onAbort: () => end("aborted"),
-    // Replaces the AI SDK's default, which logs the whole error: its
-    // message can hold what the model wrote. The name (and an HTTP status)
-    // is enough to find the cause.
-    onError: ({ error }: { error: unknown }) =>
-      end("error", {
-        errorName: error instanceof Error ? error.name : typeof error,
-        errorStatus: APICallError.isInstance(error)
-          ? error.statusCode
-          : undefined,
-      }),
+    close: () => end("done"),
   }
 }
 
@@ -216,7 +225,7 @@ async function reply({
     // chosen agreement's fields.
     prepareStep: async ({ stepNumber }) =>
       stepNumber === 0 ? {} : { instructions: instructions(await current()) },
-    ...metrics,
+    ...metrics.callbacks,
   })
 
   return streamToEventIterator(
@@ -229,6 +238,7 @@ async function reply({
       originalMessages: all,
       generateMessageId: () => crypto.randomUUID(),
       onEnd: ({ responseMessage }) => {
+        metrics.close()
         // After the response too: the save outlives a closed tab. A failure
         // is logged here: uncaught, Workers would log Drizzle's message,
         // which holds the whole reply.

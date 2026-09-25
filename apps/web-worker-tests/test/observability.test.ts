@@ -426,6 +426,48 @@ describe("the chat's metrics", () => {
     )
     expect(logged).not.toContain("Nightingale")
   })
+
+  it("count what a step used when it fails part way", async () => {
+    const model = new MockLanguageModelV4({
+      doStream: async () => ({
+        stream: simulateReadableStream({
+          chunks: [
+            { type: "text-start", id: "t" },
+            { type: "text-delta", id: "t", delta: "Half a" },
+            { type: "error", error: new TypeError("Upstream hiccup") },
+            {
+              type: "finish",
+              finishReason: { unified: "error", raw: undefined },
+              usage: {
+                inputTokens: {
+                  total: 10,
+                  noCache: 10,
+                  cacheRead: undefined,
+                  cacheWrite: undefined,
+                },
+                outputTokens: { total: 2, text: 2, reasoning: undefined },
+              },
+              providerMetadata: { openrouter: { usage: { cost: 0.00001 } } },
+            },
+          ],
+        }),
+      }),
+    })
+
+    const { turns } = await turn(model, "Hi.")
+
+    expect(turns).toEqual([
+      expect.objectContaining({
+        level: "error",
+        outcome: "error",
+        errorName: "TypeError",
+        steps: 1,
+        inputTokens: 10,
+        outputTokens: 2,
+        costMicroUsd: 10,
+      }),
+    ])
+  })
 })
 
 describe("a reply that can't be saved", () => {
