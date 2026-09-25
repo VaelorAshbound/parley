@@ -6,11 +6,11 @@ import { examples } from "../../../../packages/documents/test/examples"
 import {
   browserRunPrinter,
   buildFile,
-  FONT_CSS,
   fileName,
   PrintFailed,
   type PrintPdf,
 } from "./files"
+import { FONT_CSS } from "./fonts"
 
 const nda = definitions["mutual-nda"]
 const values = nda.draftSchema.parse(examples["mutual-nda"])
@@ -132,7 +132,7 @@ describe("buildFile", () => {
     const printPdf: PrintPdf = async (html) => {
       printedHtml = html
       return {
-        bytes: new TextEncoder().encode("%PDF-1.7").buffer,
+        bytes: await new Response("%PDF-1.7").arrayBuffer(),
         browserMs: 5,
       }
     }

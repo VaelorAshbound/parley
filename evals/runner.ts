@@ -104,6 +104,7 @@ export async function openChat(databaseUrl: string, model: LanguageModel) {
     db,
     auth,
     model,
+    printPdf: () => Promise.reject(new Error("The evals never export.")),
     waitUntil,
     reqHeaders: new Headers({ host: "localhost:3000", cookie }),
     resHeaders: new Headers(),

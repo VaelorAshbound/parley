@@ -9,8 +9,9 @@ import {
 import { logError } from "../log"
 import { chat } from "../ai/chat"
 import { drafts } from "./drafts"
+import { exports } from "./export"
 
-export const router = { drafts, chat }
+export const router = { drafts, chat, export: exports }
 export type Router = typeof router
 
 // Built once per isolate: it holds no request state.

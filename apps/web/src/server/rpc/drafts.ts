@@ -68,9 +68,11 @@ export const drafts = {
             today: input.today,
           }),
           // Another agreement is drafted from here: markComplete checks it
-          // again before anything trusts it as finished.
+          // again before anything trusts it as finished, and its first
+          // download counts as a new document (spec §2 Quota).
           ...(input.documentId !== draft.documentId && {
             status: "drafting" as const,
+            firstExportedAt: null,
           }),
         })
         return saved ?? draft
