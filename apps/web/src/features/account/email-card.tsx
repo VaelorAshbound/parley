@@ -90,8 +90,9 @@ export function EmailCard({
         <CardTitle>
           <h2>Email</h2>
         </CardTitle>
-        <CardDescription className="flex flex-wrap items-center gap-2">
-          <span className="truncate">{account.email}</span>
+        <CardDescription className="flex min-w-0 flex-wrap items-center gap-2">
+          {/* A long address shortens instead of leaving the card. */}
+          <span className="max-w-full min-w-0 truncate">{account.email}</span>
           {account.emailVerified ? (
             <Badge variant="secondary">Confirmed</Badge>
           ) : (
