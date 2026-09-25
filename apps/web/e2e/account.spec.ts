@@ -23,9 +23,10 @@ const captcha = { "x-captcha-response": "XXXX.DUMMY.TOKEN.XXXX" }
 
 /**
  * Posts to Better Auth from this request context (its cookies are the
- * browser's), and waits and tries again when the IP hit the limit.
+ * browser's), waits and tries again while the IP is over the limit, and
+ * gives back the answer's status.
  */
-async function authPost(
+async function authStatus(
   request: APIRequestContext,
   origin: string,
   path: string,
@@ -36,12 +37,21 @@ async function authPost(
       headers: { origin, ...captcha },
       data,
     })
-    if (response.ok()) return
-    if (response.status() !== 429 || attempt === 5)
-      throw new Error(`${path} failed: ${response.status()}`)
+    if (response.status() !== 429 || attempt === 5) return response.status()
     const wait = Number(response.headers()["x-retry-after"] ?? 1)
     await new Promise((resolve) => setTimeout(resolve, wait * 1000))
   }
+}
+
+/** Like authStatus, for a call that must work. */
+async function authPost(
+  request: APIRequestContext,
+  origin: string,
+  path: string,
+  data: object
+) {
+  const status = await authStatus(request, origin, path, data)
+  if (status !== 200) throw new Error(`${path} failed: ${status}`)
 }
 
 /** A new account, signed in on this page, made through the API. */
@@ -63,19 +73,36 @@ async function signUpOn(page: Page, path: string) {
   return email
 }
 
-/** Presses a button, and again after a wait if the IP hit the limit. */
-async function submitAuth(page: Page, name: string | RegExp) {
+/**
+ * Presses a button until `done` happens, pressing again after a wait when
+ * the IP hit the limit (shared by every test: 3 sign-ins per 10 s, 3 reset
+ * emails per minute).
+ */
+async function submitUntil(
+  page: Page,
+  name: string | RegExp,
+  done: () => Promise<unknown>,
+  { tries = 3, wait = 10_000 } = {}
+) {
+  const limited = page.getByText("Too many tries", { exact: false })
   for (let attempt = 1; ; attempt++) {
     await page.getByRole("button", { name, exact: true }).click()
-    const limited = page.getByText("Too many tries", { exact: false })
-    const left = page.waitForURL((url) => !/sign-in/.test(url.pathname))
+    // The last try's message goes away when the form sends again.
+    if (attempt > 1) await limited.waitFor({ state: "hidden" })
     const outcome = await Promise.race([
-      left.then(() => "left" as const),
+      done().then(() => "done" as const),
       limited.waitFor().then(() => "limited" as const),
     ])
-    if (outcome === "left" || attempt === 3) return
-    await page.waitForTimeout(10_000)
+    if (outcome === "done" || attempt === tries) return
+    await page.waitForTimeout(wait)
   }
+}
+
+/** Submits the sign-in form until the page leaves /sign-in. */
+function submitAuth(page: Page, name: string | RegExp) {
+  return submitUntil(page, name, () =>
+    page.waitForURL((url) => !/sign-in/.test(url.pathname))
+  )
 }
 
 async function signIn(page: Page, email: string, pass: string) {
@@ -168,7 +195,8 @@ fresh("changing the password, then signing in with it", async ({ page }) => {
 fresh(
   "forgot password: the emailed link sets a new one",
   async ({ page, context }) => {
-    fresh.slow()
+    // Up to a minute more if the IP used its 3 reset emails this minute.
+    fresh.setTimeout(180_000)
     fresh.skip(
       Boolean(process.env.PREVIEW_URL),
       "Reads the reset token from the local dev database"
@@ -182,10 +210,15 @@ fresh(
       page.getByRole("heading", { level: 1, name: "Reset your password" })
     ).toBeVisible()
     await page.getByLabel("Email").fill(email)
-    await page.getByRole("button", { name: "Email me a link" }).click()
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Check your inbox" })
-    ).toBeVisible()
+    const sent = page.getByRole("heading", {
+      level: 1,
+      name: "Check your inbox",
+    })
+    await submitUntil(page, "Email me a link", () => sent.waitFor(), {
+      tries: 4,
+      wait: 20_000,
+    })
+    await expect(sent).toBeVisible()
 
     await open(page, `/reset-password?token=${await resetToken(email)}`)
     await page.getByLabel("New password").fill(newPassword)
@@ -278,11 +311,14 @@ fresh("deleting the account signs out and removes it", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Sign in to save" })
   ).toBeVisible()
-  await open(page, "/sign-in")
-  await page.getByLabel("Email").fill(email)
-  await page.getByLabel("Password", { exact: true }).fill(password)
-  await page.getByRole("button", { name: /^Sign in/ }).click()
-  await expect(
-    page.getByText("That email and password don’t match.")
-  ).toBeVisible()
+  // The account is gone: its email and password no longer sign in. (Asked
+  // through the API: the home page may still be starting a guest, which
+  // would cut off a navigation.)
+  const status = await authStatus(
+    page.request,
+    new URL(page.url()).origin,
+    "/sign-in/email",
+    { email, password }
+  )
+  expect(status).toBe(401)
 })
