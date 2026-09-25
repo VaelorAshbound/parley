@@ -367,7 +367,7 @@ describe("exportDraft when the user leaves", () => {
       signal: leaving.signal,
     })
 
-    await expect(exporting).rejects.toThrow()
+    await expect(exporting).rejects.toMatchObject({ name: "AbortError" })
     expect((await countedFor(email)).rows).toEqual([])
   })
 })
