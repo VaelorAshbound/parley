@@ -2,7 +2,9 @@
 # tests against the Worker Preview that Workers Builds makes for each branch.
 # Workers Builds has no root and no GUI libraries, so browsers can't run there
 # (work/PAR-1/spikes.md, docs/adr/0001). Kept lean to save Actions minutes:
-# Chromium only on PRs, all browsers nightly, and setup overlaps the Preview build.
+# on PRs the component tests run in Chromium and Firefox (a Firefox-only bug
+# reached the Checkpoint 2 demo) and e2e in Chromium; all browsers nightly;
+# setup overlaps the Preview build.
 name: E2E
 
 on:
@@ -55,14 +57,17 @@ jobs:
         run: |
           if [ "$EVENT" = "pull_request" ]; then
             pnpm exec playwright install --with-deps --only-shell chromium
+            pnpm exec playwright install --with-deps firefox
           else
             pnpm exec playwright install --with-deps chromium firefox webkit
           fi
 
-      # Vitest browser mode (spec §6): the UI's component tests in a real
-      # Chromium. They need no Preview, so they run while it builds.
+      # Vitest browser mode (spec §6): the UI's component tests in real
+      # Chromium and Firefox. They need no Preview, so they run while it builds.
       - name: Component tests
         if: github.event_name == 'pull_request'
+        env:
+          TEST_BROWSERS: chromium,firefox
         run: |
           pnpm documents:build
           pnpm test:browser

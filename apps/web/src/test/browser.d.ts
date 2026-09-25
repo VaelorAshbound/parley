@@ -1,4 +1,9 @@
-// The Playwright provider's types for browser-mode tests: they give
-// `cdp()` its `send` (Chromium DevTools Protocol), e.g. to emulate
-// prefers-reduced-motion.
-/// <reference types="vite-plus/test/browser-playwright" />
+// Types for the browser-mode tests: the custom commands in the root
+// vite.config.ts.
+export {}
+
+declare module "vite-plus/test/browser" {
+  interface BrowserCommands {
+    emulateReducedMotion: (reduce: boolean) => Promise<void>
+  }
+}

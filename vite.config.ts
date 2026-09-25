@@ -2,9 +2,34 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig, type TestProjectInlineConfiguration } from "vite-plus"
 import { playwright } from "vite-plus/test/browser-playwright"
+import type { BrowserCommand } from "vite-plus/test/node"
 
 // Component tests in a real browser (spec §6): Vitest browser mode with the
-// Playwright provider. T32 adds Firefox and WebKit.
+// Playwright provider. Chromium by default; CI adds Firefox, since a
+// Firefox-only bug reached the Checkpoint 2 demo (TEST_BROWSERS). T32 adds
+// WebKit.
+const engines = ["chromium", "firefox", "webkit"] as const
+const browsers = (process.env.TEST_BROWSERS ?? "chromium")
+  .split(",")
+  .map((name) => {
+    const engine = engines.find((each) => each === name.trim())
+    if (!engine) throw new Error(`TEST_BROWSERS: unknown browser "${name}"`)
+    return engine
+  })
+
+/**
+ * Turns reduced motion on or off for the test page, in every engine
+ * (Playwright's emulateMedia; Chromium's DevTools protocol is Chromium only).
+ */
+const emulateReducedMotion: BrowserCommand<[reduce: boolean]> = async (
+  context,
+  reduce
+) => {
+  if (context.provider.name !== "playwright")
+    throw new Error("emulateReducedMotion needs the Playwright provider")
+  await context.page.emulateMedia({ reducedMotion: reduce ? "reduce" : null })
+}
+
 const browserProject = {
   resolve: { tsconfigPaths: true },
   plugins: [tailwindcss(), react()],
@@ -19,11 +44,13 @@ const browserProject = {
       headless: true,
       provider: playwright({
         launchOptions: {
-          // A local Chromium when Playwright's download isn't available.
+          // A local Chromium when Playwright's download isn't available
+          // (Chromium-only runs).
           executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
         },
       }),
-      instances: [{ browser: "chromium" }],
+      commands: { emulateReducedMotion },
+      instances: browsers.map((browser) => ({ browser })),
     },
   },
 } satisfies TestProjectInlineConfiguration

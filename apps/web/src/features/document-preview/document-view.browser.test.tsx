@@ -1,7 +1,7 @@
 import { definitions, render as renderDocument } from "@workspace/documents"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { describe, expect, test, vi } from "vite-plus/test"
-import { cdp, userEvent } from "vite-plus/test/browser"
+import { commands, userEvent } from "vite-plus/test/browser"
 import { render } from "vitest-browser-react"
 
 import { DocumentView } from "./document-view"
@@ -162,10 +162,7 @@ describe("the live document", () => {
   })
 
   test("with reduced motion, a change fades in place: no sweep, blur or slide", async () => {
-    const session = cdp()
-    await session.send("Emulation.setEmulatedMedia", {
-      features: [{ name: "prefers-reduced-motion", value: "reduce" }],
-    })
+    await commands.emulateReducedMotion(true)
     try {
       const { screen } = await show(filled, undefined, { purpose: 1 })
       const value = screen.getByText("Evaluating a partnership.").element()
@@ -175,7 +172,7 @@ describe("the live document", () => {
       expect(names).not.toContain("ink-sweep")
       expect(names).not.toContain("ink-blur")
     } finally {
-      await session.send("Emulation.setEmulatedMedia", { features: [] })
+      await commands.emulateReducedMotion(false)
     }
   })
 })
