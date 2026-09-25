@@ -1,13 +1,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
-import { definitions } from "@workspace/documents"
+import { definitions, type DocumentId } from "@workspace/documents"
 import { Temporal } from "temporal-polyfill"
 import { afterAll, describe, expect, inject, test } from "vite-plus/test"
 
 import type { ChatMessage } from "../apps/web/src/server/ai/chat"
 import { MODEL_ID } from "../apps/web/src/server/ai/model"
 import { chooseCases } from "./cases/choose"
+import { draftCases } from "./cases/draft"
 import { guardrailCases } from "./cases/guardrails"
 import { ndaCases } from "./cases/nda"
 import {
@@ -22,16 +23,22 @@ import {
   userReply,
   type Usage,
 } from "./runner"
-import { scoreFields } from "./score"
+import { mentioned, scoreFields } from "./score"
 
-// AI evals v1 (spec §6, T20): the real model, through the real chat.
-// Bars: the right agreement in 90% or more, the right field values in 95%
-// or more, zero invalid writes. The report lands in evals/report.md.
+// AI evals (spec §6; T20, then all 11 agreements in T30): the real model,
+// through the real chat. Bars: the right agreement in 90% or more, the
+// right field values in 95% or more, zero invalid writes. The report lands
+// in evals/report.md.
 
 const today = Temporal.Now.plainDateISO().toString()
-/** A whole NDA should take a few turns; more means the chat is stuck. */
-const MAX_TURNS = 8
+/**
+ * A whole agreement takes a few questionnaires (the CSA has 25 required
+ * fields, up to 5 questions a card); more turns means the chat is stuck.
+ */
+const MAX_TURNS = 12
 const BAR = { documents: 0.9, fields: 0.95, invalidWrites: 0 }
+/** Spec §8: a finished NDA should cost under two cents. */
+const NDA_GOAL = 0.02
 
 const apiKey =
   process.env.OPENROUTER_API_KEY ??
@@ -43,15 +50,19 @@ const apiKey =
 if (!apiKey) throw new Error("Set OPENROUTER_API_KEY (the test key)")
 
 type Result = {
-  kind: "choose" | "nda" | "guardrail"
+  kind: "choose" | "draft" | "guardrail"
   name: string
+  /** The agreement the case is about, for the per-agreement table. */
+  want: DocumentId | null
   turns: number
   usage: Usage
   /** Values the engine refused: the model tried to write something invalid. */
   invalidWrites: number
-  document?: { ok: boolean; got: string | null; want: string }
+  document?: { ok: boolean; got: string | null }
   fields?: { path: string; ok: boolean; got: unknown }[]
   complete?: boolean
+  /** Whether Parley named a related agreement the case expects (T30). */
+  suggested?: { ok: boolean; named: DocumentId[] }
   guardrail?: { ok: boolean; why: string }
 }
 const results: Result[] = []
@@ -91,6 +102,16 @@ function refusals(messages: ChatMessage[]) {
     }, 0)
 }
 
+/** Everything Parley wrote in the chat, as one text. */
+function replies(messages: ChatMessage[]) {
+  return messages
+    .filter((message) => message.role === "assistant")
+    .flatMap((message) =>
+      message.parts.flatMap((part) => (part.type === "text" ? [part.text] : []))
+    )
+    .join("\n")
+}
+
 describe("choosing the agreement", () => {
   test.for(chooseCases)("$name", async (each) => {
     const metered = meteredModel(apiKey)
@@ -121,21 +142,27 @@ describe("choosing the agreement", () => {
         turns = 2
       }
       const got = (await chat.client.drafts.get({ id: draft.id })).documentId
+      const messages = keep(
+        each.name,
+        await chat.client.chat.messages({ id: draft.id })
+      )
+      const named = each.suggests
+        ? mentioned(replies(messages), each.suggests)
+        : undefined
       results.push({
         kind: "choose",
         name: each.name,
+        want: each.expect,
         turns,
         usage: metered.usage,
-        invalidWrites: refusals(
-          keep(each.name, await chat.client.chat.messages({ id: draft.id }))
-        ),
+        invalidWrites: refusals(messages),
         document: {
           ok:
             got === each.expect ||
             (got !== null && (each.also ?? []).includes(got)),
           got,
-          want: each.expect,
         },
+        suggested: named && { ok: named.length > 0, named },
       })
     } finally {
       await chat.close()
@@ -143,8 +170,8 @@ describe("choosing the agreement", () => {
   })
 })
 
-describe("drafting a whole NDA", () => {
-  test.for(ndaCases)("$name", async (each) => {
+describe("drafting a whole agreement", () => {
+  test.for([...ndaCases, ...draftCases])("$name", async (each) => {
     const metered = meteredModel(apiKey)
     const user = meteredModel(apiKey).model
     const chat = await openChat(inject("databaseUrl"), metered.model)
@@ -193,17 +220,17 @@ describe("drafting a whole NDA", () => {
       }
       const done = await chat.client.drafts.get({ id: draft.id })
       results.push({
-        kind: "nda",
+        kind: "draft",
         name: each.name,
+        want: each.document,
         turns,
         usage: metered.usage,
         invalidWrites: refusals(
           keep(each.name, await chat.client.chat.messages({ id: draft.id }))
         ),
         document: {
-          ok: done.documentId === "mutual-nda",
+          ok: done.documentId === each.document,
           got: done.documentId,
-          want: "mutual-nda",
         },
         fields: scoreFields(each.expect, done.fields),
         complete: done.status === "complete",
@@ -245,6 +272,7 @@ describe("staying on task", () => {
       results.push({
         kind: "guardrail",
         name: each.name,
+        want: null,
         turns: 1,
         usage: metered.usage,
         invalidWrites: refusals(keep(each.name, messages)),
@@ -266,28 +294,7 @@ describe("staying on task", () => {
 })
 
 afterAll(() => {
-  const picks = results.flatMap((each) =>
-    each.document ? [each.document] : []
-  )
-  const fields = results.flatMap((each) => each.fields ?? [])
-  const guards = results.flatMap((each) =>
-    each.guardrail ? [each.guardrail] : []
-  )
-  const share = (items: { ok: boolean }[]) =>
-    items.length === 0
-      ? 0
-      : items.filter((each) => each.ok).length / items.length
-  const summary = {
-    documents: share(picks),
-    fields: share(fields),
-    invalidWrites: results.reduce((sum, each) => sum + each.invalidWrites, 0),
-    finished: share(
-      results.flatMap((each) =>
-        each.complete === undefined ? [] : [{ ok: each.complete }]
-      )
-    ),
-    guardrails: share(guards),
-  }
+  const summary = summarize(results)
   writeFileSync(join(import.meta.dirname, "report.md"), report(summary))
 
   // All the misses at once (expect.soft only works inside a test).
@@ -300,61 +307,97 @@ afterAll(() => {
       `${summary.invalidWrites} invalid writes`,
   ].filter(Boolean)
   expect(results).toHaveLength(
-    chooseCases.length + ndaCases.length + guardrailCases.length
+    chooseCases.length +
+      ndaCases.length +
+      draftCases.length +
+      guardrailCases.length
   )
   expect(misses, "below the bar (see evals/report.md)").toEqual([])
 })
 
+const share = (items: { ok: boolean }[]) =>
+  items.length === 0 ? 0 : items.filter((each) => each.ok).length / items.length
+const mean = (values: number[]) =>
+  values.length === 0
+    ? undefined
+    : values.reduce((sum, each) => sum + each, 0) / values.length
+
+/** The measures of a set of conversations (all of them, or one agreement's). */
+function summarize(set: Result[]) {
+  const drafts = set.filter((each) => each.kind === "draft")
+  return {
+    conversations: set.length,
+    documents: share(set.flatMap((each) => each.document ?? [])),
+    fields: share(set.flatMap((each) => each.fields ?? [])),
+    invalidWrites: set.reduce((sum, each) => sum + each.invalidWrites, 0),
+    finished: share(drafts.map((each) => ({ ok: each.complete === true }))),
+    suggested: share(set.flatMap((each) => each.suggested ?? [])),
+    guardrails: share(set.flatMap((each) => each.guardrail ?? [])),
+    cost: mean(set.map((each) => cost(each.usage))) ?? 0,
+    /** The product's cost of a finished draft (spec §8), when any finished. */
+    costFinished: mean(
+      drafts.filter((each) => each.complete).map((each) => cost(each.usage))
+    ),
+  }
+}
+
 const percent = (value: number) => `${Math.round(value * 100)}%`
-const dollars = (value: number) => `$${value.toFixed(4)}`
+const dollars = (value: number | undefined) =>
+  value === undefined ? "—" : `$${value.toFixed(4)}`
 const mark = (ok: boolean) => (ok ? "✅" : "❌")
 const name = (id: string | null) =>
   id && id in definitions
     ? definitions[id as keyof typeof definitions].name
     : "none"
 
-function report(summary: {
-  documents: number
-  fields: number
-  invalidWrites: number
-  finished: number
-  guardrails: number
-}) {
+function report(summary: ReturnType<typeof summarize>) {
   const conversations = [...results].sort(
     (a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name)
   )
-  const spent = conversations.map((each) => cost(each.usage))
-  const total = spent.reduce((sum, each) => sum + each, 0)
-  const row = (label: string, value: string, bar: string, ok: boolean) =>
-    `| ${label} | ${value} | ${bar} | ${mark(ok)} |`
+  const nda = summarize(results.filter((each) => each.want === "mutual-nda"))
+  const row = (label: string, value: string, bar: string, ok?: boolean) =>
+    `| ${label} | ${value} | ${bar} | ${ok === undefined ? "" : mark(ok)} |`
   return `# AI evals
 
-Generated by \`pnpm evals\` on ${today} with \`${MODEL_ID}\`, through the real chat procedure, tools, engine and database. ${conversations.length} conversations; a simulated user answers from each case's facts. Edit the cases in \`evals/cases/\`, not this file.
+Generated by \`pnpm evals\` on ${today} with \`${MODEL_ID}\`, through the real chat procedure, tools, engine and database. ${conversations.length} conversations across all ${Object.keys(definitions).length} agreements; a simulated user answers from each case's facts. Edit the cases in \`evals/cases/\`, not this file.
 
 | Measure | Result | Bar | |
 |---|---|---|---|
 ${row("Right agreement", percent(summary.documents), "≥ 90%", summary.documents >= BAR.documents)}
-${row("Right field values (NDA)", percent(summary.fields), "≥ 95%", summary.fields >= BAR.fields)}
+${row("Right field values", percent(summary.fields), "≥ 95%", summary.fields >= BAR.fields)}
 ${row("Invalid writes (refused values and failed tool calls)", String(summary.invalidWrites), "0", summary.invalidWrites === BAR.invalidWrites)}
-| NDAs finished (markComplete said complete) | ${percent(summary.finished)} | — | |
+${row("Drafts finished (markComplete said complete)", percent(summary.finished), "—")}
+${row("Named a related agreement, where one fits", percent(summary.suggested), "—")}
 ${row("Stayed on task", percent(summary.guardrails), "—", summary.guardrails === 1)}
-| Cost per conversation (mean) | ${dollars(total / Math.max(conversations.length, 1))} | — | |
+${row("Cost per conversation (mean)", dollars(summary.cost), "—")}
+${row("Cost per finished NDA (mean)", dollars(nda.costFinished), `< ${dollars(NDA_GOAL)}`, nda.costFinished !== undefined && nda.costFinished < NDA_GOAL)}
 
 Cost counts the chat's model only (not the simulated user), at OpenRouter's list prices: $0.10/M input, $0.01/M cached input, $0.50/M output.
+
+## By agreement
+
+| Agreement | Conversations | Right agreement | Right field values | Drafts finished | Cost per finished draft |
+|---|---|---|---|---|---|
+${Object.values(definitions)
+  .map((definition) => {
+    const one = summarize(results.filter((each) => each.want === definition.id))
+    return `| ${definition.name} | ${one.conversations} | ${percent(one.documents)} | ${percent(one.fields)} | ${percent(one.finished)} | ${dollars(one.costFinished)} |`
+  })
+  .join("\n")}
 
 ## Conversations
 
 | Kind | Case | Result | Turns | Model calls | Input (cached) | Output | Cost |
 |---|---|---|---|---|---|---|---|
 ${conversations
-  .map((each, index) => {
+  .map((each) => {
     const outcome =
       each.kind === "guardrail"
         ? `${mark(each.guardrail?.ok ?? false)} ${each.guardrail?.why}`
         : each.kind === "choose"
-          ? `${mark(each.document?.ok ?? false)} ${name(each.document?.got ?? null)}${each.document?.ok ? "" : ` (want ${name(each.document?.want ?? null)})`}`
-          : `${mark((each.fields ?? []).every((field) => field.ok))} ${(each.fields ?? []).filter((field) => field.ok).length}/${each.fields?.length} fields${each.complete ? ", complete" : ", not complete"}`
-    return `| ${each.kind} | ${each.name} | ${outcome}${each.invalidWrites ? `, ${each.invalidWrites} failed writes` : ""} | ${each.turns} | ${each.usage.calls} | ${each.usage.input} (${each.usage.cached}) | ${each.usage.output} | ${dollars(spent[index] ?? 0)} |`
+          ? `${mark(each.document?.ok ?? false)} ${name(each.document?.got ?? null)}${each.document?.ok ? "" : ` (want ${name(each.want)})`}${each.suggested ? `, ${each.suggested.ok ? `named ${each.suggested.named.join(", ")}` : "named no related agreement"}` : ""}`
+          : `${mark((each.document?.ok ?? false) && (each.fields ?? []).every((field) => field.ok))} ${name(each.document?.got ?? null)}, ${(each.fields ?? []).filter((field) => field.ok).length}/${each.fields?.length} fields${each.complete ? ", complete" : ", not complete"}`
+    return `| ${each.kind} | ${each.name} | ${outcome}${each.invalidWrites ? `, ${each.invalidWrites} failed writes` : ""} | ${each.turns} | ${each.usage.calls} | ${each.usage.input} (${each.usage.cached}) | ${each.usage.output} | ${dollars(cost(each.usage))} |`
   })
   .join("\n")}
 ${misses()}`

@@ -1,17 +1,13 @@
+import type { DraftCase } from "./draft"
+
 // Drafting a whole Mutual NDA by chat (spec §6). The simulated user knows
 // only the facts below and answers what the AI asks, in chat or in its
 // questionnaire. `expect` is what each field must end up holding.
 
-export type NdaCase = {
-  name: string
-  opening: string
-  facts: string
-  expect: Record<string, unknown>
-}
-
-export const ndaCases: NdaCase[] = [
+export const ndaCases: DraftCase[] = [
   {
     name: "robotics roadmap",
+    document: "mutual-nda",
     opening:
       "We're Acme Robotics. We're about to share our product roadmap with a supplier, Northwind Labs.",
     facts: `- Party 1: Acme Robotics. Signer: Ana Diaz, CEO, ana@acme.test.
@@ -42,6 +38,7 @@ export const ndaCases: NdaCase[] = [
   },
   {
     name: "biotech partnership talks",
+    document: "mutual-nda",
     opening:
       "I run Helix Bio. We're talking with Pinecrest Pharma about a research partnership and need an NDA first.",
     facts: `- Party 1: Helix Bio. Signer: Priya Raman, COO, priya@helixbio.test.
@@ -70,6 +67,7 @@ export const ndaCases: NdaCase[] = [
   },
   {
     name: "acquisition talks, open-ended",
+    document: "mutual-nda",
     opening:
       "Northstar Analytics may buy our company, Brightline Data. We need an NDA before we open our books to them.",
     facts: `- Party 1: Brightline Data. Signer: Sofia Novak, Founder and CEO, sofia@brightline.test.
