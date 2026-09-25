@@ -417,10 +417,11 @@ Rules:
   - Google + GitHub, with account linking for the same verified email. One Google client serves production + `http://localhost:3000`. GitHub has two apps (`GITHUB_CLIENT_ID` for production, `GITHUB_CLIENT_ID_DEV` for local), because GitHub allows only one callback URL per app. OAuth isn't available on PR preview URLs (their origin changes each time), so previews test email + password.
 - **Email verification rule.** Signing up gives a session right away, so the guest's draft links at once, even if the verify link is opened on another device. But **export, share and upgrade need a verified email**, which stops fake-email abuse of the quota.
 - **Account management.**
-  - `user.changeEmail.enabled`: it confirms with the current email first.
-  - `changePassword` with `revokeOtherSessions`, and setting a password for OAuth-only users.
-  - A session list with revoke.
-  - `user.deleteUser.enabled`, which needs a fresh session and removes all data.
+  - `user.changeEmail.enabled`: it confirms with the current email first. The new address's link works only where the account is signed in (T23: it would sign in a browser with no session, which is login CSRF).
+  - `changePassword` with `revokeOtherSessions`, and setting a password for OAuth-only users (after a sign-in in the last 15 minutes, `freshAge`).
+  - A session list with revoke. It comes from our own `account.sessions` procedure, because Better Auth's `/list-sessions` sends every session's token to the browser (T23).
+  - `user.deleteUser.enabled`, which needs the password (or, for an OAuth-only account, a sign-in in the last 15 minutes) and removes all data.
+  - The reset link goes to `/reset-password?token=`: the token in the query, never the path (ADR-0005). A new password set with it confirms the email, which is also the way back for the owner of an address someone else signed up with and never confirmed (T23).
 - **Plugins:**
   - `anonymous({ onLinkAccount })`;
   - `twoFactor({ issuer: "Parley" })`: TOTP with a QR code + 10 encrypted backup codes + trusted device for 30 days; only credential accounts can use it;
@@ -431,7 +432,7 @@ Rules:
 - **Session cache.** `session.cookieCache` (`compact`, 5 min) saves a DB read on most requests. A revoke can take up to 5 min to reach other devices; bump `cookieCache.version` to force it everywhere.
 - **Base URL.** No `BETTER_AUTH_URL`: `baseURL: { allowedHosts }` builds it from the request's host (Better Auth 1.5+). Production allows `parley.runtimedrift.dev` (+ `localhost:*` for dev and tests); previews allow `*-parley.vaelorashbound.workers.dev`. Production refuses workers.dev, because old versions stay reachable there. Any other host is refused. (T14)
 - **Secret.** `BETTER_AUTH_SECRET` is declared in `secrets.required` (types work in CI, deploys fail without it). Production and Previews have different values; Previews get theirs from the Previews base config (`wrangler preview base-config secret put`). Locally it is in `apps/web/.dev.vars`. (T14)
-- **Security.** `trustedOrigins`: the allowed hosts above. Secure cookies. CSRF and origin checks stay on. `BETTER_AUTH_SECRET` is at least 32 characters, from `npx @better-auth/cli secret`. `databaseHooks` write **audit logs** for session create/revoke, email change and account link (IDs only).
+- **Security.** `trustedOrigins`: the allowed hosts above. Secure cookies. CSRF and origin checks stay on. `BETTER_AUTH_SECRET` is at least 32 characters, from `npx @better-auth/cli secret`. `databaseHooks` write **audit logs** for session create/end, login method added, email change, password change and account delete (IDs only; T23).
 - **Schema.** `pnpm db:auth-schema` runs the Better Auth CLI (`auth generate`; the old `@better-auth/cli` is deprecated since Better Auth 1.5) and writes `packages/db/src/auth-schema.ts` (re-run it after plugin changes). T13 generated it from a config that lists the schema-changing options (`anonymous`, `twoFactor`, `rateLimit.storage: "database"`); T14's real config must produce the same file. Better Auth is pinned to 1.7.5, because pnpm's release-age check refused 1.7.6 (published the same day). We add the indexes Better Auth recommends (`user.email`, `account.userId`, `session.userId` + `token`, `verification.identifier`, `twoFactor.secret`). `npx @better-auth/cli info` is used when debugging.
 - **Emails** (Resend + React Email): verify email, reset password, confirm email change. They are sent in the background.
 - **Sender.** The Resend domain `mail.runtimedrift.dev` is verified (region eu-west-1, sending only). The from address is `Parley <no-reply@mail.runtimedrift.dev>`. Every send has an idempotency key (`<event>/<id>`) and checks `{ error }` (the SDK doesn't throw). Tests send to `delivered@resend.dev`. The production Worker uses a **sending-only** key limited to that domain. The full-access `RESEND_API_KEY` stays local for admin work.
