@@ -64,9 +64,14 @@ export const GUEST_DRAFTS = 1
 export const GUESTS_PER_NETWORK = { window: 60 * 60, max: 10 }
 
 /**
- * The same on test deployments (local dev, the Worker tests, Previews):
- * Turnstile's test keys let everyone through there, and the e2e runs make a
- * guest per test from one address. Still a limit, so a Preview can't be
- * flooded.
+ * The same on Previews. They pass every Turnstile token (test keys) and
+ * anyone can guess their URL, so they let only a few new guests in at a time.
+ * The e2e fixture waits and tries again on 429 (e2e/helpers.ts).
+ */
+export const PREVIEW_GUESTS_PER_NETWORK = { window: 10, max: 5 }
+
+/**
+ * Local dev and the Worker tests: also Turnstile's test keys, and the e2e
+ * runs make a guest per test from one address. Still a limit.
  */
 export const TEST_GUESTS_PER_NETWORK = { window: 10, max: 30 }

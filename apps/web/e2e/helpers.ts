@@ -11,9 +11,13 @@ export async function open(page: Page, url: string) {
   await page.locator("html[data-hydrated]").waitFor({ state: "attached" })
 }
 
+/** Tries at a 429 before a sign-in gives up. */
+const attempts = 10
+
 /**
  * A browser context signed in through `path` (an auth endpoint), saved to a
- * file. Sign-ins and sign-ups are rate limited per IP, so it waits and tries
+ * file. Sign-ins and sign-ups are rate limited per IP (a Preview lets 5 new
+ * guests in per 10 s), so it waits as long as the server says and tries
  * again on 429.
  */
 async function signedInState(
@@ -23,7 +27,7 @@ async function signedInState(
 ) {
   const baseURL = workerInfo.project.use.baseURL ?? ""
   const context = await browser.newContext({ baseURL })
-  for (let attempt = 1; attempt <= 5; attempt++) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     const response = await context.request.post(path, {
       headers: {
         origin: new URL(baseURL).origin,
@@ -34,7 +38,7 @@ async function signedInState(
       data,
     })
     if (response.ok()) break
-    if (response.status() !== 429 || attempt === 5)
+    if (response.status() !== 429 || attempt === attempts)
       throw new Error(`${name} sign-in failed: ${response.status()}`)
     const wait = Number(response.headers()["x-retry-after"] ?? 1)
     await new Promise((resolve) => setTimeout(resolve, wait * 1000))
@@ -52,15 +56,19 @@ async function signedInState(
  * first visit use the plain `test` from Playwright.
  */
 export const test = base.extend<{ guestState: string }>({
-  guestState: async ({ browser }, use, testInfo) => {
-    await use(
-      await signedInState(browser, testInfo, {
-        name: `guest-${crypto.randomUUID()}`,
-        path: "/api/auth/sign-in/anonymous",
-        data: {},
-      })
-    )
-  },
+  guestState: [
+    async ({ browser }, use, testInfo) => {
+      await use(
+        await signedInState(browser, testInfo, {
+          name: `guest-${crypto.randomUUID()}`,
+          path: "/api/auth/sign-in/anonymous",
+          data: {},
+        })
+      )
+    },
+    // Waiting for a new guest doesn't use up the test's own time.
+    { timeout: 60_000 },
+  ],
   storageState: ({ guestState }, use) => use(guestState),
 })
 

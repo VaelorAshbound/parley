@@ -24,7 +24,11 @@ import { VerifyEmail } from "../emails/verify-email"
 
 import { auditHooks } from "./audit"
 import { createMailer } from "./email"
-import { GUESTS_PER_NETWORK, TEST_GUESTS_PER_NETWORK } from "./limits"
+import {
+  GUESTS_PER_NETWORK,
+  PREVIEW_GUESTS_PER_NETWORK,
+  TEST_GUESTS_PER_NETWORK,
+} from "./limits"
 import { log, logInfo } from "./log"
 
 // Better Auth, built per request because the database client is per request
@@ -201,9 +205,7 @@ export function createAuth({
       customRules: {
         // New guests per network (spec §2 Limits). Better Auth counts per
         // IP and path, before the Turnstile check.
-        "/sign-in/anonymous": usesTestKeys(env)
-          ? TEST_GUESTS_PER_NETWORK
-          : GUESTS_PER_NETWORK,
+        "/sign-in/anonymous": guestsPerNetwork(env),
       },
     },
     advanced: {
@@ -288,6 +290,15 @@ const turnstileTestSecrets = new Set(
  */
 function usesTestKeys(env: Pick<Env, "TURNSTILE_SECRET_KEY">) {
   return turnstileTestSecrets.has(env.TURNSTILE_SECRET_KEY)
+}
+
+/** How many new guests one network may make (spec §2 Limits). */
+function guestsPerNetwork(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
+  if (!usesTestKeys(env)) return GUESTS_PER_NETWORK
+  const stage: string = env.STAGE
+  return stage === "preview"
+    ? PREVIEW_GUESTS_PER_NETWORK
+    : TEST_GUESTS_PER_NETWORK
 }
 
 /**
