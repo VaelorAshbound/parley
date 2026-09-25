@@ -1,6 +1,8 @@
-import { ORPCError } from "@orpc/client"
+import { isDefinedError, ORPCError, type InferClientErrors } from "@orpc/client"
+import type { RouterClient } from "@orpc/server"
 
-import { DAILY_MESSAGES, type LimitTier } from "@/lib/limits"
+import { DAILY_MESSAGES } from "@/lib/limits"
+import type { Router } from "@/server/rpc/router"
 
 // What to tell someone the chat refused for a limit (spec §2 Limits), from
 // the typed error, with the way past it. Null for anything else: the chat's
@@ -13,7 +15,11 @@ export type LimitProblem = {
   retry: boolean
 }
 
-type DailyLimit = { limit: number; tier: LimitTier; resetsAt: string }
+/**
+ * The chat's typed errors, from the router, so the data read here can't
+ * drift from the server's schema (chat.answer's are the same).
+ */
+type ChatError = InferClientErrors<RouterClient<Router>>["chat"]["send"]
 
 /** The upgrade page (T26). */
 const PRICING = "/pricing"
@@ -28,15 +34,17 @@ export function limitProblem(
   draftPath: string,
   time: { timeZone?: string; locale?: string } = {}
 ): LimitProblem | null {
-  if (!(error instanceof ORPCError) || !error.defined) return null
-  if (error.code === "TOO_MANY_REQUESTS")
+  if (!(error instanceof ORPCError)) return null
+  const chatError = error as ChatError
+  if (!isDefinedError(chatError)) return null
+  if (chatError.code === "TOO_MANY_REQUESTS")
     return {
       message:
         "You’re sending messages quickly. Wait a few seconds, then try again.",
       retry: true,
     }
-  if (error.code !== "DAILY_LIMIT") return null
-  const { limit, tier, resetsAt } = error.data as DailyLimit
+  if (chatError.code !== "DAILY_LIMIT") return null
+  const { limit, tier, resetsAt } = chatError.data
   const used = `You’ve used today’s ${limit} messages.`
   if (tier === "guest")
     return {
