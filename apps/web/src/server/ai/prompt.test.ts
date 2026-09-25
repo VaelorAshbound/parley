@@ -94,7 +94,10 @@ describe("the chat's instructions", () => {
     const text = instructions({ definition: definitions.csa, values: {} })
 
     // Each rule answers a refused or wrong write in T30's evals.
-    expect(text).toMatch(/either state .* or region .*, never both/)
+    expect(text).toMatch(/either state or region, never both/)
+    expect(text).toMatch(/a US state always goes in state as its code/)
+    expect(text).toMatch(/If the user doesn't know, use that usual choice/)
+    expect(text).toMatch(/An amount in \$ is in USD/)
     expect(text).toMatch(/never send an empty string/)
     expect(text).toMatch(/full legal name/)
     // Asking again and again for an ending the user doesn't know left
