@@ -118,3 +118,6 @@ Wave B1 merged (4fb2034): T22 history+search, T23 settings+password/email flows,
 
 ### 2026-09-25T19:16:42Z
 Wave B2 (T25, T27, T28) started then stopped at the owner's request before any commit; its empty worktrees removed. Found: CI e2e failed on a18bfcf (wave A): sign-up on the Preview says 'Something went wrong' because Better Auth logs 'Missing secret key' (Turnstile), though TURNSTILE_SECRET_KEY is on the Preview base config. Under investigation.
+
+### 2026-09-25T20:03:43Z
+Preview CI fixed: sign-up (Turnstile test secret now in previews.vars; base-config secrets reach only new Previews) and first-load layout shift (Linux fallback fonts: Tinos/Liberation and Noto faces, Capsize-checked; CLS 0.050 -> 0.015). Owner chose font-display swap over optional: the zero-shift e2e now allows <= 0.02.

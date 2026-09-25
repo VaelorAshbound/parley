@@ -136,7 +136,11 @@ test("loading a draft doesn't shift the layout", async ({ page }) => {
       })
   )
 
-  expect(shift).toBe(0)
+  // Only the web fonts' swap may move text, and only a little: the fallbacks
+  // are metric-matched, but no fallback wraps every line alike. The owner
+  // chose font-display: swap (brand fonts always show) over optional (never
+  // a shift) on 2026-09-25; 0.015 was measured with Noto on Linux.
+  expect(shift).toBeLessThanOrEqual(0.02)
 })
 
 for (const width of [1440, 1024, 375]) {
