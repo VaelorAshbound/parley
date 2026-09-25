@@ -286,6 +286,24 @@ describe("drafts.markComplete", () => {
     })
   })
 
+  it("goes back to drafting when the agreement is switched", async () => {
+    const client = browserClient((await signInGuest()).cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await client.drafts.updateFields({ id: draft.id, changes: ndaChanges })
+    await client.drafts.markComplete({ id: draft.id })
+
+    const switched = await client.drafts.chooseDocument({
+      id: draft.id,
+      documentId: "csa",
+      today,
+    })
+
+    expect(switched.status).toBe("drafting")
+  })
+
   it("won't finish a draft before its agreement is chosen", async () => {
     const client = browserClient((await signInGuest()).cookie)
     const draft = await client.drafts.create({ today })

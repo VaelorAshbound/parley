@@ -67,6 +67,11 @@ export const drafts = {
           fields: switchDocument(draft.fields, definitionOf(input.documentId), {
             today: input.today,
           }),
+          // Another agreement is drafted from here: markComplete checks it
+          // again before anything trusts it as finished.
+          ...(input.documentId !== draft.documentId && {
+            status: "drafting" as const,
+          }),
         })
         return saved ?? draft
       })
