@@ -2,7 +2,8 @@
 // - the saved theme is read with useSyncExternalStore instead of setState in an
 //   effect, so the React Compiler can optimize the provider
 //   (https://react.dev/reference/react/useSyncExternalStore#subscribing-to-a-browser-api);
-// - the context starts undefined, so useTheme() outside the provider throws.
+// - the context starts undefined, so useTheme() outside the provider throws;
+// - a switch turns CSS transitions off while it applies (withoutTransitions).
 import { ScriptOnce } from "@tanstack/react-router"
 import {
   createContext,
@@ -36,7 +37,28 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
   undefined
 )
 
+/**
+ * Runs `apply` with CSS transitions off, so a theme switch shows the new
+ * colors at once instead of fading every `transition-all` element (T4). The
+ * same idea as next-themes' disableTransitionOnChange, with an attribute and
+ * a rule in globals.css instead of an injected <style>, so a strict CSP
+ * doesn't block it.
+ */
+export function withoutTransitions(apply: () => void) {
+  const root = document.documentElement
+  root.setAttribute("data-theme-switching", "")
+  apply()
+  // Reading a style makes the browser compute the new colors now, while
+  // transitions are off; turning them back on then has nothing to animate.
+  void getComputedStyle(root).transitionDuration
+  requestAnimationFrame(() => root.removeAttribute("data-theme-switching"))
+}
+
 function applyTheme(theme: Theme) {
+  withoutTransitions(() => setThemeClass(theme))
+}
+
+function setThemeClass(theme: Theme) {
   const root = document.documentElement
   root.classList.remove("light", "dark")
 

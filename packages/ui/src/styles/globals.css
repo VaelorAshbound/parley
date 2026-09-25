@@ -256,6 +256,15 @@
   }
 }
 
+/* A theme switch shows its colors at once (apps/web theme-provider.tsx,
+   withoutTransitions). Unlayered and !important, to beat every utility. */
+[data-theme-switching],
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
 /* Reduced motion: the shimmer holds still (brand.md → Motion). Unlayered, so
    it wins over the `shimmer` utility in the utilities layer. */
 @media (prefers-reduced-motion: reduce) {
