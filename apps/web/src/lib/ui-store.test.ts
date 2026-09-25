@@ -67,3 +67,14 @@ test("keeps a refused save until it is taken back", () => {
   store.getState().setRefused(null)
   expect(store.getState().refused).toBeNull()
 })
+
+test("hides a deleted draft until an undo brings it back", () => {
+  const store = createUiStore()
+
+  store.getState().hide("d1")
+  store.getState().hide("d2")
+  expect(store.getState().hidden).toEqual({ d1: true, d2: true })
+
+  store.getState().unhide("d1")
+  expect(store.getState().hidden).toEqual({ d2: true })
+})
