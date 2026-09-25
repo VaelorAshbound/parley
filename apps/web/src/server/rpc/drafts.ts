@@ -47,12 +47,13 @@ const DRAFT_LIMIT = {
 
 /**
  * Makes a draft with `make`, within the guest's draft limit, or throws
- * DRAFT_LIMIT. `make` runs in the limit's transaction.
+ * `refuse` (the procedure's DRAFT_LIMIT). `make` runs in the limit's
+ * transaction.
  */
 async function withinLimit<T>(
   context: { db: Db; user: { id: string; isAnonymous?: boolean | null } },
-  make: (db: Db) => Promise<T>,
-  refuse: () => Error
+  refuse: (options: { data: { limit: number } }) => Error,
+  make: (db: Db) => Promise<T>
 ) {
   if (!context.user.isAnonymous) return make(context.db)
   const result = await withinDraftLimit(
@@ -60,7 +61,7 @@ async function withinLimit<T>(
     { userId: context.user.id, max: GUEST_DRAFTS },
     make
   )
-  if (!result) throw refuse()
+  if (!result) throw refuse({ data: { limit: GUEST_DRAFTS } })
   return result.made
 }
 
@@ -74,19 +75,16 @@ export const drafts = {
     .errors({ DRAFT_LIMIT })
     .handler(({ context, input, errors }) => {
       const id = input.documentId ?? null
-      return withinLimit(
-        context,
-        (db) =>
-          createDraft(db, {
-            userId: context.user.id,
-            documentId: id,
-            title: defaultTitle(id),
-            fields:
-              id === null
-                ? {}
-                : initialValues(definitionOf(id), { today: input.today }),
-          }),
-        () => errors.DRAFT_LIMIT({ data: { limit: GUEST_DRAFTS } })
+      return withinLimit(context, errors.DRAFT_LIMIT, (db) =>
+        createDraft(db, {
+          userId: context.user.id,
+          documentId: id,
+          title: defaultTitle(id),
+          fields:
+            id === null
+              ? {}
+              : initialValues(definitionOf(id), { today: input.today }),
+        })
       )
     }),
 
@@ -167,15 +165,12 @@ export const drafts = {
     .errors({ DRAFT_LIMIT })
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors }) => {
-      const copy = await withinLimit(
-        context,
-        (db) =>
-          duplicateDraft(
-            db,
-            { id: input.id, userId: context.user.id },
-            { title: copyTitle(context.draft.title) }
-          ),
-        () => errors.DRAFT_LIMIT({ data: { limit: GUEST_DRAFTS } })
+      const copy = await withinLimit(context, errors.DRAFT_LIMIT, (db) =>
+        duplicateDraft(
+          db,
+          { id: input.id, userId: context.user.id },
+          { title: copyTitle(context.draft.title) }
+        )
       )
       if (!copy) throw errors.NOT_FOUND()
       return copy
