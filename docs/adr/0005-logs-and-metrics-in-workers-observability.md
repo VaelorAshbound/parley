@@ -30,14 +30,19 @@ The platform facts (docs checked 2026-09-25):
 | ------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `request`                | every `/api` request (`src/server/middleware.ts`)                              | `requestId` (Cloudflare's ray id), `method`, `route` (the matched pattern or the oRPC procedure, never the path or query), `status`, `latencyMs` (to the response headers), `userId`, `tier`                                                                                              | 1, 2    |
 | `chat_turn`              | once per chat turn: `outcome` done, aborted or error (`src/server/ai/chat.ts`) | `draftId`, `userId`, `tier`, `model`, `finishReason`, `steps`, `inputTokens`, `cachedInputTokens`, `outputTokens`, `costMicroUsd` (what OpenRouter charged), `ttftMs`, `durationMs`, `toolCalls`, `toolErrors`, `failedTools`, `rejectedChanges`, and on error `errorName`, `errorStatus` | 3, 4    |
-| `api_error`, `rpc_error` | an unexpected error (T14)                                                      | the error's name and message                                                                                                                                                                                                                                                              | 1       |
+| `api_error`, `rpc_error` | an unexpected error (T14)                                                      | `error`: the error's `name`, `code` (a Postgres SQLSTATE or a system code) and `cause` (its cause's name). Never its message                                                                                                                                                              | 1       |
+| `chat_save_failed`       | a chat reply could not be saved after it streamed                              | `draftId`, `error` as above                                                                                                                                                                                                                                                               | 1       |
+| `auth_log`               | Better Auth's own error and warning lines                                      | `message`: its fixed text only (cut at the first colon, quote or new line), `error` as above                                                                                                                                                                                              | 1       |
 
 Rules, enforced by types and tests:
 
 - Log fields are flat values (`string | number | boolean`), so a body, draft or message can't be passed by accident.
 - Only IDs, counts, durations and names from fixed sets. Workerd tests send a real draft value, chat text and a session, and check that none of it reaches any console output.
-- A failed turn logs the error's **name** (and HTTP status), not its message: AI SDK errors can quote what the model wrote. Our `onError` replaces the AI SDK default, which logged the whole error.
-- `redact_query_string: true` keeps query strings (Better Auth tokens, OAuth codes) out of Cloudflare's own invocation logs and traces.
+- **No error message is ever logged.** Drizzle wraps every failed query in `DrizzleQueryError`, whose message is `Failed query: <sql>\nparams: <values>`: draft values, chat text, session tokens. Postgres and `JSON.parse` quote the value that failed. We log the name and code instead. Workerd tests break the database on purpose (a read-only session, a missing schema, a NUL in a reply) and check no value reaches the console.
+- Better Auth's default logger printed the whole error. Its `logger.log` now sends its lines to ours as `auth_log`.
+- Nothing is left to fail uncaught: Workers logs an uncaught error in full. The reply save in `waitUntil` has its own catch.
+- A failed turn logs the error's **name** (and HTTP status), not its message: AI SDK errors can quote what the model wrote. Our `onError` replaces the AI SDK default, which logged the whole error. The line is written when the turn ends, so a step that failed part way still counts its tokens and cost.
+- `redact_query_string: true` keeps query strings (Better Auth tokens, OAuth codes) out of Cloudflare's own invocation logs and traces. **Paths are not redacted:** the invocation log keeps the full path. Tokens must never go in a path segment. Better Auth's default reset link does (`/reset-password/:token`), so T21 sends its own link with the token in the query.
 - Traces are on at full sampling, for "where did the time go".
 
 ## Alternatives Considered
@@ -62,7 +67,7 @@ Rules, enforced by types and tests:
 
 ### Hono's built-in `logger()`
 
-- Rejected: it prints the full path and query as text, and Better Auth puts tokens in some paths. `requestLog` is our one custom middleware (spec §5 Hono).
+- Rejected: it prints the full path and query as text, and a path can hold a token. `requestLog` is our one custom middleware (spec §5 Hono). Our line never has the path; Cloudflare's invocation log does (see the path rule above).
 
 ## Consequences
 
