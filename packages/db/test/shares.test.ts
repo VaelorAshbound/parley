@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm"
-import { describe, expect } from "vite-plus/test"
+import { and, eq, isNull } from "drizzle-orm"
+import { test as base, describe, expect, inject } from "vite-plus/test"
 
+import { user } from "../src/auth-schema.ts"
+import { connect } from "../src/client.ts"
 import { createDraft, deleteDraft } from "../src/queries/drafts.ts"
 import {
   activeShare,
@@ -67,6 +69,51 @@ describe("shareDraft", () => {
     expect(
       await db.select().from(share).where(eq(share.draftId, draft.id))
     ).toEqual([])
+  })
+
+  // Two connections, as two tabs would have, and committed rows both can see:
+  // the rollback fixture's one session never waits for itself.
+  base("gives one link when two clicks come at once", async () => {
+    const first = await connect(inject("databaseUrl"))
+    const second = await connect(inject("databaseUrl"))
+    const [owner] = await first
+      .insert(user)
+      .values({ id: "share-race", name: "Race", email: "race@example.test" })
+      .returning()
+    const draft = await createDraft(first, { userId: owner!.id, ...nda })
+    const key = { id: draft.id, userId: owner!.id }
+    try {
+      let release = () => {}
+      const held = new Promise<void>((resolve) => (release = resolve))
+      let shared = () => {}
+      const isShared = new Promise<void>((resolve) => (shared = resolve))
+
+      // The first click's transaction stays open until the second has started.
+      const one = first.transaction(async (tx) => {
+        const link = await shareDraft(tx, key)
+        shared()
+        await held
+        return link
+      })
+      await isShared
+      const two = shareDraft(second, key)
+      // Give the second a moment to (wrongly) make its own link.
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      release()
+      const [a, b] = await Promise.all([one, two])
+
+      expect(b?.token).toBe(a?.token)
+      expect(
+        await first
+          .select({ token: share.token })
+          .from(share)
+          .where(and(eq(share.draftId, draft.id), isNull(share.revokedAt)))
+      ).toEqual([{ token: a?.token }])
+    } finally {
+      await first.delete(user).where(eq(user.id, owner!.id))
+      await first.$client.end()
+      await second.$client.end()
+    }
   })
 
   test("gives every draft its own link", async ({ db }) => {
