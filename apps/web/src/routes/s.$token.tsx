@@ -4,6 +4,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router"
 
 import { SharePage, ShareNotFound } from "@/features/share/share-page"
 import { sharePageHeaders } from "@/features/share/headers"
+import { sharedDraftQuery } from "@/features/share/shared-query"
 
 // /s/:token, a draft shared read-only (spec §5 Routing; T25). Public and
 // outside the app shell: no session is read, so a visitor gets no guest.
@@ -12,9 +13,7 @@ export const Route = createFileRoute("/s/$token")({
   loader: async ({ context, params }) => {
     try {
       const shared = await context.queryClient.ensureQueryData(
-        context.orpc.share.view.queryOptions({
-          input: { token: params.token },
-        })
+        sharedDraftQuery(context.orpc, params.token)
       )
       return { title: shared.title }
     } catch (error) {
@@ -43,8 +42,6 @@ export const Route = createFileRoute("/s/$token")({
 function SharedDraft() {
   const { orpc } = Route.useRouteContext()
   const { token } = Route.useParams()
-  const { data } = useSuspenseQuery(
-    orpc.share.view.queryOptions({ input: { token } })
-  )
+  const { data } = useSuspenseQuery(sharedDraftQuery(orpc, token))
   return <SharePage shared={data} />
 }
