@@ -23,6 +23,16 @@ export function authErrorMessage(error: AuthError) {
       return "Use at most 128 characters for your password."
     case "INVALID_EMAIL":
       return "Please enter a valid email."
+    // Settings: the current password, before a change or delete.
+    case "INVALID_PASSWORD":
+      return "That password isn’t right."
+    // A reset link that expired or was used.
+    case "INVALID_TOKEN":
+      return "This link has expired or was already used. Ask for a new one."
+    // Deleting without a password needs a recent sign-in (freshAge).
+    case "SESSION_EXPIRED":
+    case "SESSION_NOT_FRESH":
+      return "For your safety, please sign in again first."
     // Turnstile (Better Auth's captcha plugin).
     case "MISSING_RESPONSE":
     case "VERIFICATION_FAILED":
@@ -35,8 +45,25 @@ export function authErrorMessage(error: AuthError) {
 /** `?error=` after Google or GitHub sends the user back. */
 export function oauthErrorMessage(code: string) {
   return code === "account_not_linked"
-    ? "This email already has a Parley account. Sign in with your password and confirm your email; then Google and GitHub work too."
+    ? "This email already has a Parley account. Sign in with your password and confirm your email; then Google and GitHub work too. Don’t know the password? Use “Forgot password?”."
     : "Signing in didn’t work. Please try again."
+}
+
+/**
+ * `?error=` on /settings after a link from a change-email email (Better
+ * Auth's codes, and SIGN_IN_FIRST from server/auth.ts).
+ */
+export function emailLinkErrorMessage(code: string) {
+  switch (code) {
+    case "SIGN_IN_FIRST":
+      return "Sign in here first, then open the link in the email again."
+    case "INVALID_USER":
+      return "This link is for another account. Sign out, then open it again."
+    case "TOKEN_EXPIRED":
+      return "This link has expired. Please ask for a new one."
+    default:
+      return "This link doesn’t work. Please ask for a new one."
+  }
 }
 
 /** `?error=` after a confirmation link that no longer works. */

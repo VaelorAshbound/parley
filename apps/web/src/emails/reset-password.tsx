@@ -13,41 +13,41 @@ import {
 
 import { emailStyles as s } from "./styles"
 
-// The email that confirms an account's address, new or changed (spec §5
-// Auth). Plain words, one button, and the link as text for mail apps that
-// hide buttons.
+// "Forgot password?" (spec §5 Auth). Plain words, one button, and the link
+// as text for mail apps that hide buttons.
 
-export type VerifyEmailProps = { url: string }
+export type ResetPasswordProps = { url: string }
 
-export function VerifyEmail({ url }: VerifyEmailProps) {
+export function ResetPassword({ url }: ResetPasswordProps) {
   return (
     <Html lang="en" dir="ltr">
       <Head />
       <Body style={s.body}>
-        <Preview>Confirm your email to download and share your drafts.</Preview>
+        <Preview>Choose a new password for Parley.</Preview>
         <Container style={s.container}>
           <Text style={s.wordmark}>Parley</Text>
           <Section style={s.card}>
             <Heading as="h1" style={s.heading}>
-              Confirm your email
+              Reset your password
             </Heading>
             <Text style={s.text}>
-              Tap the button to confirm this is your email. Then you can
-              download and share your drafts.
+              Tap the button to choose a new password. For your safety, this
+              signs you out on every device.
             </Text>
             <Button href={url} style={s.button}>
-              Confirm email
+              Choose a new password
             </Button>
             <Text style={s.small}>
-              The link works for 1 hour. If the button doesn’t work, open this
-              link:
+              The link works once, for 30 minutes. If the button doesn’t work,
+              open this link:
             </Text>
             <Text style={s.link}>{url}</Text>
           </Section>
           <Hr style={s.rule} />
           <Text style={s.footer}>
-            You get this email because someone used this address for a Parley
-            account. If it wasn’t you, you can ignore it.
+            You get this email because someone asked to reset the password for
+            this address. If it wasn’t you, you can ignore it: your password
+            stays the same.
           </Text>
           <Text style={s.footer}>
             Parley is a demo. Not legal advice. Do not use it for real
@@ -59,8 +59,8 @@ export function VerifyEmail({ url }: VerifyEmailProps) {
   )
 }
 
-VerifyEmail.PreviewProps = {
-  url: "https://parley.runtimedrift.dev/api/auth/verify-email?token=preview",
-} satisfies VerifyEmailProps
+ResetPassword.PreviewProps = {
+  url: "https://parley.runtimedrift.dev/reset-password?token=preview",
+} satisfies ResetPasswordProps
 
-export default VerifyEmail
+export default ResetPassword

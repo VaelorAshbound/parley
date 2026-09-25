@@ -7,7 +7,7 @@ import { serverClient, signInGuest, signUpUser } from "./helpers"
 // Every procedure × every kind of caller gets exactly the allowed result
 // (spec §6 Auth matrix). A new procedure fails the completeness test below
 // until it has a row here. Owners and others are guests and signed-up
-// accounts (T21); T26 adds Pro.
+// accounts (T21); T26 adds Pro. Settings (T23) are for accounts only.
 
 type Caller =
   | "nobody"
@@ -15,7 +15,12 @@ type Caller =
   | "otherAccount"
   | "owner"
   | "accountOwner"
-type Outcome = "OK" | "UNAUTHORIZED" | "NOT_FOUND" | "NOT_OPEN"
+type Outcome =
+  | "OK"
+  | "UNAUTHORIZED"
+  | "NOT_FOUND"
+  | "NOT_OPEN"
+  | "PASSWORD_ALREADY_SET"
 type Client = Awaited<ReturnType<typeof serverClient>>
 
 const today = "2026-09-24"
@@ -35,6 +40,15 @@ const signedIn = {
   otherGuest: "OK",
   otherAccount: "OK",
   owner: "OK",
+  accountOwner: "OK",
+} as const satisfies Record<Caller, Outcome>
+
+/** Signed-up accounts only: settings (T23). The owner here is a guest. */
+const accountsOnly = {
+  nobody: "UNAUTHORIZED",
+  otherGuest: "UNAUTHORIZED",
+  otherAccount: "OK",
+  owner: "UNAUTHORIZED",
   accountOwner: "OK",
 } as const satisfies Record<Caller, Outcome>
 
@@ -100,6 +114,33 @@ const matrix: Record<
   "drafts.markComplete": {
     run: (client, id) => client.drafts.markComplete({ id }),
     expect: ownersOnly,
+  },
+  "account.get": {
+    run: (client) => client.account.get(),
+    expect: accountsOnly,
+  },
+  "account.sessions": {
+    run: (client) => client.account.sessions(),
+    expect: accountsOnly,
+  },
+  "account.revokeSession": {
+    run: (client) => client.account.revokeSession({ id: "no-such-session" }),
+    // Accounts get past the check; the session isn't theirs.
+    expect: {
+      ...accountsOnly,
+      otherAccount: "NOT_FOUND",
+      accountOwner: "NOT_FOUND",
+    },
+  },
+  "account.setPassword": {
+    run: (client) =>
+      client.account.setPassword({ newPassword: "matrix password 1" }),
+    // Accounts get past the check; they signed up with a password.
+    expect: {
+      ...accountsOnly,
+      otherAccount: "PASSWORD_ALREADY_SET",
+      accountOwner: "PASSWORD_ALREADY_SET",
+    },
   },
 }
 

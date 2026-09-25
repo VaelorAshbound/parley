@@ -51,6 +51,14 @@ describe("the request line", () => {
     )
 
     expect(lines).toEqual([
+      // The audit line (T23): ids only.
+      {
+        level: "info",
+        event: "session_created",
+        requestId: expect.any(String),
+        userId: expect.any(String),
+        sessionId: expect.any(String),
+      },
       {
         level: "info",
         event: "request",

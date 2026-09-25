@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vite-plus/test"
 
-import { authErrorMessage, oauthErrorMessage } from "./messages"
+import {
+  authErrorMessage,
+  emailLinkErrorMessage,
+  oauthErrorMessage,
+} from "./messages"
 
 describe("authErrorMessage", () => {
   it("says to wait when rate limited, whatever the code", () => {
@@ -27,6 +31,24 @@ describe("authErrorMessage", () => {
     )
   })
 
+  it("says the current password is wrong in settings", () => {
+    expect(authErrorMessage({ code: "INVALID_PASSWORD", status: 400 })).toBe(
+      "That password isn’t right."
+    )
+  })
+
+  it("says a reset link no longer works, and what to do", () => {
+    expect(authErrorMessage({ code: "INVALID_TOKEN", status: 400 })).toBe(
+      "This link has expired or was already used. Ask for a new one."
+    )
+  })
+
+  it("asks to sign in again before a sensitive change", () => {
+    expect(authErrorMessage({ code: "SESSION_EXPIRED", status: 400 })).toBe(
+      "For your safety, please sign in again first."
+    )
+  })
+
   it("has a friendly fallback for anything else", () => {
     expect(authErrorMessage({ status: 500 })).toBe(
       "Something went wrong. Please try again."
@@ -38,6 +60,28 @@ describe("oauthErrorMessage", () => {
   it("explains why Google or GitHub didn't join an existing account", () => {
     expect(oauthErrorMessage("account_not_linked")).toMatch(
       /confirm your email/
+    )
+  })
+
+  it("offers the way back to someone who doesn't know that password", () => {
+    expect(oauthErrorMessage("account_not_linked")).toMatch(/Forgot password/)
+  })
+})
+
+describe("emailLinkErrorMessage", () => {
+  it("asks to sign in before opening the new address's link", () => {
+    expect(emailLinkErrorMessage("SIGN_IN_FIRST")).toBe(
+      "Sign in here first, then open the link in the email again."
+    )
+  })
+
+  it("says the link belongs to another account", () => {
+    expect(emailLinkErrorMessage("INVALID_USER")).toMatch(/another account/)
+  })
+
+  it("says an old link no longer works", () => {
+    expect(emailLinkErrorMessage("TOKEN_EXPIRED")).toBe(
+      "This link has expired. Please ask for a new one."
     )
   })
 })
