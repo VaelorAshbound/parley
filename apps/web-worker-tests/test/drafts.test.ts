@@ -358,7 +358,7 @@ describe("an unexpected server error", () => {
       code: "INTERNAL_SERVER_ERROR",
       message: "Internal server error",
     })
-    const line = JSON.parse(String(logged.mock.calls[0]?.[0]))
+    const line = logged.mock.calls[0]?.[0]
     expect(line).toMatchObject({
       level: "error",
       event: "rpc_error",

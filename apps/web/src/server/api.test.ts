@@ -77,7 +77,7 @@ describe("an error outside oRPC and Better Auth", () => {
     expect(await response.json()).toEqual({
       error: "Something went wrong. Please try again.",
     })
-    const line = JSON.parse(String(logged.mock.calls[0]?.[0]))
+    const line = logged.mock.calls[0]?.[0]
     expect(line).toMatchObject({ level: "error", event: "api_error" })
     // A client can't choose the id its request is logged under.
     expect(line.requestId).not.toBe("forged-id")
