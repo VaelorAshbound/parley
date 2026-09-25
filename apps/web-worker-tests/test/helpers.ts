@@ -49,6 +49,25 @@ export async function signInGuest() {
   return { cookie: cookiesFrom(response) }
 }
 
+/**
+ * A new email + password account, signed in, email not confirmed. The
+ * address is on a test domain, so no email is sent. Pass a guest's cookie to
+ * sign up as that guest.
+ */
+export async function signUpUser(guestCookie?: string) {
+  const email = `ana-${crypto.randomUUID()}@example.test`
+  const response = await call("/api/auth/sign-up/email", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(guestCookie && { cookie: guestCookie }),
+    },
+    body: JSON.stringify({ name: "Ana", email, password: "correct horse 1" }),
+  })
+  expect(response.status).toBe(200)
+  return { email, cookie: cookiesFrom(response) }
+}
+
 /** Calls procedures in-process with the given cookie (or none), like SSR. */
 export async function serverClient(cookie?: string) {
   return (await chatClient(cookie, scriptedModel([[{ text: "Hi." }]]))).client

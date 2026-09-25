@@ -2,17 +2,41 @@ import { ORPCError, safe } from "@orpc/client"
 import { describe, expect, it } from "vitest"
 
 import { router } from "../../web/src/server/rpc/router"
-import { serverClient, signInGuest } from "./helpers"
+import { serverClient, signInGuest, signUpUser } from "./helpers"
 
 // Every procedure × every kind of caller gets exactly the allowed result
 // (spec §6 Auth matrix). A new procedure fails the completeness test below
-// until it has a row here. T21 adds signed-up users, T26 Pro.
+// until it has a row here. Owners and others are guests and signed-up
+// accounts (T21); T26 adds Pro.
 
-type Caller = "nobody" | "otherGuest" | "owner"
+type Caller =
+  | "nobody"
+  | "otherGuest"
+  | "otherAccount"
+  | "owner"
+  | "accountOwner"
 type Outcome = "OK" | "UNAUTHORIZED" | "NOT_FOUND" | "NOT_OPEN"
 type Client = Awaited<ReturnType<typeof serverClient>>
 
 const today = "2026-09-24"
+
+/** The usual row: signed-in owners may, everyone else may not. */
+const ownersOnly = {
+  nobody: "UNAUTHORIZED",
+  otherGuest: "NOT_FOUND",
+  otherAccount: "NOT_FOUND",
+  owner: "OK",
+  accountOwner: "OK",
+} as const satisfies Record<Caller, Outcome>
+
+/** Anyone signed in, guest or account. */
+const signedIn = {
+  nobody: "UNAUTHORIZED",
+  otherGuest: "OK",
+  otherAccount: "OK",
+  owner: "OK",
+  accountOwner: "OK",
+} as const satisfies Record<Caller, Outcome>
 
 const matrix: Record<
   string,
@@ -23,19 +47,19 @@ const matrix: Record<
 > = {
   "drafts.create": {
     run: (client) => client.drafts.create({ documentId: "mutual-nda", today }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "OK", owner: "OK" },
+    expect: signedIn,
   },
   "drafts.list": {
     run: (client) => client.drafts.list({}),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "OK", owner: "OK" },
+    expect: signedIn,
   },
   "drafts.get": {
     run: (client, id) => client.drafts.get({ id }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+    expect: ownersOnly,
   },
   "chat.messages": {
     run: (client, id) => client.chat.messages({ id }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+    expect: ownersOnly,
   },
   "chat.send": {
     run: (client, id) =>
@@ -48,12 +72,12 @@ const matrix: Record<
         },
         today,
       }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+    expect: ownersOnly,
   },
   "drafts.chooseDocument": {
     run: (client, id) =>
       client.drafts.chooseDocument({ id, documentId: "mutual-nda", today }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+    expect: ownersOnly,
   },
   "drafts.updateFields": {
     run: (client, id) =>
@@ -61,7 +85,7 @@ const matrix: Record<
         id,
         changes: [{ key: "purpose", value: "Matrix test" }],
       }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+    expect: ownersOnly,
   },
   "chat.answer": {
     run: (client, id) =>
@@ -70,35 +94,42 @@ const matrix: Record<
         calls: [{ toolCallId: "call-1-0", answers: { term: ["1y"] } }],
         today,
       }),
-    // The owner gets past the owner check; the draft asked nothing.
-    expect: {
-      nobody: "UNAUTHORIZED",
-      otherGuest: "NOT_FOUND",
-      owner: "NOT_OPEN",
-    },
+    // Owners get past the owner check; the draft asked nothing.
+    expect: { ...ownersOnly, owner: "NOT_OPEN", accountOwner: "NOT_OPEN" },
   },
   "drafts.markComplete": {
     run: (client, id) => client.drafts.markComplete({ id }),
-    expect: { nobody: "UNAUTHORIZED", otherGuest: "NOT_FOUND", owner: "OK" },
+    expect: ownersOnly,
   },
 }
 
+/** A caller with a draft of their own. */
+async function withDraft(cookie: string) {
+  const client = await serverClient(cookie)
+  const draft = await client.drafts.create({ documentId: "mutual-nda", today })
+  return { client, draftId: draft.id }
+}
+
 describe("the auth matrix", async () => {
-  const owner = await signInGuest()
-  const ownerClient = await serverClient(owner.cookie)
-  const draft = await ownerClient.drafts.create({
-    documentId: "mutual-nda",
-    today,
+  const owner = await withDraft((await signInGuest()).cookie)
+  const accountOwner = await withDraft((await signUpUser()).cookie)
+  // Everyone else tries the guest owner's draft.
+  const other = async (cookie?: string) => ({
+    client: await serverClient(cookie),
+    draftId: owner.draftId,
   })
-  const clients: Record<Caller, Client> = {
-    nobody: await serverClient(),
-    otherGuest: await serverClient((await signInGuest()).cookie),
-    owner: ownerClient,
+  const callers: Record<Caller, { client: Client; draftId: string }> = {
+    nobody: await other(),
+    otherGuest: await other((await signInGuest()).cookie),
+    otherAccount: await other((await signUpUser()).cookie),
+    owner,
+    accountOwner,
   }
 
   describe.each(Object.entries(matrix))("%s", (_, row) => {
     it.each(Object.entries(row.expect))("%s → %s", async (caller, outcome) => {
-      const { error } = await safe(row.run(clients[caller as Caller], draft.id))
+      const { client, draftId } = callers[caller as Caller]
+      const { error } = await safe(row.run(client, draftId))
 
       const got =
         error === null ? "OK" : error instanceof ORPCError ? error.code : error

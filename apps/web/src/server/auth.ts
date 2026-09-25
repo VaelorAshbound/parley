@@ -3,11 +3,15 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { betterAuth } from "better-auth/minimal"
 import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
+import { createElement } from "react"
 
+import { VerifyEmail } from "../emails/verify-email"
+
+import { createMailer } from "./email"
 import { logInfo } from "./log"
 
 // Better Auth, built per request because the database client is per request
-// (spec §5 Auth). T21 adds email + password, OAuth and emails; T27 Turnstile.
+// (spec §5 Auth).
 
 /**
  * The hosts Parley answers on. Better Auth builds its base URL from the
@@ -29,10 +33,15 @@ export function createAuth({
   waitUntil,
 }: {
   db: Db
-  env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE">
+  env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE"> & {
+    /** Missing on Previews and in local dev: no email is sent there. */
+    RESEND_API_KEY?: string | undefined
+  }
   /** ctx.waitUntil: work that may finish after the response. */
   waitUntil: (promise: Promise<unknown>) => void
 }) {
+  const sendEmail = createMailer(env)
+
   return betterAuth({
     appName: "Parley",
     secret: env.BETTER_AUTH_SECRET,
@@ -42,6 +51,26 @@ export function createAuth({
       enabled: true,
       minPasswordLength: 10,
       maxPasswordLength: 128,
+    },
+    emailVerification: {
+      // Signing up gives a session at once, so the guest's draft links right
+      // away; export, share and upgrade wait for this (spec §5 Auth).
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url, token }) => {
+        // After the response, on every path (resend awaits this): the reply
+        // is as fast for a new address as for a known one, and a slow Resend
+        // never holds up sign-up.
+        waitUntil(
+          sendEmail({
+            event: "verify_email",
+            to: user.email,
+            subject: "Confirm your email for Parley",
+            react: createElement(VerifyEmail, { url }),
+            idempotencyKey: `verify-email/${user.id}/${await digest(token)}`,
+          })
+        )
+      },
     },
     session: {
       // Saves a database read on most requests. A revoke can take up to
@@ -79,6 +108,17 @@ export function createAuth({
       twoFactor({ issuer: "Parley" }),
     ],
   })
+}
+
+/** A short one-way name for a token, so a key never holds the token. */
+async function digest(token: string) {
+  const bytes = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(token)
+  )
+  return Array.from(new Uint8Array(bytes).slice(0, 12), (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("")
 }
 
 export type Auth = ReturnType<typeof createAuth>

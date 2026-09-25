@@ -32,18 +32,47 @@ const errors = {
 
 export const pub = os.$context<BaseContext>().errors(errors)
 
-export const authed = pub.use(async ({ context, next, errors }) => {
+/** The caller's session; `fresh` skips the 5-minute cookie cache. */
+async function readSession(context: BaseContext, { fresh = false } = {}) {
   const { headers, response } = await context.auth.api.getSession({
     headers: context.reqHeaders ?? new Headers(),
+    query: { disableCookieCache: fresh },
     returnHeaders: true,
   })
   // Refreshed or cleared session cookies must reach the browser, also when
   // the session turns out to be gone.
   for (const cookie of headers.getSetCookie())
     context.resHeaders?.append("set-cookie", cookie)
-  if (!response) throw errors.UNAUTHORIZED()
-  return next({ context: { user: response.user, session: response.session } })
+  return response
+}
+
+export const authed = pub.use(async ({ context, next, errors }) => {
+  const session = await readSession(context)
+  if (!session) throw errors.UNAUTHORIZED()
+  return next({ context: { user: session.user, session: session.session } })
 })
+
+/**
+ * A signed-up user with a confirmed email: export, share and upgrade (spec
+ * §2 Limits), so fake addresses can't use up the free quota. Guests are
+ * asked to sign in.
+ */
+export const verified = authed
+  .errors({
+    EMAIL_NOT_VERIFIED: {
+      message: "Please confirm your email first. We sent you a link.",
+    },
+  })
+  .use(async ({ context, next, errors }) => {
+    if (context.user.isAnonymous) throw errors.UNAUTHORIZED()
+    if (context.user.emailVerified) return next()
+    // The cookie cache can be up to 5 minutes old, for example when the link
+    // was opened on a phone: ask the database before saying no.
+    const session = await readSession(context, { fresh: true })
+    if (!session) throw errors.UNAUTHORIZED()
+    if (!session.user.emailVerified) throw errors.EMAIL_NOT_VERIFIED()
+    return next({ context: { user: session.user, session: session.session } })
+  })
 
 /**
  * Loads the draft named by the input and checks the user owns it. Use with
