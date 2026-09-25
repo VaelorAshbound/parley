@@ -40,12 +40,16 @@ export default defineConfig({
           OPENROUTER_API_KEY: "test-only-no-real-calls",
           // Never reaches Resend: the email tests fake fetch (resend.ts).
           RESEND_API_KEY: "re_test_only_no_real_sends",
+          // Cloudflare's "always passes" test secret; siteverify is faked
+          // anyway (test/siteverify.ts).
+          TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
         },
       },
     })),
   ],
   test: {
     globalSetup: ["./test/setup.ts"],
+    setupFiles: ["./test/siteverify.ts"],
     exclude: ["**/node_modules/**", "**/*.real.test.ts"],
   },
 })

@@ -85,6 +85,8 @@ export async function openChat(databaseUrl: string, model: LanguageModel) {
     env: {
       BETTER_AUTH_SECRET: "eval-only-secret-that-is-long-enough-0123456789",
       STAGE: "production",
+      // Cloudflare's test secret; the evals never sign up or sign in.
+      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
     },
     waitUntil,
   })

@@ -8,6 +8,7 @@ import { afterAll, expect, onTestFinished } from "vitest"
 import { api } from "../../web/src/server/api"
 import { createAuth } from "../../web/src/server/auth"
 import { createServerClient } from "../../web/src/server/rpc/server-client"
+import { passingToken } from "./siteverify"
 
 export const origin = "http://localhost:3000"
 
@@ -20,6 +21,9 @@ export async function call(path: string, init: RequestInit = {}) {
   // Each call is its own client, as far as the rate limiter can tell.
   if (!headers.has("cf-connecting-ip"))
     headers.set("cf-connecting-ip", randomIp())
+  // A solved Turnstile challenge, as the sign-up and sign-in forms send it.
+  if (!headers.has("x-captcha-response"))
+    headers.set("x-captcha-response", passingToken)
   const ctx = createExecutionContext()
   const response = await api.fetch(
     new Request(origin + path, { ...init, headers }),

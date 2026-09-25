@@ -1,6 +1,7 @@
 import { moveGuestData, schema, type Db } from "@workspace/db"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { betterAuth } from "better-auth/minimal"
+import { captcha } from "better-auth/plugins"
 import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
 import { createElement } from "react"
@@ -19,12 +20,14 @@ import { logInfo } from "./log"
  * Production refuses workers.dev: old versions stay reachable there and must
  * not act on production data. https://better-auth.com/docs/reference/options#baseurl
  */
+const productionHost = "parley.runtimedrift.dev"
+
 export function allowedHosts(stage: string) {
   return stage === "preview"
     ? // Worker Previews (T3); they have their own database branch.
       ["*-parley.vaelorashbound.workers.dev", "localhost:*"]
     : // `pnpm dev` and the Worker tests run with the production vars.
-      ["parley.runtimedrift.dev", "localhost:*"]
+      [productionHost, "localhost:*"]
 }
 
 export function createAuth({
@@ -33,7 +36,7 @@ export function createAuth({
   waitUntil,
 }: {
   db: Db
-  env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE"> & {
+  env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE" | "TURNSTILE_SECRET_KEY"> & {
     /** Missing on Previews and in local dev: no email is sent there. */
     RESEND_API_KEY?: string | undefined
   }
@@ -106,7 +109,45 @@ export function createAuth({
       // Listed now because its tables are in the first migration; the
       // settings screen comes in T23b.
       twoFactor({ issuer: "Parley" }),
+      turnstile(env),
     ],
+  })
+}
+
+/**
+ * Cloudflare's test secrets ("always passes", "always fails", "already
+ * spent"), used in local dev, tests and Previews. They only accept the dummy
+ * token, which reports hostname "localhost" and action "test".
+ * https://developers.cloudflare.com/turnstile/troubleshooting/testing/
+ */
+const turnstileTestSecrets = new Set(
+  ["1x", "2x", "3x"].map((kind) => `${kind}0000000000000000000000000000000AA`)
+)
+
+/**
+ * Turnstile before the routes a bot would hammer: making accounts, guessing
+ * passwords, and sending email (spec §5 Auth). With the real widget, a token
+ * counts only if it was solved on Parley's domain, for the "auth" action.
+ * T27 adds the guest sign-in (/sign-in/anonymous).
+ */
+function turnstile(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
+  const real = !turnstileTestSecrets.has(env.TURNSTILE_SECRET_KEY)
+  return captcha({
+    provider: "cloudflare-turnstile",
+    secretKey: env.TURNSTILE_SECRET_KEY,
+    endpoints: [
+      "/sign-up/email",
+      "/sign-in/email",
+      "/request-password-reset",
+      "/send-verification-email",
+    ],
+    ...(real && {
+      expectedAction: "auth",
+      // Previews move from host to host; production has one.
+      ...(env.STAGE === "production" && {
+        allowedHostnames: [productionHost],
+      }),
+    }),
   })
 }
 

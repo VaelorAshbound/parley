@@ -29,6 +29,9 @@
       // Previews and local dev have none, so they send no email and never
       // spend the Resend quota (the mailer logs email_not_configured).
       "RESEND_API_KEY",
+      // Turnstile's widget "parley-auth". Local dev and Previews use
+      // Cloudflare's test secret 1x0000000000000000000000000000000AA.
+      "TURNSTILE_SECRET_KEY",
     ],
   },
   "vars": {
@@ -36,6 +39,9 @@
     // Set per Preview by scripts/ci-preview.sh, so CI can wait until the
     // Preview serves the commit it is testing.
     "COMMIT_SHA": "",
+    // Turnstile's widget "parley-auth" (parley.runtimedrift.dev, localhost).
+    // Public: the browser shows it.
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFDRY50F_vQ9qvx3",
   },
   // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
   // uses the real service (10 browser hours/month are in Workers Paid).
@@ -62,6 +68,9 @@
     "vars": {
       "STAGE": "preview",
       "COMMIT_SHA": "",
+      // Cloudflare's "always passes" test widget: Preview hosts change per
+      // branch, and CI's browsers must get through (spec §5 Auth).
+      "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
     },
     "browser": {
       "binding": "BROWSER",

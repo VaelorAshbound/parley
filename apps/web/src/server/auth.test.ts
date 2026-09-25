@@ -9,7 +9,11 @@ import { allowedHosts, createAuth } from "./auth"
 
 const auth = createAuth({
   db: drizzle.mock({ schema }),
-  env: { BETTER_AUTH_SECRET: "x".repeat(32), STAGE: "production" } as Env,
+  env: {
+    BETTER_AUTH_SECRET: "x".repeat(32),
+    STAGE: "production",
+    TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+  } as Env,
   waitUntil: () => {},
 })
 
