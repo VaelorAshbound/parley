@@ -76,11 +76,8 @@ ${documentList
 function related(definition: DocumentDefinition) {
   const ids = isDocumentId(definition.id) ? RELATED[definition.id] : []
   if (ids.length === 0) return ""
-  return `\nAgreements that often come with this one: ${ids
-    .map((id) => `${definitions[id].name} (${id})`)
-    .join(
-      ", "
-    )}. When you choose it, mention the ones that fit the deal once, in one line. Each is its own draft, which the user starts with New draft in the sidebar: never switch this draft to one of them.`
+  const names = ids.map((id) => `${definitions[id].name} (${id})`).join(", ")
+  return `\nAgreements that often come with this one: ${names}. When you choose it, mention the ones that fit the deal once, in one line. Each is its own draft, which the user starts with New draft in the sidebar: never switch this draft to one of them.`
 }
 
 /**
