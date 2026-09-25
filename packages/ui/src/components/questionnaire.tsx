@@ -3,7 +3,12 @@ import { Questionnaire as QuestionnairePrimitive } from "@shadcn/react/questionn
 import { cn } from "cn"
 
 import { buttonVariants, type Button } from "@workspace/ui/components/button"
-import { CheckIcon } from "lucide-react"
+import { CheckIcon, PenLineIcon } from "lucide-react"
+
+// The shadcn Questionnaire (base-nova), restyled to Paper & Ink (brand.md:
+// the questionnaire card): a serif question, answer rows with their letter
+// key on the left and a blue check on the right, a dashed row for another
+// answer, and quiet actions.
 
 function Questionnaire({
   className,
@@ -12,7 +17,7 @@ function Questionnaire({
   return (
     <QuestionnairePrimitive.Root
       data-slot="questionnaire"
-      className={cn("flex w-full min-w-0 flex-col gap-4", className)}
+      className={cn("flex w-full min-w-0 flex-col gap-3.5", className)}
       {...props}
     />
   )
@@ -26,7 +31,7 @@ function QuestionnaireProgress({
     <QuestionnairePrimitive.Progress
       data-slot="questionnaire-progress"
       className={cn(
-        "min-h-[1lh] w-fit min-w-[14ch] text-xs font-medium text-muted-foreground tabular-nums",
+        "min-h-[1lh] w-fit min-w-[14ch] text-[12.5px] text-ink-3 tabular-nums",
         className
       )}
       {...props}
@@ -42,7 +47,7 @@ function QuestionnaireItem({
     <QuestionnairePrimitive.Item
       data-slot="questionnaire-item"
       className={cn(
-        "flex min-w-0 flex-col gap-4 border-0 p-0 outline-none",
+        "flex min-w-0 flex-col gap-3.5 border-0 p-0 outline-none",
         className
       )}
       {...props}
@@ -58,7 +63,7 @@ function QuestionnaireTitle({
     <QuestionnairePrimitive.Title
       data-slot="questionnaire-title"
       className={cn(
-        "font-heading text-base leading-snug font-medium text-pretty [&:not(:has(~[data-slot=questionnaire-description]))]:mb-4",
+        "px-1 font-heading text-[21px] leading-[1.25] font-medium tracking-[-0.01em] text-pretty text-foreground [&:not(:has(~[data-slot=questionnaire-description]))]:mb-3.5",
         className
       )}
       {...props}
@@ -73,7 +78,10 @@ function QuestionnaireDescription({
   return (
     <QuestionnairePrimitive.Description
       data-slot="questionnaire-description"
-      className={cn("text-sm text-pretty text-muted-foreground", className)}
+      className={cn(
+        "-mt-2.5 px-1 text-small text-pretty text-ink-2",
+        className
+      )}
       {...props}
     />
   )
@@ -87,7 +95,7 @@ function QuestionnaireChoices({
     <QuestionnairePrimitive.Choices
       data-slot="questionnaire-choices"
       className={cn(
-        "group/questionnaire-choices grid min-w-0 gap-2",
+        "group/questionnaire-choices flex min-w-0 flex-col gap-1.5",
         className
       )}
       {...props}
@@ -104,7 +112,8 @@ function QuestionnaireChoice({
     <QuestionnairePrimitive.Choice
       data-slot="questionnaire-choice"
       className={cn(
-        "group/questionnaire-choice relative flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg border border-input bg-transparent px-3 py-2.5 text-start text-sm transition-colors outline-none select-none hover:bg-muted/50 has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-3 has-[>input:focus-visible]:ring-ring/50 data-invalid:border-destructive dark:bg-input/20 data-checked:border-primary/40 data-checked:bg-muted dark:data-checked:bg-muted",
+        "group/questionnaire-choice relative flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-card py-2.25 pr-3 pl-2.5 text-start transition-[background-color,border-color,scale] duration-140 ease-(--ease-out) outline-none select-none hover:bg-accent active:scale-[0.97] motion-reduce:active:scale-100",
+        "has-[>input:focus-visible]:border-ring has-[>input:focus-visible]:ring-3 has-[>input:focus-visible]:ring-ring/50 data-invalid:border-destructive data-checked:border-blue-border data-checked:bg-blue-tint data-checked:hover:bg-blue-tint",
         "data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className
       )}
@@ -114,29 +123,27 @@ function QuestionnaireChoice({
         data-slot="questionnaire-choice-input"
         className="absolute inset-0 z-10 size-full cursor-pointer opacity-0"
       />
+      {/* The letter key; without shortcuts, a radio or checkbox instead. */}
+      <QuestionnairePrimitive.ChoiceShortcut
+        data-slot="questionnaire-choice-shortcut"
+        className="pointer-events-none grid size-6 shrink-0 place-items-center rounded-[7px] border border-input text-[11.5px] font-semibold text-ink-2 transition-colors duration-140 group-data-checked/questionnaire-choice:border-blue-ink group-data-checked/questionnaire-choice:bg-blue-ink group-data-checked/questionnaire-choice:text-on-blue"
+      />
       <span
         aria-hidden="true"
         data-slot="questionnaire-choice-indicator"
-        className="pointer-events-none relative flex size-4 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-[4px] border border-input group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[type=radio]/questionnaire-choice:rounded-full group-data-checked/questionnaire-choice:border-primary group-data-checked/questionnaire-choice:bg-primary group-data-checked/questionnaire-choice:text-primary-foreground dark:bg-input/30 dark:group-data-checked/questionnaire-choice:bg-primary"
-      >
-        <span
-          data-slot="questionnaire-choice-indicator-dot"
-          className="hidden size-2 rounded-full bg-primary-foreground group-data-[type=checkbox]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block"
-        />
-        <CheckIcon
-          data-slot="questionnaire-choice-indicator-check"
-          className="hidden size-3.5 group-data-[type=radio]/questionnaire-choice:hidden group-data-checked/questionnaire-choice:block"
-        />
-      </span>
+        className="pointer-events-none size-4 shrink-0 rounded-[4px] border border-ink-3 group-data-[shortcut]/questionnaire-choice:hidden group-data-[type=radio]/questionnaire-choice:rounded-full group-data-checked/questionnaire-choice:border-blue-ink group-data-checked/questionnaire-choice:bg-blue-ink"
+      />
       <QuestionnairePrimitive.ChoiceLabel
         data-slot="questionnaire-choice-label"
-        className="flex min-w-0 flex-1 flex-col gap-0.5 leading-snug"
+        className="flex min-w-0 flex-1 flex-col gap-px text-[14.5px] leading-snug font-medium text-foreground"
       >
         {children}
       </QuestionnairePrimitive.ChoiceLabel>
-      <QuestionnairePrimitive.ChoiceShortcut
-        data-slot="questionnaire-choice-shortcut"
-        className="pointer-events-none ms-auto hidden size-5 shrink-0 translate-y-[--spacing(0.45)] items-center justify-center rounded-md border border-input bg-background font-mono text-[0.625rem] leading-none font-medium text-muted-foreground group-has-data-[slot=questionnaire-choice-description]/questionnaire-choice:translate-y-0.5 group-data-[shortcut]/questionnaire-choice:inline-flex"
+      <CheckIcon
+        aria-hidden="true"
+        data-slot="questionnaire-choice-check"
+        strokeWidth={2}
+        className="check-in hidden size-4.5 shrink-0 text-blue-ink group-data-checked/questionnaire-choice:block"
       />
     </QuestionnairePrimitive.Choice>
   )
@@ -149,12 +156,13 @@ function QuestionnaireChoiceDescription({
   return (
     <span
       data-slot="questionnaire-choice-description"
-      className={cn("text-muted-foreground", className)}
+      className={cn("text-[13px] font-normal text-ink-2", className)}
       {...props}
     />
   )
 }
 
+/** Another answer, typed: a dashed row that turns solid once it holds one. */
 function QuestionnaireInput({
   className,
   ...props
@@ -162,13 +170,19 @@ function QuestionnaireInput({
   return (
     <div
       data-slot="questionnaire-input-wrapper"
-      className="group/questionnaire-input relative w-full min-w-0"
+      className="group/questionnaire-input relative flex min-h-11 w-full min-w-0 items-center gap-3 rounded-xl border border-dashed border-input py-1.5 pr-3 pl-2.5 transition-colors duration-140 has-[input:focus-visible]:border-solid has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/50 has-[input[aria-invalid]]:border-destructive has-[input[data-filled]]:border-solid has-[input[data-filled]]:border-blue-border has-[input[data-filled]]:bg-blue-tint"
     >
+      <span
+        aria-hidden="true"
+        className="grid size-6 shrink-0 place-items-center rounded-[7px] border border-input text-ink-2"
+      >
+        <PenLineIcon className="size-3.5" />
+      </span>
       <QuestionnairePrimitive.Input
         data-slot="questionnaire-input"
         className={cn(
-          "h-8 min-h-11 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-[color,box-shadow,background-color] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 sm:min-h-0 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
-          "selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground",
+          "h-7.5 min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-foreground outline-none placeholder:text-ink-3 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "selection:bg-primary selection:text-primary-foreground",
           className
         )}
         {...props}
@@ -184,7 +198,7 @@ function QuestionnaireError({
   return (
     <QuestionnairePrimitive.Error
       data-slot="questionnaire-error"
-      className={cn("mt-2 text-sm text-destructive", className)}
+      className={cn("-mt-1.5 px-1 text-small text-destructive", className)}
       {...props}
     />
   )
@@ -198,7 +212,7 @@ function QuestionnaireActions({
     <div
       data-slot="questionnaire-actions"
       className={cn(
-        "grid min-h-11 w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 sm:min-h-8",
+        "flex min-h-11 w-full items-center justify-end gap-0.5 sm:min-h-8",
         className
       )}
       {...props}
@@ -209,8 +223,8 @@ function QuestionnaireActions({
 function QuestionnairePrevious({
   children,
   className,
-  size = "default",
-  variant = "outline",
+  size = "sm",
+  variant = "ghost",
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Previous> &
   Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
@@ -221,7 +235,7 @@ function QuestionnairePrevious({
       data-variant={variant}
       className={cn(
         buttonVariants({ size, variant }),
-        "col-start-1 row-start-1 min-h-11 justify-self-start sm:min-h-0",
+        "min-h-11 sm:min-h-0",
         className
       )}
       {...props}
@@ -234,8 +248,8 @@ function QuestionnairePrevious({
 function QuestionnaireSkip({
   children,
   className,
-  size = "default",
-  variant = "outline",
+  size = "sm",
+  variant = "ghost",
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Skip> &
   Pick<React.ComponentProps<typeof Button>, "size" | "variant">) {
@@ -246,7 +260,7 @@ function QuestionnaireSkip({
       data-variant={variant}
       className={cn(
         buttonVariants({ size, variant }),
-        "col-start-2 row-start-1 min-h-11 justify-self-end sm:min-h-0",
+        "min-h-11 sm:min-h-0",
         className
       )}
       {...props}
@@ -259,7 +273,7 @@ function QuestionnaireSkip({
 function QuestionnaireNext({
   children,
   className,
-  size = "default",
+  size = "sm",
   variant = "default",
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Next> &
@@ -271,7 +285,7 @@ function QuestionnaireNext({
       data-variant={variant}
       className={cn(
         buttonVariants({ size, variant }),
-        "col-start-3 row-start-1 min-h-11 justify-self-end sm:min-h-0",
+        "min-h-11 sm:min-h-0",
         className
       )}
       {...props}
@@ -284,7 +298,7 @@ function QuestionnaireNext({
 function QuestionnaireSubmit({
   children,
   className,
-  size = "default",
+  size = "sm",
   variant = "default",
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Submit> &
@@ -296,7 +310,7 @@ function QuestionnaireSubmit({
       data-variant={variant}
       className={cn(
         buttonVariants({ size, variant }),
-        "col-start-3 row-start-1 min-h-11 justify-self-end sm:min-h-0",
+        "min-h-11 sm:min-h-0",
         className
       )}
       {...props}

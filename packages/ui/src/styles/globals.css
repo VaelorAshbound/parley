@@ -327,6 +327,15 @@
   }
 }
 
+/* A questionnaire step slides in (brand.md motion: step). A utility, so a
+   variant can apply it: data-active:step-in. */
+@utility step-in {
+  animation: step-in 240ms var(--ease-out) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: fade-in 200ms ease both;
+  }
+}
+
 @keyframes ink-sweep {
   from {
     background-size: 0% 100%;
@@ -357,6 +366,12 @@
 @keyframes enter {
   from {
     transform: translateY(6px);
+    opacity: 0;
+  }
+}
+@keyframes step-in {
+  from {
+    transform: translateX(10px);
     opacity: 0;
   }
 }
