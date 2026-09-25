@@ -11,6 +11,7 @@ import {
   EmptyTitle,
 } from "@workspace/ui/components/empty"
 import { Marker, MarkerContent } from "@workspace/ui/components/marker"
+import { cn } from "@workspace/ui/lib/utils"
 import { Message, MessageContent } from "@workspace/ui/components/message"
 import {
   MessageScroller,
@@ -21,7 +22,7 @@ import {
   MessageScrollerViewport,
 } from "@workspace/ui/components/message-scroller"
 import type { ChatTransport } from "ai"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
@@ -30,6 +31,7 @@ import type { ChatMessage } from "@/server/ai/chat"
 import { Composer } from "./composer"
 import { MessageParts, PlainText } from "./message-parts"
 import { useDocumentSync } from "./use-document-sync"
+import { useUndo } from "./use-undo"
 
 // The conversation (spec §1 Middle: chat): the shadcn chat primitives, fed by
 // useChat. The scroller follows the stream and anchors each of the user's
@@ -69,8 +71,18 @@ export function ChatPanel({
   const busy = status === "submitted" || status === "streaming"
   const pending = useUiStore((state) => state.pending)
   const setPending = useUiStore((state) => state.setPending)
+  const settle = useUiStore((state) => state.settle)
+  // A new message settles the last turn's highlights in the document.
+  const send = (text: string) => {
+    settle()
+    void sendMessage({ text })
+  }
 
+  const [loaded] = useState(
+    () => new Set(initialMessages.map((message) => message.id))
+  )
   useDocumentSync(orpc, draftId, messages)
+  const undo = useUndo(orpc, draftId)
 
   // The first message, typed on the home page before this draft existed.
   useEffect(() => {
@@ -100,6 +112,8 @@ export function ChatPanel({
                   key={message.id}
                   messageId={message.id}
                   scrollAnchor={message.role === "user"}
+                  // New messages rise in; the ones there on load don't move.
+                  className={cn(!loaded.has(message.id) && "enter")}
                 >
                   {message.role === "user" ? (
                     <Message align="end">
@@ -119,6 +133,7 @@ export function ChatPanel({
                         <MessageParts
                           parts={message.parts}
                           definition={definition}
+                          onUndo={undo}
                         />
                       </MessageContent>
                     </Message>
@@ -151,11 +166,7 @@ export function ChatPanel({
         </MessageScroller>
       </MessageScrollerProvider>
       <div className="mx-auto w-full max-w-2xl shrink-0 px-5 pt-1 md:px-8">
-        <Composer
-          busy={busy}
-          onSend={(text) => void sendMessage({ text })}
-          onStop={() => void stop()}
-        />
+        <Composer busy={busy} onSend={send} onStop={() => void stop()} />
       </div>
     </div>
   )

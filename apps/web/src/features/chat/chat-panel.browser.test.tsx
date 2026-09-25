@@ -2,7 +2,7 @@ import type { RouterClient } from "@orpc/server"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 import { createChat } from "@shadcn/helpers/ai-sdk"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { definitions } from "@workspace/documents"
+import { applyFieldChanges, definitions } from "@workspace/documents"
 import { useEffect, type ReactNode } from "react"
 import { describe, expect, test, vi } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
@@ -23,8 +23,26 @@ const draftId = "0199c0de-0000-7000-8000-000000000002"
 const unused = async () => {
   throw new Error("not called in these tests")
 }
+// updateFields runs the real engine on a copy of the draft, as the server
+// would (the Undo tests).
+let server: Record<string, unknown> = {}
 const orpc = createTanstackQueryUtils({
-  drafts: { get: unused, list: unused },
+  drafts: {
+    get: unused,
+    list: unused,
+    updateFields: async ({
+      changes,
+    }: {
+      changes: { key: string; value: unknown; expected?: unknown }[]
+    }) => {
+      const result = applyFieldChanges(nda, server, changes)
+      server = result.values
+      return {
+        ...result,
+        draft: { id: draftId, documentId: "mutual-nda", fields: server },
+      }
+    },
+  },
   chat: { messages: unused, send: unused },
 } as unknown as RouterClient<Router>)
 const draftKey = orpc.drafts.get.queryKey({ input: { id: draftId } })
@@ -65,6 +83,16 @@ const conversation = () =>
       writer.text("A **Mutual NDA** fits: you both share plans.")
     })
 
+/** Reads the UI store from inside the provider, for the assertions. */
+let store: { changed: Record<string, number> } = { changed: {} }
+function Peek() {
+  const changed = useUiStore((state) => state.changed)
+  useEffect(() => {
+    store.changed = changed
+  }, [changed])
+  return null
+}
+
 async function show({
   initialMessages = [],
   pending,
@@ -74,6 +102,8 @@ async function show({
   pending?: string
   children?: ReactNode
 } = {}) {
+  server = {}
+  store = { changed: {} }
   const queryClient = new QueryClient()
   queryClient.setQueryData(draftKey, {
     id: draftId,
@@ -84,6 +114,7 @@ async function show({
     <QueryClientProvider client={queryClient}>
       <UiStoreProvider>
         {pending && <Pending text={pending} />}
+        <Peek />
         <ChatPanel
           draftId={draftId}
           initialMessages={initialMessages}
@@ -165,5 +196,56 @@ describe("the chat", () => {
     const { queryClient } = await show({ initialMessages: earlier })
 
     expect(queryClient.getQueryData(draftKey)?.fields).toEqual({})
+  })
+
+  test("marks what changed this turn, and settles it on the next message", async () => {
+    const { screen } = await show()
+    const box = screen.getByRole("textbox", { name: "Message" })
+
+    await userEvent.type(box, "We share a roadmap with a vendor.{Enter}")
+    await expect.poll(() => store.changed).toEqual({ purpose: 1 })
+
+    await userEvent.type(box, "Thanks.{Enter}")
+    await expect.poll(() => store.changed).toEqual({})
+  })
+
+  test("undoes an AI change: the value goes back, and the row says so", async () => {
+    const { screen, queryClient } = await show()
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "We share a roadmap with a vendor.{Enter}"
+    )
+    await expect
+      .poll(() => queryClient.getQueryData(draftKey)?.fields)
+      .toEqual({ purpose })
+    server = { purpose }
+
+    await screen.getByRole("button", { name: "Undo Purpose" }).click()
+
+    expect(queryClient.getQueryData(draftKey)?.fields).toEqual({})
+    await expect.element(screen.getByText("Undone")).toBeVisible()
+    await expect.poll(() => server).toEqual({})
+  })
+
+  test("won't undo over a newer edit, and says the field changed since", async () => {
+    const { screen, queryClient } = await show()
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "We share a roadmap with a vendor.{Enter}"
+    )
+    await expect
+      .poll(() => queryClient.getQueryData(draftKey)?.fields)
+      .toEqual({ purpose })
+    // The user edits the purpose by hand after the AI.
+    queryClient.setQueryData(draftKey, (draft) =>
+      draft ? { ...draft, fields: { purpose: "My own words." } } : draft
+    )
+
+    await screen.getByRole("button", { name: "Undo Purpose" }).click()
+
+    await expect.element(screen.getByText("Changed since")).toBeVisible()
+    expect(queryClient.getQueryData(draftKey)?.fields).toEqual({
+      purpose: "My own words.",
+    })
   })
 })

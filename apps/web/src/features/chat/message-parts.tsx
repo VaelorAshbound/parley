@@ -1,28 +1,39 @@
-import { isDocumentId, type DocumentDefinition } from "@workspace/documents"
+import {
+  isDocumentId,
+  type AnyField,
+  type ChangeRequest,
+  type DocumentDefinition,
+} from "@workspace/documents"
+import { Button } from "@workspace/ui/components/button"
 import {
   Marker,
   MarkerContent,
   MarkerIcon,
 } from "@workspace/ui/components/marker"
-import { FileTextIcon, PenLineIcon } from "lucide-react"
+import { cn } from "@workspace/ui/lib/utils"
+import { FileTextIcon, PenLineIcon, Undo2Icon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { documentName } from "@/lib/documents"
+import { useUiStore } from "@/lib/ui-store"
 import type { ChatMessage } from "@/server/ai/chat"
 
 // One message's parts in the chat (spec §1 "The wow moment"): the assistant's
-// words, the agreement it picked, and each change it made to the document.
-// T18 adds the Undo, the highlight and the motion.
+// words, the agreement it picked, and each change it made to the document,
+// with an Undo.
 
 type Part = ChatMessage["parts"][number]
 
 export function MessageParts({
   parts,
   definition,
+  onUndo,
 }: {
   parts: Part[]
   /** The draft's agreement, to name the fields a change touched. */
   definition: DocumentDefinition | null
+  /** Undoes one AI change (useUndo); without it, no Undo buttons show. */
+  onUndo?: (undo: { row: string; change: ChangeRequest }) => void
 }) {
   return parts.map((part, index) => {
     switch (part.type) {
@@ -49,8 +60,11 @@ export function MessageParts({
           return part.output.applied.length > 0 ? (
             <Changes
               key={index}
+              call={part.toolCallId}
               changes={part.output.applied}
+              inverse={part.output.inverse}
               definition={definition}
+              onUndo={onUndo}
             />
           ) : null
         if (part.state === "output-error") return null
@@ -74,39 +88,49 @@ function Working({ children }: { children: ReactNode }) {
   )
 }
 
-/** Each field a change set, as "Purpose → Evaluating a partnership". */
+/**
+ * Each field a change set, as a marker: "MNDA term → 2 years", with an Undo
+ * (brand.md: a pen, the field, an arrow, the value in the document's ink).
+ */
 function Changes({
+  call,
   changes,
+  inverse,
   definition,
+  onUndo,
 }: {
+  call: string
   changes: {
     key: string
     before?: unknown
     after?: unknown
     explanation: string
   }[]
+  inverse: { key: string; value?: unknown; expected?: unknown }[]
   definition: DocumentDefinition | null
+  onUndo: ((undo: { row: string; change: ChangeRequest }) => void) | undefined
 }) {
+  const undo = useUiStore((state) => state.undo)
   return (
     <ul
       aria-label="Changes to the document"
-      className="flex flex-col overflow-hidden rounded-xl border bg-card text-[13.5px]"
+      className="enter flex flex-col overflow-hidden rounded-xl border bg-card"
     >
       {changes.map((change) => {
         const field = definition?.fields[change.key]
-        const shown =
-          change.after === undefined
-            ? "cleared"
-            : field?.merges === "parts"
-              ? changedParts(change.before, change.after)
-              : (field?.format(change.after) ?? "set")
+        const row = `${call}:${change.key}`
+        const state = undo[row]
+        const back = inverse.find((each) => each.key === change.key)
         return (
-          <li
+          <Marker
             key={change.key}
+            render={<li />}
             title={change.explanation}
-            className="flex h-10.5 items-center gap-2.5 border-t px-3.5 first:border-t-0"
+            className="h-10.5 gap-2.5 border-t pr-1.5 pl-3.5 text-[13.5px] first:border-t-0"
           >
-            <PenLineIcon aria-hidden="true" className="size-3.5 text-ink-3" />
+            <MarkerIcon>
+              <PenLineIcon className="size-3.5 text-ink-3" />
+            </MarkerIcon>
             <span className="shrink-0 text-ink-2">
               {field?.label ?? change.key}
             </span>
@@ -114,10 +138,46 @@ function Changes({
               →
             </span>
             <span className="sr-only">set to</span>
-            <span className="min-w-0 flex-1 truncate font-serif text-[15px] text-blue-ink">
-              {shown}
-            </span>
-          </li>
+            <MarkerContent
+              className={cn(
+                "flex-1 truncate font-serif text-[15px] text-blue-ink",
+                state === "undone" && "text-ink-3 line-through"
+              )}
+            >
+              {shown(field, change)}
+            </MarkerContent>
+            {state === "undone" ? (
+              <span className="px-2.5 text-xs text-muted-foreground">
+                Undone
+              </span>
+            ) : state === "stale" ? (
+              <span className="px-2.5 text-xs text-muted-foreground">
+                Changed since
+              </span>
+            ) : onUndo && back ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7.5 text-[12.5px] text-ink-2"
+                aria-label={`Undo ${field?.label ?? change.key}`}
+                onClick={() =>
+                  onUndo({
+                    row,
+                    // Stored as JSON: an empty value comes back as null.
+                    change: {
+                      key: back.key,
+                      value: back.value ?? null,
+                      expected: back.expected ?? null,
+                    },
+                  })
+                }
+              >
+                <Undo2Icon data-icon="inline-start" />
+                Undo
+              </Button>
+            ) : null}
+          </Marker>
         )
       })}
     </ul>
@@ -125,14 +185,45 @@ function Changes({
 }
 
 /**
- * What changed in a field with parts, like a party: "Ana Diaz, CEO". The
- * field's own headline (its company) would hide the name and email.
+ * The value as the row shows it: short where the document is long ("2
+ * years", not the whole sentence around it), and for a field with parts,
+ * the parts that changed.
  */
-function changedParts(before: unknown, after: unknown) {
+function shown(
+  field: AnyField | undefined,
+  change: { before?: unknown; after?: unknown }
+) {
+  const { after } = change
+  if (after === undefined) return "cleared"
+  if (field?.merges === "parts")
+    return changedParts(field, change.before, after)
+  if (field?.kind === "choice") {
+    const option = record(after)
+    const picked =
+      typeof option.option === "string"
+        ? field.options[option.option]
+        : undefined
+    if (picked?.with && option.value !== undefined)
+      return picked.with.format(option.value) ?? field.format(after) ?? "set"
+  }
+  return field?.format(after) ?? "set"
+}
+
+/**
+ * What changed in a field with parts, like a party: "Ana Diaz, CEO". The
+ * field's own headline (its company) would hide the name and email. A code
+ * reads as its name ("DE" → "Delaware").
+ */
+function changedParts(field: AnyField, before: unknown, after: unknown) {
   const old = record(before)
-  const texts = Object.entries(record(after)).flatMap(([part, value]) =>
-    typeof value === "string" && value !== old[part] ? [value] : []
-  )
+  const texts = Object.entries(record(after)).flatMap(([part, value]) => {
+    if (typeof value !== "string" || value === old[part]) return []
+    const named =
+      field.kind === "jurisdiction" && part === "state"
+        ? field.formatPath(after, part)
+        : value
+    return [named ?? value]
+  })
   return texts.length > 0 ? texts.join(", ") : "updated"
 }
 
