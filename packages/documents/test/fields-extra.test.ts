@@ -214,6 +214,16 @@ describe("jurisdiction outside the US", () => {
     }
   })
 
+  it("still reads a stored draft whose region names a US state", () => {
+    // Drafts saved before the rule may hold { region: "Oregon" }: only new
+    // writes are checked, so loading them never throws.
+    const stored = { region: "Oregon", courtLocation: "Portland" }
+
+    expect(law.draftSchema.parse(stored)).toEqual(stored)
+    expect(law.schema.parse(stored)).toEqual(stored)
+    expect(law.changeSchema.safeParse({ region: "Oregon" }).success).toBe(false)
+  })
+
   it("swaps the place when a change picks the other kind", () => {
     expect(
       law.merge(

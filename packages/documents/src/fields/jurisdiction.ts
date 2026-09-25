@@ -81,7 +81,10 @@ const usPlaces = new Set(
     .map((name) => name.toLowerCase())
     .filter((name) => name !== "georgia")
 )
-const region = plainText(100).refine(
+const region = plainText(100)
+// Checked on writes only: drafts saved before this rule may hold "Oregon",
+// and the draft and complete schemas must still read them.
+const newRegion = region.refine(
   (value) => !usPlaces.has(value.toLowerCase()),
   "That's a US state: pick it as the state."
 )
@@ -189,7 +192,7 @@ function worldJurisdiction(config: JurisdictionConfig) {
       z
         .strictObject({
           state: stateCode.nullable(),
-          region: region.nullable(),
+          region: newRegion.nullable(),
           courtLocation: courtLocation.nullable(),
         })
         .exactPartial(),
