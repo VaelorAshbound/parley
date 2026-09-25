@@ -167,6 +167,54 @@ describe("a database failure", () => {
     expect(text).not.toContain("params")
   })
 
+  it("keeps the session token out when the session lookup fails", async () => {
+    const signIn = await call("/api/auth/sign-in/anonymous", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    })
+    // Without the cached session cookie, the session is read from the
+    // database, by its token.
+    const cookie = cookiesFrom(signIn)
+      .split("; ")
+      .filter((each) => each.includes("session_token"))
+      .join("; ")
+    const token = decodeURIComponent(cookie.split("=")[1] ?? "").split(".")[0]
+    expect(token?.length).toBeGreaterThan(10)
+
+    const {
+      result: response,
+      calls,
+      text,
+    } = await captured(() =>
+      call(
+        "/api/rpc/drafts/list",
+        {
+          method: "POST",
+          headers: {
+            cookie,
+            "content-type": "application/json",
+            "x-csrf-token": "orpc",
+          },
+          body: JSON.stringify({ json: {} }),
+        },
+        brokenDatabase("search_path=nowhere")
+      )
+    )
+
+    expect(response.status).toBe(500)
+    // Better Auth's own log of it too, through our logger.
+    expect(calls).toContainEqual([
+      expect.objectContaining({
+        level: "error",
+        event: "auth_log",
+        error: expect.objectContaining({ code: "42P01" }),
+      }),
+    ])
+    expect(text).not.toContain(token)
+    expect(text).not.toContain("params")
+  })
+
   it("keeps a failed sign-in's logs structured and free of query values", async () => {
     const {
       result: response,

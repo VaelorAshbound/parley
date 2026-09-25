@@ -4,6 +4,8 @@ import { betterAuth } from "better-auth/minimal"
 import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
 
+import { log } from "./log"
+
 // Better Auth, built per request because the database client is per request
 // (spec §5 Auth). T21 adds email + password, OAuth and emails; T27 Turnstile.
 
@@ -33,6 +35,20 @@ export function createAuth({
 }) {
   return betterAuth({
     appName: "Parley",
+    // Better Auth's own error and warning lines, through our structured
+    // logger (T29). Its default prints the whole error, and a failed query's
+    // message holds the bound values (session tokens, emails). Its messages
+    // are fixed text, some ending with a value after a colon or in quotes (a
+    // URL, a provider): only the text before that is kept.
+    logger: {
+      log: (level, message, ...args: unknown[]) =>
+        log(
+          level === "error" || level === "warn" ? level : "info",
+          "auth_log",
+          { message: message.split(/[:"'`\n]/)[0]?.trim() },
+          args.find((each) => each instanceof Error)
+        ),
+    },
     secret: env.BETTER_AUTH_SECRET,
     baseURL: { allowedHosts: allowedHosts(env.STAGE), protocol: "auto" },
     database: drizzleAdapter(db, { provider: "pg", schema }),
