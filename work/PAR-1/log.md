@@ -88,3 +88,6 @@ Demo: owner hit INVALID_ANSWERS (typed answers missing from a questionnaire). No
 
 ### 2026-09-25T09:31:00Z
 Demo bug root cause: Firefox. The questionnaire library moves typed boxes in/out of the form via the form attribute; FormData follows the form owner, which Firefox didn't restore, so every typed answer was dropped (choices kept). Fixed by reading answers from the form's own inputs (d7a8545), with a test that drops a box's form owner. Found via the new answers_refused log + session user agent.
+
+### 2026-09-25T09:32:52Z
+Owner confirmed the Firefox questionnaire fix works.
