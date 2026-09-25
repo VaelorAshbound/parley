@@ -3,6 +3,8 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 import { createChat } from "@shadcn/helpers/ai-sdk"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { applyFieldChanges, definitions } from "@workspace/documents"
+import { ORPCError } from "@orpc/client"
+import type { ChatTransport } from "ai"
 import { useEffect, type ReactNode } from "react"
 import { describe, expect, test, vi } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
@@ -26,6 +28,7 @@ const unused = async () => {
 // updateFields runs the real engine on a copy of the draft, as the server
 // would (the Undo tests).
 let server: Record<string, unknown> = {}
+let serverChat: ChatMessage[] = []
 const orpc = createTanstackQueryUtils({
   drafts: {
     get: unused,
@@ -43,7 +46,8 @@ const orpc = createTanstackQueryUtils({
       }
     },
   },
-  chat: { messages: unused, send: unused },
+  // The server's copy of the chat, for the tests that read it back.
+  chat: { messages: async () => serverChat, send: unused },
 } as unknown as RouterClient<Router>)
 const draftKey = orpc.drafts.get.queryKey({ input: { id: draftId } })
 
@@ -98,11 +102,14 @@ async function show({
   pending,
   children,
   script = conversation(),
+  transport = (base) => base,
 }: {
   initialMessages?: ChatMessage[]
   pending?: string
   children?: ReactNode
   script?: ReturnType<typeof conversation>
+  /** Wraps the scripted transport, to make a request fail. */
+  transport?: (base: ChatTransport<ChatMessage>) => ChatTransport<ChatMessage>
 } = {}) {
   server = {}
   store = { changed: {} }
@@ -121,7 +128,7 @@ async function show({
           draftId={draftId}
           initialMessages={initialMessages}
           definition={nda}
-          transport={script.transport({ delayMs: 0 })}
+          transport={transport(script.transport({ delayMs: 0 }))}
           orpc={orpc}
         />
         {children}
@@ -293,8 +300,70 @@ describe("the chat", () => {
 
     await expect.element(screen.getByText("Two years it is.")).toBeVisible()
     expect(heard).toEqual({ answers: { term: ["2y"] } })
+    // Taken by the server: nothing is left to resume.
+    await expect
+      .poll(() =>
+        Object.keys(localStorage).filter((key) =>
+          key.startsWith("parley:questions:")
+        )
+      )
+      .toEqual([])
     await expect
       .element(screen.getByText("Key terms answered ·", { exact: false }))
       .toHaveTextContent("Key terms answered · 2 years")
+  })
+
+  test("brings the questions back, answers kept, when the server refuses them", async () => {
+    const set = {
+      title: "Deal parties",
+      questions: [
+        {
+          name: "company",
+          prompt: "What is your company's legal name?",
+          required: true,
+          choices: [],
+          multiple: false,
+        },
+      ],
+    }
+    const script = createChat<ChatMessage>()
+      .user("Help me.")
+      .assistant(({ writer }) => {
+        writer.tool("askQuestions", { input: set })
+      })
+    const asked = script.get()
+    serverChat = asked
+    const { screen } = await show({
+      initialMessages: asked,
+      script,
+      // The answers never get past the server.
+      transport: (base) => ({
+        ...base,
+        sendMessages: async () => {
+          throw new ORPCError("INVALID_ANSWERS", {
+            message: "Those answers don't fit the questions.",
+          })
+        },
+      }),
+    })
+
+    await userEvent.type(
+      screen.getByRole("textbox", {
+        name: "What is your company's legal name?",
+      }),
+      "Acme Robotics"
+    )
+    await screen.getByRole("button", { name: "Send answers" }).click()
+
+    await expect
+      .element(
+        screen.getByRole("textbox", {
+          name: "What is your company's legal name?",
+        })
+      )
+      .toHaveValue("Acme Robotics")
+    expect(
+      screen.getByText("Parley couldn’t answer.", { exact: false }).query()
+    ).toBeNull()
   })
 })

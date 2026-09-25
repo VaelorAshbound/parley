@@ -20,6 +20,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { ChevronLeftIcon } from "lucide-react"
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 
+import type { ChatMessage } from "@/server/ai/chat"
 import {
   isShown,
   MAX_ANSWER,
@@ -49,7 +50,7 @@ export function AiQuestionnaire({
   set: QuestionSet
   onAnswer: (answers: Answers) => void
 }) {
-  const storage = `parley:questions:${toolCallId}`
+  const storage = storageKey(toolCallId)
   // What was answered before a reload lives in this browser, which the
   // server render can't see: the form mounts again once hydrated, and only
   // then reads it.
@@ -65,10 +66,9 @@ export function AiQuestionnaire({
       set={set}
       saved={() => (hydrated ? load(storage) : null)}
       onChange={(progress) => store(storage, progress)}
-      onAnswer={(answers) => {
-        forget(storage)
-        onAnswer(answers)
-      }}
+      // Kept until the server takes them (forgetSettledQuestions): if it
+      // refuses, the questionnaire comes back with them.
+      onAnswer={onAnswer}
     />
   )
 }
@@ -311,6 +311,20 @@ function store(key: string, progress: Progress) {
   } catch {
     // No resume, nothing else lost.
   }
+}
+
+/**
+ * Drops the saved progress of every questionnaire in the message that is no
+ * longer open: answered and taken by the server, or closed from the chat.
+ */
+export function forgetSettledQuestions(message: ChatMessage | undefined) {
+  for (const part of message?.parts ?? [])
+    if (part.type === "tool-askQuestions" && part.state !== "input-available")
+      forget(storageKey(part.toolCallId))
+}
+
+function storageKey(toolCallId: string) {
+  return `parley:questions:${toolCallId}`
 }
 
 function forget(key: string) {

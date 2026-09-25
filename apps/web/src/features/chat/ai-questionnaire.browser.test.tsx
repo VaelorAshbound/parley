@@ -170,6 +170,81 @@ describe("the AI's questionnaire", () => {
       .toHaveTextContent("Choose an answer to continue.")
   })
 
+  test("sends typed answers given with the mouse and the Next button", async () => {
+    const { screen, onAnswer } = await show("call-8")
+    await screen.getByRole("radio", { name: /2 years/ }).click()
+    await screen.getByRole("radio", { name: "Yes" }).click()
+    await screen
+      .getByRole("textbox", { name: "Who signs for Northwind?" })
+      .click()
+    await userEvent.keyboard("Bo Chen")
+    await screen.getByRole("button", { name: "Next" }).click()
+    await screen.getByRole("textbox", { name: "Another answer" }).click()
+    await userEvent.keyboard("Texas")
+
+    await screen.getByRole("button", { name: "Send answers" }).click()
+
+    await expect
+      .poll(() => onAnswer.mock.calls[0]?.[0])
+      .toEqual({
+        term: ["2y"],
+        hasSigner: ["yes"],
+        signer: ["Bo Chen"],
+        law: ["Texas"],
+      })
+  })
+
+  test("keeps a typed answer across a reload", async () => {
+    const typed: QuestionSet = {
+      title: "Deal parties",
+      questions: [
+        {
+          name: "party1_company",
+          prompt: "What is your company's legal name?",
+          required: true,
+          choices: [],
+          multiple: false,
+        },
+        {
+          name: "sharing",
+          prompt: "Will the supplier share too?",
+          required: true,
+          choices: [
+            { value: "both", label: "Yes, both sides" },
+            { value: "you_only", label: "No, only us" },
+          ],
+          multiple: false,
+        },
+      ],
+    }
+    const onAnswer = vi.fn<(answers: Answers) => void>()
+    const first = await render(
+      <AiQuestionnaire toolCallId="call-9" set={typed} onAnswer={onAnswer} />
+    )
+    await userEvent.type(
+      first.getByRole("textbox", {
+        name: "What is your company's legal name?",
+      }),
+      "Acme Robotics{Enter}"
+    )
+    await expect
+      .element(
+        first.getByRole("group", { name: "Will the supplier share too?" })
+      )
+      .toBeVisible()
+    await first.unmount()
+
+    const screen = await render(
+      <AiQuestionnaire toolCallId="call-9" set={typed} onAnswer={onAnswer} />
+    )
+    await userEvent.keyboard("b")
+    await screen.getByRole("button", { name: "Send answers" }).click()
+
+    await expect
+      .poll(() => onAnswer.mock.calls[0]?.[0])
+      .toEqual({ party1_company: ["Acme Robotics"], sharing: ["you_only"] })
+  })
+
   test("picks up where it was after a reload", async () => {
     const first = await show("call-7")
     await userEvent.keyboard("b")
@@ -190,7 +265,7 @@ describe("the AI's questionnaire", () => {
     await expect
       .poll(() => onAnswer.mock.calls[0]?.[0])
       .toEqual({ term: ["2y"], hasSigner: ["no"] })
-    // Sent: nothing is left to resume.
-    expect(localStorage.getItem("parley:questions:call-7")).toBeNull()
+    // Kept until the server takes the answers (the chat panel's test).
+    expect(localStorage.getItem("parley:questions:call-7")).not.toBeNull()
   })
 })

@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react"
+import { ORPCError } from "@orpc/client"
 import { useQueryClient } from "@tanstack/react-query"
 import type { DocumentDefinition } from "@workspace/documents"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
@@ -31,6 +32,7 @@ import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
 import { MessageParts, PlainText } from "./message-parts"
+import { forgetSettledQuestions } from "./ai-questionnaire"
 import { questionsAnswered } from "./transport"
 import { useDocumentSync } from "./use-document-sync"
 import { useUndo } from "./use-undo"
@@ -61,6 +63,8 @@ export function ChatPanel({
     stop,
     error,
     regenerate,
+    setMessages,
+    clearError,
   } = useChat<ChatMessage>({
     id: draftId,
     messages: initialMessages,
@@ -68,14 +72,30 @@ export function ChatPanel({
     // Answers to the AI's questions go back as soon as they are given.
     sendAutomaticallyWhen: questionsAnswered,
     // The next visit to this draft starts from the whole chat, and the
-    // sidebar's order from this turn.
-    onFinish: ({ messages: all }) => {
+    // sidebar's order from this turn. Answers the server took no longer
+    // need keeping for a reload.
+    onFinish: ({ messages: all, isError }) => {
+      if (!isError) forgetSettledQuestions(all.at(-1))
       queryClient.setQueryData(
         orpc.chat.messages.queryKey({ input: { id: draftId } }),
         all
       )
       void queryClient.invalidateQueries({
         queryKey: orpc.drafts.list.key(),
+      })
+    },
+    // The server refused the answers, or the questions had closed: its copy
+    // of the chat is the truth, so the questionnaire comes back (with what
+    // was typed, still saved) instead of a dead end.
+    onError: (failure) => {
+      if (
+        !(failure instanceof ORPCError) ||
+        (failure.code !== "INVALID_ANSWERS" && failure.code !== "NOT_OPEN")
+      )
+        return
+      void orpc.chat.messages.call({ id: draftId }).then((fresh) => {
+        setMessages(fresh)
+        clearError()
       })
     },
   })
