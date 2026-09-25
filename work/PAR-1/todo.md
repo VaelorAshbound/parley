@@ -626,7 +626,25 @@
   - Files: `apps/web/src/server/rpc/export.ts`, `src/server/quota.ts`, `src/features/export/*`
   - Deps: T12, T21
 
-- [ ] **T25: Share links** (M)
+- [x] **T25: Share links** (M)
+  - Done 2026-09-25. Skills: build, incremental-implementation, test-driven-development, source-driven-development (TanStack Start route `headers` and loader `notFound`, MDN ClipboardItem), security-and-hardening, observability-and-instrumentation, documentation-and-adrs, git-workflow-and-versioning; cloudflare:workers-best-practices (Web Crypto for the token), shadcn (DropdownMenu, Badge, Empty, toast). Checked:
+    - `pnpm check`; `pnpm test` (1036, 1 skipped); `pnpm test:workers` (344: new `share.test.ts` 15, and the auth matrix with `share.get/create/view/revoke` rows); `pnpm db:check` (no schema change: the `share` table is T13's).
+    - e2e Chromium + Firefox on port 3131: `share.spec.ts` 4/4 (owner copies the link, a visitor with no cookies opens it read-only with `noindex` and `no-store`, the owner turns it off, the reload is a 404 with the same headers; a made-up link is a 404) and `export.spec.ts` 2/2 (same header). In Chromium the test also reads the real clipboard.
+    - Screenshots at 1440 light and dark and 375: the Share menu, the share page, the 404, the phone panel header. Resend: no sends.
+  - Built:
+    - **`share.get` / `share.create` / `share.revoke` / `share.view`** (`server/rpc/share.ts`, queries in `packages/db/src/queries/shares.ts`). The token is 16 bytes of Web Crypto, base64url (22 letters). One live link per draft: Create gives the link that is on (a row lock makes two clicks one link); Stop sharing sets `revokedAt` on it, the row stays, so an old token never works again. Create needs a confirmed email, like export; revoke only needs ownership, so it is never blocked.
+    - **The public read sends only `title`, `documentId` and `values`** (parsed by the document's schema). A Worker test reads the raw HTTP body and finds no chat text, email, user id or draft id. A token of the wrong shape is refused before the database; unknown, off and deleted are one `NOT_FOUND`.
+    - **`/s/$token`** (`features/share/share-page.tsx`): the document read-only (`DocumentView` without `onEdit`: no buttons at all), the draft's title, a Read only badge, the demo note, the Common Paper / CC BY 4.0 credit and "Draft your own". It reads no session. Every answer, the 404 too: `Cache-Control: private, no-store`, `X-Robots-Tag: noindex, nofollow` (+ robots meta), `Referrer-Policy: no-referrer` (+ meta), `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `nosniff` (route `headers`).
+    - **Share menu in the panel header**, next to Download and like it: Copy link (toast "Link copied") and, while a link is on, Stop sharing (toast "Link turned off"). The link's state loads on hover or focus of the button, so the menu doesn't grow when it opens. The copy writes a `ClipboardItem` holding the server's answer during the click (Safari refuses a copy after an await). A guest gets "Create a free account to share", an unconfirmed email "Confirm your email to share", each with its button.
+    - Logs: `share_created` / `share_revoked` (ids), `share_viewed` (found / not_found); never the token (Worker test).
+    - **ADR-0007** (share links as bearer tokens; why the token isn't hashed).
+  - Decisions:
+    - "The Share button copies the link" is a menu with Copy link first, like Download: turning the link off later needs a place, and a toast's action disappears.
+    - The token is stored as is, not hashed: the owner must be able to copy the same link again, and whoever can read `share` can read `draft` beside it (ADR-0007).
+  - For later:
+    - **T27:** put `share.view` and `/s/*` in the per-IP rate limit (guessing 128 bits isn't practical, but a burst of misses should cost nothing). The page's loader shows any 4xx as the 404, so a `RATE_LIMITED` there would read "This link doesn't work"; T27 may want its own message.
+    - **T38:** Workers Logs' invocation records keep the request path, and `/s/:token` puts the token there (`redact_query_string` only covers query strings). Only operators see it.
+    - **T37:** the phone design's bottom Share + Download bar.
   - Accept:
     - `share.create` and `share.revoke` use a random 128-bit token. `/s/$token` is a public, read-only SSR page with `noindex`, the attribution, and a "Draft your own" call to action.
     - A revoked or unknown token gives a friendly 404. The auth matrix covers these calls.
