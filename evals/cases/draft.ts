@@ -93,7 +93,7 @@ ${REST}`,
     name: "DPA for patient insights",
     document: "dpa",
     opening:
-      "Our customer Lumen Clinics in Germany needs a GDPR data processing agreement with us. We process their patients' and staff's personal data in our analytics service.",
+      "Our customer Lumen Clinics runs clinics in Germany and the UK, and needs a GDPR data processing agreement with us. We process their patients' and staff's personal data in our analytics service.",
     facts: `- The DPA adds to the Cloud Service Agreement between Northwind Health Analytics, Inc. and Lumen Clinics GmbH, dated October 1, 2026.
 - Customer: Lumen Clinics GmbH, the controller of the data, at Torstrasse 12, 10119 Berlin, Germany. Signer: Lena Vogel, Data Protection Officer. Email, for notices too: lena@lumen.test.
 - Provider: Northwind Health Analytics, Inc., at 500 Howard St, San Francisco, CA 94105. Signer: Omar Haddad, General Counsel. Email, for notices too: omar@northwind.test. Security contact: security@northwind.test.
