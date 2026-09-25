@@ -24,8 +24,8 @@ export const draftCases: DraftCase[] = [
     document: "csa",
     opening:
       "We're Northwind Analytics. Juniper Outfitters wants to buy a yearly subscription to our hosted sales forecasting dashboard.",
-    facts: `- Provider: Northwind Analytics, Inc. Signer: Priya Raman, Chief Revenue Officer, priya@northwind.test.
-- Customer: Juniper Outfitters LLC. Signer: Marco Silva, VP of Operations, marco@juniper.test.
+    facts: `- Provider: Northwind Analytics, Inc. Signer: Priya Raman, Chief Revenue Officer. Email, for notices too: priya@northwind.test.
+- Customer: Juniper Outfitters LLC. Signer: Marco Silva, VP of Operations. Email, for notices too: marco@juniper.test.
 - The product: Northwind Insights, a hosted sales forecasting dashboard.
 - Access starts on the date of the last signature. No pilot.
 - Each term is 12 months. Fees: $48,000 per year, billed by invoice once a year, paid within 30 days of receiving it.
@@ -61,8 +61,8 @@ ${REST}`,
     opening:
       "Juniper Outfitters buys our cloud dashboard under a Cloud Service Agreement. Now they want an SLA: an uptime target, with credits when we miss it.",
     facts: `- The SLA adds to the Order Form dated November 1, 2026 under the Cloud Service Agreement between Northwind Analytics, Inc. and Juniper Outfitters LLC.
-- Provider: Northwind Analytics, Inc. Signer: Priya Raman, Chief Revenue Officer, priya@northwind.test.
-- Customer: Juniper Outfitters LLC. Signer: Marco Silva, VP of Operations, marco@juniper.test.
+- Provider: Northwind Analytics, Inc. Signer: Priya Raman, Chief Revenue Officer. Email, for notices too: priya@northwind.test.
+- Customer: Juniper Outfitters LLC. Signer: Marco Silva, VP of Operations. Email, for notices too: marco@juniper.test.
 - Only an uptime target: 99.9%. No scheduled downtime is excluded. No support response target.
 - Uptime credits: 5% from 99.0% up to the target, 10% from 95.0% to 99.0%, 20% under 95.0%.
 ${REST}`,
@@ -95,8 +95,8 @@ ${REST}`,
     opening:
       "Our customer Lumen Clinics in Germany needs a GDPR data processing agreement with us. We process their patients' and staff's personal data in our analytics service.",
     facts: `- The DPA adds to the Cloud Service Agreement between Northwind Health Analytics, Inc. and Lumen Clinics GmbH, dated October 1, 2026.
-- Customer: Lumen Clinics GmbH, the controller of the data. Signer: Lena Vogel, Data Protection Officer, lena@lumen.test.
-- Provider: Northwind Health Analytics, Inc. Signer: Omar Haddad, General Counsel, omar@northwind.test. Security contact: security@northwind.test.
+- Customer: Lumen Clinics GmbH, the controller of the data. Signer: Lena Vogel, Data Protection Officer. Email, for notices too: lena@lumen.test.
+- Provider: Northwind Health Analytics, Inc. Signer: Omar Haddad, General Counsel. Email, for notices too: omar@northwind.test. Security contact: security@northwind.test.
 - The service: Northwind Patient Insights.
 - Subprocessors: listed in the DPA. Just one: Stratus Cloud Hosting, Inc., in Germany, for hosting.
 - Whose data: the clinics' patients (end users) and employees. What data: names and contact details.
@@ -129,8 +129,8 @@ ${REST}`,
     opening:
       "Juniper Outfitters uses our cloud dashboard under a CSA, and we just added AI features. They want an AI addendum that says we never train our models on their data.",
     facts: `- The addendum changes the Cloud Service Agreement between Northwind Analytics, Inc. and Juniper Outfitters LLC, dated November 1, 2026.
-- Provider: Northwind Analytics, Inc. Signer: Priya Raman, Chief Revenue Officer, priya@northwind.test.
-- Customer: Juniper Outfitters LLC. Signer: Marco Silva, VP of Operations, marco@juniper.test.
+- Provider: Northwind Analytics, Inc. Signer: Priya Raman, Chief Revenue Officer. Email, for notices too: priya@northwind.test.
+- Customer: Juniper Outfitters LLC. Signer: Marco Silva, VP of Operations. Email, for notices too: marco@juniper.test.
 - No customer data may be used to train models, for any purpose.
 - The Provider defends the Customer against AI claims (the standard provider claims). The Customer defends no one.
 - No AI acceptable use policy.
@@ -159,8 +159,8 @@ ${REST}`,
     document: "pilot-agreement",
     opening:
       "Harbor Health wants to try our staff scheduling app, Slotwise, for free for 60 days before they decide to buy.",
-    facts: `- Provider: Slotwise Inc. Signer: Dana Kim, CEO, dana@slotwise.test.
-- Customer: Harbor Health, Inc. Signer: Hugo Lind, VP of Operations, hugo@harborhealth.test.
+    facts: `- Provider: Slotwise Inc. Signer: Dana Kim, CEO. Email, for notices too: dana@slotwise.test.
+- Customer: Harbor Health, Inc. Signer: Hugo Lind, VP of Operations. Email, for notices too: hugo@harborhealth.test.
 - The product: Slotwise, a staff scheduling web app.
 - It starts on the date of the last signature and lasts 60 days. It is free.
 - Texas law, courts in Travis County.
@@ -195,8 +195,8 @@ ${REST}`,
     document: "design-partner-agreement",
     opening:
       "We're giving Corner Market early access to Shelf Sense, our unreleased inventory tool, in exchange for regular feedback.",
-    facts: `- Provider: Acme Analytics, Inc. Signer: Ana Diaz, CEO, ana@acme.test.
-- Partner: Corner Market Co. Signer: Cy Park, Owner, cy@cornermarket.test.
+    facts: `- Provider: Acme Analytics, Inc. Signer: Ana Diaz, CEO. Email, for notices too: ana@acme.test.
+- Partner: Corner Market Co. Signer: Cy Park, Owner. Email, for notices too: cy@cornermarket.test.
 - The product: Shelf Sense, an early inventory planning tool for retail stores.
 - The partner gives feedback in 2 sessions per month, and agrees to be a reference customer. Nothing else.
 - In return the provider gives a 20% discount when the product launches.
@@ -232,8 +232,8 @@ ${REST}`,
     document: "psa",
     opening:
       "We're Harbor Health. We're hiring the agency Northwind Studio to redesign our patient portal, paid by milestones.",
-    facts: `- Provider: Northwind Studio LLC. Signer: Nora Patel, Managing Partner, nora@northwindstudio.test.
-- Customer: Harbor Health, Inc. Signer: Hugo Lind, VP of Operations, hugo@harborhealth.test.
+    facts: `- Provider: Northwind Studio LLC. Signer: Nora Patel, Managing Partner. Email, for notices too: nora@northwindstudio.test.
+- Customer: Harbor Health, Inc. Signer: Hugo Lind, VP of Operations. Email, for notices too: hugo@harborhealth.test.
 - Services: research, design and front-end build of the new patient portal, launched within 4 months.
 - Deliverables: a design system and the portal's front-end code. Harbor Health owns them once it has paid for them.
 - No third-party materials.
@@ -269,8 +269,8 @@ ${REST}`,
     document: "software-license-agreement",
     opening:
       "First Harbor Bank wants to license our fraud detection software and run it on its own servers, not in our cloud.",
-    facts: `- Provider: Quill Labs, Inc. Signer: Quinn Adeyemi, Chief Revenue Officer, quinn@quill.test.
-- Customer: First Harbor Bank, N.A. Signer: Mara Vogel, Head of Fraud Operations, mara@firstharbor.test.
+    facts: `- Provider: Quill Labs, Inc. Signer: Quinn Adeyemi, Chief Revenue Officer. Email, for notices too: quinn@quill.test.
+- Customer: First Harbor Bank, N.A. Signer: Mara Vogel, Head of Fraud Operations. Email, for notices too: mara@firstharbor.test.
 - The software: Quill Sentinel, on-premises fraud detection software.
 - The order date is the date of the last signature. Each subscription period is 12 months. Fees: $120,000 per year.
 - Paid by invoice once a year, within 30 days of receiving it.
@@ -308,8 +308,8 @@ ${REST}`,
     document: "partnership-agreement",
     opening:
       "We're Acme Analytics. We and Maple Retail Group want a partnership agreement: each of us refers customers to the other, with set duties.",
-    facts: `- Company: Acme Analytics, Inc. Signer: Ana Diaz, CEO, ana@acme.test.
-- Partner: Maple Retail Group Ltd. Signer: Dee Singh, Head of Alliances, dee@maple.test.
+    facts: `- Company: Acme Analytics, Inc. Signer: Ana Diaz, CEO. Email, for notices too: ana@acme.test.
+- Partner: Maple Retail Group Ltd. Signer: Dee Singh, Head of Alliances. Email, for notices too: dee@maple.test.
 - Each side refers customers to the other. No money changes hands, so no payment process or schedule.
 - Worldwide. It starts on the date of the last signature and ends 1 year after that.
 - California law, courts in San Francisco County.
@@ -347,8 +347,8 @@ ${REST}`,
     opening:
       "We host patient records for Maple Valley Clinic under our service contract. They need us to sign a HIPAA business associate agreement.",
     facts: `- The BAA is part of the Cloud Service Agreement between Cedar Care Records, Inc. and Maple Valley Clinic, P.C., dated October 1, 2026.
-- Provider: Cedar Care Records, Inc., a business associate. Signer: Priya Raman, Chief Privacy Officer, priya@cedarcare.test.
-- Company: Maple Valley Clinic, P.C., a covered entity. Signer: Sam Okafor, Medical Director, sam@maplevalley.test.
+- Provider: Cedar Care Records, Inc., a business associate. Signer: Priya Raman, Chief Privacy Officer. Email, for notices too: priya@cedarcare.test.
+- Company: Maple Valley Clinic, P.C., a covered entity. Signer: Sam Okafor, Medical Director. Email, for notices too: sam@maplevalley.test.
 - A breach must be reported within 5 business days.
 - The provider keeps no designated record set.
 - The provider may use subcontractors with no extra limits. PHI never leaves the United States. No de-identification. No aggregation.

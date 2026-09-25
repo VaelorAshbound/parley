@@ -36,7 +36,38 @@ describe("scoring an eval's fields", () => {
       { term: { option: "expires", value: { amount: 1, unit: "years" } } }
     )
 
-    expect(results.map((each) => each.ok)).toEqual([true, false, true])
+    expect(results.map((each) => each.ok)).toEqual([true, false])
+  })
+
+  test("takes the same length in other units as the same duration", () => {
+    const results = scoreFields(
+      {
+        subscriptionPeriod: { amount: 12, unit: "months" },
+        pilotPeriod: { amount: 2, unit: "weeks" },
+      },
+      {
+        subscriptionPeriod: { amount: 1, unit: "years" },
+        pilotPeriod: { amount: 14, unit: "days" },
+      }
+    )
+
+    expect(results).toEqual([
+      {
+        path: "subscriptionPeriod",
+        ok: true,
+        got: { amount: 1, unit: "years" },
+      },
+      { path: "pilotPeriod", ok: true, got: { amount: 14, unit: "days" } },
+    ])
+  })
+
+  test("keeps business days apart from calendar days", () => {
+    const [result] = scoreFields(
+      { breachNotificationPeriod: { amount: 5, unit: "businessDays" } },
+      { breachNotificationPeriod: { amount: 5, unit: "days" } }
+    )
+
+    expect(result?.ok).toBe(false)
   })
 
   test("counts a missing value as wrong", () => {
