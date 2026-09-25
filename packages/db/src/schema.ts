@@ -137,6 +137,32 @@ export const aiUsage = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.day] })]
 )
 
+/**
+ * One row per counted document (spec §2 Quota): a draft's first export. The
+ * monthly limit counts these rows, not the drafts, so deleting a downloaded
+ * draft doesn't give its place back (ADR-0006). No foreign key to the draft
+ * for that reason; the rows go with the user.
+ */
+export const countedExport = pgTable(
+  "counted_export",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    draftId: uuid("draft_id").notNull(),
+    countedAt: timestamp("counted_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("counted_export_user_id_counted_at_idx").on(
+      table.userId,
+      table.countedAt
+    ),
+  ]
+)
+
 export const draftRelations = relations(draft, ({ one, many }) => ({
   user: one(user, { fields: [draft.userId], references: [user.id] }),
   messages: many(message),
