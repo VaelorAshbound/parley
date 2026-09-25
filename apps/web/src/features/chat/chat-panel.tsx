@@ -21,12 +21,16 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@workspace/ui/components/message-scroller"
-import type { ChatTransport } from "ai"
+import {
+  lastAssistantMessageIsCompleteWithToolCalls,
+  type ChatTransport,
+} from "ai"
 import { useEffect, useState } from "react"
 
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
 import type { ChatMessage } from "@/server/ai/chat"
+import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
 import { MessageParts, PlainText } from "./message-parts"
@@ -51,23 +55,32 @@ export function ChatPanel({
   orpc: Orpc
 }) {
   const queryClient = useQueryClient()
-  const { messages, sendMessage, status, stop, error, regenerate } =
-    useChat<ChatMessage>({
-      id: draftId,
-      messages: initialMessages,
-      transport,
-      // The next visit to this draft starts from the whole chat, and the
-      // sidebar's order from this turn.
-      onFinish: ({ messages: all }) => {
-        queryClient.setQueryData(
-          orpc.chat.messages.queryKey({ input: { id: draftId } }),
-          all
-        )
-        void queryClient.invalidateQueries({
-          queryKey: orpc.drafts.list.key(),
-        })
-      },
-    })
+  const {
+    messages,
+    sendMessage,
+    addToolOutput,
+    status,
+    stop,
+    error,
+    regenerate,
+  } = useChat<ChatMessage>({
+    id: draftId,
+    messages: initialMessages,
+    transport,
+    // Answers to the AI's questions go back as soon as they are given.
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    // The next visit to this draft starts from the whole chat, and the
+    // sidebar's order from this turn.
+    onFinish: ({ messages: all }) => {
+      queryClient.setQueryData(
+        orpc.chat.messages.queryKey({ input: { id: draftId } }),
+        all
+      )
+      void queryClient.invalidateQueries({
+        queryKey: orpc.drafts.list.key(),
+      })
+    },
+  })
   const busy = status === "submitted" || status === "streaming"
   const pending = useUiStore((state) => state.pending)
   const setPending = useUiStore((state) => state.setPending)
@@ -76,6 +89,20 @@ export function ChatPanel({
   const send = (text: string) => {
     settle()
     void sendMessage({ text })
+  }
+  const answer = ({
+    toolCallId,
+    answers,
+  }: {
+    toolCallId: string
+    answers: Answers
+  }) => {
+    settle()
+    void addToolOutput({
+      tool: "askQuestions",
+      toolCallId,
+      output: { answers },
+    })
   }
 
   const [loaded] = useState(
@@ -107,7 +134,7 @@ export function ChatPanel({
                   </EmptyHeader>
                 </Empty>
               ) : null}
-              {messages.map((message) => (
+              {messages.map((message, index) => (
                 <MessageScrollerItem
                   key={message.id}
                   messageId={message.id}
@@ -134,6 +161,12 @@ export function ChatPanel({
                           parts={message.parts}
                           definition={definition}
                           onUndo={undo}
+                          last={index === messages.length - 1}
+                          onAnswer={
+                            index === messages.length - 1 && !busy
+                              ? answer
+                              : undefined
+                          }
                         />
                       </MessageContent>
                     </Message>

@@ -11,16 +11,25 @@ import {
   MarkerIcon,
 } from "@workspace/ui/components/marker"
 import { cn } from "@workspace/ui/lib/utils"
-import { FileTextIcon, PenLineIcon, Undo2Icon } from "lucide-react"
+import {
+  CheckIcon,
+  FileTextIcon,
+  ListChecksIcon,
+  PenLineIcon,
+  Undo2Icon,
+} from "lucide-react"
 import type { ReactNode } from "react"
 
 import { documentName } from "@/lib/documents"
 import { useUiStore } from "@/lib/ui-store"
 import type { ChatMessage } from "@/server/ai/chat"
+import { isShown, type Answers } from "@/server/ai/questions"
+
+import { AiQuestionnaire, type QuestionSet } from "./ai-questionnaire"
 
 // One message's parts in the chat (spec §1 "The wow moment"): the assistant's
-// words, the agreement it picked, and each change it made to the document,
-// with an Undo.
+// words, the agreement it picked, each change it made to the document (with
+// an Undo), its questions, and the note that the agreement is complete.
 
 type Part = ChatMessage["parts"][number]
 
@@ -28,12 +37,18 @@ export function MessageParts({
   parts,
   definition,
   onUndo,
+  onAnswer,
+  last = false,
 }: {
   parts: Part[]
   /** The draft's agreement, to name the fields a change touched. */
   definition: DocumentDefinition | null
   /** Undoes one AI change (useUndo); without it, no Undo buttons show. */
   onUndo?: (undo: { row: string; change: ChangeRequest }) => void
+  /** Sends the answers to open questions; only the live turn has it. */
+  onAnswer?: (answer: { toolCallId: string; answers: Answers }) => void
+  /** The newest message: its open questions are still coming, not closed. */
+  last?: boolean
 }) {
   return parts.map((part, index) => {
     switch (part.type) {
@@ -69,10 +84,112 @@ export function MessageParts({
           ) : null
         if (part.state === "output-error") return null
         return <Working key={index}>Updating the document…</Working>
+      case "tool-askQuestions":
+        if (part.state === "input-streaming")
+          return <Working key={index}>Writing questions…</Working>
+        if (part.state === "output-available")
+          return <Answered key={index} set={part.input} answers={part.output} />
+        if (part.state === "input-available" && onAnswer)
+          return (
+            <AiQuestionnaire
+              key={part.toolCallId}
+              toolCallId={part.toolCallId}
+              set={part.input}
+              onAnswer={(answers) =>
+                onAnswer({ toolCallId: part.toolCallId, answers })
+              }
+            />
+          )
+        if (part.state === "input-available" && last)
+          return <Working key={index}>Writing questions…</Working>
+        // Replied to in the chat instead, or a set the model got wrong.
+        return part.input?.title ? (
+          <Marker key={index} className="text-ink-3">
+            <MarkerIcon>
+              <ListChecksIcon />
+            </MarkerIcon>
+            <MarkerContent>
+              {part.input.title} · answered in the chat
+            </MarkerContent>
+          </Marker>
+        ) : null
+      case "tool-markComplete":
+        if (part.state === "output-available")
+          return part.output.complete ? (
+            <Complete key={index} definition={definition} />
+          ) : null
+        if (part.state === "output-error") return null
+        return <Working key={index}>Checking the document…</Working>
       default:
         return null
     }
   })
+}
+
+/**
+ * Answered questions, folded to one line: "Key terms answered · 2 years,
+ * Texas" (brand.md: the summary row). Skipped questions are left out.
+ */
+function Answered({
+  set,
+  answers,
+}: {
+  set: QuestionSet
+  answers: { answers: Answers }
+}) {
+  const given = answers.answers
+  const summary = set.questions
+    .filter((question) => isShown(question, given))
+    .flatMap((question) =>
+      (given[question.name] ?? []).map(
+        (value) =>
+          question.choices.find((choice) => choice.value === value)?.label ??
+          value
+      )
+    )
+    .join(", ")
+  return (
+    <Marker className="enter min-h-11.5 gap-2.5 rounded-[14px] border bg-card pr-1.5 pl-3 text-[13.5px] text-ink-2">
+      <MarkerIcon className="grid size-5.5 shrink-0 place-items-center rounded-full bg-blue-tint text-blue-ink">
+        <CheckIcon className="size-3.25" strokeWidth={2.25} />
+      </MarkerIcon>
+      <MarkerContent className="min-w-0 flex-1 truncate py-2.5">
+        {summary ? (
+          <>
+            {set.title} answered ·{" "}
+            <span className="text-foreground">{summary}</span>
+          </>
+        ) : (
+          `${set.title} skipped`
+        )}
+      </MarkerContent>
+    </Marker>
+  )
+}
+
+/**
+ * markComplete found nothing missing: the agreement is ready. T24 adds the
+ * Export button here, once export exists.
+ */
+function Complete({ definition }: { definition: DocumentDefinition | null }) {
+  return (
+    <div className="enter flex items-start gap-3 rounded-[14px] border bg-card px-3.5 py-3">
+      <span
+        aria-hidden="true"
+        className="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-full bg-blue-tint text-blue-ink"
+      >
+        <CheckIcon className="size-3.25" strokeWidth={2.25} />
+      </span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <p className="font-heading text-[17px] leading-snug font-medium">
+          {definition ? `Your ${definition.name} is complete` : "Complete"}
+        </p>
+        <p className="text-small text-ink-2">
+          Every required field is filled. Read it through before you use it.
+        </p>
+      </div>
+    </div>
+  )
 }
 
 /** A tool at work: a status that screen readers announce, with the shimmer. */

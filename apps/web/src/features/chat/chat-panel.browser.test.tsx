@@ -97,10 +97,12 @@ async function show({
   initialMessages = [],
   pending,
   children,
+  script = conversation(),
 }: {
   initialMessages?: ChatMessage[]
   pending?: string
   children?: ReactNode
+  script?: ReturnType<typeof conversation>
 } = {}) {
   server = {}
   store = { changed: {} }
@@ -119,7 +121,7 @@ async function show({
           draftId={draftId}
           initialMessages={initialMessages}
           definition={nda}
-          transport={conversation().transport({ delayMs: 0 })}
+          transport={script.transport({ delayMs: 0 })}
           orpc={orpc}
         />
         {children}
@@ -247,5 +249,53 @@ describe("the chat", () => {
     expect(queryClient.getQueryData(draftKey)?.fields).toEqual({
       purpose: "My own words.",
     })
+  })
+
+  test("asks with a questionnaire, sends the answers, and goes on", async () => {
+    const questions = {
+      title: "Key terms",
+      questions: [
+        {
+          name: "term",
+          prompt: "How long should the NDA last?",
+          required: true,
+          choices: [
+            { value: "1y", label: "1 year" },
+            { value: "2y", label: "2 years" },
+          ],
+          allowOther: false,
+          multiple: false,
+        },
+      ],
+    }
+    let heard: unknown
+    const script = createChat<ChatMessage>()
+      .user("Help me with the terms.")
+      .assistant(({ writer }) => {
+        writer.tool("askQuestions", { input: questions })
+      })
+      .assistant(({ writer, toolCall }) => {
+        heard = toolCall?.output
+        writer.text("Two years it is.")
+      })
+    const { screen } = await show({ script })
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "Help me with the terms.{Enter}"
+    )
+    await expect
+      .element(
+        screen.getByRole("group", { name: "How long should the NDA last?" })
+      )
+      .toBeVisible()
+    await userEvent.keyboard("b")
+    await screen.getByRole("button", { name: "Send answers" }).click()
+
+    await expect.element(screen.getByText("Two years it is.")).toBeVisible()
+    expect(heard).toEqual({ answers: { term: ["2y"] } })
+    await expect
+      .element(screen.getByText("Key terms answered ·", { exact: false }))
+      .toHaveTextContent("Key terms answered · 2 years")
   })
 })

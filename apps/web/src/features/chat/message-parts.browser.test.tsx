@@ -145,3 +145,90 @@ test("names a state in a jurisdiction change, not its code", async () => {
     .element(screen.getByText("Delaware, New Castle", { exact: true }))
     .toBeVisible()
 })
+
+const keyTerms = {
+  title: "Key terms",
+  questions: [
+    {
+      name: "term",
+      prompt: "How long should the NDA last?",
+      required: true,
+      choices: [{ value: "2y", label: "2 years" }],
+      allowOther: false,
+      multiple: false,
+    },
+    {
+      name: "law",
+      prompt: "Which state's law applies?",
+      required: false,
+      choices: [],
+      allowOther: true,
+      multiple: false,
+    },
+  ],
+}
+
+test("folds answered questions into one line, in the user's words", async () => {
+  const screen = await renderWithStore(
+    <MessageParts
+      parts={[
+        {
+          type: "tool-askQuestions",
+          toolCallId: "call-q",
+          state: "output-available",
+          input: keyTerms,
+          output: { answers: { term: ["2y"], law: ["Texas"] } },
+        },
+      ]}
+      definition={nda}
+    />
+  )
+
+  await expect
+    .element(screen.getByText("Key terms answered ·", { exact: false }))
+    .toHaveTextContent("Key terms answered · 2 years, Texas")
+})
+
+test("marks questions that were answered in the chat instead", async () => {
+  const screen = await renderWithStore(
+    <MessageParts
+      parts={[
+        {
+          type: "tool-askQuestions",
+          toolCallId: "call-q",
+          state: "output-error",
+          input: keyTerms,
+          errorText: "The user replied in the chat instead.",
+        },
+      ]}
+      definition={nda}
+    />
+  )
+
+  await expect
+    .element(screen.getByText("Key terms · answered in the chat"))
+    .toBeVisible()
+})
+
+test("says the agreement is complete once nothing is missing", async () => {
+  const screen = await renderWithStore(
+    <MessageParts
+      parts={[
+        {
+          type: "tool-markComplete",
+          toolCallId: "call-done",
+          state: "output-available",
+          input: {},
+          output: { complete: true, missing: [] },
+        },
+      ]}
+      definition={nda}
+    />
+  )
+
+  await expect
+    .element(
+      screen.getByText("Your Mutual Non-Disclosure Agreement is complete")
+    )
+    .toBeVisible()
+})
