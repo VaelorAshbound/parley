@@ -180,7 +180,7 @@ function Home() {
 /** Why the draft didn't start, with the way past it. */
 function Problem({ problem }: { problem: StartProblem }) {
   return (
-    <Alert role="alert" className="enter mt-4">
+    <Alert className="enter mt-4">
       <InfoIcon />
       <AlertDescription className="text-foreground">
         {problem.message}
