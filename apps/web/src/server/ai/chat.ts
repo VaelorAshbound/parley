@@ -11,6 +11,7 @@ import {
   type UIMessage,
 } from "ai"
 
+import { logWarn } from "../log"
 import { authed, draftOwner, type BaseContext } from "../rpc/base"
 import { z } from "../zod"
 import { recent } from "./history"
@@ -261,7 +262,20 @@ export const chat = {
             const checked = answersFor(part.input.questions).safeParse({
               answers: byCall.get(part.toolCallId),
             })
-            if (!checked.success) throw errors.INVALID_ANSWERS()
+            if (!checked.success) {
+              // Which question failed and why, never the answers: a refusal
+              // means the browser and the server disagree (a bug to find).
+              logWarn("answers_refused", {
+                toolCallId: part.toolCallId,
+                issues: checked.error.issues
+                  .map(
+                    ({ path, message }) =>
+                      `${path.filter((each) => each !== "answers").join(".")}: ${message}`
+                  )
+                  .join("; "),
+              })
+              throw errors.INVALID_ANSWERS()
+            }
             return [part.toolCallId, answersShape.parse(checked.data)]
           })
         )

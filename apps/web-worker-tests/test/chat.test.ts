@@ -2,7 +2,7 @@ import { safe } from "@orpc/client"
 import { simulateReadableStream } from "ai"
 import { definitions } from "@workspace/documents"
 import { MockLanguageModelV4 } from "ai/test"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { chatClient, scriptedModel, serverClient, signInGuest } from "./helpers"
 
@@ -822,17 +822,29 @@ describe("the AI's questionnaire", () => {
 
   it("refuses answers that don't fit the questions, without the model", async () => {
     const { client, model, draft } = await asked()
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
 
     const { error } = await safe(
       client.chat.answer({
         id: draft.id,
-        calls: [{ toolCallId: "call-1-0", answers: { law: ["DE"] } }],
+        calls: [
+          { toolCallId: "call-1-0", answers: { law: ["Secret Street 1"] } },
+        ],
         today,
       })
     )
 
     expect(error).toMatchObject({ code: "INVALID_ANSWERS" })
     expect(model.doStreamCalls).toHaveLength(1)
+    // Logged with the question that failed and why, never the answers.
+    const [line] = warn.mock.calls.map(([each]) => String(each))
+    expect(JSON.parse(line ?? "{}")).toMatchObject({
+      level: "warn",
+      event: "answers_refused",
+      toolCallId: "call-1-0",
+      issues: "term: Answer this question.",
+    })
+    expect(line).not.toContain("Secret Street")
   })
 
   it("won't take answers twice, or for questions that were never asked", async () => {

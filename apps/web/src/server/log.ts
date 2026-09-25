@@ -32,3 +32,13 @@ export function logError(
     })
   )
 }
+
+/** Something refused but handled; fields as for logError. */
+export function logWarn(
+  event: string,
+  fields: Record<string, string | number | boolean> = {}
+) {
+  console.warn(
+    JSON.stringify({ level: "warn", event, requestId: requestId(), ...fields })
+  )
+}
