@@ -55,12 +55,7 @@ export function useDownload(orpc: Orpc, draftId: string): Download {
     start: (format) => mutate({ format, id: draftId }),
     pending,
     problem:
-      error && current
-        ? exportProblem(error, {
-            format: current.format,
-            draftPath: `/d/${draftId}`,
-          })
-        : undefined,
+      error && current ? exportProblem(error, `/d/${draftId}`) : undefined,
     dismiss: reset,
   }
 }

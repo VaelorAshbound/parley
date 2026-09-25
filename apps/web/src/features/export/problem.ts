@@ -1,7 +1,5 @@
 import { ORPCError } from "@orpc/client"
 
-import type { ExportFormat } from "@/server/quota"
-
 // What to tell someone whose download didn't happen, from the typed error
 // (spec §5 API: typed errors drive the UI, never string matching). Each
 // limit comes with the way past it.
@@ -30,9 +28,10 @@ function dataOf<T>(error: ORPCError<string, unknown>) {
   return error.data as T
 }
 
+/** `draftPath` is where an account or a confirmed email brings them back. */
 export function exportProblem(
   error: unknown,
-  { draftPath }: { format: ExportFormat; draftPath: string }
+  draftPath: string
 ): ExportProblem {
   if (!(error instanceof ORPCError) || !error.defined) return TRY_AGAIN
   switch (error.code) {
@@ -46,7 +45,13 @@ export function exportProblem(
         },
       }
     case "EMAIL_NOT_VERIFIED":
-      return { message: "Confirm your email to download. We sent you a link." }
+      return {
+        message: "Confirm your email to download. We sent you a link.",
+        action: {
+          label: "Get a new link",
+          href: `/verify-email?redirect=${encodeURIComponent(draftPath)}`,
+        },
+      }
     case "QUOTA_EXCEEDED":
       return {
         message: `You've used your ${dataOf<{ limit: number }>(error).limit} free documents this month. Documents you already downloaded stay free.`,
