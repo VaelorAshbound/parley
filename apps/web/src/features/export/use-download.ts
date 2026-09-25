@@ -34,17 +34,20 @@ function save(file: File) {
 
 export function useDownload(orpc: Orpc, draftId: string): Download {
   const { mutate, isPending, variables, error, reset } = useMutation({
-    mutationFn: (format: ExportFormat) =>
-      orpc.export[format].call({ id: draftId }),
+    mutationFn: ({ format, id }: { format: ExportFormat; id: string }) =>
+      orpc.export[format].call({ id }),
     onSuccess: save,
   })
+  // The draft page stays mounted when another draft opens: what happened to
+  // the last draft's download isn't this one's.
+  const current = variables?.id === draftId ? variables : undefined
   return {
-    start: (format) => mutate(format),
-    pending: isPending ? variables : undefined,
+    start: (format) => mutate({ format, id: draftId }),
+    pending: isPending ? current?.format : undefined,
     problem:
-      error && variables
+      error && current
         ? exportProblem(error, {
-            format: variables,
+            format: current.format,
             draftPath: `/d/${draftId}`,
           })
         : undefined,

@@ -42,8 +42,14 @@ function savedFiles() {
   return names
 }
 
-function Panel({ orpc }: { orpc: ReturnType<typeof fakeServer> }) {
-  const download = useDownload(orpc, draftId)
+function Panel({
+  orpc,
+  id = draftId,
+}: {
+  orpc: ReturnType<typeof fakeServer>
+  id?: string
+}) {
+  const download = useDownload(orpc, id)
   return (
     <>
       <DownloadMenu download={download} />
@@ -52,9 +58,11 @@ function Panel({ orpc }: { orpc: ReturnType<typeof fakeServer> }) {
   )
 }
 
-function renderWith(node: ReactNode) {
+const queryClient = () => new QueryClient()
+
+function renderWith(node: ReactNode, client = queryClient()) {
   return render(
-    <QueryClientProvider client={new QueryClient()}>{node}</QueryClientProvider>
+    <QueryClientProvider client={client}>{node}</QueryClientProvider>
   )
 }
 
@@ -161,6 +169,27 @@ describe("the Download menu", () => {
     await expect.element(screen.getByRole("alert")).toBeVisible()
 
     await screen.getByRole("button", { name: "Close message" }).click()
+
+    await expect.element(screen.getByRole("alert")).not.toBeInTheDocument()
+  })
+
+  test("doesn't carry a message over to the next draft", async () => {
+    // The draft page stays mounted when another draft opens.
+    const orpc = fakeServer({
+      pdf: () =>
+        Promise.reject(new ORPCError("NO_DOCUMENT", { defined: true })),
+    })
+    const client = queryClient()
+    const screen = await renderWith(<Panel orpc={orpc} />, client)
+    await screen.getByRole("button", { name: "Download" }).click()
+    await screen.getByRole("menuitem", { name: "PDF" }).click()
+    await expect.element(screen.getByRole("alert")).toBeVisible()
+
+    await screen.rerender(
+      <QueryClientProvider client={client}>
+        <Panel orpc={orpc} id="0199c0de-0000-7000-8000-000000000025" />
+      </QueryClientProvider>
+    )
 
     await expect.element(screen.getByRole("alert")).not.toBeInTheDocument()
   })
