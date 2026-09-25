@@ -9,6 +9,11 @@ export default defineConfig({
       wrangler: { configPath: "../web/wrangler.jsonc" },
       main: "../web/src/server/api.ts",
       remoteBindings: true,
+      // Resend's key from the shell (never a file here): without it the
+      // real email test is skipped.
+      miniflare: {
+        bindings: { RESEND_API_KEY: process.env.RESEND_API_KEY ?? "" },
+      },
     }),
   ],
   test: {
