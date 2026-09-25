@@ -48,14 +48,15 @@ export function useDownload(orpc: Orpc, draftId: string): Download {
     filters: { mutationKey, status: "pending" },
     select: (mutation) => (mutation.state.variables as Variables).format,
   })
-  // The draft page stays mounted when another draft opens: what happened to
-  // the last draft's download isn't this one's.
-  const current = variables?.id === draftId ? variables : undefined
   return {
     start: (format) => mutate({ format, id: draftId }),
     pending,
+    // The draft page stays mounted when another draft opens: what happened
+    // to the last draft's download isn't this one's.
     problem:
-      error && current ? exportProblem(error, `/d/${draftId}`) : undefined,
+      error && variables?.id === draftId
+        ? exportProblem(error, `/d/${draftId}`)
+        : undefined,
     dismiss: reset,
   }
 }
