@@ -125,9 +125,7 @@ export const BAR = {
 export const percent = (value: number) => `${Math.round(value * 100)}%`
 
 /** Each measure of a run below its bar, in words; empty when it passes. */
-export function belowBar(run: {
-  [measure in keyof typeof BAR]: number
-}): string[] {
+export function belowBar(run: Record<keyof typeof BAR, number>): string[] {
   return [
     run.documents < BAR.documents &&
       `right agreement ${percent(run.documents)}`,
