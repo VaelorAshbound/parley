@@ -69,6 +69,11 @@
   // Worker Previews (one per branch) get their own binding list; wrangler
   // preview refuses to run without it.
   // https://developers.cloudflare.com/workers/previews/configuration/
+  // Secrets: a new one on the Preview base config reaches only Previews
+  // created after it. Put it on each live Preview too, or its requests fail
+  // (T21's TURNSTILE_SECRET_KEY did, as "Missing secret key"):
+  //   wrangler preview base-config secret put NAME
+  //   wrangler preview secret put NAME --name <branch>
   "previews": {
     // Turns on Server-Timing headers for DevTools (spec §5 Hono).
     "vars": {

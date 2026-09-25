@@ -129,6 +129,7 @@ Rules:
 - Cloud: dev/test resources may be created without asking. Anything in production, and any delete, needs the owner's OK. Agents never migrate Neon; the lead does it after merge.
 - Resend: the free plan can run out. Tests use a fake sender; at most 3 real sends per task. A quota error stops all sends and is reported to the owner at once.
 - The laptop has 16 GB RAM. Heavy commands (dev server, e2e, test runs, `vp check`, builds) run under one shared lock (`flock`), so only one runs at a time; a dev server is stopped right after its e2e run. Each worktree uses its own `PORT` (3000 belongs to another app locally).
+- After each merge push, the lead checks CI (Workers Builds + GitHub Actions E2E) is green before starting the next wave. Wave A's merge went red on the Preview (a base-config secret that existing Previews don't get) and it was seen only a wave later.
 
 ## What you need to do (owner actions)
 

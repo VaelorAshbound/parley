@@ -115,3 +115,6 @@ Wave B1 paused (usage limit). Worktrees kept, base a18bfcf: .claude/worktrees/wf
 
 ### 2026-09-25T19:12:13Z
 Wave B1 merged (4fb2034): T22 history+search, T23 settings+password/email flows, T24 PDF/DOCX export with quota. Migrations: 0002_draft_history_pages (T22), 0003_counted_export (T24, renumbered). ADR-0006. Gate green: check, 1014 unit, 301 worker, db:check; e2e Chromium+Firefox 77/80, the 3 failures pass alone (shared test data, logged on PAR-8). Local dev DB migrated. T27 got Musts: export rate limit, guest captcha. Filed PAR-11 (Turnstile reset), PAR-12 (phone drawer). Neon migrations 0002+0003 not applied yet.
+
+### 2026-09-25T19:16:42Z
+Wave B2 (T25, T27, T28) started then stopped at the owner's request before any commit; its empty worktrees removed. Found: CI e2e failed on a18bfcf (wave A): sign-up on the Preview says 'Something went wrong' because Better Auth logs 'Missing secret key' (Turnstile), though TURNSTILE_SECRET_KEY is on the Preview base config. Under investigation.
