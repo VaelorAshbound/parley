@@ -426,6 +426,19 @@
   - Files: `evals/{runner.ts,cases/*.ts,report.md}`
   - Deps: T19
 
+### Review before Checkpoint 2 (2026-09-25)
+- Skills: code-review-and-quality (an independent reviewer agent over dd77fd2..HEAD), debugging-and-error-recovery. No critical issues; authorization held everywhere. Fixed, each with a test that fails without the fix:
+  - **CI was red on T19's push:** the Worker tests ran the test Postgres out of connections (helpers never closed their clients). A probe read 100+ open, then 31 after the fix. Also explains the one-off local flake.
+  - **Two answers at once both ran:** `chat.send` and `chat.answer` now read and save under the draft's row lock (a test races two connections).
+  - **Two questionnaires in one step left one without a result:** `chat.answer` takes `calls: [...]`, every open one, and refuses a partial set.
+  - **One ever-growing reply bypassed the history budget:** its oldest parts leave the model's view; the stream continues from the whole stored reply (a test caught the save cutting it).
+  - **A switched agreement kept "complete":** `chooseDocument` resets it to drafting.
+  - **Question names like `constructor` broke the chat:** refused.
+  - **A message could take the id of Parley's reply and overwrite it:** the upsert needs the same role, and `chat.send` refuses it (`MESSAGE_ID_TAKEN`).
+  - **Evals under-counted:** failed tool calls count as invalid writes, a chat that doesn't load fails, an empty court location no longer matches, one NDA asks for a non-default term. Re-run twice: every bar met.
+  - `folded()` no longer changes the model's own input, and keeps every explanation.
+- Not done (small, noted for later): cache the per-field JSON Schemas (T35); a trimmed history window may start with an assistant message (OpenRouter takes it today); stale `parley:questions:*` keys stay in localStorage when a questionnaire is closed from the chat; after an `INVALID_ANSWERS` refusal the card stays answered on the client (the client checks the same rules, so it needs a bug to happen). A separate `/code-simplify` pass was not run; the reviewer covered readability.
+
 ### Checkpoint 2: **stop for owner review (demo)**
 - [ ] On a local run, a guest drafts a complete NDA by chat and sees the live shimmer, the undo markers, and the inline questionnaire.
 - [ ] `pnpm check`, all tests and the evals are green. You have tried it yourself.
