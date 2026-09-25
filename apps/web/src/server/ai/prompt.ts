@@ -1,4 +1,9 @@
-import type { DocumentDefinition } from "@workspace/documents"
+import {
+  definitions,
+  isDocumentId,
+  type DocumentDefinition,
+  type DocumentId,
+} from "@workspace/documents"
 import { dequal } from "dequal"
 
 import { documentList } from "../../lib/documents"
@@ -25,7 +30,7 @@ How to work:
 - Talk in short, plain words. The user may not know legal terms.
 - Write plain text in short paragraphs: no Markdown headings, lists, tables or links. **Bold** for a key term is fine.
 - First understand the deal: who the parties are and what they share, sell or build.
-- Pick the agreement with chooseDocument as soon as one clearly fits, and say why in one line. Don't wait for every detail: ask the rest while you fill it in. Ask first only when two agreements fit equally well. Mention related agreements when they usually come together (a CSA often comes with an SLA and a DPA).
+- Pick the agreement with chooseDocument as soon as one clearly fits, and say why in one line. Don't wait for every detail: ask the rest while you fill it in. Ask first only when two agreements fit equally well.
 - Fill fields with updateFields as soon as you learn a value. Each change carries a short, plain explanation of what it means.
 - Never make up names, companies, emails or addresses. Ask for them.
 - A jurisdiction's courtLocation is only the city or county ("New Castle County"): the document adds the state itself.
@@ -34,12 +39,44 @@ How to work:
 - A value still on its default was not chosen by the user. Before markComplete, confirm those in one questionnaire (the default as the first choice), unless the user already answered them.
 - When nothing required is empty, call markComplete. If it lists missing fields, ask for them.`
 
-const CATALOG = `The agreements (id: name, what it is for):
+/**
+ * The agreements that usually come with each one (T30). A CSA is often
+ * signed with an SLA, a DPA and an AI Addendum (spec §2); those add-ons each
+ * attach to a main agreement; a pilot or a design partnership often leads to
+ * a CSA. Each is its own draft: the model suggests them, never switches.
+ */
+export const RELATED: Readonly<Record<DocumentId, readonly DocumentId[]>> = {
+  "mutual-nda": [],
+  csa: ["sla", "dpa", "ai-addendum"],
+  sla: ["csa"],
+  dpa: ["csa", "psa", "software-license-agreement"],
+  "ai-addendum": ["csa", "software-license-agreement"],
+  "pilot-agreement": ["csa", "dpa"],
+  "design-partner-agreement": ["csa"],
+  psa: ["dpa"],
+  "software-license-agreement": ["dpa", "ai-addendum"],
+  "partnership-agreement": ["dpa"],
+  baa: ["csa"],
+}
+
+const CATALOG = `The agreements (id: name, what it is for, and the agreements that often come with it):
 ${documentList
-  .map(
-    (document) => `- ${document.id}: ${document.name}. ${document.description}`
-  )
+  .map((document) => {
+    const related = RELATED[document.id]
+    return `- ${document.id}: ${document.name}. ${document.description}${related.length > 0 ? ` Often comes with: ${related.join(", ")}.` : ""}`
+  })
   .join("\n")}`
+
+/** The related agreements of the chosen one, for the model to suggest. */
+function related(definition: DocumentDefinition) {
+  const ids = isDocumentId(definition.id) ? RELATED[definition.id] : []
+  if (ids.length === 0) return ""
+  return `\nAgreements that often come with this one: ${ids
+    .map((id) => `${definitions[id].name} (${id})`)
+    .join(
+      ", "
+    )}. When you choose it, mention the ones that fit the deal once, in one line. Each is its own draft, which the user starts with New draft in the sidebar: never switch this draft to one of them.`
+}
 
 /**
  * A field's value shape for the model: the JSON Schema of one change, without
@@ -125,7 +162,8 @@ export function instructions({
   return [
     ROLE,
     CATALOG,
-    `The chosen agreement: ${definition.name} (${definition.id}). Its fields (key (kind): label. help. The value updateFields takes, as JSON Schema; the value null clears the whole field). For a field with parts (a party, a jurisdiction), send only the parts that change; the others stay as they are:
+    `The chosen agreement: ${definition.name} (${definition.id}).${related(definition)}
+Its fields (key (kind): label. help. The value updateFields takes, as JSON Schema; the value null clears the whole field). For a field with parts (a party, a jurisdiction), send only the parts that change; the others stay as they are:
 ${fields
   .map(
     ([key, field]) =>

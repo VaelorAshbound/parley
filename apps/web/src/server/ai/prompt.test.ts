@@ -3,7 +3,7 @@ import { describe, expect, test } from "vite-plus/test"
 
 import { documentList } from "@/lib/documents"
 
-import { instructions } from "./prompt"
+import { instructions, RELATED } from "./prompt"
 
 const nda = definitions["mutual-nda"]
 
@@ -12,6 +12,35 @@ describe("the chat's instructions", () => {
     const text = instructions({ definition: null, values: {} })
 
     for (const document of documentList) expect(text).toContain(document.id)
+  })
+
+  test("name the agreements that usually come with each one", () => {
+    const text = instructions({ definition: null, values: {} })
+    const csa = text.split("\n").find((line) => line.startsWith("- csa:"))
+
+    // Spec example: a CSA often comes with an SLA, a DPA and an AI Addendum.
+    expect(csa).toMatch(/Often comes with: sla, dpa, ai-addendum/)
+  })
+
+  test("never list an agreement as related to itself", () => {
+    for (const [id, related] of Object.entries(RELATED))
+      expect(related, id).not.toContain(id)
+  })
+
+  test("tell the model to suggest related agreements as new drafts, not switch", () => {
+    const text = instructions({ definition: definitions.csa, values: {} })
+
+    expect(text).toMatch(
+      /Agreements that often come with this one: Service Level Agreement \(sla\), Data Processing Agreement \(dpa\), AI Addendum \(ai-addendum\)\./
+    )
+    expect(text).toMatch(/New draft/)
+    expect(text).toMatch(/never switch this draft to one of them/)
+  })
+
+  test("say nothing about related agreements when none usually come along", () => {
+    const text = instructions({ definition: nda, values: {} })
+
+    expect(text).not.toMatch(/Agreements that often come with this one/)
   })
 
   test("ask for an agreement first when none is chosen", () => {
