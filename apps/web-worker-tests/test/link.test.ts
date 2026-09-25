@@ -1,15 +1,19 @@
 import { connect, listMessages, saveMessages, schema } from "@workspace/db"
 import { eq } from "drizzle-orm"
 import { env } from "cloudflare:workers"
-import { describe, expect, it, onTestFinished } from "vitest"
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
 
 import { call, cookiesFrom, serverClient, signInGuest } from "./helpers"
+import { fakeResend } from "./resend"
 
 // A guest who signs up or signs in keeps their draft and chat (spec §1
 // story 6). Better Auth deletes the guest after it links, and drafts cascade
 // with it, so onLinkAccount must move them first (T14 review).
 
 const today = "2026-09-25"
+
+let resend: ReturnType<typeof fakeResend> | undefined
+afterEach(() => resend?.restore())
 const hello = {
   id: "m-hello",
   role: "user" as const,
@@ -137,5 +141,38 @@ describe("a guest who signs in to an existing account", () => {
     expect(await stillGuest.drafts.get({ id: guest.draft.id })).toMatchObject({
       id: guest.draft.id,
     })
+  })
+})
+
+describe("a guest who opens someone else's confirmation link", () => {
+  // Login CSRF: an attacker signs up with their own mailbox and sends the
+  // link to a guest. The link must not sign the guest in as the attacker,
+  // and must never move the guest's drafts into the attacker's account.
+  it("keeps the guest's draft and session, and moves nothing", async () => {
+    resend = fakeResend()
+    const attacker = `mallory-${crypto.randomUUID()}@acme.dev`
+    await signUp(attacker)
+    const link = resend.linkFor(attacker)
+    const guest = await guestWithDraft()
+    using info = vi.spyOn(console, "info").mockImplementation(() => {})
+
+    const response = await call(link.pathname + link.search, {
+      headers: { cookie: guest.cookie },
+      redirect: "manual",
+    })
+
+    expect(response.headers.get("set-cookie") ?? "").not.toContain(
+      "session_token="
+    )
+    const stillGuest = await serverClient(guest.cookie)
+    expect(await stillGuest.drafts.get({ id: guest.draft.id })).toMatchObject({
+      id: guest.draft.id,
+      userId: guest.draft.userId,
+    })
+    const session = await call("/api/auth/get-session", {
+      headers: { cookie: guest.cookie },
+    })
+    expect(await session.json()).toMatchObject({ user: { isAnonymous: true } })
+    expect(info.mock.calls.flat().join("\n")).not.toContain("guest_linked")
   })
 })

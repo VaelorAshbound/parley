@@ -78,9 +78,9 @@ describe("a procedure that needs a confirmed email", () => {
   it("lets the account in once the email is confirmed", async () => {
     const { cookie, link } = await signUp()
 
-    const confirmed = await open(link, cookie)
+    await open(link, cookie)
 
-    expect(await outcome(cookiesFrom(confirmed))).toBe("OK")
+    expect(await outcome(cookie)).toBe("OK")
   })
 
   it("knows at once when the email was confirmed on another device", async () => {

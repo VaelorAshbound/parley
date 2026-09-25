@@ -56,7 +56,7 @@ export function SignUpForm({
           name: value.name.trim(),
           email: value.email,
           password: value.password,
-          // Where the link in the email lands, signed in.
+          // Where the link in the email lands.
           callbackURL: new URL(verifyEmail, window.location.origin).href,
         },
         { headers }

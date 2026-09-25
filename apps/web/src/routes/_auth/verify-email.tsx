@@ -21,15 +21,24 @@ import {
 import { redirectSearch } from "@/features/auth/redirect"
 import { useTurnstile } from "@/features/auth/turnstile"
 import { authClient } from "@/lib/auth-client"
-import type { Viewer } from "@/lib/session"
+import { freshViewer, viewerQuery, type Viewer } from "@/lib/session"
 
 // "Check your inbox" after sign-up, and where the link in the email lands
-// (signed in, spec §5 Auth). Export, share and upgrade wait for this.
+// (spec §5 Auth). Export, share and upgrade wait for this.
 export const Route = createFileRoute("/_auth/verify-email")({
   validateSearch: redirectSearch.extend({
     // Better Auth adds it when a link has expired or was used.
     error: z.string().max(64).optional().catch(undefined),
   }),
+  beforeLoad: async ({ context: { viewer, queryClient } }) => {
+    if (!viewer || viewer.isAnonymous || viewer.emailVerified) return
+    // The link was likely just opened, but the session cookie can say "not
+    // confirmed" for 5 more minutes: ask the database (it also refreshes
+    // the cookie, so the rest of Parley sees it too).
+    const fresh = await freshViewer()
+    queryClient.setQueryData(viewerQuery.queryKey, fresh)
+    return { viewer: fresh }
+  },
   head: () => ({ meta: [{ title: "Confirm your email · Parley" }] }),
   component: VerifyEmail,
 })
@@ -42,11 +51,12 @@ function VerifyEmail() {
   if (!account)
     return (
       <Page
-        title="Confirm your email"
+        title={error ? "Confirm your email" : "Sign in to continue"}
         description={
           error
             ? `${verifyLinkErrorMessage(error)} Sign in to get a new one.`
-            : "Sign in to confirm your email."
+            : // The link confirms but never signs in (server/auth.ts).
+              "If you opened the link in our email, your email is confirmed."
         }
       >
         <Link

@@ -71,7 +71,11 @@ export function createAuth({
       // Signing up gives a session at once, so the guest's draft links right
       // away; export, share and upgrade wait for this (spec §5 Auth).
       sendOnSignUp: true,
-      autoSignInAfterVerification: true,
+      // Never sign in from the link: the anonymous plugin links on any new
+      // session, so a guest who opened someone else's link would be signed
+      // in as them and hand over their drafts (login CSRF). Sign-up already
+      // signed the user in; on another device they sign in as usual.
+      autoSignInAfterVerification: false,
       sendVerificationEmail: async ({ user, url, token }) => {
         // After the response, on every path (resend awaits this): the reply
         // is as fast for a new address as for a known one, and a slow Resend

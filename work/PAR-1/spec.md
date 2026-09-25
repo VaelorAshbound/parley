@@ -413,7 +413,7 @@ Rules:
 - **Bundle.** Import `betterAuth` from **`better-auth/minimal`** (we use the Drizzle adapter, so Kysely isn't needed). Plugins come from their own paths for tree-shaking.
 - **Methods.**
   - `emailAndPassword` with `minPasswordLength: 10`, `maxPasswordLength: 128`, `resetPasswordTokenExpiresIn: 30 min` and `revokeSessionsOnPasswordReset: true`.
-  - `emailVerification` with `sendOnSignUp` and `autoSignInAfterVerification`.
+  - `emailVerification` with `sendOnSignUp`, and `autoSignInAfterVerification: false` (T21 review): a link that signs in lets anyone who has it sign a guest in as its owner, and the anonymous plugin would then move the guest's drafts to that owner (login CSRF). Sign-up already signs in; on another device the user signs in as usual.
   - Google + GitHub, with account linking for the same verified email. One Google client serves production + `http://localhost:3000`. GitHub has two apps (`GITHUB_CLIENT_ID` for production, `GITHUB_CLIENT_ID_DEV` for local), because GitHub allows only one callback URL per app. OAuth isn't available on PR preview URLs (their origin changes each time), so previews test email + password.
 - **Email verification rule.** Signing up gives a session right away, so the guest's draft links at once, even if the verify link is opened on another device. But **export, share and upgrade need a verified email**, which stops fake-email abuse of the quota.
 - **Account management.**

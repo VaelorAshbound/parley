@@ -28,8 +28,9 @@ function post(
 
 const password = "correct horse 1"
 
+/** The session, read from the database (not the 5-minute cookie cache). */
 async function session(cookie: string) {
-  const response = await call("/api/auth/get-session", {
+  const response = await call("/api/auth/get-session?disableCookieCache=true", {
     headers: { cookie },
   })
   return (await response.json()) as {
@@ -85,7 +86,7 @@ describe("sign-up", () => {
 })
 
 describe("the confirmation link", () => {
-  it("confirms the email and keeps the user signed in", async () => {
+  it("confirms the email of the user who is signed in", async () => {
     resend = fakeResend()
     const email = newEmail()
     const signUp = await post("/api/auth/sign-up/email", {
@@ -101,23 +102,30 @@ describe("the confirmation link", () => {
     })
 
     expect(response.status).toBe(302)
-    expect(await session(cookiesFrom(response))).toMatchObject({
+    expect(await session(cookiesFrom(signUp))).toMatchObject({
       user: { email, emailVerified: true },
     })
   })
 
-  it("works on another device, with no session there", async () => {
+  it("confirms the email on another device, without signing in there", async () => {
     resend = fakeResend()
     const email = newEmail()
-    await post("/api/auth/sign-up/email", { name: "Ana", email, password })
+    const signUp = await post("/api/auth/sign-up/email", {
+      name: "Ana",
+      email,
+      password,
+    })
     const link = resend.linkFor(email)
 
     const response = await call(link.pathname + link.search, {
       redirect: "manual",
     })
 
+    // A link that signs in would let anyone who has it sign a stranger in
+    // as its owner (login CSRF; see link.test.ts).
     expect(response.status).toBe(302)
-    expect(await session(cookiesFrom(response))).toMatchObject({
+    expect(cookiesFrom(response)).not.toContain("session_token=")
+    expect(await session(cookiesFrom(signUp))).toMatchObject({
       user: { email, emailVerified: true },
     })
   })
