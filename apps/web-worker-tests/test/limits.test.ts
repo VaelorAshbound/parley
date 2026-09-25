@@ -27,8 +27,13 @@ import {
 // Spec §2 Limits, each at its edge (T27): the last request that fits
 // passes, and the next one is refused with a typed answer.
 
-function randomIp() {
-  return `198.51.100.${Math.floor(Math.random() * 250) + 1}`
+// One address per test, never shared: each run has a fresh database, and a
+// random pick could land on a network another test already filled.
+const networks = {
+  production: "198.51.100.1",
+  another: "198.51.100.2",
+  preview: "198.51.100.3",
+  local: "198.51.100.4",
 }
 
 const today = "2026-09-25"
@@ -399,7 +404,7 @@ describe("new guests from one network", () => {
 
   it(`production lets ${GUESTS_PER_NETWORK.max} in, then asks the next to wait an hour`, async () => {
     const auth = await productionAuth()
-    const ip = randomIp()
+    const ip = networks.production
 
     for (let guest = 1; guest <= GUESTS_PER_NETWORK.max; guest++)
       expect((await newGuest(auth, ip)).status).toBe(200)
@@ -410,7 +415,7 @@ describe("new guests from one network", () => {
       GUESTS_PER_NETWORK.window - 60
     )
     // Another network is not held up.
-    expect((await newGuest(auth, randomIp())).status).toBe(200)
+    expect((await newGuest(auth, networks.another)).status).toBe(200)
   })
 
   it(`Previews let ${PREVIEW_GUESTS_PER_NETWORK.max} in quickly, then ask the next to wait`, async () => {
@@ -423,7 +428,7 @@ describe("new guests from one network", () => {
       env: { ...env, STAGE: "preview" as Env["STAGE"] },
       waitUntil: () => {},
     })
-    const ip = randomIp()
+    const ip = networks.preview
 
     for (let guest = 1; guest <= PREVIEW_GUESTS_PER_NETWORK.max; guest++)
       expect((await newGuest(auth, ip)).status).toBe(200)
@@ -436,7 +441,7 @@ describe("new guests from one network", () => {
   })
 
   it("local dev and the Worker tests let the e2e runs through", async () => {
-    const ip = randomIp()
+    const ip = networks.local
     const newTestGuest = () =>
       call("/api/auth/sign-in/anonymous", {
         method: "POST",
