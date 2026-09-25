@@ -5,6 +5,7 @@ import { afterEach, expect, test, vi } from "vite-plus/test"
 
 import type { Router } from "@/server/rpc/router"
 
+import type { Shared } from "./share-page"
 import { sharedDraftQuery } from "./shared-query"
 
 // A visitor's page reads the shared draft once per load: coming back to the
@@ -14,9 +15,9 @@ import { sharedDraftQuery } from "./shared-query"
 afterEach(() => focusManager.setFocused(undefined))
 
 test("reads the shared draft once per page load, not again on focus", async () => {
-  const view = vi.fn(async () => ({
+  const view = vi.fn<() => Promise<Shared>>(async () => ({
     title: "NDA with Bolt",
-    documentId: "mutual-nda" as const,
+    documentId: "mutual-nda",
     values: {},
   }))
   const orpc = createTanstackQueryUtils({
