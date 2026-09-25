@@ -169,40 +169,7 @@ function DraftsPage() {
       {!shown ? (
         <DraftsSkeleton />
       ) : shown.length === 0 ? (
-        filtered ? (
-          <Empty className="border">
-            <EmptyHeader>
-              <EmptyTitle>No drafts match</EmptyTitle>
-              <EmptyDescription>
-                Try another word, or look in all agreements.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Link
-                to="."
-                search={{}}
-                onClick={box.clear}
-                className={buttonVariants({ variant: "outline" })}
-              >
-                Clear the search
-              </Link>
-            </EmptyContent>
-          </Empty>
-        ) : (
-          <Empty className="border">
-            <EmptyHeader>
-              <EmptyTitle>No drafts yet</EmptyTitle>
-              <EmptyDescription>
-                Describe a deal and Parley drafts the agreement with you.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Link to="/" className={buttonVariants()}>
-                Start a draft
-              </Link>
-            </EmptyContent>
-          </Empty>
-        )
+        <NoDrafts filtered={filtered} onClear={box.clear} />
       ) : (
         <ItemGroup
           aria-label="Drafts"
@@ -259,6 +226,53 @@ function DraftsPage() {
         </Button>
       )}
     </DraftsFrame>
+  )
+}
+
+/** An empty list: nothing matches the search, or no drafts at all. */
+function NoDrafts({
+  filtered,
+  onClear,
+}: {
+  filtered: boolean
+  /** Empties the search box as its link clears the URL. */
+  onClear: () => void
+}) {
+  if (filtered)
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyTitle>No drafts match</EmptyTitle>
+          <EmptyDescription>
+            Try another word, or look in all agreements.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Link
+            to="/drafts"
+            search={{}}
+            onClick={onClear}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Clear the search
+          </Link>
+        </EmptyContent>
+      </Empty>
+    )
+  return (
+    <Empty className="border">
+      <EmptyHeader>
+        <EmptyTitle>No drafts yet</EmptyTitle>
+        <EmptyDescription>
+          Describe a deal and Parley drafts the agreement with you.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Link to="/" className={buttonVariants()}>
+          Start a draft
+        </Link>
+      </EmptyContent>
+    </Empty>
   )
 }
 
