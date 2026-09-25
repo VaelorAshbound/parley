@@ -3,22 +3,22 @@ import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { InfoIcon } from "lucide-react"
 
-import type { LimitProblem } from "./limit-problem"
-
 /**
- * A limit the chat reached (spec §2 Limits), in the conversation where the
- * reply would have been: what happened, and the way past it. Not an error
- * color: nothing broke.
+ * Why something the user asked for didn't happen (a limit reached, a draft
+ * that didn't start), and the way past it: a link, or Try again when
+ * `onRetry` is given. Not an error color: nothing broke.
  */
-export function LimitBanner({
+export function ProblemNote({
   problem,
   onRetry,
+  className,
 }: {
-  problem: LimitProblem
-  onRetry: () => void
+  problem: { message: string; action?: { label: string; href: string } }
+  onRetry?: () => void
+  className?: string
 }) {
   return (
-    <Alert className="enter">
+    <Alert className={cn("enter", className)}>
       <InfoIcon />
       <AlertDescription className="text-foreground">
         {problem.message}
@@ -34,7 +34,7 @@ export function LimitBanner({
           {problem.action.label}
         </a>
       ) : null}
-      {problem.retry ? (
+      {onRetry ? (
         <Button
           type="button"
           size="sm"

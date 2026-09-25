@@ -5,21 +5,17 @@ import {
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import type { DocumentId } from "@workspace/documents"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { Button } from "@workspace/ui/components/button"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { cn } from "@workspace/ui/lib/utils"
-import { ArrowRightIcon, InfoIcon } from "lucide-react"
+import { ArrowRightIcon } from "lucide-react"
 import { Temporal } from "temporal-polyfill"
 
+import { ProblemNote } from "@/components/problem-note"
 import { authConfigQuery } from "@/features/auth/auth-config"
 import { useTurnstile } from "@/features/auth/turnstile"
 import { Composer } from "@/features/chat/composer"
-import {
-  startProblem,
-  type StartProblem,
-} from "@/features/drafts/start-problem"
+import { startProblem } from "@/features/drafts/start-problem"
 import { signInGuest } from "@/lib/auth-client"
 import { documentList } from "@/lib/documents"
 import { viewerQuery } from "@/lib/session"
@@ -166,7 +162,9 @@ function Home() {
             </li>
           ))}
         </ol>
-        {start.isError && <Problem problem={startProblem(start.error)} />}
+        {start.isError && (
+          <ProblemNote problem={startProblem(start.error)} className="mt-4" />
+        )}
 
         <p className="mt-12 text-[12.5px] text-muted-foreground">
           Standard agreements by Common Paper, used under CC BY 4.0. Parley is a
@@ -174,28 +172,5 @@ function Home() {
         </p>
       </main>
     </div>
-  )
-}
-
-/** Why the draft didn't start, with the way past it. */
-function Problem({ problem }: { problem: StartProblem }) {
-  return (
-    <Alert className="enter mt-4">
-      <InfoIcon />
-      <AlertDescription className="text-foreground">
-        {problem.message}
-      </AlertDescription>
-      {problem.action && (
-        <a
-          href={problem.action.href}
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "col-start-2 mt-2 w-fit"
-          )}
-        >
-          {problem.action.label}
-        </a>
-      )}
-    </Alert>
   )
 }
