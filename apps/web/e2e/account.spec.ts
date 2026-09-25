@@ -1,4 +1,8 @@
-import { test as fresh, type Page } from "@playwright/test"
+import {
+  test as fresh,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test"
 import { connect, schema } from "@workspace/db"
 import { and, eq, like } from "drizzle-orm"
 
@@ -17,20 +21,38 @@ const newPassword = "battery staple 2"
 /** Cloudflare's dummy Turnstile token: the dev server uses the test keys. */
 const captcha = { "x-captcha-response": "XXXX.DUMMY.TOKEN.XXXX" }
 
+/**
+ * Posts to Better Auth from this request context (its cookies are the
+ * browser's), and waits and tries again when the IP hit the limit.
+ */
+async function authPost(
+  request: APIRequestContext,
+  origin: string,
+  path: string,
+  data: object
+) {
+  for (let attempt = 1; ; attempt++) {
+    const response = await request.post(`/api/auth${path}`, {
+      headers: { origin, ...captcha },
+      data,
+    })
+    if (response.ok()) return
+    if (response.status() !== 429 || attempt === 5)
+      throw new Error(`${path} failed: ${response.status()}`)
+    const wait = Number(response.headers()["x-retry-after"] ?? 1)
+    await new Promise((resolve) => setTimeout(resolve, wait * 1000))
+  }
+}
+
 /** A new account, signed in on this page, made through the API. */
 async function signUp(page: Page) {
   const email = `e2e-${crypto.randomUUID()}@example.test`
-  for (let attempt = 1; ; attempt++) {
-    const response = await page.request.post("/api/auth/sign-up/email", {
-      headers: { origin: new URL(page.url() || "http://x").origin, ...captcha },
-      data: { name: "Ana Tester", email, password },
-    })
-    if (response.ok()) return email
-    if (response.status() !== 429 || attempt === 5)
-      throw new Error(`Sign-up failed: ${response.status()}`)
-    const wait = Number(response.headers()["x-retry-after"] ?? 1)
-    await page.waitForTimeout(wait * 1000)
-  }
+  await authPost(page.request, new URL(page.url()).origin, "/sign-up/email", {
+    name: "Ana Tester",
+    email,
+    password,
+  })
+  return email
 }
 
 /** Opens a page first, so API calls carry this origin. */
@@ -193,6 +215,53 @@ fresh("a reset link works once", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Ask for a new link" })
   ).toBeVisible()
+})
+
+fresh(
+  "changing the email asks the new address to confirm",
+  async ({ page }) => {
+    fresh.slow()
+    await signUpOn(page, "/settings")
+    const newEmail = `e2e-${crypto.randomUUID()}@example.test`
+
+    await page.getByLabel("New email").fill(newEmail)
+    await page.getByRole("button", { name: "Change email" }).click()
+
+    // A new account's email isn't confirmed yet: the link goes straight to
+    // the new address (a confirmed one approves first: Worker tests).
+    await expect(
+      page.getByText(`Check ${newEmail}: open the link to confirm it.`)
+    ).toBeVisible()
+  }
+)
+
+fresh("signing out another device", async ({ page, browser, baseURL }) => {
+  fresh.slow()
+  const email = await signUpOn(page, "/")
+
+  // The same account on a phone.
+  const phone = await browser.newContext({
+    baseURL,
+    userAgent:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+  })
+  const origin = new URL(page.url()).origin
+  await authPost(phone.request, origin, "/sign-in/email", { email, password })
+
+  await open(page, "/settings")
+  const other = page
+    .getByRole("listitem")
+    .filter({ hasText: "Safari on iPhone" })
+  await other.getByRole("button", { name: "Sign out" }).click()
+  await expect(other).toHaveCount(0)
+  await expect(page.getByText("This device", { exact: true })).toBeVisible()
+
+  // Asked past the 5-minute cookie cache, the phone has no session now.
+  const session = await phone.request.get(
+    "/api/auth/get-session?disableCookieCache=true"
+  )
+  expect(await session.json()).toBeNull()
+  await phone.close()
 })
 
 fresh("deleting the account signs out and removes it", async ({ page }) => {

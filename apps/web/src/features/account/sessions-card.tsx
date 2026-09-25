@@ -76,7 +76,13 @@ export function SessionsCard() {
       <CardContent className="flex flex-col gap-4">
         <ItemGroup>
           {sessions.map((session) => (
-            <Item key={session.id} variant="outline" size="sm">
+            <Item
+              key={session.id}
+              // ItemGroup is a list; its rows must be list items.
+              role="listitem"
+              variant="outline"
+              size="sm"
+            >
               <ItemMedia variant="icon">
                 {mobile.test(session.device) ? (
                   <SmartphoneIcon />
