@@ -18,7 +18,7 @@ export function LimitBanner({
   onRetry: () => void
 }) {
   return (
-    <Alert role="status" className="enter">
+    <Alert className="enter">
       <InfoIcon />
       <AlertDescription className="text-foreground">
         {problem.message}
