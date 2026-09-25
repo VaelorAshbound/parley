@@ -184,7 +184,13 @@ export function createAuth({
       // 5 minutes to reach other devices (spec §5 Auth).
       cookieCache: { enabled: true, maxAge: 5 * 60, strategy: "compact" },
     },
-    hooks: { before: newEmailNeedsItsAccount(env.BETTER_AUTH_SECRET) },
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/verify-email")
+          await newEmailNeedsItsAccount(ctx, env.BETTER_AUTH_SECRET)
+        if (ctx.path === "/delete-user") await deleteNeedsThePassword(ctx)
+      }),
+    },
     // Who signed in, out, and changed what: IDs only (spec §5 Auth).
     databaseHooks: auditHooks(),
     // Memory would reset per isolate on Workers.
@@ -303,32 +309,55 @@ function turnstile(env: Pick<Env, "STAGE" | "TURNSTILE_SECRET_KEY">) {
  * link works only where the account is signed in; elsewhere it says to sign
  * in first, and still works afterwards (it lasts an hour).
  */
-function newEmailNeedsItsAccount(secret: string) {
-  return createAuthMiddleware(async (ctx) => {
-    if (ctx.path !== "/verify-email") return
-    const token: unknown = ctx.query?.token
-    if (typeof token !== "string") return
-    const payload = await verifyJWT<{ requestType?: unknown }>(token, secret)
-    if (payload?.requestType !== "change-email-verification") return
-    if (await getSessionFromCtx(ctx)) return
-    // Back to the page that asked, as Better Auth sends its own errors. This
-    // runs before its origin check, so it makes the same one (the settings
-    // page sends a full URL), and redirects on this host only.
-    const callbackURL: unknown = ctx.query?.callbackURL
-    if (
-      typeof callbackURL === "string" &&
-      ctx.context.isTrustedOrigin(callbackURL, { allowRelativePaths: true })
-    ) {
-      const url = new URL(callbackURL, ctx.context.baseURL)
-      url.searchParams.set("error", "SIGN_IN_FIRST")
-      throw ctx.redirect(url.pathname + url.search)
-    }
-    throw APIError.from("UNAUTHORIZED", {
-      code: "SIGN_IN_FIRST",
-      message: "Sign in, then open the link again.",
-    })
+async function newEmailNeedsItsAccount(ctx: HookContext, secret: string) {
+  const token: unknown = ctx.query?.token
+  if (typeof token !== "string") return
+  const payload = await verifyJWT<{ requestType?: unknown }>(token, secret)
+  if (payload?.requestType !== "change-email-verification") return
+  if (await getSessionFromCtx(ctx)) return
+  // Back to the page that asked, as Better Auth sends its own errors. This
+  // runs before its origin check, so it makes the same one (the settings
+  // page sends a full URL), and redirects on this host only.
+  const callbackURL: unknown = ctx.query?.callbackURL
+  if (
+    typeof callbackURL === "string" &&
+    ctx.context.isTrustedOrigin(callbackURL, { allowRelativePaths: true })
+  ) {
+    const url = new URL(callbackURL, ctx.context.baseURL)
+    url.searchParams.set("error", "SIGN_IN_FIRST")
+    throw ctx.redirect(url.pathname + url.search)
+  }
+  throw APIError.from("UNAUTHORIZED", {
+    code: "SIGN_IN_FIRST",
+    message: "Sign in, then open the link again.",
   })
 }
+
+/**
+ * Deleting an account that has a password always needs the password (spec
+ * §5 Auth). Better Auth also takes a sign-in in the last 15 minutes
+ * instead, which only a Google or GitHub account should get: otherwise
+ * anyone at the user's browser in that time could delete the account.
+ */
+async function deleteNeedsThePassword(ctx: HookContext) {
+  // Better Auth checks a password that is sent.
+  const password: unknown = ctx.body?.password
+  if (password) return
+  // No session: Better Auth answers 401.
+  const session = await getSessionFromCtx(ctx)
+  if (!session) return
+  const credential = await ctx.context.internalAdapter.findCredentialAccount(
+    session.user.id
+  )
+  if (credential?.password)
+    throw APIError.from("BAD_REQUEST", {
+      code: "INVALID_PASSWORD",
+      message: "Invalid password",
+    })
+}
+
+/** What a Better Auth hook gets. */
+type HookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0]
 
 /** A short one-way name for a token, so a key never holds the token. */
 async function digest(token: string) {

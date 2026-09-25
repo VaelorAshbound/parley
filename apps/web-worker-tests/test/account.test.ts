@@ -548,6 +548,18 @@ describe("deleting the account", () => {
     expect((await rowsOf(ana.userId)).user).toBe(1)
   })
 
+  // Better Auth alone would take a fresh session instead: anyone at the
+  // user's browser in the 15 minutes after sign-in could delete it.
+  it("always needs the password of an account that has one", async () => {
+    const ana = await signUp()
+
+    const response = await post("/api/auth/delete-user", {}, ana.cookie)
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ code: "INVALID_PASSWORD" })
+    expect(await rowsOf(ana.userId)).toMatchObject({ user: 1, accounts: 1 })
+  })
+
   it("lets a Google or GitHub account delete itself right after signing in", async () => {
     const ana = await signUp()
     await withoutPassword(ana.userId)
