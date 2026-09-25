@@ -23,8 +23,11 @@ describe("the chat's instructions", () => {
   })
 
   test("never list an agreement as related to itself", () => {
-    for (const [id, related] of Object.entries(RELATED))
-      expect(related, id).not.toContain(id)
+    const selfRelated = Object.entries(RELATED)
+      .filter(([id, related]) => (related as readonly string[]).includes(id))
+      .map(([id]) => id)
+
+    expect(selfRelated).toEqual([])
   })
 
   test("tell the model to suggest related agreements as new drafts, not switch", () => {
