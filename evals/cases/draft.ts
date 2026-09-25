@@ -95,12 +95,13 @@ ${REST}`,
     opening:
       "Our customer Lumen Clinics in Germany needs a GDPR data processing agreement with us. We process their patients' and staff's personal data in our analytics service.",
     facts: `- The DPA adds to the Cloud Service Agreement between Northwind Health Analytics, Inc. and Lumen Clinics GmbH, dated October 1, 2026.
-- Customer: Lumen Clinics GmbH, the controller of the data. Signer: Lena Vogel, Data Protection Officer. Email, for notices too: lena@lumen.test.
-- Provider: Northwind Health Analytics, Inc. Signer: Omar Haddad, General Counsel. Email, for notices too: omar@northwind.test. Security contact: security@northwind.test.
+- Customer: Lumen Clinics GmbH, the controller of the data, at Torstrasse 12, 10119 Berlin, Germany. Signer: Lena Vogel, Data Protection Officer. Email, for notices too: lena@lumen.test.
+- Provider: Northwind Health Analytics, Inc., at 500 Howard St, San Francisco, CA 94105. Signer: Omar Haddad, General Counsel. Email, for notices too: omar@northwind.test. Security contact: security@northwind.test.
 - The service: Northwind Patient Insights.
 - Subprocessors: listed in the DPA. Just one: Stratus Cloud Hosting, Inc., in Germany, for hosting.
 - Whose data: the clinics' patients (end users) and employees. What data: names and contact details.
-- Special category data: yes, health data.
+- Special category data: yes, health data, protected by the provider's security policy.
+- The provider receives, stores, uses (analyzes) and erases the data. The customer sends it continuously.
 - The EU transfer clauses follow the law of Ireland. UK transfers: England and Wales.
 ${REST}`,
     expect: {
