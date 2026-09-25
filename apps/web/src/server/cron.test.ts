@@ -1,6 +1,16 @@
-import { describe, expect, it } from "vite-plus/test"
+import { connect, deleteExpiredSessions, deleteIdleGuests } from "@workspace/db"
+import { describe, expect, it, vi } from "vite-plus/test"
 
-import { inBatches } from "./cron"
+import { inBatches, scheduled } from "./cron"
+
+// The deletes are faked here, so a run can fail halfway on purpose. The
+// Worker tests (apps/web-worker-tests/test/cron.test.ts) run them for real.
+vi.mock(import("@workspace/db"), async (original) => ({
+  ...(await original()),
+  connect: vi.fn<typeof connect>(),
+  deleteIdleGuests: vi.fn<typeof deleteIdleGuests>(),
+  deleteExpiredSessions: vi.fn<typeof deleteExpiredSessions>(),
+}))
 
 /** A table with `rows` rows to delete; each call deletes up to its limit. */
 function table(rows: number) {
@@ -50,5 +60,46 @@ describe("inBatches", () => {
 
     expect(result).toEqual({ deleted: 10_000, complete: false })
     expect(new Set(limits)).toEqual(new Set([500]))
+  })
+})
+
+describe("scheduled", () => {
+  it("logs what a failed run deleted before it failed", async () => {
+    // Deletes can't be undone: on-call must see how much went.
+    // All scheduled() does with the connection itself is close it.
+    const connection = { $client: { end: async () => {} } }
+    vi.mocked(connect).mockResolvedValue(
+      connection as unknown as Awaited<ReturnType<typeof connect>>
+    )
+    vi.mocked(deleteIdleGuests)
+      .mockResolvedValueOnce(500)
+      .mockResolvedValueOnce(3)
+    vi.mocked(deleteExpiredSessions)
+      .mockResolvedValueOnce(500)
+      .mockRejectedValueOnce(
+        Object.assign(new Error("terminating connection"), { code: "57P01" })
+      )
+    using error = vi.spyOn(console, "error").mockImplementation(() => {})
+    const controller = {
+      cron: "17 3 * * *",
+      scheduledTime: Date.UTC(2026, 2, 20, 3, 17),
+      noRetry: () => {},
+    }
+    const env = { HYPERDRIVE: { connectionString: "postgres://faked" } }
+
+    await expect(
+      scheduled(controller, env as Env, {} as ExecutionContext)
+    ).rejects.toThrow("terminating connection")
+
+    expect(error.mock.calls).toEqual([
+      [
+        expect.objectContaining({
+          event: "purge_failed",
+          guests: 503,
+          sessions: 500,
+          error: expect.objectContaining({ code: "57P01" }),
+        }),
+      ],
+    ])
   })
 })
