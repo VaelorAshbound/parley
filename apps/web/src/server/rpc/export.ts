@@ -37,8 +37,10 @@ type Missing = { key: string; label: string }
 
 export type ExportOutcome =
   | { ok: true; file: File; counted: boolean; browserMs: number | undefined }
-  | { ok: false; error: "PRO_REQUIRED" | "QUOTA_EXCEEDED" | "NOT_FOUND" }
-  | { ok: false; error: "NO_DOCUMENT" }
+  | {
+      ok: false
+      error: "PRO_REQUIRED" | "QUOTA_EXCEEDED" | "NOT_FOUND" | "NO_DOCUMENT"
+    }
   | { ok: false; error: "INCOMPLETE"; missing: Missing[] }
 
 /** The export itself, apart from the procedure, so tests can pick the plan. */
