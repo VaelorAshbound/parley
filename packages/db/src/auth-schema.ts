@@ -22,6 +22,10 @@ export const user = pgTable("user", {
     .notNull(),
   isAnonymous: boolean("is_anonymous").default(false),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  plan: text("plan", { enum: ["free", "pro"] })
+    .default("free")
+    .notNull(),
+  planUpdatedAt: timestamp("plan_updated_at"),
 });
 
 export const session = pgTable(
