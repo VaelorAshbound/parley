@@ -1,4 +1,5 @@
 import {
+  billingFields,
   claimUnconfirmedAccount,
   moveGuestData,
   schema,
@@ -127,6 +128,8 @@ export function createAuth({
       },
     },
     user: {
+      // The plan (T26): set by Polar's webhooks only.
+      additionalFields: billingFields,
       // Settings → Delete account (spec §5 Auth): the password, or for a
       // Google or GitHub account a sign-in in the last 15 minutes
       // (freshAge). The user row goes, and every draft, chat, session and
