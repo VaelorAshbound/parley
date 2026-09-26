@@ -23,6 +23,10 @@ import {
   XIcon,
 } from "lucide-react"
 
+import {
+  barButton,
+  type Placement,
+} from "@/features/document-preview/placement"
 import type { Orpc } from "@/lib/orpc"
 
 import { useDownload, type Download } from "./use-download"
@@ -40,19 +44,42 @@ function Busy({ busy }: { busy: boolean }) {
   )
 }
 
-/** The panel header's menu: PDF, or Word for Pro. */
-export function DownloadMenu({ download }: { download: Download }) {
+/**
+ * The document's menu: PDF, or Word for Pro. In the panel header, or as the
+ * main button of the phone's bottom bar (`bar`), where it opens upward.
+ */
+export function DownloadMenu({
+  download,
+  placement = "header",
+}: {
+  download: Download
+  placement?: Placement
+}) {
   const busy = download.pending !== undefined
+  const bar = placement === "bar"
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="outline" disabled={busy} />}
+        render={
+          <Button
+            variant={bar ? "default" : "outline"}
+            disabled={busy}
+            className={cn(bar && barButton)}
+          />
+        }
       >
         <Busy busy={busy} />
         Download
-        <ChevronDownIcon data-icon="inline-end" className="text-ink-3" />
+        {!bar && (
+          <ChevronDownIcon data-icon="inline-end" className="text-ink-3" />
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-auto min-w-44">
+      <DropdownMenuContent
+        align={bar ? "center" : "end"}
+        side={bar ? "top" : "bottom"}
+        sideOffset={bar ? 8 : 4}
+        className="w-auto min-w-44"
+      >
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => download.start("pdf")}>
             <FileTextIcon />
