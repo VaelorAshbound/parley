@@ -124,3 +124,9 @@ Preview CI fixed: sign-up (Turnstile test secret now in previews.vars; base-conf
 
 ### 2026-09-25T20:11:12Z
 Session end. Finished: waves A (T21, T29, T30) and B1 (T22, T23, T24) built, reviewed, fixed and merged; Neon preview migrated (0002, 0003); T21 production secrets set; Preview CI fixed (Turnstile test secret in previews.vars; Linux font fallbacks, CLS 0.05 -> 0.015, owner kept font-display swap, e2e budget 0.02). CI green on 576e1cb. 27 of 42 tasks done. Next session: wave B2 (T25, T27, T28) with work/PAR-1/waves/wave-b2.js (faster rules in plan.md; update SCRATCH and BASE), then wave C (T23b, T26, T31, T37), then STOP at Checkpoint 6. Open: PAR-8..12; production migrations 0002/0003 wait for T38 with owner OK; owner checks: one exported PDF, one DOCX in Word, Observability chat_turn on the Preview.
+
+### 2026-09-26T02:51:04Z
+Wave B2 merged and pushed (T25 share links e.g. 94dbfb1, T28 purge 6a1bb45, T27 limits + PAR-11 e0012e3), CI green on 5d273a6 (Workers Builds + e2e). Gate: check, 1101 unit, 370 worker, db:check. Local e2e: the 2 remaining failures fail at the same rate on the pre-wave commit (PAR-8). Owner decisions: keep the Share menu; Previews use the capped test OpenRouter key (base config set; the existing PAR-1-parley Preview may still hold the old key, not checked yet). Filed PAR-13..16. No new migrations. Owner asked to hold wave C. Wave C script must reset worktrees to BASE (harness made them from main).
+
+### 2026-09-26T04:20:39Z
+Wave C paused at the owner's request (RAM: another project's session needs the memory). Stopped during build. Worktrees kept, base 5d273a6: .claude/worktrees/wf_af3c2e47-d76-1=T23b (2 commits, uncommitted edits), -2=T26 (1 commit + edits), -3=T31 (edits only), -4=T37 (3 commits). Resume: new agents continue each task from its worktree (build, review, fix), then merge one by one. Script: work/PAR-1/waves/wave-c.js.
