@@ -130,3 +130,6 @@ Wave B2 merged and pushed (T25 share links e.g. 94dbfb1, T28 purge 6a1bb45, T27 
 
 ### 2026-09-26T04:20:39Z
 Wave C paused at the owner's request (RAM: another project's session needs the memory). Stopped during build. Worktrees kept, base 5d273a6: .claude/worktrees/wf_af3c2e47-d76-1=T23b (2 commits, uncommitted edits), -2=T26 (1 commit + edits), -3=T31 (edits only), -4=T37 (3 commits). Resume: new agents continue each task from its worktree (build, review, fix), then merge one by one. Script: work/PAR-1/waves/wave-c.js.
+
+### 2026-09-26T18:17:26Z
+Session end. Finished: wave B2 (T25, T27, T28) built, reviewed, fixed, merged; CI green on 5d273a6. Previews use the capped test OpenRouter key; Share menu kept (owner). Filed PAR-13..16; PAR-8 notes (cold dev server fails ~half locally, same before B2). 28 of 42 tasks done. Wave C started, then paused for RAM (owner). Next session: resume wave C from its 4 worktrees (wf_af3c2e47-d76-1..4, base 5d273a6), re-checking half-written edits; then merge, gate, push, CI, STOP at Checkpoint 6. Open: check which OpenRouter key the existing PAR-1-parley Preview uses; owner checks (one PDF, one DOCX in Word, chat_turn log).
