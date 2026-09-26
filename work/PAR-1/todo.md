@@ -651,7 +651,7 @@
     - **When the browser won't copy, the owner can still take the link.** The Share menu shows the live link (one tap selects it), and the toast says "Open Share to copy it". A browser with no clipboard (plain http, older ones) used to throw with no toast; it now gets the same message (browser tests).
     - **The public page reads the draft once per load.** `share.view` never goes stale (`features/share/shared-query.ts`), so focusing the tab no longer costs a Worker request, a DB read and a `share_viewed` log (unit test with TanStack Query's `focusManager`).
     - Simplified: dropped the unused `Share` type.
-    - **Needs the owner's OK:** the Accept says "the Share button copies the link". It is a menu with Copy link first (two clicks), so Stop sharing has a lasting place, like Download's menu. If one click matters more, a split button (Share copies, the arrow opens Stop sharing) is the other way.
+    - **Owner decision (2026-09-26):** keep the Share menu. Copy link is first (two clicks), so Stop sharing has a lasting place, like Download's menu. No split button.
     - Gates: `pnpm check`; `pnpm test` (1039, 1 skipped); `pnpm test:workers` (344). e2e Chromium + Firefox on port 3131: `share.spec.ts` 4/4 (it now also sees the link in the menu); `export.spec.ts` 2/2 alone. Run together with share, the export test once hit its 30 s limit on the dev server's first compile of `/sign-up` (23 s even alone): not T25's. Screenshots of the menu with the link at 1440 px, Chromium and Firefox.
   - Accept:
     - `share.create` and `share.revoke` use a random 128-bit token. `/s/$token` is a public, read-only SSR page with `noindex`, the attribution, and a "Draft your own" call to action.
@@ -706,7 +706,7 @@
     - **Lead/owner:** the Verify's manual burst test on the Preview after merge: 11 quick chat sends → the 11th shows "sending messages quickly"; a 2nd draft as a guest → "Guests keep one draft".
     - **T26:** `tierOf` must return "pro" for Pro users; `DAILY_MESSAGES.pro` (500) and the "Get Pro" link in the limit note are ready.
     - **T28:** `ai_usage` rows of deleted guests go with the user (cascade); nothing to add.
-    - **Owner:** Previews use Turnstile's test keys, so a bot passes there; the per-guest daily limit and per-network cap (5/10 s) slow it, and only an OpenRouter credit cap bounds it. Give Previews their own OpenRouter key with a small hard cap (`wrangler preview base-config secret put OPENROUTER_API_KEY`), so an attack on a Preview can't use up production's credit.
+    - **Done (owner OK, 2026-09-26):** Previews use Turnstile's test keys, so a bot passes there; the per-guest daily limit and per-network cap (5/10 s) slow it, and only an OpenRouter credit cap bounds it. So Previews now get the test OpenRouter key ($5 hard cap) from the Preview base config, not production's key.
   - Must (T14 review): cap drafts per user (guest 1, spec §2 Limits) and new guests per IP, and rate-limit `/api/rpc` too: Better Auth's limiter only covers `/api/auth`.
   - Must (T24 review): `export.pdf` and `export.docx` are in the per-user RPC rate limit (Rate Limiting binding), with a Worker test at the edge. Re-exports are free and each is a ~4 s Browser Run print. Before the first production deploy.
   - Must (T21 notes): add `/sign-in/anonymous` to the captcha endpoints in auth.ts (same widget, action "auth"); guest sign-in then sends the Turnstile header (lib/auth-client.ts `signInGuest`, and the e2e guest fixture).
