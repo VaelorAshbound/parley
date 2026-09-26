@@ -9,6 +9,9 @@ export const humanCheckFailed =
   "We couldn’t check that you’re a person. Please try again."
 
 export function authErrorMessage(error: AuthError) {
+  // Also a 429, but for 15 minutes (Better Auth's twoFactor lockout).
+  if (error.code === "ACCOUNT_TEMPORARILY_LOCKED")
+    return "Too many wrong codes. Please try again in 15 minutes."
   if (error.status === 429)
     return "Too many tries. Please wait a minute, then try again."
   switch (error.code) {
@@ -37,9 +40,29 @@ export function authErrorMessage(error: AuthError) {
     case "MISSING_RESPONSE":
     case "VERIFICATION_FAILED":
       return humanCheckFailed
+    // Two-factor sign-in (T23b): the code step, and turning it on.
+    case "INVALID_CODE":
+      return "That code isn’t right. Check the app and try again."
+    case "INVALID_BACKUP_CODE":
+      return "That backup code isn’t right, or it was used already."
+    case "INVALID_TWO_FACTOR_COOKIE":
+      return "Your sign-in timed out. Please sign in again."
+    case "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE":
+      return "Too many wrong codes. Please sign in again."
     default:
       return "Something went wrong. Please try again."
   }
+}
+
+/**
+ * The code step is over (it lasts 10 minutes and takes 5 wrong codes): the
+ * next try starts again from the password.
+ */
+export function needsNewSignIn(code: string | undefined) {
+  return (
+    code === "INVALID_TWO_FACTOR_COOKIE" ||
+    code === "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE"
+  )
 }
 
 /** `?error=` after Google or GitHub sends the user back. */

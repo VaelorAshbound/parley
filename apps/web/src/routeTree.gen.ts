@@ -17,6 +17,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-pa
 import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
+import { Route as AuthTwoFactorRouteImport } from './routes/_auth/two-factor'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as DevBrandRouteImport } from './routes/dev.brand'
 import { Route as STokenRouteImport } from './routes/s.$token'
@@ -61,6 +62,11 @@ const AuthSignUpRoute = AuthSignUpRouteImport.update({
   path: '/sign-up',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthTwoFactorRoute = AuthTwoFactorRouteImport.update({
+  id: '/two-factor',
+  path: '/two-factor',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof AuthResetPasswordRoute
   '/sign-in': typeof AuthSignInRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/two-factor': typeof AuthTwoFactorRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/s/$token': typeof STokenRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof AuthResetPasswordRoute
   '/sign-in': typeof AuthSignInRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/two-factor': typeof AuthTwoFactorRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/s/$token': typeof STokenRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
+  '/_auth/two-factor': typeof AuthTwoFactorRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/dev/brand': typeof DevBrandRoute
   '/s/$token': typeof STokenRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/two-factor'
     | '/verify-email'
     | '/dev/brand'
     | '/s/$token'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/two-factor'
     | '/verify-email'
     | '/dev/brand'
     | '/s/$token'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/_auth/reset-password'
     | '/_auth/sign-in'
     | '/_auth/sign-up'
+    | '/_auth/two-factor'
     | '/_auth/verify-email'
     | '/dev/brand'
     | '/s/$token'
@@ -243,6 +255,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/two-factor': {
+      id: '/_auth/two-factor'
+      path: '/two-factor'
+      fullPath: '/two-factor'
+      preLoaderRoute: typeof AuthTwoFactorRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/verify-email': {
@@ -323,6 +342,7 @@ interface AuthRouteChildren {
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthTwoFactorRoute: typeof AuthTwoFactorRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
 }
 
@@ -331,6 +351,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
+  AuthTwoFactorRoute: AuthTwoFactorRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
 }
 
