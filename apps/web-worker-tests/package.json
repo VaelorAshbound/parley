@@ -1,0 +1,25 @@
+{
+  "name": "web-worker-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:real": "vitest run --config vitest.real.config.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.2.0",
+    "@orpc/client": "1.15.4",
+    "@orpc/server": "1.15.4",
+    "@workspace/db": "workspace:*",
+    "@workspace/documents": "workspace:*",
+    "ai": "7.0.112",
+    "drizzle-orm": "^0.45.3",
+    "jszip": "^3.10.1",
+    "temporal-polyfill": "^1.0.5",
+    "typescript": "catalog:",
+    "unpdf": "1.8.1",
+    "vitest": "~4.1.11",
+    "web": "workspace:*"
+  }
+}

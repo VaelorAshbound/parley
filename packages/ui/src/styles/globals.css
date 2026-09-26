@@ -1,0 +1,450 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+/* shadcn/typeset (https://ui.shadcn.com/docs/typeset), kept as its own file. */
+@import "./typeset.css";
+/* Self-hosted variable fonts (brand.md → Type). Newsreader's `opsz` entry
+   keeps the optical-size axis; the italic face only downloads when used. */
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
+@import "@fontsource-variable/instrument-sans/wght.css";
+
+@custom-variant dark (&:is(.dark *));
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../../../components/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+
+/* Metric-matched fallbacks from Capsize, so the font swap does not shift the
+   layout: one per platform's usual font (Times New Roman and Arial on Windows
+   and macOS; Liberation, which has Tinos's and Arimo's metrics, or Noto on
+   Linux). A face whose font isn't installed is skipped. theme.test.ts checks
+   these values against @capsizecss/metrics. */
+@font-face {
+  font-family: "Newsreader Fallback: Times New Roman";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT");
+  ascent-override: 69.6835%;
+  descent-override: 25.124%;
+  line-gap-override: 0%;
+  size-adjust: 105.4769%;
+}
+@font-face {
+  font-family: "Newsreader Fallback: Tinos";
+  src:
+    local("Tinos Regular"), local("Tinos-Regular"), local("Liberation Serif"),
+    local("LiberationSerif");
+  ascent-override: 69.6835%;
+  descent-override: 25.124%;
+  line-gap-override: 0%;
+  size-adjust: 105.4769%;
+}
+@font-face {
+  font-family: "Newsreader Fallback: Noto Serif";
+  src: local("Noto Serif Regular"), local("NotoSerif-Regular");
+  ascent-override: 82.5053%;
+  descent-override: 29.7468%;
+  size-adjust: 89.0852%;
+}
+@font-face {
+  font-family: "Instrument Sans Fallback: Arial";
+  src: local("Arial"), local("ArialMT");
+  ascent-override: 94.4163%;
+  descent-override: 24.3341%;
+  line-gap-override: 0%;
+  size-adjust: 102.7365%;
+}
+@font-face {
+  font-family: "Instrument Sans Fallback: Arimo";
+  src:
+    local("Arimo Regular"), local("Arimo-Regular"), local("Liberation Sans"),
+    local("LiberationSans");
+  ascent-override: 94.4163%;
+  descent-override: 24.3341%;
+  line-gap-override: 0%;
+  size-adjust: 102.7365%;
+}
+@font-face {
+  font-family: "Instrument Sans Fallback: Noto Sans";
+  src: local("Noto Sans Regular"), local("NotoSans-Regular");
+  ascent-override: 100.3886%;
+  descent-override: 25.8734%;
+  size-adjust: 96.6245%;
+}
+
+@theme {
+  /* Brand motion curves (brand.md → Motion). These replace Tailwind's
+     `ease-out` and `ease-in-out`, which are too weak for UI. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Type scale (brand.md → Type). `text-label` also needs `uppercase`. */
+  --text-display: 4.75rem;
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.032em;
+  --text-display--font-weight: 400;
+  --text-title: 2.875rem;
+  --text-title--line-height: 1.04;
+  --text-title--letter-spacing: -0.024em;
+  --text-title--font-weight: 400;
+  --text-question: 1.3125rem;
+  --text-question--line-height: 1.25;
+  --text-question--letter-spacing: -0.01em;
+  --text-question--font-weight: 500;
+  --text-contract: 0.90625rem;
+  --text-contract--line-height: 1.55;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.84375rem;
+  --text-small--line-height: 1.45;
+  --text-label: 0.71875rem;
+  --text-label--line-height: 1.3;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--font-weight: 600;
+}
+
+@theme inline {
+  --font-sans:
+    "Instrument Sans Variable", "Instrument Sans Fallback: Arial",
+    "Instrument Sans Fallback: Arimo", "Instrument Sans Fallback: Noto Sans",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-serif:
+    "Newsreader Variable", "Newsreader Fallback: Times New Roman",
+    "Newsreader Fallback: Tinos", "Newsreader Fallback: Noto Serif", ui-serif,
+    Georgia, serif;
+  --font-heading: var(--font-serif);
+  --shadow-sheet: var(--sheet-shadow);
+
+  /* Parley tokens beyond the shadcn set. */
+  --color-paper-deep: var(--paper-deep);
+  --color-sheet: var(--sheet);
+  --color-bubble: var(--bubble);
+  --color-rule-sheet: var(--rule-sheet);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-blue-ink: var(--blue-ink);
+  --color-blue-tint: var(--blue-tint);
+  --color-blue-border: var(--blue-border);
+  --color-on-blue: var(--on-blue);
+  --color-highlighter: var(--highlighter);
+  --color-highlighter-soft: var(--highlighter-soft);
+  --color-empty: var(--empty);
+  --color-empty-border: var(--empty-border);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Paper & Ink (brand.md → Color). Contrast is checked in theme.test.ts. */
+:root {
+  --paper-deep: #edeae2;
+  --sheet: #fffdf9;
+  --bubble: #ece8df;
+  --rule-sheet: #ece7dc;
+  --ink-2: #57544c;
+  --ink-3: #6a665d;
+  --ink-4: #a29d92;
+  --blue-ink: #2743c4;
+  --blue-tint: #eef1fc;
+  --blue-border: #9aa9e6;
+  --on-blue: #fdfdff;
+  --highlighter: #ffe58a;
+  --highlighter-soft: #fff1bc;
+  --empty: #f2efe8;
+  --empty-border: #cfc8b9;
+  --sheet-shadow:
+    0 0 0 1px rgb(27 26 23 / 0.05), 0 2px 4px rgb(27 26 23 / 0.04),
+    0 30px 60px -24px rgb(27 26 23 / 0.28);
+
+  --background: #f6f4ee;
+  --foreground: #1b1a17;
+  --card: #ffffff;
+  --card-foreground: #1b1a17;
+  --popover: #ffffff;
+  --popover-foreground: #1b1a17;
+  --primary: #1b1a17;
+  --primary-foreground: #faf8f3;
+  --secondary: #ece8df;
+  --secondary-foreground: #1b1a17;
+  --muted: #f2efe8;
+  --muted-foreground: #6a665d;
+  --accent: #e9e5db;
+  --accent-foreground: #1b1a17;
+  --destructive: #b42318;
+  --border: #e3ded3;
+  --input: #d5cfc2;
+  --ring: #2743c4;
+  --chart-1: #2743c4;
+  --chart-2: #57544c;
+  --chart-3: #9aa9e6;
+  --chart-4: #a29d92;
+  --chart-5: #cfc8b9;
+  --radius: 0.625rem;
+  --sidebar: #f0ede6;
+  --sidebar-foreground: #1b1a17;
+  --sidebar-primary: #1b1a17;
+  --sidebar-primary-foreground: #faf8f3;
+  --sidebar-accent: #e6e2d8;
+  --sidebar-accent-foreground: #1b1a17;
+  --sidebar-border: #e3ded3;
+  --sidebar-ring: #2743c4;
+
+  /* The shadcn shimmer, tuned to the brand: ink-3 → ink → ink-3 over 1.5 s.
+     Use it on `text-muted-foreground` text. */
+  --shimmer-color: var(--foreground);
+  --shimmer-duration: 1.5s;
+}
+
+.dark {
+  --paper-deep: #0e0e0c;
+  --sheet: #1c1b18;
+  --bubble: #2a2925;
+  --rule-sheet: #292724;
+  --ink-2: #b8b3a9;
+  --ink-3: #9c978c;
+  --ink-4: #6a665e;
+  --blue-ink: #9daeff;
+  --blue-tint: #1d2340;
+  --blue-border: #4a5a9e;
+  --on-blue: #10142a;
+  --highlighter: #4b3f14;
+  --highlighter-soft: #342c10;
+  --empty: #252420;
+  --empty-border: #4a4740;
+  --sheet-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.15), 0 2px 4px rgb(0 0 0 / 0.12),
+    0 30px 60px -24px rgb(0 0 0 / 0.84);
+
+  --background: #141412;
+  --foreground: #edeae3;
+  --card: #1f1e1b;
+  --card-foreground: #edeae3;
+  --popover: #1f1e1b;
+  --popover-foreground: #edeae3;
+  --primary: #edeae3;
+  --primary-foreground: #151412;
+  --secondary: #2a2925;
+  --secondary-foreground: #edeae3;
+  --muted: #252420;
+  --muted-foreground: #9c978c;
+  --accent: #2b2a26;
+  --accent-foreground: #edeae3;
+  --destructive: #ff8a7a;
+  --border: #2e2c28;
+  --input: #3d3b35;
+  --ring: #9daeff;
+  --chart-1: #9daeff;
+  --chart-2: #b8b3a9;
+  --chart-3: #4a5a9e;
+  --chart-4: #6a665e;
+  --chart-5: #4a4740;
+  --sidebar: #181715;
+  --sidebar-foreground: #edeae3;
+  --sidebar-primary: #edeae3;
+  --sidebar-primary-foreground: #151412;
+  --sidebar-accent: #302e2a;
+  --sidebar-accent-foreground: #edeae3;
+  --sidebar-border: #2e2c28;
+  --sidebar-ring: #9daeff;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-optical-sizing: auto;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+/* A theme switch shows its colors at once (apps/web theme-provider.tsx,
+   withoutTransitions). Unlayered and !important, to beat every utility. */
+[data-theme-switching],
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+/* Reduced motion: the shimmer holds still (brand.md → Motion). Unlayered, so
+   it wins over the `shimmer` utility in the utilities layer. */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}
+
+/* Typeset presets (spec §5 UI). The live document reads like the printed
+   contract: Newsreader at the brand's Contract size (brand.md → Type). */
+@layer components {
+  .typeset-contract {
+    --typeset-font-body: var(--font-serif);
+    --typeset-font-heading: var(--font-serif);
+    --typeset-size: 14.5px;
+    --typeset-leading: 1.55;
+    --typeset-flow: 0.8em;
+    font-optical-sizing: auto;
+  }
+
+  /* The assistant's replies: the brand's Body type, a tight chat rhythm. */
+  .typeset-chat {
+    --typeset-size: 15px;
+    --typeset-leading: 1.6;
+    --typeset-flow: 0.65em;
+  }
+}
+
+/* A field's life in the live document (brand.md → A field's life, Motion).
+   Only transform, opacity and filter move, plus the highlighter's
+   background-size on short inline text. */
+@property --ink {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+
+@layer components {
+  /* Just changed: a highlighter sweeps over the value as it inks in, then
+     settles to a soft highlight until the next message. */
+  .ink-in {
+    --ink: var(--highlighter);
+    background-image: linear-gradient(var(--ink), var(--ink));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-radius: 2px;
+    box-decoration-break: clone;
+    animation:
+      ink-sweep 640ms var(--ease-out) both,
+      ink-blur 520ms var(--ease-out) both,
+      ink-settle 1600ms ease 1600ms forwards;
+  }
+
+  /* The row changed this turn: a blue bar in the margin, like a redline. */
+  .change-bar {
+    transform-origin: top;
+    animation: change-bar 480ms var(--ease-out) both;
+  }
+
+  /* A check mark that was just picked. */
+  .check-in {
+    transform-origin: center;
+    animation: check-in 260ms var(--ease-out) both;
+  }
+
+  /* New chat messages and markers rise in. */
+  .enter {
+    animation: enter 340ms var(--ease-out) both;
+  }
+}
+
+/* A questionnaire step slides in (brand.md motion: step). A utility, so a
+   variant can apply it: data-active:step-in. */
+@utility step-in {
+  animation: step-in 240ms var(--ease-out) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: fade-in 200ms ease both;
+  }
+}
+
+@keyframes ink-sweep {
+  from {
+    background-size: 0% 100%;
+  }
+}
+@keyframes ink-blur {
+  from {
+    filter: blur(3px);
+    opacity: 0.4;
+  }
+}
+@keyframes ink-settle {
+  to {
+    --ink: var(--highlighter-soft);
+  }
+}
+@keyframes change-bar {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes check-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+@keyframes enter {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+@keyframes step-in {
+  from {
+    transform: translateX(10px);
+    opacity: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ink-fade {
+  from {
+    --ink: transparent;
+  }
+}
+
+/* Reduced motion: no sweeps, slides or blur. Highlights fade in place. */
+@media (prefers-reduced-motion: reduce) {
+  .ink-in {
+    animation:
+      ink-fade 320ms ease both,
+      ink-settle 1600ms ease 1600ms forwards;
+  }
+  .change-bar,
+  .check-in,
+  .enter {
+    animation: fade-in 200ms ease both;
+  }
+}

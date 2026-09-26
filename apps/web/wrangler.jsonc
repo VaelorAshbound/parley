@@ -1,0 +1,173 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "parley",
+  // src/server.ts: /api/* goes to Hono, everything else to TanStack Start.
+  // A custom entry also gives us scheduled() for the cron jobs (T28).
+  "main": "src/server.ts",
+  "compatibility_date": "2026-09-23",
+  // Production lives on the custom domain (T38), not workers.dev. Previews
+  // still get workers.dev URLs so each branch can be tested (T3).
+  "workers_dev": false,
+  "preview_urls": true,
+  // enable_request_signal: request.signal aborts when the client leaves, so
+  // oRPC can stop the work (and the LLM spend) with it (spec §5 API).
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  // Run next to Neon (AWS eu-central-1): a save is about 7 database round
+  // trips, which took 0.8 s from a US edge on the Preview (T16). T35 measures
+  // it against the default. https://developers.cloudflare.com/workers/configuration/placement/
+  "placement": { "region": "aws:eu-central-1" },
+  // The nightly guest cleanup (src/server/cron.ts, T28): 03:17 UTC, once a
+  // day, so it wakes Neon only once. Cron Triggers run on production only,
+  // never on Previews.
+  "triggers": { "crons": ["17 3 * * *"] },
+  // Declared so `wrangler types` works without .dev.vars (CI), and deploys
+  // fail when one is missing. Previews get theirs from the Previews base
+  // config (`wrangler preview base-config secret put`); `wrangler preview`
+  // doesn't check this list, so a Preview may run without some (wrangler
+  // 4.136). The code handles a missing one where that is safe.
+  "secrets": {
+    "required": [
+      "BETTER_AUTH_SECRET",
+      "OPENROUTER_API_KEY",
+      // Production: the sending-only key for mail.runtimedrift.dev (T38).
+      // Previews and local dev have none, so they send no email and never
+      // spend the Resend quota (the mailer logs email_not_configured).
+      "RESEND_API_KEY",
+      // Turnstile's widget "parley-auth". Local dev and Previews use
+      // Cloudflare's test secret 1x0000000000000000000000000000000AA.
+      "TURNSTILE_SECRET_KEY",
+      // OAuth apps "Parley" (GitHub) and the Google client. Local dev uses
+      // the "Parley (dev)" GitHub app; Previews have none (spec §5 Auth).
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "GITHUB_CLIENT_ID",
+      "GITHUB_CLIENT_SECRET",
+    ],
+  },
+  "vars": {
+    "STAGE": "production",
+    // Set per Preview by scripts/ci-preview.sh, so CI can wait until the
+    // Preview serves the commit it is testing.
+    "COMMIT_SHA": "",
+    // Turnstile's widget "parley-auth" (parley.runtimedrift.dev, localhost).
+    // Public: the browser shows it.
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFDRY50F_vQ9qvx3",
+  },
+  // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
+  // uses the real service (10 browser hours/month are in Workers Paid).
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true,
+  },
+  // Per-user limits on /api/rpc (spec §2 Limits, T27; src/server/limits.ts
+  // uses them). Counted per Cloudflare location and roughly, which is fine
+  // for stopping floods. `period` is 10 or 60 seconds. A namespace_id is
+  // shared by every Worker on the account, so Previews use their own.
+  // https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+  "ratelimits": [
+    // Every procedure: far above what a person clicks.
+    {
+      "name": "RPC_RATE_LIMITER",
+      "namespace_id": "2701",
+      "simple": { "limit": 300, "period": 60 },
+    },
+    // The AI routes (chat.send, chat.answer): each one is a model call.
+    {
+      "name": "AI_RATE_LIMITER",
+      "namespace_id": "2702",
+      "simple": { "limit": 10, "period": 10 },
+    },
+    // Downloads: a PDF is a ~4 s Browser Run print, even when re-exports
+    // are free.
+    {
+      "name": "EXPORT_RATE_LIMITER",
+      "namespace_id": "2703",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  // Neon through Hyperdrive with query caching OFF: a cached SELECT would
+  // show a stale draft or a revoked share link (spec §5 Database). Local dev
+  // uses the Postgres from `pnpm db:dev`.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // "parley" → the Neon production branch
+      "id": "904889e1abe144c4a434c382a53f03a4",
+      "localConnectionString": "postgres://postgres:postgres@localhost:54320/parley",
+    },
+  ],
+  // Worker Previews (one per branch) get their own binding list; wrangler
+  // preview refuses to run without it.
+  // https://developers.cloudflare.com/workers/previews/configuration/
+  // Secrets: a new one on the Preview base config reaches only Previews
+  // created after it, and `wrangler preview secret put` lasts only until the
+  // next build. So a value that isn't secret goes in `vars` below, in git
+  // (T21's TURNSTILE_SECRET_KEY was missing on the live Preview this way).
+  "previews": {
+    // Turns on Server-Timing headers for DevTools (spec §5 Hono).
+    "vars": {
+      "STAGE": "preview",
+      "COMMIT_SHA": "",
+      // Cloudflare's "always passes" test widget: Preview hosts change per
+      // branch, and CI's browsers must get through (spec §5 Auth).
+      "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+      // Its public test secret: every token passes, so it isn't a secret.
+      "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA",
+    },
+    "browser": {
+      "binding": "BROWSER",
+    },
+    // The same limits as production, counted apart from it.
+    "ratelimits": [
+      {
+        "name": "RPC_RATE_LIMITER",
+        "namespace_id": "2711",
+        "simple": { "limit": 300, "period": 60 },
+      },
+      {
+        "name": "AI_RATE_LIMITER",
+        "namespace_id": "2712",
+        "simple": { "limit": 10, "period": 10 },
+      },
+      {
+        "name": "EXPORT_RATE_LIMITER",
+        "namespace_id": "2713",
+        "simple": { "limit": 10, "period": 60 },
+      },
+    ],
+    // Previews never touch production data. "parley-preview" → the Neon
+    // "preview" branch, until T33 gives each PR its own branch.
+    "hyperdrive": [
+      {
+        "binding": "HYPERDRIVE",
+        "id": "fc5e4caf73334f3ea148a21c83e83695",
+        "localConnectionString": "postgres://postgres:postgres@localhost:54320/parley",
+      },
+    ],
+    // Previews keep their own telemetry settings, set here:
+    // https://developers.cloudflare.com/workers/previews/test-and-debug/
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": true,
+      "traces": { "enabled": true, "head_sampling_rate": 1 },
+    },
+  },
+  // Workers Logs + traces (T29). Our own lines are in src/server/log.ts;
+  // traces show where a request's time went (the OpenRouter and database
+  // calls). Both are billed as events from 2026-10-01: 20M a month are in
+  // Workers Paid, then $0.60 per million. A request writes a few (its
+  // invocation log, our lines, a span per outbound call), so full sampling
+  // stays in the free part far past our traffic; lower the rates if not.
+  // https://developers.cloudflare.com/workers/observability/traces/#limits--pricing
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    // Query strings carry Better Auth's tokens (?token=) and OAuth codes;
+    // keep them out of invocation logs and traces. (Wrangler's config
+    // schema, 4.136; not on the docs page yet.)
+    "redact_query_string": true,
+    "traces": { "enabled": true, "head_sampling_rate": 1 },
+  },
+  "upload_source_maps": true,
+}

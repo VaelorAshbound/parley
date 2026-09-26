@@ -1,0 +1,48 @@
+# Design Partner Agreement
+1 Design Partner Overview
+  1.1 Product Access. [keyterms:Partner, keyterms:Term, keyterms:Provider, keyterms:Program]
+  1.2 Program and Feedback. [keyterms:Program, keyterms:Provider, keyterms:Partner]
+  1.3 Product Improvement. [keyterms:Provider, keyterms:Program, keyterms:Partner]
+2 Fees and Costs
+  2.1 [keyterms:Partner, keyterms:Provider, keyterms:Fees]
+3 Term & Termination
+  3.1 Agreement Term. [keyterms:Effective Date, keyterms:Term, keyterms:Provider, keyterms:Partner]
+  3.2 Termination.
+  3.3 Effect of Termination.
+    3.3.a [keyterms:Partner, keyterms:Program]
+    3.3.b
+  3.4 Survival.
+    3.4.a
+    3.4.b
+4 Disclaimer of Warranties
+  4.1 [keyterms:Provider, keyterms:Partner]
+5 Confidentiality
+  5.1 Non-Use and Non-Disclosure.
+  5.2 Exclusions. [keyterms:Partner, keyterms:Provider]
+  5.3 Required Disclosures.
+  5.4 Permitted Disclosures.
+6 Intellectual Property
+  6.1 Reservation of Rights. [keyterms:Provider, keyterms:Partner, keyterms:Program, keyterms:Effective Date]
+  6.2 Ownership. [keyterms:Provider, keyterms:Partner]
+7 General Terms
+  7.1 Entire Agreement.
+  7.2 Modifications, Severability, and Waiver.
+  7.3 Governing Law and Chosen Courts. [keyterms:Governing Law, keyterms:Chosen Courts]
+  7.4 Injunctive Relief.
+  7.5 Restrictions. [keyterms:Partner]
+  7.6 Non-Exhaustive Remedies.
+  7.7 Assignment.
+  7.8 Notices. [keyterms:Notice Address]
+  7.9 Independent Contractors.
+  7.10 No Third-Party Beneficiary.
+  7.11 Titles and Interpretation.
+  7.12 Signature.
+8 Definitions
+  8.1 defines "Agreement" [keyterms:Provider, keyterms:Partner]
+  8.2 defines "Applicable Laws" [keyterms:Provider, keyterms:Partner]
+  8.3 defines "Confidential Information" [keyterms:Effective Date, keyterms:Provider]
+  8.4 defines "Cover Page" [keyterms:Provider, keyterms:Partner]
+  8.5 defines "Discloser"
+  8.6 defines "Feedback"
+  8.7 defines "Product"
+  8.8 defines "Recipient"

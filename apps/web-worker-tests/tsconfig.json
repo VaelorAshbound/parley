@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // The tests import app code, and the email templates are TSX.
+    "jsx": "react-jsx",
+    "types": [
+      "@cloudflare/vitest-plugin/types",
+      "../web/worker-configuration.d.ts"
+    ]
+  },
+  "include": ["test", "vitest.config.ts", "vitest.real.config.ts"]
+}

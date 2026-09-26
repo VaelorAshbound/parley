@@ -1,0 +1,62 @@
+import { useMutation, useMutationState } from "@tanstack/react-query"
+
+import type { Orpc } from "@/lib/orpc"
+import type { ExportFormat } from "@/server/quota"
+
+import { exportProblem, type ExportProblem } from "./problem"
+
+// Downloads a draft as a PDF or a Word file (T24). The server makes the file
+// and names it (`<Title> – <Document>.pdf`); oRPC hands it over as a File,
+// named from its Content-Disposition:
+// https://orpc.dev/docs/file-upload-download
+
+export type Download = {
+  start: (format: ExportFormat) => void
+  /** The format being made right now. */
+  pending: ExportFormat | undefined
+  /** Why the last download didn't happen, and the way past it. */
+  problem: ExportProblem | undefined
+  dismiss: () => void
+}
+
+/**
+ * Hands the file to the browser to save. The URL is freed a little later:
+ * some browsers still read it after click() returns.
+ */
+function save(file: File) {
+  const url = URL.createObjectURL(file)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = file.name
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 10_000)
+}
+
+type Variables = { format: ExportFormat; id: string }
+
+export function useDownload(orpc: Orpc, draftId: string): Download {
+  // Every download control of a draft (the panel's menu, the chat's
+  // buttons) shares this key, so while one makes the file all of them wait:
+  // one Browser Run print at a time.
+  const mutationKey = ["export", draftId]
+  const { mutate, variables, error, reset } = useMutation({
+    mutationKey,
+    mutationFn: ({ format, id }: Variables) => orpc.export[format].call({ id }),
+    onSuccess: save,
+  })
+  const [pending] = useMutationState({
+    filters: { mutationKey, status: "pending" },
+    select: (mutation) => (mutation.state.variables as Variables).format,
+  })
+  return {
+    start: (format) => mutate({ format, id: draftId }),
+    pending,
+    // The draft page stays mounted when another draft opens: what happened
+    // to the last draft's download isn't this one's.
+    problem:
+      error && variables?.id === draftId
+        ? exportProblem(error, `/d/${draftId}`)
+        : undefined,
+    dismiss: reset,
+  }
+}

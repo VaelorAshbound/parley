@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <title>Parley</title>
+  <style>
+    .bowl { fill: #2743C4 }
+    .stem { fill: #1B1A17 }
+    @media (prefers-color-scheme: dark) {
+      .bowl { fill: #9DAEFF }
+      .stem { fill: #EDEAE3 }
+    }
+  </style>
+  <path class="bowl" d="M12.6 3V13H8.6L5 15.8L5.6 12.05A5 5 0 0 1 8.5 3Z"/>
+  <path class="stem" d="M13.4 3H20V21H17.9V5.1H15.5V21H13.4Z"/>
+</svg>

@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drafting</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+%%FONTS%%
+<style>
+%%CSS%%
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; overflow: hidden; background: #F6F4EE; color: #1B1A17; font-family: %%SANS%%;">
+
+<aside aria-label="Drafts" style="width: 256px; flex-shrink: 0; height: 900px; box-sizing: border-box; background: #F0EDE6; border-right: 1px solid #E3DED3; display: flex; flex-direction: column; padding: 10px 10px 12px;">
+  <div style="height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 2px 0 8px;">
+    <a href="Main.dc.html" aria-label="Parley home" style="display: flex; align-items: center; gap: 8px; color: #1B1A17;">%%MARK:22%%<span style="font-family: %%SERIF%%; font-size: 21px; font-weight: 500; letter-spacing: -0.02em; line-height: 1;">Parley</span></a>
+    <button class="pl-press pl-hover" aria-label="Collapse sidebar" style="width: 34px; height: 34px; border: 0; background: transparent; border-radius: 8px; display: grid; place-items: center; color: #57544C; cursor: pointer;">%%I:panel:18%%</button>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 12px;">
+    <button class="pl-press pl-outline" style="height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid #E3DED3; background: #FFFFFF; border-radius: 10px; font-size: 14px; font-weight: 500; color: #1B1A17; cursor: pointer; box-shadow: 0 1px 2px rgba(27,26,23,0.05);">%%I:new:17%%New draft</button>
+    <button class="pl-press pl-hover" style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; background: transparent; border-radius: 10px; font-size: 14px; color: #57544C; cursor: pointer;">%%I:search:17%%<span style="flex-grow: 1; text-align: left;">Search</span><kbd style="font-family: %%SANS%%; font-size: 11px; font-weight: 500; color: #6A665D; border: 1px solid #D5CFC2; border-radius: 5px; padding: 1px 5px; background: #F6F4EE;">⌘K</kbd></button>
+  </div>
+  <nav aria-label="Draft history" style="flex-grow: 1; min-height: 0; overflow: hidden; margin-top: 20px; display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; flex-direction: column; gap: 1px;">
+      <div style="font-size: 12px; font-weight: 500; color: #6A665D; padding: 0 12px 6px;">Today</div>
+      <a href="#" aria-current="page" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #1B1A17; background: #E6E2D8;">Northwind NDA</a>
+      <a href="#" class="pl-hover" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; font-size: 14px; color: #57544C;">Halcyon design partner</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 1px;">
+      <div style="font-size: 12px; font-weight: 500; color: #6A665D; padding: 0 12px 6px;">Yesterday</div>
+      <a href="#" class="pl-hover" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; font-size: 14px; color: #57544C;">Pilot with Bramble Co.</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 1px;">
+      <div style="font-size: 12px; font-weight: 500; color: #6A665D; padding: 0 12px 6px;">Last 7 days</div>
+      <a href="#" class="pl-hover" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; font-size: 14px; color: #57544C;">EU customer DPA</a>
+      <a href="#" class="pl-hover" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; font-size: 14px; color: #57544C;">Ferro Studio services</a>
+      <a href="#" class="pl-hover" style="height: 34px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; font-size: 14px; color: #57544C;">Kestrel cloud terms</a>
+    </div>
+    <a href="#" class="pl-link" style="padding: 0 12px; font-size: 13px; font-weight: 500; color: #57544C;">View all</a>
+  </nav>
+  <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; margin: 0 0 6px; border: 1px solid #E3DED3; border-radius: 12px; background: #F6F4EE;">
+    <div style="font-size: 12.5px; color: #57544C;">2 of 3 free documents this month</div>
+    <div style="height: 4px; border-radius: 4px; background: #E3DED3; overflow: hidden;"><div style="width: 66.6%; height: 4px; border-radius: 4px; background: #2743C4;"></div></div>
+    <a href="Pricing.dc.html" style="font-size: 12.5px; font-weight: 500;">Get unlimited with Pro</a>
+  </div>
+  <button class="pl-press pl-hover" aria-label="Account menu" style="height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 8px; border: 0; background: transparent; border-radius: 10px; cursor: pointer; color: #1B1A17;">
+    <span style="width: 32px; height: 32px; border-radius: 999px; background: #E1E6FA; color: #2743C4; display: grid; place-items: center; font-size: 12px; font-weight: 600;">AR</span>
+    <span style="flex-grow: 1; text-align: left; font-size: 14px; font-weight: 500;">Ana Ruiz</span>
+    <span style="font-size: 11px; font-weight: 600; color: #57544C; border: 1px solid #D5CFC2; border-radius: 999px; padding: 1px 8px;">Free</span>
+    <span style="color: #6A665D; display: flex;">%%I:chevupdown:15%%</span>
+  </button>
+</aside>
+
+<main style="width: 560px; flex-shrink: 0; height: 900px; display: flex; flex-direction: column; background: #F6F4EE;">
+  <header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; padding: 0 20px 0 26px;">
+    <button class="pl-press pl-hover" style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 8px 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 15px; font-weight: 600; color: #1B1A17; cursor: pointer;">Northwind NDA<span style="color: #6A665D; display: flex;">%%I:chevdown:16%%</span></button>
+  </header>
+
+  <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column-reverse; -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 48px); mask-image: linear-gradient(to bottom, transparent 0, black 48px);">
+    <div style="display: flex; flex-direction: column; gap: 22px; padding: 40px 36px 20px;">
+
+      <div style="align-self: flex-end; max-width: 380px; background: #ECE8DF; border-radius: 20px 20px 6px 20px; padding: 11px 16px; font-size: 15px; line-height: 1.5; color: #1B1A17;">We’re Acme Robotics. We’re about to share our product roadmap with Northwind Labs, a manufacturing partner. Need an NDA?</div>
+
+      <div role="separator" style="display: flex; align-items: center; gap: 12px; color: #6A665D; font-size: 12.5px;"><span style="flex-grow: 1; height: 1px; background: #E3DED3;"></span><span style="display: flex; align-items: center; gap: 6px;">%%I:file:14%%Mutual NDA selected</span><span style="flex-grow: 1; height: 1px; background: #E3DED3;"></span></div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.6; color: #1B1A17; text-wrap: pretty;">
+        <p style="margin: 0;">A <strong style="font-weight: 600;">Mutual NDA</strong> fits here. You’re both sharing, so it protects each side the same way.</p>
+        <p style="margin: 0;">I filled in the purpose and both companies from what you wrote.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; border: 1px solid #E3DED3; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+        <sc-for list="{{initialMarkers}}" as="m" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 6px 0 14px; font-size: 13.5px; border-top: 1px solid {{m.rule}};">
+            <span style="color: #6A665D; display: flex;">%%I:pen:14%%</span>
+            <span style="color: #57544C; flex-shrink: 0;">{{m.label}}</span>
+            <span aria-hidden="true" style="color: #A29D92;">→</span>
+            <span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: %%SERIF%%; font-size: 15px; color: {{m.valueColor}}; text-decoration: {{m.deco}};">{{m.value}}</span>
+            <sc-if value="{{m.on}}" hint-placeholder-val="{{ true }}"><button class="pl-press pl-hover" onClick="{{m.act}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #57544C; display: flex; align-items: center; gap: 5px; cursor: pointer;">%%I:undo:13%%Undo</button></sc-if>
+            <sc-if value="{{m.off}}" hint-placeholder-val="{{ false }}"><button class="pl-press pl-hover" onClick="{{m.act}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #2743C4; display: flex; align-items: center; gap: 5px; cursor: pointer;">%%I:redo:13%%Redo</button></sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{showCard}}" hint-placeholder-val="{{ true }}">
+        <section aria-label="Key terms" onKeyDown="{{q.onKey}}" style="background: #FFFFFF; border: 1px solid #E3DED3; border-radius: 18px; box-shadow: 0 1px 2px rgba(27,26,23,0.04), 0 10px 28px -14px rgba(27,26,23,0.16); padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 2px 4px 0;">
+            <span style="font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6A665D;">Key terms</span>
+            <span style="flex-grow: 1;"></span>
+            <span style="font-size: 12.5px; color: #6A665D; font-variant-numeric: tabular-nums;">{{q.num}} of 2</span>
+            <div role="progressbar" aria-label="Key terms progress" aria-valuemin="0" aria-valuemax="2" aria-valuenow="{{q.num}}" style="width: 64px; height: 4px; border-radius: 4px; background: #ECE7DC; overflow: hidden;"><div class="pl-progress" style="height: 4px; border-radius: 4px; background: #2743C4; width: {{q.progress}};"></div></div>
+          </div>
+          <div class="{{q.cls}}" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px;">
+              <h3 style="margin: 0; font-family: %%SERIF%%; font-size: 21px; line-height: 1.25; font-weight: 500; letter-spacing: -0.01em; color: #1B1A17;">{{q.title}}</h3>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.5; color: #57544C;">{{q.desc}}</p>
+            </div>
+            <div role="radiogroup" aria-label="{{q.title}}" style="display: flex; flex-direction: column; gap: 6px;">
+              <sc-for list="{{q.options}}" as="o" hint-placeholder-count="3">
+                <button class="{{o.hoverCls}}" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 12px 9px 10px; border-radius: 12px; border: 1px solid {{o.border}}; background: {{o.bg}}; cursor: pointer; text-align: left;">
+                  <span style="flex-shrink: 0; width: 24px; height: 24px; box-sizing: border-box; border-radius: 7px; border: 1px solid {{o.kbdBorder}}; background: {{o.kbdBg}}; color: {{o.kbdFg}}; display: grid; place-items: center; font-size: 11.5px; font-weight: 600;">{{o.letter}}</span>
+                  <span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px;"><span style="font-size: 14.5px; font-weight: 500; color: #1B1A17;">{{o.label}}</span><span style="font-size: 13px; color: #57544C;">{{o.desc}}</span></span>
+                  <sc-if value="{{o.selected}}" hint-placeholder-val="{{ false }}"><span class="pl-pop-a" style="color: #2743C4; display: flex;">%%I:check:18:2%%</span></sc-if>
+                </button>
+              </sc-for>
+              <label style="display: flex; align-items: center; gap: 12px; padding: 7px 12px 7px 10px; border-radius: 12px; border: 1px dashed #D5CFC2;">
+                <span style="flex-shrink: 0; width: 24px; height: 24px; box-sizing: border-box; border-radius: 7px; border: 1px solid #D5CFC2; color: #57544C; display: grid; place-items: center; font-size: 11.5px; font-weight: 600;">D</span>
+                <span class="pl-sr">Other answer</span>
+                <input type="text" placeholder="Something else… press Enter" onKeyDown="{{q.onOther}}" style="flex-grow: 1; min-width: 0; height: 30px; border: 0; outline: none; background: transparent; font-size: 14px; color: #1B1A17; padding: 0;">
+              </label>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; min-height: 30px; padding: 0 4px; font-size: 12.5px; color: #6A665D;">
+            <span style="display: flex; align-items: center; gap: 5px;">Press <kbd style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; border: 1px solid #D5CFC2; border-radius: 5px; padding: 0 5px; color: #57544C;">A</kbd>–<kbd style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; border: 1px solid #D5CFC2; border-radius: 5px; padding: 0 5px; color: #57544C;">C</kbd> to answer</span>
+            <div style="display: flex; gap: 2px;">
+              <sc-if value="{{q.canBack}}" hint-placeholder-val="{{ false }}"><button class="pl-press pl-hover" onClick="{{q.back}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 500; color: #57544C; cursor: pointer; display: flex; align-items: center; gap: 4px;">%%I:chevleft:14%%Back</button></sc-if>
+              <sc-if value="{{q.canSkip}}" hint-placeholder-val="{{ false }}"><button class="pl-press pl-hover" onClick="{{q.skip}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 500; color: #57544C; cursor: pointer;">Skip</button></sc-if>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{showSummary}}" hint-placeholder-val="{{ false }}">
+        <div class="pl-enter" style="display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 6px 0 12px; border: 1px solid #E3DED3; border-radius: 14px; background: #FFFFFF; font-size: 13.5px; color: #57544C;">
+          <span style="width: 22px; height: 22px; flex-shrink: 0; border-radius: 999px; background: #EEF1FC; color: #2743C4; display: grid; place-items: center;">%%I:check:13:2.25%%</span>
+          <span style="flex-grow: 1; min-width: 0;">Key terms answered · <span style="color: #1B1A17;">{{summary}}</span></span>
+          <button class="pl-press pl-hover" onClick="{{editAnswers}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #57544C; cursor: pointer;">Edit</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{updating}}" hint-placeholder-val="{{ false }}">
+        <div role="status" class="pl-enter" style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #6A665D;">%%I:pen:15%%<span class="pl-shimmer">Updating the document…</span></div>
+      </sc-if>
+
+      <sc-if value="{{answered}}" hint-placeholder-val="{{ false }}">
+        <div class="pl-enter" style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.6; color: #1B1A17; text-wrap: pretty;">
+            <p style="margin: 0;"><strong style="font-weight: 600;">{{te.head}}</strong> {{te.body}}</p>
+            <p style="margin: 0;"><strong style="font-weight: 600;">{{ce.head}}</strong> {{ce.body}}</p>
+          </div>
+          <div style="display: flex; flex-direction: column; border: 1px solid #E3DED3; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+            <sc-for list="{{answerMarkers}}" as="m" hint-placeholder-count="2">
+              <div style="display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 6px 0 14px; font-size: 13.5px; border-top: 1px solid {{m.rule}};">
+                <span style="color: #6A665D; display: flex;">%%I:pen:14%%</span>
+                <span style="color: #57544C; flex-shrink: 0;">{{m.label}}</span>
+                <span aria-hidden="true" style="color: #A29D92;">→</span>
+                <span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: %%SERIF%%; font-size: 15px; color: {{m.valueColor}}; text-decoration: {{m.deco}};">{{m.value}}</span>
+                <sc-if value="{{m.on}}" hint-placeholder-val="{{ true }}"><button class="pl-press pl-hover" onClick="{{m.act}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #57544C; display: flex; align-items: center; gap: 5px; cursor: pointer;">%%I:undo:13%%Undo</button></sc-if>
+                <sc-if value="{{m.off}}" hint-placeholder-val="{{ false }}"><button class="pl-press pl-hover" onClick="{{m.act}}" style="height: 30px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #2743C4; display: flex; align-items: center; gap: 5px; cursor: pointer;">%%I:redo:13%%Redo</button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #1B1A17;">One key term left: which state’s law should govern this NDA?</p>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <div style="flex-shrink: 0; padding: 4px 28px 14px; display: flex; flex-direction: column; gap: 10px;">
+    <div class="pl-composer" style="background: #FFFFFF; border: 1px solid #D5CFC2; border-radius: 20px; box-shadow: 0 1px 2px rgba(27,26,23,0.04), 0 8px 24px -14px rgba(27,26,23,0.14); padding: 14px 12px 10px 18px; display: flex; flex-direction: column; gap: 6px;">
+      <label for="reply" class="pl-sr">Reply to Parley</label>
+      <textarea id="reply" rows="2" placeholder="Reply to Parley…" style="border: 0; outline: none; resize: none; background: transparent; font-size: 15px; line-height: 1.5; color: #1B1A17; padding: 0;"></textarea>
+      <div style="display: flex; align-items: center; justify-content: flex-end;">
+        <button class="pl-press pl-ink-btn" aria-label="Send" style="width: 34px; height: 34px; border-radius: 999px; border: 0; background: #1B1A17; color: #FAF8F3; display: grid; place-items: center; cursor: pointer;">%%I:arrowup:17:2%%</button>
+      </div>
+    </div>
+    <p style="margin: 0; text-align: center; font-size: 12px; color: #6A665D;">Parley fills in standard agreements. It isn’t legal advice.</p>
+  </div>
+</main>
+
+<section aria-label="Live document" style="width: 624px; flex-shrink: 0; height: 900px; display: flex; flex-direction: column; background: #EDEAE2; border-left: 1px solid #E3DED3;">
+  <header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 14px;">
+    <button class="pl-press pl-hover" style="display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 8px; border: 0; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 600; color: #1B1A17; cursor: pointer;"><span style="color: #57544C; display: flex;">%%I:file:16%%</span>Mutual NDA<span style="color: #6A665D; display: flex;">%%I:chevdown:15%%</span></button>
+    <sc-if value="{{saved}}" hint-placeholder-val="{{ true }}"><span class="pl-fade-a" style="display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: #6A665D;">%%I:check:13:2%%Saved</span></sc-if>
+    <sc-if value="{{updating}}" hint-placeholder-val="{{ false }}"><span class="pl-shimmer" style="font-size: 12.5px;">Saving…</span></sc-if>
+    <span style="flex-grow: 1;"></span>
+    <button class="pl-press pl-outline" style="height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 12px; border: 1px solid #E3DED3; background: #FFFFFF; border-radius: 9px; font-size: 13.5px; font-weight: 500; color: #1B1A17; cursor: pointer;">%%I:link:15%%Share</button>
+    <button class="pl-press pl-outline" style="height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 8px 0 12px; border: 1px solid #E3DED3; background: #FFFFFF; border-radius: 9px; font-size: 13.5px; font-weight: 500; color: #1B1A17; cursor: pointer;">%%I:download:15%%Download<span style="color: #6A665D; display: flex;">%%I:chevdown:14%%</span></button>
+    <span aria-hidden="true" style="width: 1px; height: 20px; background: #D5CFC2; margin: 0 4px;"></span>
+    <button class="pl-press pl-hover" aria-label="Expand document" style="width: 34px; height: 34px; border: 0; background: transparent; border-radius: 8px; display: grid; place-items: center; color: #57544C; cursor: pointer;">%%I:expand:16%%</button>
+    <button class="pl-press pl-hover" aria-label="Close document" style="width: 34px; height: 34px; border: 0; background: transparent; border-radius: 8px; display: grid; place-items: center; color: #57544C; cursor: pointer;">%%I:x:17%%</button>
+  </header>
+
+  <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 8px 36px 48px;">
+    <article style="width: 552px; margin: 0 auto; box-sizing: border-box; padding: 50px 52px 52px; background: #FFFDF9; border-radius: 4px; box-shadow: 0 0 0 1px rgba(27,26,23,0.04), 0 2px 4px rgba(27,26,23,0.04), 0 16px 40px -12px rgba(27,26,23,0.14); font-family: %%SERIF%%; color: #1B1A17;">
+      <div style="display: flex; justify-content: space-between; font-family: %%SANS%%; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6A665D;"><span>Cover Page</span><span>Common Paper · v1.0</span></div>
+      <h1 style="margin: 14px 0 0; font-size: 26px; line-height: 1.15; font-weight: 500; letter-spacing: -0.012em;">Mutual Non-Disclosure Agreement</h1>
+      <p style="margin: 14px 0 0; font-size: 13px; line-height: 1.65; color: #57544C; text-wrap: pretty;">This Mutual Non-Disclosure Agreement (the “MNDA”) consists of: (1) this Cover Page (“<strong style="font-weight: 600; color: #1B1A17;">Cover Page</strong>”) and (2) the Common Paper Mutual NDA Standard Terms Version 1.0 (“<strong style="font-weight: 600; color: #1B1A17;">Standard Terms</strong>”) identical to those posted at commonpaper.com/standards/mutual-nda/1.0. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.</p>
+
+      <div style="margin-top: 22px; border-top: 1.5px solid #1B1A17;">
+
+        <div style="position: relative; display: grid; grid-template-columns: 128px minmax(0, 1fr); column-gap: 22px; padding: 15px 0; border-bottom: 1px solid #ECE7DC;">
+          <div style="position: relative; z-index: 1;">
+            <div style="font-family: %%SANS%%; font-size: 12px; font-weight: 600; line-height: 1.35;">Purpose</div>
+            <div style="font-family: %%SANS%%; font-size: 11.5px; line-height: 1.4; color: #6A665D; margin-top: 3px;">How Confidential Information may be used</div>
+          </div>
+          <div style="position: relative; z-index: 1; font-size: 14.5px; line-height: 1.55;">
+            <sc-if value="{{f.purpose.on}}" hint-placeholder-val="{{ true }}"><span class="{{f.purpose.cls}}"><span class="{{f.purpose.ink}}" style="color: #2743C4;">Evaluating whether to enter into a manufacturing partnership with the other party.</span></span></sc-if>
+            <sc-if value="{{f.purpose.off}}" hint-placeholder-val="{{ false }}"><span class="{{f.purpose.phCls}}" style="font-family: %%SANS%%; font-size: 12.5px; line-height: 1.4; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px; white-space: nowrap;">Purpose</span></sc-if>
+          </div>
+          <sc-if value="{{f.purpose.bar}}" hint-placeholder-val="{{ true }}"><span class="{{f.purpose.barCls}}" aria-hidden="true" style="position: absolute; left: -26px; top: 16px; bottom: 16px; width: 2px; border-radius: 2px; background: #2743C4; transform-origin: top;"></span></sc-if>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 128px minmax(0, 1fr); column-gap: 22px; padding: 15px 0; border-bottom: 1px solid #ECE7DC;">
+          <div style="font-family: %%SANS%%; font-size: 12px; font-weight: 600; line-height: 1.35; padding-top: 3px;">Effective Date</div>
+          <div style="font-size: 14.5px; line-height: 1.55; color: #2743C4;">September 23, 2026</div>
+        </div>
+
+        <div style="position: relative; display: grid; grid-template-columns: 128px minmax(0, 1fr); column-gap: 22px; padding: 15px 0; border-bottom: 1px solid #ECE7DC;">
+          <sc-if value="{{t.asking}}" hint-placeholder-val="{{ true }}">
+            <div aria-hidden="true" class="pl-fade-a" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none;">
+              <div style="position: absolute; top: 6px; bottom: 6px; left: -14px; right: -14px; border: 1.5px dashed #9AA9E6; border-radius: 10px; background: #F3F5FD;"></div>
+              <span style="position: absolute; top: -2px; right: -2px; font-family: %%SANS%%; font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; line-height: 16px; color: #2743C4; background: #FFFDF9; padding: 0 6px; border-radius: 4px;">Asking in chat</span>
+            </div>
+          </sc-if>
+          <div style="position: relative; z-index: 1;">
+            <div style="font-family: %%SANS%%; font-size: 12px; font-weight: 600; line-height: 1.35;">MNDA Term</div>
+            <div style="font-family: %%SANS%%; font-size: 11.5px; line-height: 1.4; color: #6A665D; margin-top: 3px;">The length of this MNDA</div>
+          </div>
+          <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; line-height: 1.55;">
+            <div style="display: flex; gap: 10px; align-items: flex-start; opacity: {{t.l1op}}; transition: opacity 280ms ease;">
+              <sc-if value="{{t.l1on}}" hint-placeholder-val="{{ false }}"><span class="{{t.c1cls}}" style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; background: #2743C4; color: #FDFDFF; display: grid; place-items: center;">%%I:check:10:3.5%%</span></sc-if>
+              <sc-if value="{{t.l1off}}" hint-placeholder-val="{{ true }}"><span style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; box-sizing: border-box; border: 1.25px solid #6A665D;"></span></sc-if>
+              <span>Expires <sc-if value="{{t.l1on}}" hint-placeholder-val="{{ false }}"><span class="{{t.cls}}"><span class="{{t.ink}}" style="color: #2743C4;">{{t.l1text}}</span></span></sc-if><sc-if value="{{t.l1off}}" hint-placeholder-val="{{ true }}"><span class="{{t.phCls}}" style="font-family: %%SANS%%; font-size: 12.5px; line-height: 1.4; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px; white-space: nowrap;">length</span></sc-if> from Effective Date.</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-start; opacity: {{t.l2op}}; transition: opacity 280ms ease;">
+              <sc-if value="{{t.l2on}}" hint-placeholder-val="{{ false }}"><span class="{{t.c2cls}}" style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; background: #2743C4; color: #FDFDFF; display: grid; place-items: center;">%%I:check:10:3.5%%</span></sc-if>
+              <sc-if value="{{t.l2off}}" hint-placeholder-val="{{ true }}"><span style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; box-sizing: border-box; border: 1.25px solid #6A665D;"></span></sc-if>
+              <span class="{{t.l2cls}}"><span class="{{t.l2ink}}" style="color: {{t.l2color}};">Continues until terminated in accordance with the terms of the MNDA.</span></span>
+            </div>
+          </div>
+          <sc-if value="{{t.bar}}" hint-placeholder-val="{{ false }}"><span class="{{t.barCls}}" aria-hidden="true" style="position: absolute; left: -26px; top: 16px; bottom: 16px; width: 2px; border-radius: 2px; background: #2743C4; transform-origin: top;"></span></sc-if>
+        </div>
+
+        <div style="position: relative; display: grid; grid-template-columns: 128px minmax(0, 1fr); column-gap: 22px; padding: 15px 0; border-bottom: 1px solid #ECE7DC;">
+          <sc-if value="{{c.asking}}" hint-placeholder-val="{{ false }}">
+            <div aria-hidden="true" class="pl-fade-b" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none;">
+              <div style="position: absolute; top: 6px; bottom: 6px; left: -14px; right: -14px; border: 1.5px dashed #9AA9E6; border-radius: 10px; background: #F3F5FD;"></div>
+              <span style="position: absolute; top: -2px; right: -2px; font-family: %%SANS%%; font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; line-height: 16px; color: #2743C4; background: #FFFDF9; padding: 0 6px; border-radius: 4px;">Asking in chat</span>
+            </div>
+          </sc-if>
+          <div style="position: relative; z-index: 1;">
+            <div style="font-family: %%SANS%%; font-size: 12px; font-weight: 600; line-height: 1.35;">Term of Confidentiality</div>
+            <div style="font-family: %%SANS%%; font-size: 11.5px; line-height: 1.4; color: #6A665D; margin-top: 3px;">How long Confidential Information is protected</div>
+          </div>
+          <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; line-height: 1.55;">
+            <div style="display: flex; gap: 10px; align-items: flex-start; opacity: {{c.l1op}}; transition: opacity 280ms ease;">
+              <sc-if value="{{c.l1on}}" hint-placeholder-val="{{ false }}"><span class="{{c.c1cls}}" style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; background: #2743C4; color: #FDFDFF; display: grid; place-items: center;">%%I:check:10:3.5%%</span></sc-if>
+              <sc-if value="{{c.l1off}}" hint-placeholder-val="{{ true }}"><span style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; box-sizing: border-box; border: 1.25px solid #6A665D;"></span></sc-if>
+              <span><sc-if value="{{c.l1on}}" hint-placeholder-val="{{ false }}"><span class="{{c.cls}}"><span class="{{c.ink}}" style="color: #2743C4;">{{c.l1text}}</span></span></sc-if><sc-if value="{{c.l1off}}" hint-placeholder-val="{{ true }}"><span class="{{c.phCls}}" style="font-family: %%SANS%%; font-size: 12.5px; line-height: 1.4; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px; white-space: nowrap;">length</span></sc-if> from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws.</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-start; opacity: {{c.l2op}}; transition: opacity 280ms ease;">
+              <sc-if value="{{c.l2on}}" hint-placeholder-val="{{ false }}"><span class="{{c.c2cls}}" style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; background: #2743C4; color: #FDFDFF; display: grid; place-items: center;">%%I:check:10:3.5%%</span></sc-if>
+              <sc-if value="{{c.l2off}}" hint-placeholder-val="{{ true }}"><span style="flex-shrink: 0; width: 14px; height: 14px; margin-top: 4px; border-radius: 4px; box-sizing: border-box; border: 1.25px solid #6A665D;"></span></sc-if>
+              <span class="{{c.l2cls}}"><span class="{{c.l2ink}}" style="color: {{c.l2color}};">In perpetuity.</span></span>
+            </div>
+          </div>
+          <sc-if value="{{c.bar}}" hint-placeholder-val="{{ false }}"><span class="{{c.barCls}}" aria-hidden="true" style="position: absolute; left: -26px; top: 16px; bottom: 16px; width: 2px; border-radius: 2px; background: #2743C4; transform-origin: top;"></span></sc-if>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 128px minmax(0, 1fr); column-gap: 22px; padding: 15px 0; border-bottom: 1px solid #ECE7DC;">
+          <div style="font-family: %%SANS%%; font-size: 12px; font-weight: 600; line-height: 1.35; padding-top: 3px;">Governing Law &amp; Jurisdiction</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; line-height: 1.55;">
+            <div>Governing Law: <span style="font-family: %%SANS%%; font-size: 12.5px; line-height: 1.4; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px; white-space: nowrap;">State</span></div>
+            <div>Jurisdiction: <span style="font-family: %%SANS%%; font-size: 12.5px; line-height: 1.4; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px; white-space: nowrap;">City or county and state</span></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 128px minmax(0, 1fr); column-gap: 22px; padding: 15px 0; border-bottom: 1px solid #ECE7DC;">
+          <div>
+            <div style="font-family: %%SANS%%; font-size: 12px; font-weight: 600; line-height: 1.35;">MNDA Modifications</div>
+            <div style="font-family: %%SANS%%; font-size: 11.5px; line-height: 1.4; color: #6A665D; margin-top: 3px;">List any modifications to the MNDA</div>
+          </div>
+          <div style="font-size: 14.5px; line-height: 1.55; color: #6A665D; font-style: italic;">None</div>
+        </div>
+      </div>
+
+      <p style="margin: 22px 0 0; font-size: 13.5px; line-height: 1.6;">By signing this Cover Page, each party agrees to enter into this MNDA as of the Effective Date.</p>
+
+      <table style="width: 100%; margin-top: 16px; border-collapse: collapse; font-size: 13.5px; line-height: 1.45;">
+        <thead>
+          <tr style="border-bottom: 1.5px solid #1B1A17;">
+            <th scope="col" style="width: 118px; padding: 0 0 8px;"><span class="pl-sr">Field</span></th>
+            <th scope="col" style="padding: 0 0 8px; text-align: left; font-family: %%SANS%%; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6A665D;">Party 1</th>
+            <th scope="col" style="padding: 0 0 8px 16px; text-align: left; font-family: %%SANS%%; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6A665D;">Party 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #ECE7DC;"><th scope="row" style="padding: 18px 0 10px; text-align: left; font-family: %%SANS%%; font-size: 12px; font-weight: 600;">Signature</th><td style="padding: 18px 0 10px;"></td><td style="padding: 18px 0 10px 16px;"></td></tr>
+          <tr style="border-bottom: 1px solid #ECE7DC;"><th scope="row" style="padding: 10px 0; text-align: left; font-family: %%SANS%%; font-size: 12px; font-weight: 600;">Print Name</th><td style="padding: 10px 0;"><span style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Name</span></td><td style="padding: 10px 0 10px 16px;"><span style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Name</span></td></tr>
+          <tr style="border-bottom: 1px solid #ECE7DC;"><th scope="row" style="padding: 10px 0; text-align: left; font-family: %%SANS%%; font-size: 12px; font-weight: 600;">Title</th><td style="padding: 10px 0;"><span style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Title</span></td><td style="padding: 10px 0 10px 16px;"><span style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Title</span></td></tr>
+          <tr style="border-bottom: 1px solid #ECE7DC;"><th scope="row" style="padding: 10px 0; text-align: left; font-family: %%SANS%%; font-size: 12px; font-weight: 600;">Company</th>
+            <td style="padding: 10px 0;"><sc-if value="{{f.p1.on}}" hint-placeholder-val="{{ true }}"><span class="{{f.p1.cls}}"><span class="{{f.p1.ink}}" style="color: #2743C4;">Acme Robotics, Inc.</span></span></sc-if><sc-if value="{{f.p1.off}}" hint-placeholder-val="{{ false }}"><span class="{{f.p1.phCls}}" style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Company</span></sc-if></td>
+            <td style="padding: 10px 0 10px 16px;"><sc-if value="{{f.p2.on}}" hint-placeholder-val="{{ true }}"><span class="{{f.p2.cls}}"><span class="{{f.p2.ink}}" style="color: #2743C4;">Northwind Labs LLC</span></span></sc-if><sc-if value="{{f.p2.off}}" hint-placeholder-val="{{ false }}"><span class="{{f.p2.phCls}}" style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Company</span></sc-if></td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ECE7DC;"><th scope="row" style="padding: 10px 0; text-align: left; font-family: %%SANS%%; font-size: 12px; font-weight: 600; vertical-align: top;">Notice Address</th><td style="padding: 10px 0;"><span style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Email or address</span></td><td style="padding: 10px 0 10px 16px;"><span style="font-family: %%SANS%%; font-size: 12px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">Email or address</span></td></tr>
+          <tr style="border-bottom: 1px solid #ECE7DC;"><th scope="row" style="padding: 10px 0; text-align: left; font-family: %%SANS%%; font-size: 12px; font-weight: 600;">Date</th><td style="padding: 10px 0;"></td><td style="padding: 10px 0 10px 16px;"></td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin: 28px 0 0; text-align: center; font-family: %%SANS%%; font-size: 11px; line-height: 1.5; color: #6A665D;">Common Paper Mutual Non-Disclosure Agreement (Version 1.0) free to use under CC BY 4.0.</p>
+    </article>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  st() {
+    return Object.assign({
+      step: 1, touched: false, pick1: null, pick2: null, other1: '', other2: '', busy: false,
+      updating: false, answered: false, applied: false, term: null, conf: null,
+      termOther: '', confOther: '', termRev: 0, confRev: 0, undone: {}, urev: {}
+    }, this.state || {});
+  }
+
+  later(fn, ms) {
+    this.timers = this.timers || [];
+    this.timers.push(setTimeout(fn, ms));
+  }
+
+  componentWillUnmount() {
+    (this.timers || []).forEach(clearTimeout);
+  }
+
+  choose(q, value, text) {
+    const s = this.st();
+    if (s.busy || s.updating || s.step !== q) return;
+    if (q === 1) {
+      this.setState({ pick1: value, other1: text || '', busy: true, touched: true });
+      this.later(() => this.setState({ step: 2, busy: false }), 260);
+      return;
+    }
+    this.setState({ pick2: value, other2: text || '', busy: true, touched: true });
+    this.later(() => this.setState({ step: 3, busy: false, updating: true, answered: false }), 280);
+    this.later(() => {
+      const t = this.st();
+      this.setState({
+        term: t.pick1, termOther: t.other1, termRev: t.termRev + 1, applied: true,
+        undone: Object.assign({}, t.undone, { term: false })
+      });
+    }, 1150);
+    this.later(() => {
+      const t = this.st();
+      const skip = t.pick2 === 'skip';
+      this.setState({
+        conf: skip ? null : t.pick2, confOther: t.other2, confRev: skip ? t.confRev : t.confRev + 1,
+        updating: false, answered: true, undone: Object.assign({}, t.undone, { conf: false })
+      });
+    }, 1450);
+  }
+
+  toggle(key) {
+    const s = this.st();
+    this.setState({
+      undone: Object.assign({}, s.undone, { [key]: !s.undone[key] }),
+      urev: Object.assign({}, s.urev, { [key]: (s.urev[key] || 0) + 1 })
+    });
+  }
+
+  renderVals() {
+    const s = this.st();
+    const par = (n, a, b) => (n % 2 ? a : b);
+
+    const initialField = (key) => {
+      const u = s.urev[key] || 0;
+      const on = !s.undone[key];
+      const redone = on && u > 0;
+      return {
+        on, off: !on,
+        cls: redone ? 'pl-v ' + par(u, 'pl-fresh-a', 'pl-fresh-b') : (s.applied ? 'pl-v pl-plain' : 'pl-v pl-soft'),
+        ink: redone ? par(u, 'pl-ink-a', 'pl-ink-b') : '',
+        phCls: u > 0 ? par(u, 'pl-fade-a', 'pl-fade-b') : '',
+        bar: on && (redone || !s.applied),
+        barCls: redone ? par(u, 'pl-bar-a', 'pl-bar-b') : ''
+      };
+    };
+
+    const choiceField = (key, value, rev, texts, otherText, lastKey) => {
+      const v = value && !s.undone[key] ? value : null;
+      const n = rev + (s.urev[key] || 0);
+      const fresh = 'pl-v ' + par(n, 'pl-fresh-a', 'pl-fresh-b');
+      const ink = par(n, 'pl-ink-a', 'pl-ink-b');
+      const l1on = v !== null && v !== lastKey;
+      const l2on = v === lastKey;
+      return {
+        l1on, l1off: !l1on, l2on, l2off: !l2on,
+        l1text: v === 'other' ? otherText : (texts[v] || ''),
+        l1op: l2on ? '0.42' : '1',
+        l2op: l1on ? '0.42' : '1',
+        cls: fresh, ink,
+        phCls: n > 0 ? par(n, 'pl-fade-a', 'pl-fade-b') : '',
+        l2cls: l2on ? fresh : '', l2ink: l2on ? ink : '',
+        l2color: l2on ? '#2743C4' : '#1B1A17',
+        c1cls: par(n, 'pl-pop-a', 'pl-pop-b'), c2cls: par(n, 'pl-pop-a', 'pl-pop-b'),
+        bar: v !== null, barCls: par(n, 'pl-bar-a', 'pl-bar-b')
+      };
+    };
+
+    const t = choiceField('term', s.term, s.termRev, { y1: '1 year', y2: '2 years' }, s.termOther, 'until');
+    t.asking = s.step === 1;
+    const c = choiceField('conf', s.conf, s.confRev, { c1: '1 year', c3: '3 years' }, s.confOther, 'forever');
+    c.asking = s.step === 2;
+
+    const SUM1 = { y1: '1 year', y2: '2 years', until: 'Until ended', other: s.other1 };
+    const SUM2 = { c1: '1 year', c3: '3 years', forever: 'Forever', skip: 'Left open', other: s.other2 };
+    const day = (y) => 'September 23, ' + y;
+    const TE = {
+      y1: ['MNDA Term: 1 year.', 'Either side can share new confidential information until ' + day(2027) + '.'],
+      y2: ['MNDA Term: 2 years.', 'Either side can share new confidential information until ' + day(2028) + '.'],
+      until: ['MNDA Term: until ended.', 'It stays in force until one side ends it under the Standard Terms.'],
+      other: ['MNDA Term: ' + s.termOther + '.', 'Set exactly as you wrote it.']
+    };
+    const kept = ' Trade secrets stay protected for as long as they stay secret.';
+    const CE = {
+      c1: ['Confidentiality: 1 year.', 'What you share stays protected until ' + day(2027) + '.' + kept],
+      c3: ['Confidentiality: 3 years.', 'What you share stays protected until ' + day(2029) + '.' + kept],
+      forever: ['Confidentiality: forever.', 'Perpetual means shared information never stops being protected.'],
+      skip: ['Confidentiality: left open.', 'I left it blank for now. You can set it any time.'],
+      other: ['Confidentiality: ' + s.confOther + '.', 'Set exactly as you wrote it.']
+    };
+    const te = TE[s.term] || TE.y2;
+    const ce = CE[s.pick2 === 'skip' ? 'skip' : s.conf] || CE.c3;
+
+    const marker = (key, label, value, i) => {
+      const off = !!s.undone[key];
+      return {
+        label, value, on: !off, off,
+        act: () => this.toggle(key),
+        valueColor: off ? '#6A665D' : '#2743C4',
+        deco: off ? 'line-through' : 'none',
+        rule: i === 0 ? 'transparent' : '#ECE7DC'
+      };
+    };
+    const answerMarkers = [marker('term', 'MNDA Term', SUM1[s.term] || '', 0)];
+    if (s.conf) answerMarkers.push(marker('conf', 'Confidentiality', SUM2[s.conf] || '', 1));
+
+    const QS = {
+      1: {
+        title: 'How long should the NDA last?',
+        desc: 'How long either side can share new confidential information under it.',
+        opts: [['y1', 'A', '1 year', 'Enough for a short evaluation.'],
+               ['y2', 'B', '2 years', 'Room to evaluate and start working together.'],
+               ['until', 'C', 'Until one side ends it', 'Stays open until someone gives notice.']]
+      },
+      2: {
+        title: 'How long should secrets stay protected?',
+        desc: 'This can outlast the NDA itself.',
+        opts: [['c1', 'A', '1 year', 'Fine for low-risk information.'],
+               ['c3', 'B', '3 years', 'A common middle ground.'],
+               ['forever', 'C', 'Forever', 'Protection never runs out.']]
+      }
+    };
+    const qn = s.step === 2 ? 2 : 1;
+    const qd = QS[qn];
+    const picked = qn === 1 ? s.pick1 : s.pick2;
+    const q = {
+      num: qn,
+      title: qd.title,
+      desc: qd.desc,
+      progress: qn === 1 ? '50%' : '100%',
+      cls: s.touched ? par(qn, 'pl-step-a', 'pl-step-b') : '',
+      canBack: qn === 2,
+      canSkip: qn === 2,
+      back: () => { if (!this.st().busy) this.setState({ step: 1 }); },
+      skip: () => this.choose(2, 'skip'),
+      onOther: (e) => {
+        if (e.key !== 'Enter') return;
+        const v = (e.currentTarget.value || '').trim();
+        if (!v) return;
+        e.preventDefault();
+        this.choose(qn, 'other', v);
+      },
+      onKey: (e) => {
+        if (e.target && e.target.tagName === 'INPUT') return;
+        const hit = qd.opts.find((o) => o[1] === String(e.key || '').toUpperCase());
+        if (!hit) return;
+        e.preventDefault();
+        this.choose(qn, hit[0]);
+      },
+      options: qd.opts.map(([key, letter, label, desc]) => {
+        const sel = picked === key;
+        return {
+          letter, label, desc, selected: sel, checked: sel ? 'true' : 'false',
+          border: sel ? '#2743C4' : '#E3DED3',
+          bg: sel ? '#EEF1FC' : '#FFFFFF',
+          kbdBorder: sel ? '#2743C4' : '#D5CFC2',
+          kbdBg: sel ? '#2743C4' : '#FFFFFF',
+          kbdFg: sel ? '#FDFDFF' : '#57544C',
+          hoverCls: sel ? 'pl-press' : 'pl-press pl-opt-idle',
+          pick: () => this.choose(qn, key)
+        };
+      })
+    };
+
+    return {
+      f: { purpose: initialField('purpose'), p1: initialField('p1'), p2: initialField('p2') },
+      t, c, q, te: { head: te[0], body: te[1] }, ce: { head: ce[0], body: ce[1] },
+      initialMarkers: [
+        marker('purpose', 'Purpose', 'Evaluating a manufacturing partnership', 0),
+        marker('p1', 'Party 1', 'Acme Robotics, Inc.', 1),
+        marker('p2', 'Party 2', 'Northwind Labs LLC', 2)
+      ],
+      answerMarkers,
+      showCard: s.step < 3,
+      showSummary: s.step === 3,
+      summary: 'Term ' + (SUM1[s.pick1] || '') + ' · Confidentiality ' + (SUM2[s.pick2] || ''),
+      editAnswers: () => { if (!this.st().updating) this.setState({ step: 1, answered: false, touched: true }); },
+      updating: s.updating,
+      saved: !s.updating,
+      answered: s.answered && s.step === 3
+    };
+  }
+}
+</script>
+</body>
+</html>
