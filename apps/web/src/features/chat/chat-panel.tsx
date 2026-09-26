@@ -5,12 +5,6 @@ import type { DocumentDefinition } from "@workspace/documents"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@workspace/ui/components/empty"
 import { Marker, MarkerContent } from "@workspace/ui/components/marker"
 import { cn } from "@workspace/ui/lib/utils"
 import { Message, MessageContent } from "@workspace/ui/components/message"
@@ -25,6 +19,7 @@ import {
 import type { ChatTransport } from "ai"
 import { useEffect, useState } from "react"
 
+import { ChatWelcome } from "@/features/empty-state/chat-welcome"
 import { DownloadButton } from "@/features/export/download"
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
@@ -148,14 +143,7 @@ export function ChatPanel({
           <MessageScrollerViewport>
             <MessageScrollerContent className="mx-auto w-full max-w-2xl gap-5 px-5 pt-6 pb-4 md:px-8">
               {messages.length === 0 && !pending ? (
-                <Empty className="my-auto">
-                  <EmptyHeader>
-                    <EmptyTitle>Tell Parley about your deal</EmptyTitle>
-                    <EmptyDescription>
-                      Who is it with, and what are you sharing or selling?
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
+                <ChatWelcome document={definition?.name ?? null} />
               ) : null}
               {messages.map((message, index) => (
                 <MessageScrollerItem
