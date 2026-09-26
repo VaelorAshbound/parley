@@ -101,6 +101,8 @@ export const auditEvents = new Set([
   "password_changed",
   "password_reset",
   "user_deleted",
+  "two_factor_on",
+  "two_factor_off",
 ])
 
 /** The Cookie header a browser would send back after this response. */
