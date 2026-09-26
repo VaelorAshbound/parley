@@ -1,10 +1,11 @@
 import { eq, inArray } from "drizzle-orm"
 import { describe, expect } from "vite-plus/test"
 
-import { session, twoFactor, user } from "../src/auth-schema.ts"
+import { session, twoFactor, user, verification } from "../src/auth-schema.ts"
 import type { Db } from "../src/client.ts"
 import {
   claimUnconfirmedAccount,
+  forgetTrustedDevices,
   listSessions,
   sessionToken,
 } from "../src/queries/accounts.ts"
@@ -79,6 +80,64 @@ describe("claimUnconfirmedAccount", () => {
       .from(twoFactor)
       .where(inArray(twoFactor.userId, [ana.id, bo.id]))
     expect(secrets).toEqual([{ userId: bo.id }])
+  })
+
+  test("forgets the devices trusted to skip the code", async ({ db }) => {
+    const ana = await makeUser(db)
+    await trustDevice(db, ana.id)
+
+    await claimUnconfirmedAccount(db, ana.id)
+
+    expect(await trustedDevices(db, ana.id)).toEqual([])
+  })
+})
+
+let devices = 0
+
+/**
+ * A device trusted to skip the two-factor code, as Better Auth's twoFactor
+ * plugin stores it: a verification row named `trust-device-…` whose value
+ * is the user's id.
+ */
+async function trustDevice(db: Db, userId: string) {
+  devices += 1
+  await db.insert(verification).values({
+    id: `verification-${devices}`,
+    identifier: `trust-device-${devices}`,
+    value: userId,
+    expiresAt: new Date(Date.now() + 86_400_000),
+  })
+}
+
+async function trustedDevices(db: Db, userId: string) {
+  const rows = await db
+    .select({ identifier: verification.identifier })
+    .from(verification)
+    .where(eq(verification.value, userId))
+  return rows.map((row) => row.identifier)
+}
+
+describe("forgetTrustedDevices", () => {
+  test("forgets every device the user trusted, and nothing else", async ({
+    db,
+  }) => {
+    const ana = await makeUser(db)
+    const bo = await makeUser(db)
+    await trustDevice(db, ana.id)
+    await trustDevice(db, ana.id)
+    await trustDevice(db, bo.id)
+    // A sign-in waiting for its code also names the user.
+    await db.insert(verification).values({
+      id: "verification-challenge",
+      identifier: "2fa-challenge",
+      value: ana.id,
+      expiresAt: new Date(Date.now() + 600_000),
+    })
+
+    await forgetTrustedDevices(db, ana.id)
+
+    expect(await trustedDevices(db, ana.id)).toEqual(["2fa-challenge"])
+    expect(await trustedDevices(db, bo.id)).toHaveLength(1)
   })
 })
 

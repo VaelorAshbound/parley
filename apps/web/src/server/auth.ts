@@ -15,7 +15,6 @@ import { betterAuth } from "better-auth/minimal"
 // captcha and lastLoginMethod have no path of their own in 1.7.5.
 import { captcha, lastLoginMethod } from "better-auth/plugins"
 import { anonymous } from "better-auth/plugins/anonymous"
-import { twoFactor } from "better-auth/plugins/two-factor"
 import { createElement } from "react"
 
 import { ChangeEmail } from "../emails/change-email"
@@ -30,6 +29,7 @@ import {
   TEST_GUESTS_PER_NETWORK,
 } from "./limits"
 import { log, logInfo } from "./log"
+import { twoFactorGuests, twoFactorSignIn } from "./two-factor"
 
 // Better Auth, built per request because the database client is per request
 // (spec §5 Auth).
@@ -64,6 +64,12 @@ export function createAuth({
   waitUntil: (promise: Promise<unknown>) => void
 }) {
   const sendEmail = createMailer(env)
+
+  /** Moves a guest's drafts and chats to the account they signed in to. */
+  async function linkGuest(guestId: string, userId: string) {
+    const { drafts } = await moveGuestData(db, { from: guestId, to: userId })
+    logInfo("guest_linked", { guestId, userId, drafts })
+  }
 
   return betterAuth({
     appName: "Parley",
@@ -214,27 +220,20 @@ export function createAuth({
       backgroundTasks: { handler: waitUntil },
     },
     plugins: [
+      // Before the anonymous plugin: a guest who signs in to an account
+      // with two-factor on is linked after the code, not after the
+      // password (server/two-factor.ts).
+      twoFactorSignIn(),
+      twoFactorGuests({ db, linkGuest }),
       // Guests: the first action that needs a session signs in anonymously.
       anonymous({
         // A guest signed up or signed in (email, Google, GitHub). Better
         // Auth deletes the guest right after this, and the drafts would go
         // with it (cascade): move them first. If this throws, the guest and
         // its drafts stay, and the user can try again.
-        onLinkAccount: async ({ anonymousUser, newUser }) => {
-          const { drafts } = await moveGuestData(db, {
-            from: anonymousUser.user.id,
-            to: newUser.user.id,
-          })
-          logInfo("guest_linked", {
-            guestId: anonymousUser.user.id,
-            userId: newUser.user.id,
-            drafts,
-          })
-        },
+        onLinkAccount: ({ anonymousUser, newUser }) =>
+          linkGuest(anonymousUser.user.id, newUser.user.id),
       }),
-      // Listed now because its tables are in the first migration; the
-      // settings screen comes in T23b.
-      twoFactor({ issuer: "Parley" }),
       turnstile(env),
       // A cookie only: "Last used" on the sign-in buttons.
       lastLoginMethod(),
