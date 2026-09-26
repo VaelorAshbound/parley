@@ -24,7 +24,8 @@ import { useUiStore } from "@/lib/ui-store"
 // The right panel (spec §1 Layout): the live document, where any value can be
 // clicked and edited in place. The field being edited is in the URL
 // (`?field=party1.email`), so a reload or a shared link opens the same
-// editor. The header has Share (T25) and Download (T24).
+// editor. The header has Share (T25) and Download (T24); on a phone they sit
+// in a bar at the bottom, under the thumb (brand.md canvas, Phone document).
 
 type Draft = {
   id: string
@@ -45,11 +46,12 @@ export function DocumentPanel({
   const { orpc } = useRouteContext({ from: "/_app/d/$draftId" })
   const panel = useRef<HTMLDivElement>(null)
   const download = useDownload(orpc, draft.id)
+  const chosen = draft.documentId !== null
 
   return (
     <section
       aria-label="Live document"
-      className="flex h-full min-w-0 flex-col bg-paper-deep"
+      className="relative flex h-full min-w-0 flex-col bg-paper-deep"
     >
       <header className="flex h-14 shrink-0 items-center gap-1.5 pr-3 pl-4">
         <FileTextIcon className="size-4 text-ink-2" aria-hidden="true" />
@@ -57,11 +59,11 @@ export function DocumentPanel({
           {name}
         </h2>
         <SaveStatus />
-        {draft.documentId !== null && (
-          <>
+        {chosen && (
+          <div className="flex items-center gap-1.5 max-md:hidden">
             <ShareMenu orpc={orpc} draftId={draft.id} />
             <DownloadMenu download={download} />
-          </>
+          </div>
         )}
         <Link
           to="."
@@ -86,7 +88,11 @@ export function DocumentPanel({
       </div>
       <div
         ref={panel}
-        className="min-h-0 flex-1 scroll-fade-y overflow-y-auto px-4 pb-12 md:px-9"
+        className={cn(
+          "min-h-0 flex-1 scroll-fade-y overflow-y-auto px-4 pb-12 md:px-9",
+          // Room for the phone's bar, so the page's end can scroll clear.
+          chosen && "max-md:pb-28"
+        )}
       >
         <div className="mx-auto max-w-[552px] rounded-sm bg-sheet px-6 py-10 shadow-sheet md:px-13 md:py-12">
           {draft.documentId === null ? (
@@ -103,6 +109,18 @@ export function DocumentPanel({
           )}
         </div>
       </div>
+      {chosen && (
+        // Frosted, so the page reads through it; solid paper when the
+        // system asks for less transparency (brand.md → Motion).
+        <div
+          role="toolbar"
+          aria-label="Share or download"
+          className="absolute inset-x-3 bottom-[calc(0.875rem+env(safe-area-inset-bottom))] grid grid-cols-2 gap-2 rounded-[20px] bg-background/78 p-2 shadow-float ring-1 ring-white/55 backdrop-blur-xl backdrop-saturate-180 md:hidden dark:ring-white/6 reduced-transparency:bg-background reduced-transparency:backdrop-blur-none"
+        >
+          <ShareMenu orpc={orpc} draftId={draft.id} placement="bar" />
+          <DownloadMenu download={download} placement="bar" />
+        </div>
+      )}
     </section>
   )
 }
