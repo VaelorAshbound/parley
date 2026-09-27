@@ -21,6 +21,13 @@ describe("billingProblem", () => {
     })
   })
 
+  it("says there is no billing before the first upgrade", () => {
+    expect(billingProblem({ code: "NO_BILLING", status: 404 })).toEqual({
+      message: "There is no billing yet. It starts when you upgrade.",
+      action: { label: "See Pro", href: "/pricing" },
+    })
+  })
+
   it("asks a signed-out visitor to sign in, back to Pricing", () => {
     expect(billingProblem({ code: "UNAUTHORIZED", status: 401 })).toEqual({
       message: "Sign in to upgrade.",

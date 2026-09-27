@@ -17,11 +17,22 @@ import type { Db } from "../client.ts"
  */
 export async function setPlan(
   db: Db,
-  { userId, plan, at }: { userId: string; plan: Plan; at: Date }
+  {
+    userId,
+    plan,
+    at,
+    customerId,
+  }: {
+    userId: string
+    plan: Plan
+    at: Date
+    /** Polar's id for the user as a customer, when the state names one. */
+    customerId?: string
+  }
 ) {
   const [updated] = await db
     .update(user)
-    .set({ plan, planUpdatedAt: at })
+    .set({ plan, planUpdatedAt: at, polarCustomerId: customerId })
     .where(
       and(
         eq(user.id, userId),
@@ -36,4 +47,13 @@ export async function setPlan(
     .from(user)
     .where(eq(user.id, userId))
   return current && { ...current, applied: false }
+}
+
+/** The user a Polar customer belongs to, from an earlier state. */
+export async function userOfPolarCustomer(db: Db, customerId: string) {
+  const [row] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.polarCustomerId, customerId))
+  return row?.id
 }

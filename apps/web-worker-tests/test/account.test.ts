@@ -1,7 +1,7 @@
 import { ORPCError, safe } from "@orpc/client"
 import { schema } from "@workspace/db"
 import { and, eq } from "drizzle-orm"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   browserClient,
@@ -11,6 +11,7 @@ import {
   origin,
   post,
 } from "./helpers"
+import { fakePolar } from "./polar"
 import { fakeResend } from "./resend"
 
 // Account settings (spec §5 Auth, T23), through the real /api app: what the
@@ -475,6 +476,14 @@ describe("changing the email", () => {
 })
 
 describe("deleting the account", () => {
+  // Deleting asks Polar to cancel any billing first (T26); these users
+  // never bought, so Polar has no customer for them.
+  let polar: ReturnType<typeof fakePolar>
+  beforeEach(() => {
+    polar = fakePolar()
+  })
+  afterEach(() => polar.restore())
+
   /** Every row that holds the user's data, by table. */
   async function rowsOf(userId: string) {
     const db = await database()

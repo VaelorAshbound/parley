@@ -27,7 +27,8 @@ import {
   billingPlugin,
   cancelBilling,
   checkoutAllowed,
-  closedEndpoints,
+  closedPaths,
+  portalAllowed,
   type BillingEnv,
 } from "./billing"
 import { createMailer } from "./email"
@@ -221,12 +222,9 @@ export function createAuth({
         if (ctx.path === "/verify-email")
           await newEmailNeedsItsAccount(ctx, env.BETTER_AUTH_SECRET)
         if (ctx.path === "/delete-user") await deleteNeedsThePassword(ctx)
-        if (ctx.path === "/checkout") await checkoutAllowed(ctx)
-        if (closedEndpoints.has(ctx.path))
-          throw APIError.from("NOT_FOUND", {
-            code: "NOT_FOUND",
-            message: "Not found",
-          })
+        // Polar (T26): checkout answers the body it runs with.
+        if (ctx.path === "/checkout") return checkoutAllowed(ctx, env)
+        if (ctx.path === "/customer/portal") await portalAllowed(ctx, env, db)
       }),
     },
     // Who signed in, out, and changed what: IDs only (spec §5 Auth).
@@ -239,12 +237,14 @@ export function createAuth({
         // New guests per network (spec §2 Limits). Better Auth counts per
         // IP and path, before the Turnstile check.
         "/sign-in/anonymous": guestsPerNetwork(env),
-        // Each is a call to Polar's API, which limits the whole
-        // organization; a person needs a few (T26).
-        "/checkout": { window: 60, max: 5 },
-        "/customer/portal": { window: 60, max: 10 },
+        // Signed by Polar and checked (T26); a burst of renewals must not
+        // be turned away, or Polar gives up on the endpoint. Checkout and
+        // the portal are limited per user (server/billing.ts).
+        "/polar/webhooks": false,
       },
     },
+    // Polar's routes Parley doesn't use (T26).
+    disabledPaths: closedPaths,
     advanced: {
       useSecureCookies: true,
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
