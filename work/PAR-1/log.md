@@ -133,3 +133,6 @@ Wave C paused at the owner's request (RAM: another project's session needs the m
 
 ### 2026-09-26T18:17:26Z
 Session end. Finished: wave B2 (T25, T27, T28) built, reviewed, fixed, merged; CI green on 5d273a6. Previews use the capped test OpenRouter key; Share menu kept (owner). Filed PAR-13..16; PAR-8 notes (cold dev server fails ~half locally, same before B2). 28 of 42 tasks done. Wave C started, then paused for RAM (owner). Next session: resume wave C from its 4 worktrees (wf_af3c2e47-d76-1..4, base 5d273a6), re-checking half-written edits; then merge, gate, push, CI, STOP at Checkpoint 6. Open: check which OpenRouter key the existing PAR-1-parley Preview uses; owner checks (one PDF, one DOCX in Word, chat_turn log).
+
+### 2026-09-27T16:19:53Z
+Owner decision: wave C goes one task at a time, not in parallel, starting in a fresh session. Each task continues from its saved worktree (wf_af3c2e47-d76-1=T23b, -2=T26, -3=T31, -4=T37; base 5d273a6): check half-written edits, build, test, review, simplify, merge, gate, push, CI. Then STOP at Checkpoint 6.
