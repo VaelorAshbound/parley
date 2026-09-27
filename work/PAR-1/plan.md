@@ -60,7 +60,7 @@ Loaded skills are binding workflows (CLAUDE.md). At the start of each task, **lo
 - process: `incremental-implementation`, `test-driven-development`, `source-driven-development` (check APIs in the docs before coding), `git-workflow-and-versioning` (every commit);
 - `observability-and-instrumentation` whenever logs or metrics are touched;
 - `doubt-driven-development` for decisions that are hard to reverse (schema, auth, billing, money paths);
-- before each checkpoint: `code-review-and-quality` → `code-simplification` (`/review`, `/code-simplify`).
+- before each checkpoint: `/test` → `/review` → `/code-simplify`.
 
 | Task | Process skills | Domain skills |
 |---|---|---|
@@ -111,8 +111,6 @@ Skills that aren't used, and why:
 - `pick-ui-library` / `prototype`: only when you ask for them.
 
 ## Parallel run (owner decision, 2026-09-25)
-
-Tasks T21–T40 run as parallel sub-agents, in waves that follow the dependency graph. Spec and plan stay as approved; each task goes /build → /test → /review → /code-simplify, and /ship runs once at T40.
 
 | Wave | Tasks | Starts after |
 |---|---|---|
