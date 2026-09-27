@@ -7,9 +7,12 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { anonymous } from "better-auth/plugins/anonymous"
 import { twoFactor } from "better-auth/plugins/two-factor"
 
+import { billingFields } from "../src/billing-fields.ts"
+
 export const auth = betterAuth({
   database: drizzleAdapter({}, { provider: "pg" }),
   emailAndPassword: { enabled: true },
+  user: { additionalFields: billingFields },
   rateLimit: { storage: "database" },
   plugins: [anonymous(), twoFactor()],
 })

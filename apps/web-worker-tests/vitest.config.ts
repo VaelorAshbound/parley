@@ -48,6 +48,10 @@ export default defineConfig({
           GITHUB_CLIENT_SECRET: "test-github-secret",
           GOOGLE_CLIENT_ID: "test-google-client",
           GOOGLE_CLIENT_SECRET: "test-google-secret",
+          // Polar: the tests fake its API (test/polar.ts) and sign their
+          // own webhooks with this secret.
+          POLAR_ACCESS_TOKEN: "polar_oat_test_only_no_real_calls",
+          POLAR_WEBHOOK_SECRET: "polar_whs_test_only_secret",
         },
       },
     })),

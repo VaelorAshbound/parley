@@ -1,14 +1,16 @@
-import { Link } from "@tanstack/react-router"
 import { DISCLAIMER, type DocumentId } from "@workspace/documents"
 import { Badge } from "@workspace/ui/components/badge"
-import { Button, buttonVariants } from "@workspace/ui/components/button"
-import { SidebarTrigger, useSidebar } from "@workspace/ui/components/sidebar"
+import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { cn } from "@workspace/ui/lib/utils"
 import { ArrowRightIcon } from "lucide-react"
 import { useRef, type ReactNode } from "react"
 
-import { LogoMark } from "@/components/logo"
+import {
+  CommonPaperLink,
+  LicenseLink,
+  SiteFooter,
+  SiteHeader,
+} from "@/components/site"
 import { Composer } from "@/features/chat/composer"
 import { documentList } from "@/lib/documents"
 
@@ -48,7 +50,7 @@ export function Landing({
     // The art and the two-column library follow the room the page has, not
     // the window: an open sidebar takes 16rem of it.
     <div className="@container flex min-h-svh flex-col">
-      <LandingHeader isAccount={isAccount} />
+      <SiteHeader isAccount={isAccount} />
       <main className="flex w-full flex-1 flex-col px-6 pt-6 pb-10 md:px-12 md:pt-10 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
         <section className="grid gap-x-10 @min-[72rem]:grid-cols-[minmax(0,560px)_minmax(0,1fr)] @min-[84rem]:grid-cols-[600px_minmax(0,1fr)] @min-[84rem]:pt-4">
           <div className="flex max-w-150 flex-col">
@@ -205,83 +207,8 @@ export function Landing({
           </Button>
         </section>
 
-        <footer className="mt-16 flex flex-col gap-4 border-t pt-5.5 text-[12.5px] text-muted-foreground md:mt-18 md:flex-row md:items-center md:justify-between md:gap-6">
-          <span className="flex items-center gap-2 text-foreground">
-            <LogoMark className="size-4.5" />
-            <span className="font-serif text-base font-medium tracking-[-0.02em]">
-              Parley
-            </span>
-          </span>
-          <span>
-            Standard terms © <CommonPaperLink />, <LicenseLink /> · Not legal
-            advice
-          </span>
-          {!isAccount && (
-            <nav aria-label="Footer" className="flex gap-5">
-              <Link to="/sign-in" className="text-ink-2 hover:text-foreground">
-                Sign in
-              </Link>
-            </nav>
-          )}
-        </footer>
+        <SiteFooter isAccount={isAccount} />
       </main>
     </div>
-  )
-}
-
-/** The wordmark and, for a visitor, the way to sign in. */
-function LandingHeader({ isAccount }: { isAccount: boolean }) {
-  // An open sidebar already shows the wordmark beside this one.
-  const { state } = useSidebar()
-  return (
-    <header className="flex h-14 shrink-0 items-center gap-1 px-3 md:h-17 md:pr-14 md:pl-12 @min-[84rem]:pl-23">
-      <SidebarTrigger className="md:hidden" />
-      <Link
-        to="/"
-        className={cn(
-          "px-1 font-serif text-[1.4375rem] font-medium tracking-[-0.02em] md:px-0",
-          state === "expanded" && "md:invisible"
-        )}
-      >
-        Parley
-      </Link>
-      {!isAccount && (
-        <Link
-          to="/sign-in"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "ml-auto h-9 px-4"
-          )}
-        >
-          Sign in
-        </Link>
-      )}
-    </header>
-  )
-}
-
-function CommonPaperLink() {
-  return (
-    <a
-      href="https://commonpaper.com/standards/"
-      target="_blank"
-      rel="noreferrer"
-      className="underline decoration-input underline-offset-2 hover:text-foreground"
-    >
-      Common Paper
-    </a>
-  )
-}
-
-function LicenseLink() {
-  return (
-    <a
-      href="https://creativecommons.org/licenses/by/4.0/"
-      target="_blank"
-      rel="noreferrer"
-      className="underline decoration-input underline-offset-2 hover:text-foreground"
-    >
-      CC BY 4.0
-    </a>
   )
 }

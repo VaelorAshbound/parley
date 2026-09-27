@@ -1,7 +1,19 @@
 import { Temporal } from "temporal-polyfill"
 import { describe, expect, it } from "vite-plus/test"
 
-import { decideExport, FREE_DOCUMENTS_PER_MONTH, monthStart } from "./quota"
+import {
+  decideExport,
+  FREE_DOCUMENTS_PER_MONTH,
+  monthStart,
+  planOf,
+} from "./quota"
+
+describe("planOf", () => {
+  it("is the plan Polar's webhooks set on the user (T26)", () => {
+    expect(planOf({ plan: "pro" })).toBe("pro")
+    expect(planOf({ plan: "free" })).toBe("free")
+  })
+})
 
 describe("monthStart", () => {
   it("is midnight UTC on the first of the month", () => {

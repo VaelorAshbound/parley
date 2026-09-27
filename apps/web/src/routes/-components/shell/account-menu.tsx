@@ -10,23 +10,27 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
 import { SidebarMenuButton } from "@workspace/ui/components/sidebar"
+import { Spinner } from "@workspace/ui/components/spinner"
+import { toast } from "@workspace/ui/components/toast"
 import {
   CreditCardIcon,
   LogInIcon,
   LogOutIcon,
   SettingsIcon,
+  SparklesIcon,
   UserRoundIcon,
 } from "lucide-react"
 
 import { reloadTo } from "@/features/auth/reload-to"
+import { usePortal } from "@/features/billing/use-billing"
 import { authClient } from "@/lib/auth-client"
 import type { Viewer } from "@/lib/session"
 
-/** The plan's name on the badge. T26 adds Pro. */
-const plan = "Free"
+const planNames = { free: "Free", pro: "Pro" } as const
 
 // The sidebar's account row (spec §1 Layout). Guests are asked to sign in,
-// which keeps their draft; accounts get their name, plan and a menu.
+// which keeps their draft; accounts get their name, plan and a menu:
+// Settings, Billing (Pro) or Upgrade to Pro (Free), and Sign out.
 export function AccountMenu({ viewer }: { viewer: Viewer }) {
   const location = useLocation()
 
@@ -47,7 +51,7 @@ export function AccountMenu({ viewer }: { viewer: Viewer }) {
         <UserRoundIcon />
         <span className="truncate">{viewer.name}</span>
         <Badge variant="secondary" className="ml-auto">
-          {plan}
+          {planNames[viewer.plan]}
         </Badge>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="min-w-56">
@@ -63,14 +67,14 @@ export function AccountMenu({ viewer }: { viewer: Viewer }) {
             <SettingsIcon />
             Settings
           </DropdownMenuItem>
-          {/* The Polar portal comes with T26. */}
-          <DropdownMenuItem disabled>
-            <CreditCardIcon />
-            Billing
-            <Badge variant="outline" className="ml-auto">
-              Soon
-            </Badge>
-          </DropdownMenuItem>
+          {viewer.plan === "pro" ? (
+            <BillingItem />
+          ) : (
+            <DropdownMenuItem render={<Link to="/pricing" />}>
+              <SparklesIcon />
+              Upgrade to Pro
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -86,5 +90,25 @@ export function AccountMenu({ viewer }: { viewer: Viewer }) {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+/**
+ * Polar's billing portal (T26). The menu stays open with a spinner while
+ * the portal's link is made, then the page goes there.
+ */
+function BillingItem() {
+  const portal = usePortal((problem) =>
+    toast.add({ title: "Billing didn’t open", description: problem.message })
+  )
+  return (
+    <DropdownMenuItem
+      closeOnClick={false}
+      disabled={portal.pending}
+      onClick={portal.open}
+    >
+      {portal.pending ? <Spinner /> : <CreditCardIcon />}
+      Billing
+    </DropdownMenuItem>
   )
 }
