@@ -51,7 +51,10 @@ export default defineConfig({
           // Polar: the tests fake its API (test/polar.ts) and sign their
           // own webhooks with this secret.
           POLAR_ACCESS_TOKEN: "polar_oat_test_only_no_real_calls",
-          POLAR_WEBHOOK_SECRET: "polar_whs_test_only_secret",
+          // A Standard Webhooks secret, as Polar makes them since
+          // 2026-09-08 (test/polar.ts signs with its base64 key).
+          POLAR_WEBHOOK_SECRET:
+            "whsec_dGVzdCBvbmx5OiBub3QgYSByZWFsIHNlY3JldCBrZXk=",
         },
       },
     })),

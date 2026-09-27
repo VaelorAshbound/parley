@@ -28,8 +28,9 @@ export function stateFor<T extends State>(
 
 /**
  * Signs a body the way Polar does (Standard Webhooks: HMAC-SHA256 over
- * "id.timestamp.body", keyed with the secret's bytes), independently of the
- * SDK the app verifies with.
+ * "id.timestamp.body", keyed with the base64 bytes after `whsec_`, for
+ * secrets made since 2026-09-08), independently of the library the app
+ * verifies with.
  */
 export async function sign(
   body: string,
@@ -41,7 +42,9 @@ export async function sign(
 ) {
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    Uint8Array.from(atob(secret.replace(/^whsec_/, "")), (c) =>
+      c.charCodeAt(0)
+    ),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]

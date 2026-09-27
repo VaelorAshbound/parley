@@ -28,6 +28,7 @@ import {
   cancelBilling,
   checkoutAllowed,
   closedPaths,
+  polarWebhooks,
   portalAllowed,
   type BillingEnv,
 } from "./billing"
@@ -269,7 +270,8 @@ export function createAuth({
       // A cookie only: "Last used" on the sign-in buttons.
       lastLoginMethod(),
       // Parley Pro: Polar sandbox checkout, portal and webhooks (T26).
-      billingPlugin({ db, env, origin }),
+      billingPlugin({ env, origin }),
+      polarWebhooks({ db, env }),
       // No tanstackStartCookies() (spec §5 Auth asked for it; T21 found it
       // does nothing here and breaks things): sign-in, sign-up and sign-out
       // go through /api/auth, whose responses carry their own cookies, and
