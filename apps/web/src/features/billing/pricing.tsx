@@ -70,11 +70,15 @@ export function Pricing({
           {!isAccount && (
             <Link
               to="/"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm text-ink-2 hover:text-foreground"
+              className="mt-4 text-sm text-balance text-ink-2 hover:text-foreground"
             >
               No account? Start a draft now: {GUEST_DRAFTS} draft,{" "}
               {DAILY_MESSAGES.guest} messages a day.
-              <ArrowRightIcon className="size-3.5" aria-hidden="true" />
+              {/* In the text, so it wraps with the last word. */}
+              <ArrowRightIcon
+                className="ml-1.5 inline size-3.5 align-[-0.125em]"
+                aria-hidden="true"
+              />
             </Link>
           )}
         </section>
@@ -218,7 +222,7 @@ function ProAction({ isAccount, pro }: { isAccount: boolean; pro: boolean }) {
       <Link
         to="/sign-up"
         search={{ redirect: "/pricing" }}
-        className={cn(buttonVariants({ variant: "secondary" }), wide)}
+        className={cn(buttonVariants(), wide)}
       >
         Upgrade to Pro
       </Link>
@@ -260,13 +264,7 @@ function PolarButton({
 } & ReturnType<typeof useCheckout>) {
   return (
     <div className="flex flex-col gap-3">
-      <Button
-        type="button"
-        variant="secondary"
-        className={wide}
-        disabled={pending}
-        onClick={open}
-      >
+      <Button type="button" className={wide} disabled={pending} onClick={open}>
         {pending && <Spinner data-icon="inline-start" />}
         {pending ? pendingLabel : label}
       </Button>

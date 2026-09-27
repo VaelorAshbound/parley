@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "@tanstack/react-router"
 import { useEffect } from "react"
 
 import { authClient } from "@/lib/auth-client"
@@ -64,17 +65,20 @@ const TRIES = 30
 /**
  * After Polar's checkout: waits for its webhook to turn Pro on, asking for
  * the session fresh from the database (the cookie cache may say Free for 5
- * more minutes). Each answer also refreshes the viewer, so the plan badge
+ * more minutes). The answer also refreshes the viewer, so the plan badge
  * in the sidebar changes with the page.
  */
 export function useUpgradeWait(checkoutId: string | undefined) {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const queryKey = ["billing", "upgrade", checkoutId]
   const wait = useQuery({
     queryKey,
     queryFn: async () => {
       const viewer = await freshViewer()
       queryClient.setQueryData(viewerQuery.queryKey, viewer)
+      // The sidebar reads the viewer from the route's context.
+      if (viewer?.plan === "pro") await router.invalidate()
       return viewer
     },
     enabled: checkoutId !== undefined,

@@ -302,9 +302,15 @@ describe("checkout", () => {
     polar.answer(({ method, path }) =>
       method === "POST" && path === "/v1/checkouts/"
         ? Response.json(checkoutCreated, { status: 201 })
-        : undefined
+        : method === "POST" && path === "/v1/customers/"
+          ? Response.json({ id: "cus-new" }, { status: 201 })
+          : undefined
     )
   )
+
+  /** The calls that made a checkout session. */
+  const checkouts = () =>
+    polar.calls.filter(({ path }) => path === "/v1/checkouts/")
 
   it("sends a verified free user to Polar's checkout for Pro", async () => {
     const { cookie, userId } = await newAccount()
@@ -316,8 +322,8 @@ describe("checkout", () => {
       url: checkoutCreated.url,
       redirect: true,
     })
-    expect(polar.calls).toHaveLength(1)
-    expect(polar.calls[0]?.body).toMatchObject({
+    expect(checkouts()).toHaveLength(1)
+    expect(checkouts()[0]?.body).toMatchObject({
       products: [checkoutCreated.product_id],
       external_customer_id: userId,
       success_url: "http://localhost:3000/pricing?checkout_id={CHECKOUT_ID}",
@@ -371,7 +377,35 @@ describe("checkout", () => {
       )
 
     expect(statuses).toEqual([200, 200, 200, 200, 200, 429])
-    expect(polar.calls).toHaveLength(5)
+    expect(checkouts()).toHaveLength(5)
+  })
+
+  it("fills in the confirmed email: the buyer is who Parley knows", async () => {
+    const { cookie, email, userId } = await newAccount()
+
+    await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(polar.calls[0]).toMatchObject({
+      method: "POST",
+      path: "/v1/customers/",
+      body: { external_id: userId, email },
+    })
+  })
+
+  it("still opens checkout when Polar already has this customer", async () => {
+    const { cookie } = await newAccount()
+    polar.answer(({ method, path }) =>
+      path === "/v1/customers/"
+        ? Response.json({ detail: "exists" }, { status: 422 })
+        : method === "POST" && path === "/v1/checkouts/"
+          ? Response.json(checkoutCreated, { status: 201 })
+          : undefined
+    )
+
+    const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(response.status).toBe(200)
+    expect(checkouts()).toHaveLength(1)
   })
 
   it.each([

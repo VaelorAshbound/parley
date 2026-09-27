@@ -244,7 +244,34 @@ export async function checkoutAllowed(ctx: HookContext, env: BillingEnv) {
       code: "ALREADY_PRO",
       message: "You already have Pro.",
     })
+  await makeCustomer(env, user)
   return { context: { body: { ...body.data, allowDiscountCodes: false } } }
+}
+
+/**
+ * Makes the Polar customer with the confirmed email and name, so checkout
+ * fills them in and the buyer is who Parley knows (the plugin sends only
+ * our user id). Polar already having the customer (a second try), or the
+ * email (PAR-17), is fine: checkout then asks for the email, as it would.
+ */
+async function makeCustomer(
+  env: BillingEnv,
+  user: { id: string; email: string; name: string }
+) {
+  try {
+    await polarApi(env).customers.create({
+      externalId: user.id,
+      email: user.email,
+      name: user.name,
+    })
+  } catch (error) {
+    log(
+      "warn",
+      "polar_customer_not_made",
+      { userId: user.id, ...statusOf(error) },
+      error
+    )
+  }
 }
 
 /**
