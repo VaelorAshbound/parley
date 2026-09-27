@@ -142,3 +142,6 @@ T37 merged (68786f9) and pushed; CI green on 5ec4890 (Workers Builds + e2e). Rev
 
 ### 2026-09-27T17:57:47Z
 Session end. Finished: T37 (empty-state and first-run polish) built, reviewed, fixed, merged (68786f9), pushed; CI green on 5ec4890. 29 of 42 tasks done. Next session: T23b from worktree wf_af3c2e47-d76-1 (base 5d273a6; 2 commits + uncommitted edits: check them first), then T26 (-2), T31 (-3), one at a time, then Checkpoint 6 with /test, /review, /code-simplify per checkpoint (new rule). Local e2e needs 'pnpm db:dev' running. Open: check which OpenRouter key the PAR-1-parley Preview uses; owner checks (one PDF, one DOCX in Word, chat_turn log).
+
+### 2026-09-27T18:20:02Z
+T23b merged (ffdb8d1) and pushed; CI green on ffdb8d1 (Workers Builds + e2e). Continued from worktree wf_af3c2e47-d76-1: server + code step were committed; the Settings card + e2e were staged and complete. Fixed on the way: a type error (enable can reply method otp), 2 a11y lint notes, account.get test missing the twoFactor field. Gate: check, 1124 unit, 388 worker, db:check, e2e two-factor Chromium + Firefox 4/4. Screens checked at 1440 light/dark and 375. Next: T26 from worktree wf_af3c2e47-d76-2 (1 commit + edits: check them first), then T31 (-3), then Checkpoint 6.
