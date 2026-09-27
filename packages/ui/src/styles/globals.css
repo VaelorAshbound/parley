@@ -10,6 +10,8 @@
 @import "@fontsource-variable/instrument-sans/wght.css";
 
 @custom-variant dark (&:is(.dark *));
+/* Frosted surfaces turn solid for people who ask for less transparency. */
+@custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
@@ -113,6 +115,7 @@
     Georgia, serif;
   --font-heading: var(--font-serif);
   --shadow-sheet: var(--sheet-shadow);
+  --shadow-float: var(--float-shadow);
 
   /* Parley tokens beyond the shadcn set. */
   --color-paper-deep: var(--paper-deep);
@@ -191,6 +194,9 @@
   --sheet-shadow:
     0 0 0 1px rgb(27 26 23 / 0.05), 0 2px 4px rgb(27 26 23 / 0.04),
     0 30px 60px -24px rgb(27 26 23 / 0.28);
+  /* Something that floats over the page: a card, a bubble, a bar. */
+  --float-shadow:
+    0 1px 2px rgb(27 26 23 / 0.06), 0 14px 32px -12px rgb(27 26 23 / 0.24);
 
   --background: #f6f4ee;
   --foreground: #1b1a17;
@@ -250,6 +256,8 @@
   --sheet-shadow:
     0 0 0 1px rgb(0 0 0 / 0.15), 0 2px 4px rgb(0 0 0 / 0.12),
     0 30px 60px -24px rgb(0 0 0 / 0.84);
+  --float-shadow:
+    0 1px 2px rgb(0 0 0 / 0.18), 0 14px 32px -12px rgb(0 0 0 / 0.6);
 
   --background: #141412;
   --foreground: #edeae3;
@@ -446,5 +454,98 @@
   .check-in,
   .enter {
     animation: fade-in 200ms ease both;
+  }
+}
+
+/* The start page's one reveal on load (brand.md → Motion): the sheets fan
+   out, the first message pops in, Purpose inks in, its change marker
+   appears, and a highlighter sweeps under the headline. No loops. */
+@layer components {
+  .hero-marker {
+    --ink: var(--highlighter);
+    background-image: linear-gradient(
+      transparent 62%,
+      var(--ink) 62% 92%,
+      transparent 92%
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    box-decoration-break: clone;
+    animation: ink-sweep 900ms var(--ease-in-out) 700ms both;
+  }
+  .hero-rise {
+    animation: hero-rise 800ms var(--ease-out) 150ms both;
+  }
+  .hero-fan-l {
+    animation: hero-fan-l 1000ms var(--ease-out) 350ms both;
+  }
+  .hero-fan-r {
+    animation: hero-fan-r 1000ms var(--ease-out) 450ms both;
+  }
+  /* The delay is set where it is used. */
+  .hero-pop {
+    animation: hero-pop 600ms var(--ease-out) both;
+  }
+  .hero-ink {
+    --ink: var(--highlighter);
+    background-image: linear-gradient(var(--ink), var(--ink));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-radius: 2px;
+    box-decoration-break: clone;
+    animation:
+      ink-sweep 700ms var(--ease-out) 1500ms both,
+      hero-ink 600ms var(--ease-out) 1500ms both,
+      ink-settle 1600ms ease 3600ms forwards;
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+}
+@keyframes hero-fan-l {
+  from {
+    transform: rotate(6deg) translateY(18px);
+    opacity: 0;
+  }
+}
+@keyframes hero-fan-r {
+  from {
+    transform: rotate(-4deg) translateY(18px);
+    opacity: 0;
+  }
+}
+@keyframes hero-pop {
+  from {
+    transform: translateY(8px) scale(0.97);
+    opacity: 0;
+  }
+}
+@keyframes hero-ink {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: things fade in place, and the highlights fade in as
+   color only (brand.md → Motion). */
+@media (prefers-reduced-motion: reduce) {
+  .hero-marker {
+    animation: ink-fade 320ms ease 700ms both;
+  }
+  .hero-rise,
+  .hero-fan-l,
+  .hero-fan-r,
+  .hero-pop {
+    animation: fade-in 220ms ease both;
+  }
+  .hero-ink {
+    animation:
+      ink-fade 320ms ease 1500ms both,
+      ink-settle 1600ms ease 3600ms forwards;
   }
 }
