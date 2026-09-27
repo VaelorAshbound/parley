@@ -10,5 +10,10 @@ describe("tierOf", () => {
   it("names a signed-up user's plan", () => {
     expect(tierOf({ isAnonymous: false })).toBe("free")
     expect(tierOf({ isAnonymous: null })).toBe("free")
+    expect(tierOf({ isAnonymous: false, plan: "free" })).toBe("free")
+  })
+
+  it("names a Pro user's plan (T26)", () => {
+    expect(tierOf({ isAnonymous: false, plan: "pro" })).toBe("pro")
   })
 })

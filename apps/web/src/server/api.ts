@@ -31,6 +31,7 @@ async function services(c: Context<AppEnv>) {
   const auth = createAuth({
     db,
     env: c.env,
+    origin: new URL(c.req.url).origin,
     waitUntil: (promise) => c.executionCtx.waitUntil(promise),
   })
   return {

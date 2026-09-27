@@ -12,11 +12,11 @@ export type Plan = "free" | "pro"
 export type ExportFormat = "pdf" | "docx"
 
 /**
- * The user's plan. Everyone is on Free until T26 reads the Polar
- * subscription here.
+ * The user's plan: Polar's webhooks keep it on the user row (T26,
+ * server/billing.ts), so the session carries it.
  */
-export function planOf(_user: { id: string }): Plan {
-  return "free"
+export function planOf(user: { plan?: string | null }): Plan {
+  return user.plan === "pro" ? "pro" : "free"
 }
 
 /** The first moment of the calendar month (UTC) that `now` is in. */
