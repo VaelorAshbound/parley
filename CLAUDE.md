@@ -65,6 +65,7 @@ Load `agent-skills:git-workflow-and-versioning` before any branch, commit or mer
 # Session workflow
 
 - A session works one `wi` item (`wi --help`). Start with `wi show <ID>`; if I did not name one, ask.
-- Phase = next skill: define -> /spec, plan -> /plan, build -> /build, verify -> /test, review -> /review then /code-simplify, ship -> /ship. Advance the phase when the phase's artifact is approved.
+- Follow the agent-skills lifecycle (`using-agent-skills`), sized to the work. Advance a phase when its artifact is approved.
+- Size the process to the task: "Not every task needs every skill" (`using-agent-skills`). Say which phases were skipped and why.
 - Artifacts go in `work/<ID>/` and are committed as they happen, never left in conversation.
 - Session end: `wi log <ID>` with what finished and what is next. New work found on the way: `wi new --origin <ID>`.
