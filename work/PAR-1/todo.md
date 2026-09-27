@@ -672,7 +672,18 @@
   - Files: `apps/web/src/server/rpc/share.ts`, `src/routes/s.$token.tsx`, `src/features/share/*`
   - Deps: T21, T16
 
-- [ ] **T26: Polar sandbox: Pro plan** (M)
+- [x] **T26: Polar sandbox: Pro plan** (M)
+  - Done 2026-09-27. Skills: build, incremental-implementation, doubt-driven-development (one fresh adversarial review; cross-model offered, owner skipped), security-and-hardening, test-driven-development, frontend-ui-engineering, documentation-and-adrs, git-workflow-and-versioning; better-auth-best-practices, cloudflare:wrangler, firecrawl-search (Polar's webhook docs). Checked:
+    - Gate: `pnpm check`; `pnpm test` 1145; `pnpm test:workers` 435 (billing 46: webhook state, deleted customers, gone accounts, checkout guard and per-user limit, portal, delete cancels billing); `pnpm db:check`. e2e `pricing.spec` + `first-run.spec` + `account.spec` Chromium + Firefox. CI green on the recreated Preview.
+    - **Real sandbox run on the Preview** (test card 4242…): checkout with the confirmed email filled in → Polar's webhook → `pro` → cancel at period end → still `pro` → revoke (period ends) → `free`.
+    - Screenshots at 1440 light and dark, and 375: visitor, Free, Pro, the wait after checkout, the account menu, a confirm-your-email note.
+  - Built: plan on the user row (migration 0004, `plan`, `plan_updated_at`, `polar_customer_id`); `/pricing` from the design canvas; plan badge, Billing (portal) or Upgrade to Pro in the account menu; Pro gets Word, no monthly limit and the Pro AI budget. ADR-0008.
+  - Found and fixed on the way:
+    - Review (15 findings): deleting an account always cancels billing first; a paid state for a gone account is canceled; each webhook reads Polar's current state; per-user limit (`BILLING_RATE_LIMITER`, 5/min); portal POST-only for real customers; no discount codes; `disabledPaths`; no IP limit on the webhook; 10 s timeout.
+    - Real run: Polar secrets made since 2026-09-08 are Standard Webhooks secrets; the plugin's 0.x SDK (0.49 too) can't check them, so every real webhook failed and Polar disabled the endpoint. Parley has its own webhook route now (`standardwebhooks`, both keys, as Polar's docs say); tests sign the new way. Endpoint re-enabled.
+    - Checkout showed an empty email: the Polar customer is now made first with the confirmed email.
+    - Previews: Polar secrets in the Preview base config; the `PAR-1-parley` Preview was deleted and recreated (owner OK) so it picks them up. Neon `preview` branch migrated (0004). The sandbox webhook points at the PAR-1-parley Preview.
+  - Open: production needs its own Polar webhook endpoint + secrets and migration 0004 (T38, owner OK). PAR-17.
   - Accept:
     - `@polar-sh/better-auth` with `checkout`, `portal` and `webhooks`. The Pro product is set up in the sandbox. There is a `/pricing` page.
     - Webhooks turn Pro on and off (subscription active or canceled). Gating (DOCX, unlimited documents, higher daily limits) reads the plan.
