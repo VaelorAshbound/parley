@@ -136,3 +136,6 @@ Session end. Finished: wave B2 (T25, T27, T28) built, reviewed, fixed, merged; C
 
 ### 2026-09-27T16:19:53Z
 Owner decision: wave C goes one task at a time, not in parallel, starting in a fresh session. Each task continues from its saved worktree (wf_af3c2e47-d76-1=T23b, -2=T26, -3=T31, -4=T37; base 5d273a6): check half-written edits, build, test, review, simplify, merge, gate, push, CI. Then STOP at Checkpoint 6.
+
+### 2026-09-27T17:34:10Z
+Owner decision: test, review and simplify run per checkpoint over all its tasks, not per task (plan.md 'One task at a time'). Each task is /build only (tests written first). The per-task loop in 'Parallel run' was a session's mistake, not an owner decision. Next: T23b, T26, T31, T37 one at a time from their worktrees, then Checkpoint 6: /test, /review, /code-simplify over T22-T37's wave B+C tasks, then owner review.

@@ -110,7 +110,16 @@ Skills that aren't used, and why:
 - `resend:agent-email-inbox`: there is no inbound email.
 - `pick-ui-library` / `prototype`: only when you ask for them.
 
-## Parallel run (owner decision, 2026-09-25)
+## One task at a time (owner decision, 2026-09-27)
+
+Replaces the parallel run below from wave C on. Two changes:
+
+- **One task at a time**, not parallel waves. Parallel agents ran the 16 GB laptop out of memory (wave C was paused for it). Each paused wave C task goes on from its saved worktree (`.claude/worktrees/wf_af3c2e47-d76-1`=T23b, `-2`=T26, `-3`=T31, `-4`=T37; base 5d273a6).
+- **Test, review and simplify run per checkpoint, not per task.** Each task is only /build (which still writes its tests first, TDD). At each checkpoint: /test, then /review, then /code-simplify over all the tasks since the last checkpoint. This is what the "Always on" list above said; the parallel run wrongly made it per task, which tripled the agent cost of each wave. /ship still runs once at T40.
+
+The rules below (merge gate, CI check, cloud, Resend, RAM lock) still apply.
+
+## Parallel run (owner decision, 2026-09-25; replaced 2026-09-27)
 
 Tasks T21–T40 run as parallel sub-agents, in waves that follow the dependency graph. Spec and plan stay as approved; each task goes /build → /test → /review → /code-simplify, and /ship runs once at T40.
 
