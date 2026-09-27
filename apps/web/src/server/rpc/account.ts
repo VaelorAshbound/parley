@@ -43,6 +43,9 @@ export const account = {
       hasPassword: ids.includes("credential"),
       providers: ids.filter(isProvider),
       freshUntil: await freshUntil(context.auth, context.session),
+      // Two-factor sign-in (T23b). Turning it on or off renews this
+      // session, and with it the cookie cache this is read from.
+      twoFactor: context.user.twoFactorEnabled === true,
     }
   }),
 

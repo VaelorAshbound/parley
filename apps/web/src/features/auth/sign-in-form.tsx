@@ -1,5 +1,5 @@
 import { revalidateLogic } from "@tanstack/react-form"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -35,6 +35,7 @@ export function SignInForm({
   lastUsed: boolean
 }) {
   const turnstile = useTurnstile(siteKey)
+  const navigate = useNavigate()
   const [error, setError] = useState<string>()
 
   const form = useAppForm({
@@ -48,9 +49,16 @@ export function SignInForm({
         setError(humanCheckFailed)
         return
       }
-      const { error } = await authClient.signIn.email(value, { headers })
+      const { data, error } = await authClient.signIn.email(value, {
+        headers,
+      })
       if (error) {
         setError(authErrorMessage(error))
+        return
+      }
+      // Two-factor sign-in is on: the code comes next, no session yet.
+      if ("twoFactorRedirect" in data && data.twoFactorRedirect) {
+        await navigate({ to: "/two-factor", search: { redirect: returnTo } })
         return
       }
       reloadTo(returnTo)

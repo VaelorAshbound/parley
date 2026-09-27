@@ -19,6 +19,8 @@ export function auditHooks(): Hooks {
   // (Better Auth 1.7 gives it no old row to compare with).
   const changingEmail = new WeakSet<object>()
   const changingPassword = new WeakSet<object>()
+  // Two-factor sign-in turned on (the first code was right) or off (T23b).
+  const turningTwoFactor = new WeakMap<object, boolean>()
 
   return {
     session: {
@@ -65,10 +67,17 @@ export function auditHooks(): Hooks {
       update: {
         before: async (data, ctx) => {
           if (ctx && typeof data.email === "string") changingEmail.add(ctx)
+          if (ctx && typeof data.twoFactorEnabled === "boolean")
+            turningTwoFactor.set(ctx, data.twoFactorEnabled)
         },
         after: async (user, ctx) => {
           if (ctx && changingEmail.has(ctx))
             logInfo("email_changed", { userId: user.id })
+          const twoFactor = ctx ? turningTwoFactor.get(ctx) : undefined
+          if (twoFactor !== undefined)
+            logInfo(twoFactor ? "two_factor_on" : "two_factor_off", {
+              userId: user.id,
+            })
         },
       },
       delete: {

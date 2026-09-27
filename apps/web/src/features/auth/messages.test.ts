@@ -3,6 +3,7 @@ import { describe, expect, it } from "vite-plus/test"
 import {
   authErrorMessage,
   emailLinkErrorMessage,
+  needsNewSignIn,
   oauthErrorMessage,
 } from "./messages"
 
@@ -47,6 +48,38 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage({ code: "SESSION_EXPIRED", status: 400 })).toBe(
       "For your safety, please sign in again first."
     )
+  })
+
+  it("says a code from the authenticator app is wrong", () => {
+    expect(authErrorMessage({ code: "INVALID_CODE", status: 401 })).toBe(
+      "That code isn’t right. Check the app and try again."
+    )
+  })
+
+  it("says a backup code is wrong or was used", () => {
+    expect(authErrorMessage({ code: "INVALID_BACKUP_CODE", status: 401 })).toBe(
+      "That backup code isn’t right, or it was used already."
+    )
+  })
+
+  it("says how long a locked account waits, not just a minute", () => {
+    expect(
+      authErrorMessage({ code: "ACCOUNT_TEMPORARILY_LOCKED", status: 429 })
+    ).toBe("Too many wrong codes. Please try again in 15 minutes.")
+  })
+
+  it.each(["INVALID_TWO_FACTOR_COOKIE", "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE"])(
+    "asks to sign in again when the code step is over (%s)",
+    (code) => {
+      expect(authErrorMessage({ code, status: 401 })).toMatch(
+        /Please sign in again\.$/
+      )
+      expect(needsNewSignIn(code)).toBe(true)
+    }
+  )
+
+  it("keeps the code step for a wrong code", () => {
+    expect(needsNewSignIn("INVALID_CODE")).toBe(false)
   })
 
   it("has a friendly fallback for anything else", () => {

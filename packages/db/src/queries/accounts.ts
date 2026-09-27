@@ -1,6 +1,6 @@
-import { and, desc, eq, gt } from "drizzle-orm"
+import { and, desc, eq, gt, like } from "drizzle-orm"
 
-import { session, twoFactor, user } from "../auth-schema.ts"
+import { session, twoFactor, user, verification } from "../auth-schema.ts"
 import type { Db } from "../client.ts"
 
 // Account settings (T23). Better Auth owns these tables; these reads and the
@@ -11,16 +11,35 @@ import type { Db } from "../client.ts"
  * they opened a password reset link sent there. Their email now counts as
  * confirmed. Whoever made the account may have been someone else using
  * this address (spec §5 Auth), so two-factor sign-in goes too: its secret
- * is theirs, and the owner could never sign in past it.
+ * is theirs, and the owner could never sign in past it. So do the devices
+ * they trusted to skip the code.
  */
 export async function claimUnconfirmedAccount(db: Db, userId: string) {
   await db.transaction(async (tx) => {
     await tx.delete(twoFactor).where(eq(twoFactor.userId, userId))
+    await forgetTrustedDevices(tx, userId)
     await tx
       .update(user)
       .set({ emailVerified: true, twoFactorEnabled: false })
       .where(eq(user.id, userId))
   })
+}
+
+/**
+ * Forgets every device the user trusted to skip the two-factor code ("Trust
+ * this device for 30 days", T23b). Better Auth's twoFactor plugin keeps each
+ * as a verification row named `trust-device-…` whose value is the user's id,
+ * and on turning two-factor off forgets only the device that asked.
+ */
+export async function forgetTrustedDevices(db: Db, userId: string) {
+  await db
+    .delete(verification)
+    .where(
+      and(
+        eq(verification.value, userId),
+        like(verification.identifier, "trust-device-%")
+      )
+    )
 }
 
 /**
