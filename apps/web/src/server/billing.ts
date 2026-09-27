@@ -219,7 +219,7 @@ const checkoutBody = z.strictObject({
  * for Pro. The plugin itself would pass on trials, discounts, metadata and
  * return URLs from the request body. The user row is read fresh, not from
  * the 5-minute cookie cache: a user who just paid must not be sold Pro twice
- * (and Polar's organization refuses a second subscription, ADR-0007).
+ * (and Polar's organization refuses a second subscription, ADR-0008).
  *
  * Answers the body the checkout runs with: Parley has no discount codes, so
  * Polar's page shows no field for one.
