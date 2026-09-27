@@ -116,7 +116,7 @@ This is the standard stack from CLAUDE.md. The versions below were checked on 20
 | API | **Hono** + **oRPC**, typed from the DB to the UI, with Zod at every edge |
 | AI | **AI SDK v7** (`streamText` + tools, `useChat`) over oRPC (`streamToEventIterator` / `eventIteratorToUnproxiedDataStream`) and **OpenRouter** (`@openrouter/ai-sdk-provider`) |
 | Auth | **Better Auth** (`better-auth/minimal` + Drizzle adapter): email + password (verification, reset, change), Google, GitHub, `anonymous()` guests with `onLinkAccount`, `twoFactor`, `captcha` (Turnstile), `lastLoginMethod`, Polar, `tanstackStartCookies`. See §5 Auth. |
-| Payments | **Polar sandbox** (`server: "sandbox"`, org `parley-legal`) through `@polar-sh/better-auth`: `checkout` (slug `pro` → `POLAR_PRO_PRODUCT_ID`, **Parley Pro $5/month**), `portal` and `webhooks` (`/api/auth/polar/webhooks`) |
+| Payments | **Polar sandbox** (`server: "sandbox"`, org `parley-legal`) through `@polar-sh/better-auth`: `checkout` (slug `pro` → `POLAR_PRO_PRODUCT_ID`, **Parley Pro $5/month**), `portal`, and Parley's own webhook route at `/api/auth/polar/webhooks` (the plugin's needs an SDK that can't check secrets made since 2026-09-08; ADR-0008) |
 | DB | **Neon Postgres** through Hyperdrive (**query caching off**), `pg` (node-postgres) + **Drizzle** ORM. Local Postgres for dev. See §5 Database. |
 | Export | **DOCX**: `docx` (`Packer.toArrayBuffer`). **PDF**: Cloudflare **Browser Run** `quickAction("pdf", { html })`, using the same HTML as the preview. |
 | Abuse and cost | Turnstile before a guest's first message. Workers Rate Limiting binding. A per-user daily AI budget kept in Postgres. A hard monthly credit limit on the OpenRouter key. |
