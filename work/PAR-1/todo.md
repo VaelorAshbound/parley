@@ -569,7 +569,18 @@
   - Files: `apps/web/src/features/account/*`, `src/routes/_app/_authed/settings.tsx`, `src/server/rpc/account.ts`
   - Deps: T21
 
-- [ ] **T23b: Two-factor authentication** (S)
+- [x] **T23b: Two-factor authentication** (S)
+  - Done 2026-09-27. Skills: build, incremental-implementation, security-and-hardening, test-driven-development, git-workflow-and-versioning; two-factor-authentication-best-practices, better-auth-security-best-practices (rate limit, trusted devices), shadcn (InputOTP, Dialog, Card). Checked:
+    - Gate (after rebase on 71f9c82): `pnpm check` pass; `pnpm test` 1124 pass, 1 skipped; `pnpm test:workers` 388 pass (`two-factor.test.ts`: on only after the first code, sign-in needs a code, a backup code works once, trusted device, off forgets every trusted device, a guest is linked only after the code); `pnpm db:check` pass.
+    - e2e `two-factor.spec.ts` Chromium + Firefox 4 pass (codes made in the test from the QR key, RFC 6238, apart from Better Auth's code). WebKit can't start on this laptop (missing system libraries), not run.
+    - Screenshots with Playwright at 1440 light and dark, and 375: the card off and on, password step, QR step (white QR in dark mode), backup codes, the code step, a wrong code, and "Too many tries" (3 code tries per 10 s).
+  - Built:
+    - **Server** (`server/two-factor.ts`): Better Auth `twoFactor` (issuer Parley, 10-minute code step, 30-day trusted devices), listed **before** `anonymous`, so a guest is linked only after the code; the guest is carried to the code step in a signed 10-minute cookie. Turning it off forgets every trusted device; so does a reset that claims an unconfirmed account. Audit lines `two_factor_on` / `two_factor_off`. `account.get` says `twoFactor`.
+    - **Sign-in code step** (`/two-factor`): InputOTP boxes for the app code or a backup code (a whole code can be pasted; sent when the last box fills), "Trust this device for 30 days", plain words for a wrong code, a timed-out step and the lock. A wrong code stays in the boxes to fix one digit.
+    - **Settings card** (`features/account/two-factor/*`): Turn on (password → QR code + typed key → first code → 10 backup codes once, with Copy and Download), New backup codes and Turn off (password each). Accounts without a password are told to add one first.
+  - Decisions:
+    - **Only the password sign-in asks for a code.** Google and GitHub have their own second step; Better Auth doesn't gate them (spec §5 Auth).
+    - Better Auth's defaults for limits: 3 tries per 10 s per code step, 5 wrong codes per step, 10 wrong in a row lock the code step for 15 minutes.
   - Accept:
     - `twoFactor` plugin: enable with a password → QR code + 10 backup codes (shown once, with copy and download) → turned on only after the first TOTP check succeeds. Disable with a password.
     - Sign-in with 2FA: `twoFactorRedirect` → `/two-factor` (`InputOTP` for the TOTP or a backup code, "Trust this device for 30 days").
