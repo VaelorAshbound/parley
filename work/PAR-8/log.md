@@ -9,3 +9,6 @@ Wave B2 saw two more cold-dev-server timeouts (30 s): export.spec 'a guest who w
 
 ### 2026-09-26T02:44:15Z
 2026-09-26 after wave B2: drafts.spec 'renames a draft' and editing.spec 'a whole NDA' fail about half the time locally in Chromium, even alone (repeat-each=3). Same rate on the pre-wave commit 630a811 (3/6), so not a B2 regression. Trace: on a cold dev server the draft page stays on its skeleton; some module requests (chat-panel.tsx, field-editor.tsx, download.tsx, definitions/psa.ts, sla.ts) end with status -1, and the page never finishes loading. Later repeats pass. Also: a memory-killed e2e run left 12 orphaned workerd processes (2.7 GB) behind; they made a full run fail 10 tests until killed.
+
+### 2026-09-27T17:49:21Z
+2026-09-27 (T37 merge): limits.spec 'a guest with a draft is asked to make an account for a second' fails in Firefox 3/3 with NS_BINDING_ABORTED on the second page.goto('/') from the draft page. Same 2/2 on the pre-T37 commit b7def71, so not T37. Same symptom as shell.spec:120.
