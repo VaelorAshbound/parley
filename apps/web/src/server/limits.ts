@@ -37,7 +37,7 @@ export function limitersFrom(env: Pick<Env, Binding>): Limiters {
 }
 
 /** AI messages a day, counted per UTC day in `ai_usage` (shared with the UI). */
-export { DAILY_MESSAGES, type LimitTier } from "../lib/limits"
+export { DAILY_MESSAGES, GUEST_DRAFTS, type LimitTier } from "../lib/limits"
 
 /** The UTC day the daily limits count in, and when the next one starts. */
 export function usageDay(now: Temporal.Instant = Temporal.Now.instant()) {
@@ -48,12 +48,6 @@ export function usageDay(now: Temporal.Instant = Temporal.Now.instant()) {
     resetsAt: new Date(next.epochMilliseconds).toISOString(),
   }
 }
-
-/**
- * Drafts a guest may keep (spec §2 Limits). An account has no limit; signing
- * up keeps the guest's draft.
- */
-export const GUEST_DRAFTS = 1
 
 /**
  * New guests from one network (IP address), in production: at most `max`,

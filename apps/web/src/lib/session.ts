@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-start/server"
 import { z } from "zod"
 
+import { planOf, type Plan } from "@/lib/limits"
 import { requestServices } from "@/server/request-services"
 
 /** Who is using Parley right now: what the UI needs, no tokens. */
@@ -15,6 +16,8 @@ export type Viewer = {
   email: string
   emailVerified: boolean
   isAnonymous: boolean
+  /** Set by Polar's webhooks (T26). */
+  plan: Plan
 } | null
 
 // Read on the server, in the first page response, so the page never flashes
@@ -33,7 +36,14 @@ const getViewer = createServerFn({ method: "GET" })
     if (cookies.length > 0) setResponseHeader("set-cookie", cookies)
     if (!response) return null
     const { id, name, email, emailVerified, isAnonymous } = response.user
-    return { id, name, email, emailVerified, isAnonymous: isAnonymous === true }
+    return {
+      id,
+      name,
+      email,
+      emailVerified,
+      isAnonymous: isAnonymous === true,
+      plan: planOf(response.user),
+    }
   })
 
 export const viewerQuery = queryOptions({
