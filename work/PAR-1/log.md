@@ -136,3 +136,6 @@ Session end. Finished: wave B2 (T25, T27, T28) built, reviewed, fixed, merged; C
 
 ### 2026-09-27T16:19:53Z
 Owner decision: wave C goes one task at a time, not in parallel, starting in a fresh session. Each task continues from its saved worktree (wf_af3c2e47-d76-1=T23b, -2=T26, -3=T31, -4=T37; base 5d273a6): check half-written edits, build, test, review, simplify, merge, gate, push, CI. Then STOP at Checkpoint 6.
+
+### 2026-09-27T17:55:47Z
+T37 merged (68786f9) and pushed; CI green on 5ec4890 (Workers Builds + e2e). Review fixed: headline jumped a line at 1440 px (italic face now preloaded on / only), failed start/Turnstile shown by the box and in view, phone bar a labeled group, dark-mode composer shadow, reduced-motion highlight fade, 44 px chips on phones; new e2e for each. Gate: check, 1111 unit, 370 worker, db:check, e2e 104/105 (Firefox limits.spec goto abort, same on pre-T37 b7def71, logged on PAR-8). Process change from another session: test/review/simplify per checkpoint, not per task. Next: T23b from worktree wf_af3c2e47-d76-1, then T26, T31, then Checkpoint 6.
