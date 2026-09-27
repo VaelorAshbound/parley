@@ -62,7 +62,6 @@ export function CodeStep({
           message: authErrorMessage(error),
           restart: needsNewSignIn(error.code),
         })
-        form.setFieldValue("code", "")
         return
       }
       reloadTo(returnTo)
@@ -90,6 +89,8 @@ export function CodeStep({
               kind={kind}
               label={words[kind].label}
               onComplete={sendWhenFull}
+              // The page has nothing else to fill in.
+              // oxlint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             />
           )}
