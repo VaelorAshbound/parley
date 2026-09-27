@@ -10,11 +10,12 @@ import { EmailCard } from "@/features/account/email-card"
 import { PasswordCard } from "@/features/account/password-card"
 import { ProfileCard } from "@/features/account/profile-card"
 import { SessionsCard } from "@/features/account/sessions-card"
+import { TwoFactorCard } from "@/features/account/two-factor/two-factor-card"
 import { authConfigQuery } from "@/features/auth/auth-config"
 
-// Settings (spec §5 Auth, T23): name, email, password, signed-in devices,
-// theme, and deleting the account. `?email=` and `?error=` come back from
-// the links in the change-email emails.
+// Settings (spec §5 Auth, T23): name, email, password, two-factor sign-in
+// (T23b), signed-in devices, theme, and deleting the account. `?email=` and
+// `?error=` come back from the links in the change-email emails.
 export const Route = createFileRoute("/_app/_authed/settings")({
   validateSearch: z.object({
     email: z.email().optional().catch(undefined),
@@ -50,6 +51,7 @@ function Settings() {
         linkError={search.error}
       />
       <PasswordCard account={login} />
+      <TwoFactorCard account={login} />
       <SessionsCard />
       <AppearanceCard />
       <DeleteAccountCard account={login} />
