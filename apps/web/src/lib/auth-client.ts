@@ -1,3 +1,4 @@
+import { polarClient } from "@polar-sh/better-auth/client"
 import { anonymousClient, twoFactorClient } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
@@ -5,7 +6,8 @@ import { createAuthClient } from "better-auth/react"
 export const authClient = createAuthClient({
   // twoFactorClient without a redirect: the sign-in form goes to
   // /two-factor itself, and keeps where the user was going (T23b).
-  plugins: [anonymousClient(), twoFactorClient()],
+  // polarClient: checkout and the billing portal (T26).
+  plugins: [anonymousClient(), twoFactorClient(), polarClient()],
 })
 
 /** Why a guest session couldn't start, for the words on the page. */
