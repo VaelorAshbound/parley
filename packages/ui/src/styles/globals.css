@@ -462,9 +462,10 @@
    appears, and a highlighter sweeps under the headline. No loops. */
 @layer components {
   .hero-marker {
+    --ink: var(--highlighter);
     background-image: linear-gradient(
       transparent 62%,
-      var(--highlighter) 62% 92%,
+      var(--ink) 62% 92%,
       transparent 92%
     );
     background-repeat: no-repeat;
@@ -530,11 +531,11 @@
   }
 }
 
-/* Reduced motion: things fade in place, and the highlights are simply
-   there. */
+/* Reduced motion: things fade in place, and the highlights fade in as
+   color only (brand.md → Motion). */
 @media (prefers-reduced-motion: reduce) {
   .hero-marker {
-    animation: none;
+    animation: ink-fade 320ms ease 700ms both;
   }
   .hero-rise,
   .hero-fan-l,
@@ -543,6 +544,8 @@
     animation: fade-in 220ms ease both;
   }
   .hero-ink {
-    animation: ink-settle 1600ms ease 800ms forwards;
+    animation:
+      ink-fade 320ms ease 1500ms both,
+      ink-settle 1600ms ease 3600ms forwards;
   }
 }
