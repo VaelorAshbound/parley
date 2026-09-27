@@ -59,10 +59,8 @@ export function Composer({
     >
       <InputGroup
         className={cn(
-          "bg-card",
-          start
-            ? "rounded-[22px] shadow-[0_1px_2px_rgba(27,26,23,0.04),0_14px_36px_-18px_rgba(27,26,23,0.2)]"
-            : "rounded-[20px] shadow-[0_1px_2px_rgba(27,26,23,0.04),0_8px_24px_-14px_rgba(27,26,23,0.14)]"
+          "bg-card shadow-float",
+          start ? "rounded-[22px]" : "rounded-[20px]"
         )}
       >
         <InputGroupTextarea
@@ -92,7 +90,7 @@ export function Composer({
         >
           {start ? (
             <>
-              <span className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground pointer-coarse:invisible">
                 <Kbd>Enter</Kbd>
                 to start
               </span>
@@ -100,11 +98,16 @@ export function Composer({
                 type="submit"
                 variant="default"
                 disabled={busy}
+                aria-busy={busy}
                 className="h-10 rounded-full pr-3.5 pl-4.5 text-[14.5px]"
               >
                 Start drafting
                 {busy ? (
-                  <Spinner data-icon="inline-end" aria-label="Starting" />
+                  <Spinner
+                    data-icon="inline-end"
+                    role="presentation"
+                    aria-hidden="true"
+                  />
                 ) : (
                   <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
                 )}
