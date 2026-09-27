@@ -12,3 +12,6 @@ Wave B2 saw two more cold-dev-server timeouts (30 s): export.spec 'a guest who w
 
 ### 2026-09-27T17:49:21Z
 2026-09-27 (T37 merge): limits.spec 'a guest with a draft is asked to make an account for a second' fails in Firefox 3/3 with NS_BINDING_ABORTED on the second page.goto('/') from the draft page. Same 2/2 on the pre-T37 commit b7def71, so not T37. Same symptom as shell.spec:120.
+
+### 2026-09-27T20:20:16Z
+More flaky tests seen in CI on 2026-09-27 (PAR-1-parley): (1) e2e drafts.spec 'a signed-out visitor keeps the browser's own Ctrl+K' failed first and passed on retry twice (runs for a510dd0/1dd6594 era and 417b24b; once a page.evaluate timeout at 30 s). (2) Component test src/features/drafts/search-dialog.browser.test.tsx 'arrow keys move the highlight, and Enter opens that draft' failed on 1dd6594 (expected '/d/d1' to be '/d/d2'), passed on the next run. (3) e2e drafts.spec 'renames a draft from its title menu, everywhere at once' passed only on retry on 417b24b. None touched by recent tasks.
