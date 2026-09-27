@@ -88,7 +88,7 @@ export function Landing({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-8.5 rounded-full bg-transparent px-3.5 text-[13.5px] font-normal text-ink-2"
+                    className="h-8.5 rounded-full bg-transparent px-3.5 text-[13.5px] font-normal text-ink-2 max-md:h-11"
                     disabled={busy}
                     onClick={() => onStart({ text: starter.prompt })}
                   >
@@ -97,7 +97,14 @@ export function Landing({
                 </li>
               ))}
             </ul>
-            {turnstile}
+            {/* Next to the box, and scrolled to: a start from the library
+                below may be what failed or needs the click. */}
+            {(turnstile || problem) && (
+              <div ref={(note) => note?.scrollIntoView({ block: "nearest" })}>
+                {turnstile}
+                {problem}
+              </div>
+            )}
 
             <div className="mt-7 flex max-w-[32.5rem] flex-col gap-1 text-[12.5px] leading-relaxed text-muted-foreground">
               <p>
@@ -172,7 +179,6 @@ export function Landing({
             ))}
           </ol>
         </section>
-        {problem}
 
         <section className="mt-20 flex flex-col gap-6 border-t-[1.5px] border-foreground pt-10 md:mt-28 md:flex-row md:items-end md:justify-between md:gap-10 md:pt-12">
           <h2 className="font-serif text-4xl leading-none font-normal tracking-[-0.03em] md:text-[3.625rem]">
