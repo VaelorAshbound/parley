@@ -1,6 +1,6 @@
 import { ORPCError, safe } from "@orpc/client"
 import type { RouterClient } from "@orpc/server"
-import { connect, schema } from "@workspace/db"
+import { connect, schema, setPlan } from "@workspace/db"
 import { definitions } from "@workspace/documents"
 import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
@@ -405,6 +405,27 @@ describe("export.docx", () => {
 
     expect(error).toMatchObject({ code: "PRO_REQUIRED", defined: true })
     expect((await countedFor(email)).rows).toEqual([])
+  })
+
+  it("is a Word file for Pro, and Pro has no monthly limit (T26)", async () => {
+    const { cookie, email } = await signUpVerified()
+    const { userId } = await countedFor(email)
+    // As Polar's webhook does (billing.test.ts delivers the real one).
+    await setPlan(await database(), { userId, plan: "pro", at: new Date() })
+    const client = await serverClient(cookie)
+    for (const _ of [1, 2, 3])
+      await client.export.pdf({ id: await completeNda(client) })
+
+    const pdf = await safe(client.export.pdf({ id: await completeNda(client) }))
+    const docx = await safe(
+      client.export.docx({ id: await completeNda(client) })
+    )
+
+    expect(pdf.error).toBeNull()
+    expect(docx.error).toBeNull()
+    expect(docx.data?.type).toBe(
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
   })
 })
 

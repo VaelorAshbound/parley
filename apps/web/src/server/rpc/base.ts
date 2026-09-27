@@ -9,8 +9,9 @@ import type {
 
 import type { Auth, Session } from "../auth"
 import type { PrintPdf } from "../files"
-import type { Limiters } from "../limits"
+import type { LimitTier, Limiters } from "../limits"
 import { annotate } from "../log"
+import { planOf } from "../quota"
 
 // Every procedure is built from one of these (spec §5 API): `pub` for
 // anyone, `authed` for a signed-in user or guest, and `authed` + `draftOwner`
@@ -84,9 +85,12 @@ export const authed = pub
   // middleware's dedupe).
   .use(perUser("rpc"))
 
-/** A user's plan, for logs and metrics (T29). T26 adds "pro". */
-export function tierOf(user: { isAnonymous?: boolean | null }) {
-  return user.isAnonymous ? ("guest" as const) : ("free" as const)
+/** A user's plan, for limits, logs and metrics (T29, T26). */
+export function tierOf(user: {
+  isAnonymous?: boolean | null
+  plan?: string | null
+}): LimitTier {
+  return user.isAnonymous ? "guest" : planOf(user)
 }
 export type Tier = ReturnType<typeof tierOf>
 

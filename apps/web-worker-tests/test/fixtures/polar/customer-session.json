@@ -1,0 +1,37 @@
+{
+  "created_at": "2026-09-26T03:24:44.028007Z",
+  "modified_at": null,
+  "id": "79b58ca3-4647-40e7-b32b-d607b55d2171",
+  "token": "polar_mst_fixture",
+  "expires_at": "2026-09-26T04:24:44.027982Z",
+  "return_url": "http://localhost:3000/pricing",
+  "customer_portal_url": "https://sandbox.polar.sh/parley-legal/portal?customer_session_token=polar_mst_fixture&email=delivered%40resend.dev",
+  "customer_id": "7f4d6f86-56cb-4bc5-9b6b-5fa1135d7793",
+  "customer": {
+    "id": "7f4d6f86-56cb-4bc5-9b6b-5fa1135d7793",
+    "created_at": "2026-09-26T03:21:36.906837Z",
+    "modified_at": "2026-09-26T03:21:42.448275Z",
+    "metadata": {},
+    "external_id": "t26-fixture-user",
+    "email": "delivered@resend.dev",
+    "email_verified": false,
+    "type": "individual",
+    "name": "Ana Fixture",
+    "billing_name": "Ana Fixture",
+    "billing_address": {
+      "line1": "1 Main St",
+      "line2": null,
+      "postal_code": "10001",
+      "city": "New York",
+      "state": "US-NY",
+      "country": "US"
+    },
+    "tax_id": null,
+    "locale": "en",
+    "organization_id": "57b3fe37-509b-4b63-a8c9-1707a6ec97bb",
+    "default_payment_method_id": null,
+    "deleted_at": null,
+    "first_user_event_at": null,
+    "avatar_url": "https://img.logo.dev/resend.dev?size=64&retina=true&token=pk_F9AlCmtZTqK_Ky1UDqCs9Q&fallback=404"
+  }
+}

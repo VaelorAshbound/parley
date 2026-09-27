@@ -91,6 +91,10 @@ export async function openChat(databaseUrl: string, model: LanguageModel) {
       STAGE: "production",
       // Cloudflare's test secret; the evals never sign up or sign in.
       TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+      // The evals never buy Pro: Polar is never called.
+      POLAR_ACCESS_TOKEN: "eval-no-polar",
+      POLAR_WEBHOOK_SECRET: "eval-no-polar",
+      POLAR_PRO_PRODUCT_ID: "c47ef7e0-e925-48a8-9160-bc35f30b4c05",
     },
     waitUntil,
   })
