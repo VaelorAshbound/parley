@@ -149,7 +149,10 @@ fresh("the account menu leads to settings", async ({ page }) => {
   const menu = page.getByRole("button", { name: /Ana Tester/ })
   await expect(menu).toContainText("Free")
   await menu.click()
-  await expect(page.getByRole("menuitem", { name: /Billing/ })).toBeDisabled()
+  // Free: the way to Pro; Billing (Polar's portal) is for Pro (T26).
+  await expect(
+    page.getByRole("menuitem", { name: "Upgrade to Pro" })
+  ).toHaveAttribute("href", "/pricing")
   await page.getByRole("menuitem", { name: "Settings" }).click()
 
   await expect(
