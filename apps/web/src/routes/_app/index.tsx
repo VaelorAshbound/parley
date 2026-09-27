@@ -4,6 +4,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { italicPreload } from "@workspace/ui/lib/fonts"
 import { Temporal } from "temporal-polyfill"
 
 import { ProblemNote } from "@/components/problem-note"
@@ -16,7 +17,7 @@ import { viewerQuery } from "@/lib/session"
 import { useUiStore } from "@/lib/ui-store"
 
 export const Route = createFileRoute("/_app/")({
-  head: () => ({ meta: [{ title: "Parley" }] }),
+  head: () => ({ meta: [{ title: "Parley" }], links: [italicPreload] }),
   // The Turnstile site key, for the first visit's guest (spec §2 Limits).
   loader: ({ context }) => context.queryClient.ensureQueryData(authConfigQuery),
   component: Home,
