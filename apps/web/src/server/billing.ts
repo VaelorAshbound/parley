@@ -1,7 +1,6 @@
-import { checkout, polar, portal, webhooks } from "@polar-sh/better-auth"
+import { checkout, polar, portal } from "@polar-sh/better-auth"
 import { Polar } from "@polar-sh/sdk"
 import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate"
-import type { WebhookCustomerStateChangedPayload } from "@polar-sh/sdk/models/components/webhookcustomerstatechangedpayload"
 import { ResourceNotFound } from "@polar-sh/sdk/models/errors/resourcenotfound"
 import {
   schema,
@@ -10,14 +9,21 @@ import {
   type Db,
   type Plan,
 } from "@workspace/db"
-import { APIError, getSessionFromCtx } from "better-auth/api"
+import type { BetterAuthPlugin } from "better-auth"
+import {
+  APIError,
+  createAuthEndpoint,
+  getSessionFromCtx,
+} from "better-auth/api"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { log, logInfo } from "./log"
+import { verifyPolarWebhook } from "./polar-webhook"
 
 // Parley Pro through Polar's SANDBOX (spec §4 Payments, T26), with Polar's
-// Better Auth plugin: checkout, the customer portal and signed webhooks.
+// Better Auth plugin for checkout and the customer portal, and our own
+// route for its signed webhooks.
 // https://polar.sh/docs/integrate/sdk/adapters/better-auth
 //
 // The plan lives on the user row (`plan`), so every session carries it.
@@ -56,11 +62,9 @@ const PRICING = "/pricing"
  * fail with, Polar.
  */
 export function billingPlugin({
-  db,
   env,
   origin,
 }: {
-  db: Db
   env: BillingEnv
   /** This request's origin: the portal's "back to Parley" link. */
   origin?: string | undefined
@@ -80,13 +84,58 @@ export function billingPlugin({
       // absolute, and Parley answers on several hosts (production, Previews,
       // localhost).
       portal({ returnUrl: origin && new URL(PRICING, origin).href }),
-      webhooks({
-        secret: env.POLAR_WEBHOOK_SECRET,
-        onCustomerStateChanged: (payload) =>
-          applyCustomerState(db, env, payload),
-      }),
+      // Not the plugin's webhooks(): its SDK can't check the signature of
+      // an endpoint made after 2026-09-08 (polarWebhooks, below).
     ],
   })
+}
+
+/** What Parley reads from a webhook: which customer's state changed. */
+const stateChanged = z.object({
+  type: z.literal("customer.state_changed"),
+  data: z.object({ id: z.string(), external_id: z.string().nullable() }),
+})
+
+/**
+ * Polar's webhooks at /api/auth/polar/webhooks (the plugin's path). The
+ * signature is checked with both of Polar's keys (server/polar-webhook.ts);
+ * other events are acknowledged and ignored.
+ */
+export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
+  return {
+    id: "parley-polar-webhooks",
+    endpoints: {
+      polarWebhooks: createAuthEndpoint(
+        "/polar/webhooks",
+        { method: "POST", metadata: { isAction: false }, cloneRequest: true },
+        async (ctx) => {
+          const body = (await ctx.request?.text()) ?? ""
+          let event: unknown
+          try {
+            event = verifyPolarWebhook(
+              body,
+              Object.fromEntries(ctx.request?.headers ?? []),
+              env.POLAR_WEBHOOK_SECRET
+            )
+          } catch {
+            log("warn", "polar_webhook_refused", {})
+            throw APIError.from("BAD_REQUEST", {
+              code: "INVALID_SIGNATURE",
+              message: "The webhook's signature doesn't match.",
+            })
+          }
+          const state = stateChanged.safeParse(event)
+          // A throw answers 500, and Polar sends it again later.
+          if (state.success)
+            await applyCustomerState(db, env, {
+              customerId: state.data.data.id,
+              externalId: state.data.data.external_id,
+            })
+          return ctx.json({ received: true })
+        }
+      ),
+    },
+  } satisfies BetterAuthPlugin
 }
 
 /**
@@ -137,9 +186,15 @@ async function currentState(env: BillingEnv, customerId: string) {
 export async function applyCustomerState(
   db: Db,
   env: BillingEnv,
-  payload: WebhookCustomerStateChangedPayload
+  {
+    customerId,
+    externalId,
+  }: {
+    customerId: string
+    /** Our user id, as Polar knows it; cleared when Polar deletes it. */
+    externalId: string | null
+  }
 ) {
-  const { id: customerId, externalId } = payload.data
   // Deleting a customer in Polar clears its external id (our user id); the
   // customer id we kept still finds the user.
   const userId = externalId ?? (await userOfPolarCustomer(db, customerId))

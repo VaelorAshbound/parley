@@ -189,7 +189,7 @@ describe("Polar's webhook", () => {
 
     const response = await deliver(stateFor(active, userId))
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(500)
     expect(await planOf(userId)).toBe("free")
   })
 
@@ -199,7 +199,9 @@ describe("Polar's webhook", () => {
 
     const forged = await deliver(
       JSON.parse(body),
-      await sign(body, { secret: "polar_whs_someone_else" })
+      await sign(body, {
+        secret: "whsec_c29tZW9uZSBlbHNlJ3Mgc2VjcmV0IGtleSBieXRlcw==",
+      })
     )
 
     expect(forged.status).toBe(400)

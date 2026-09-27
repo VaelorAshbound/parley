@@ -46,6 +46,7 @@
     "react-qr-code": "^2.2.0",
     "react-resizable-panels": "^4.13.2",
     "resend": "6.28.1",
+    "standardwebhooks": "1.1.1",
     "temporal-polyfill": "^1.0.5",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
