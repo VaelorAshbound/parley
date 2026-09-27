@@ -139,3 +139,6 @@ Owner decision: wave C goes one task at a time, not in parallel, starting in a f
 
 ### 2026-09-27T17:55:47Z
 T37 merged (68786f9) and pushed; CI green on 5ec4890 (Workers Builds + e2e). Review fixed: headline jumped a line at 1440 px (italic face now preloaded on / only), failed start/Turnstile shown by the box and in view, phone bar a labeled group, dark-mode composer shadow, reduced-motion highlight fade, 44 px chips on phones; new e2e for each. Gate: check, 1111 unit, 370 worker, db:check, e2e 104/105 (Firefox limits.spec goto abort, same on pre-T37 b7def71, logged on PAR-8). Process change from another session: test/review/simplify per checkpoint, not per task. Next: T23b from worktree wf_af3c2e47-d76-1, then T26, T31, then Checkpoint 6.
+
+### 2026-09-27T17:57:47Z
+Session end. Finished: T37 (empty-state and first-run polish) built, reviewed, fixed, merged (68786f9), pushed; CI green on 5ec4890. 29 of 42 tasks done. Next session: T23b from worktree wf_af3c2e47-d76-1 (base 5d273a6; 2 commits + uncommitted edits: check them first), then T26 (-2), T31 (-3), one at a time, then Checkpoint 6 with /test, /review, /code-simplify per checkpoint (new rule). Local e2e needs 'pnpm db:dev' running. Open: check which OpenRouter key the PAR-1-parley Preview uses; owner checks (one PDF, one DOCX in Word, chat_turn log).
