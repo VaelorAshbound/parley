@@ -113,7 +113,10 @@ export function DocumentPanel({
         // Frosted, so the page reads through it; solid paper when the
         // system asks for less transparency (brand.md → Motion).
         <div
-          role="toolbar"
+          // Two menu buttons, each its own Tab stop: a group, not a toolbar
+          // (no arrow keys) and not a form's fieldset.
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
+          role="group"
           aria-label="Share or download"
           className="absolute inset-x-3 bottom-[calc(0.875rem+env(safe-area-inset-bottom))] grid grid-cols-2 gap-2 rounded-[20px] bg-background/78 p-2 shadow-float ring-1 ring-white/55 backdrop-blur-xl backdrop-saturate-180 md:hidden dark:ring-white/6 reduced-transparency:bg-background reduced-transparency:backdrop-blur-none"
         >
