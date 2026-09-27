@@ -1,9 +1,11 @@
-import { anonymousClient } from "better-auth/client/plugins"
+import { anonymousClient, twoFactorClient } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
 // The browser side of Better Auth, on the same origin (/api/auth).
 export const authClient = createAuthClient({
-  plugins: [anonymousClient()],
+  // twoFactorClient without a redirect: the sign-in form goes to
+  // /two-factor itself, and keeps where the user was going (T23b).
+  plugins: [anonymousClient(), twoFactorClient()],
 })
 
 /** Why a guest session couldn't start, for the words on the page. */

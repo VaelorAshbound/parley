@@ -183,6 +183,7 @@ describe("account.get", () => {
       hasPassword: true,
       providers: [],
       freshUntil: expect.any(Date),
+      twoFactor: false,
     })
   })
 
