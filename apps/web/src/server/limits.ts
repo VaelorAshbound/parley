@@ -17,6 +17,8 @@ export const RATE_LIMITS = {
   AI_RATE_LIMITER: { limit: 10, period: 10 },
   /** Downloads: each PDF is a ~4 s Browser Run print, re-exports too. */
   EXPORT_RATE_LIMITER: { limit: 10, period: 60 },
+  /** Checkout and the billing portal: each calls Polar's API (T26). */
+  BILLING_RATE_LIMITER: { limit: 5, period: 60 },
 } as const
 
 type Binding = keyof typeof RATE_LIMITS
@@ -28,7 +30,9 @@ export type Limiters = {
   export: Ratelimiter
 }
 
-export function limitersFrom(env: Pick<Env, Binding>): Limiters {
+export function limitersFrom(
+  env: Pick<Env, Exclude<Binding, "BILLING_RATE_LIMITER">>
+): Limiters {
   return {
     rpc: new CloudflareRatelimiter(env.RPC_RATE_LIMITER),
     ai: new CloudflareRatelimiter(env.AI_RATE_LIMITER),

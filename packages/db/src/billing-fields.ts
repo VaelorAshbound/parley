@@ -27,4 +27,16 @@ export const billingFields = {
     input: false,
     returned: false,
   },
+  /**
+   * Polar's id for this user as a customer, from its webhooks. A customer
+   * deleted in Polar loses its external id (our user id); this still finds
+   * the user, so the plan can go back to Free.
+   */
+  polarCustomerId: {
+    type: "string",
+    required: false,
+    unique: true,
+    input: false,
+    returned: false,
+  },
 } satisfies Record<string, DBFieldAttribute>

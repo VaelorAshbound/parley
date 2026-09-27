@@ -32,6 +32,6 @@
     "default_payment_method_id": null,
     "deleted_at": null,
     "first_user_event_at": null,
-    "avatar_url": "https://img.logo.dev/resend.dev?size=64&retina=true&token=pk_F9AlCmtZTqK_Ky1UDqCs9Q&fallback=404"
+    "avatar_url": "https://img.logo.dev/resend.dev?size=64&retina=true&token=pk_fixture&fallback=404"
   }
 }

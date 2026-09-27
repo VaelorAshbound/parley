@@ -51,7 +51,11 @@ export function useCheckout() {
 
 /** Polar's customer portal: the card, invoices, and canceling. */
 export function usePortal(onProblem?: (problem: BillingProblem) => void) {
-  return usePolarPage(() => authClient.customer.portal(), onProblem)
+  return usePolarPage(
+    // POST: the server refuses a GET, which a link on another site can make.
+    () => authClient.customer.portal({ fetchOptions: { method: "POST" } }),
+    onProblem
+  )
 }
 
 /** How many times the page asks before it says it's still waiting (1 min). */

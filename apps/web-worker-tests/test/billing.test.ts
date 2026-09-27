@@ -1,7 +1,9 @@
 import { schema } from "@workspace/db"
+import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
+import { cancelBilling } from "../../web/src/server/billing"
 import checkoutCreated from "./fixtures/polar/checkout-created.json"
 import customerSession from "./fixtures/polar/customer-session.json"
 import canceledAtPeriodEnd from "./fixtures/polar/state-canceled-at-period-end.json"
@@ -16,17 +18,18 @@ import {
   signUpUser,
   signUpVerified,
 } from "./helpers"
-import { deliver, fakePolarApi, sign, stateFor } from "./polar"
+import { deliver, fakePolar, send, sign, stateFor } from "./polar"
 
 // Parley Pro through Polar's sandbox (spec §2 Limits, §4 Payments; T26).
-// Polar's webhooks are the only way the plan changes: they are signed, may
-// come twice, late, or out of order, and the newest state wins.
+// Polar's webhooks are the only way the plan changes. Each is only a sign
+// that something changed: Parley reads the customer's current state from
+// Polar, so a retry, a duplicate or a late delivery can't undo it.
 
-let restore: (() => void) | undefined
-afterEach(() => {
-  restore?.()
-  restore = undefined
+let polar: ReturnType<typeof fakePolar>
+beforeEach(() => {
+  polar = fakePolar()
 })
+afterEach(() => polar.restore())
 
 async function userIdOf(email: string) {
   const db = await database()
@@ -53,16 +56,27 @@ type State = typeof active | typeof canceledAtPeriodEnd | typeof revoked
 async function accountWith(state: State) {
   const account = await signUpVerified()
   const userId = await userIdOf(account.email)
-  expect((await deliver(stateFor(state, userId))).status).toBe(200)
-  return { ...account, userId }
+  expect((await send(polar, stateFor(state, userId))).status).toBe(200)
+  polar.forget()
+  return { ...account, userId, customerId: `cus-${userId}` }
 }
+
+async function newAccount() {
+  const account = await signUpVerified()
+  return { ...account, userId: await userIdOf(account.email) }
+}
+
+const deleted = (userId: string) => ({
+  method: "DELETE",
+  path: `/v1/customers/cus-${userId}?anonymize=true`,
+  body: undefined,
+})
 
 describe("Polar's webhook", () => {
   it("turns Pro on when the subscription is active", async () => {
-    const { email } = await signUpVerified()
-    const userId = await userIdOf(email)
+    const { userId } = await newAccount()
 
-    const response = await deliver(stateFor(active, userId))
+    const response = await send(polar, stateFor(active, userId))
 
     expect(response.status).toBe(200)
     expect(await planOf(userId)).toBe("pro")
@@ -71,7 +85,7 @@ describe("Polar's webhook", () => {
   it("keeps Pro after a cancel, until the paid month ends", async () => {
     const { userId } = await accountWith(active)
 
-    await deliver(stateFor(canceledAtPeriodEnd, userId))
+    await send(polar, stateFor(canceledAtPeriodEnd, userId))
 
     expect(await planOf(userId)).toBe("pro")
   })
@@ -79,7 +93,7 @@ describe("Polar's webhook", () => {
   it("turns Pro off when the subscription is revoked", async () => {
     const { userId } = await accountWith(canceledAtPeriodEnd)
 
-    await deliver(stateFor(revoked, userId))
+    await send(polar, stateFor(revoked, userId))
 
     expect(await planOf(userId)).toBe("free")
   })
@@ -93,7 +107,7 @@ describe("Polar's webhook", () => {
     expect(await planOf(userId)).toBe("pro")
   })
 
-  it("ignores an older state that arrives late", async () => {
+  it("reads the current state, so a late delivery can't undo a newer one", async () => {
     // As seen in the sandbox: a retry of the first state (no subscription
     // yet) arrived after the state with the new subscription.
     const { userId } = await accountWith(active)
@@ -104,9 +118,18 @@ describe("Polar's webhook", () => {
     expect(await planOf(userId)).toBe("pro")
   })
 
+  it("follows Polar's current state even when the delivery says otherwise", async () => {
+    const { userId } = await accountWith(active)
+    polar.states.set(`cus-${userId}`, stateFor(revoked, userId).data)
+
+    // Two changes in the same millisecond, delivered in the wrong order.
+    await deliver(stateFor(active, userId))
+
+    expect(await planOf(userId)).toBe("free")
+  })
+
   it("gives no Pro for a subscription to another product", async () => {
-    const { email } = await signUpVerified()
-    const userId = await userIdOf(email)
+    const { userId } = await newAccount()
     const other = stateFor(active, userId)
     const [subscription] = other.data.active_subscriptions
     if (!subscription) throw new Error("fixture has a subscription")
@@ -114,19 +137,64 @@ describe("Polar's webhook", () => {
       { ...subscription, product_id: crypto.randomUUID() },
     ]
 
-    await deliver(other)
+    await send(polar, other)
 
     expect(await planOf(userId)).toBe("free")
   })
 
-  it("accepts a customer that isn't a Parley user, and changes nothing", async () => {
-    expect((await deliver(stateFor(active, null))).status).toBe(200)
-    expect((await deliver(stateFor(active, "no-such-user"))).status).toBe(200)
+  it("turns Pro off for a customer deleted in Polar, found by its customer id", async () => {
+    // Deleting a customer clears its external id (our user id).
+    const { userId, customerId } = await accountWith(active)
+    polar.states.delete(customerId)
+    const base = stateFor(revoked, null, customerId)
+    const gone = {
+      ...base,
+      data: { ...base.data, deleted_at: new Date().toISOString() },
+    }
+
+    const response = await deliver(gone)
+
+    expect(response.status).toBe(200)
+    expect(await planOf(userId)).toBe("free")
+  })
+
+  it("cancels a paid subscription whose Parley account is gone", async () => {
+    // Checkout finished in one tab after the account was deleted in another.
+    const ghost = crypto.randomUUID()
+    polar.answer(({ method }) =>
+      method === "DELETE" ? new Response(null, { status: 204 }) : undefined
+    )
+
+    const response = await send(polar, stateFor(active, ghost))
+
+    expect(response.status).toBe(200)
+    expect(polar.calls).toContainEqual(deleted(ghost))
+  })
+
+  it("leaves alone a customer Parley didn't make", async () => {
+    // Made by hand in Polar's dashboard: no external id.
+    const response = await send(polar, stateFor(active, null))
+
+    expect(response.status).toBe(200)
+    expect(polar.calls.map(({ method }) => method)).not.toContain("DELETE")
+  })
+
+  it("asks Polar to send again when it can't read the state", async () => {
+    const { userId } = await newAccount()
+    polar.answer(({ method }) =>
+      method === "GET"
+        ? Response.json({ detail: "down" }, { status: 503 })
+        : undefined
+    )
+
+    const response = await deliver(stateFor(active, userId))
+
+    expect(response.status).toBe(400)
+    expect(await planOf(userId)).toBe("free")
   })
 
   it("refuses a body that isn't signed with Parley's secret", async () => {
-    const { email } = await signUpVerified()
-    const userId = await userIdOf(email)
+    const { userId } = await newAccount()
     const body = JSON.stringify(stateFor(active, userId))
 
     const forged = await deliver(
@@ -139,8 +207,7 @@ describe("Polar's webhook", () => {
   })
 
   it("refuses a signed body that was changed on the way", async () => {
-    const { email } = await signUpVerified()
-    const userId = await userIdOf(email)
+    const { userId } = await newAccount()
     const signedFor = await sign(JSON.stringify(stateFor(revoked, userId)))
 
     const changed = await deliver(stateFor(active, userId), signedFor)
@@ -150,8 +217,7 @@ describe("Polar's webhook", () => {
   })
 
   it("refuses an old signed delivery replayed later", async () => {
-    const { email } = await signUpVerified()
-    const userId = await userIdOf(email)
+    const { userId } = await newAccount()
     const body = JSON.stringify(stateFor(active, userId))
     const hourAgo = Math.floor(Date.now() / 1000) - 60 * 60
 
@@ -181,9 +247,7 @@ describe("the plan in the session", () => {
 
     const response = await call(
       "/api/auth/get-session?disableCookieCache=true",
-      {
-        headers: { cookie },
-      }
+      { headers: { cookie } }
     )
 
     expect(
@@ -191,11 +255,19 @@ describe("the plan in the session", () => {
     ).toBe("pro")
   })
 
+  it("never shows the Polar customer id", async () => {
+    const { cookie } = await accountWith(active)
+
+    const response = await call(
+      "/api/auth/get-session?disableCookieCache=true",
+      { headers: { cookie } }
+    )
+
+    expect(await response.text()).not.toContain("cus-")
+  })
+
   it("can't be set by the user", async () => {
-    const { cookie, userId } = await signUpVerified().then(async (account) => ({
-      ...account,
-      userId: await userIdOf(account.email),
-    }))
+    const { cookie, userId } = await newAccount()
 
     const response = await post(
       "/api/auth/update-user",
@@ -226,20 +298,16 @@ describe("the plan in the session", () => {
 })
 
 describe("checkout", () => {
-  function fakeCheckout() {
-    const polar = fakePolarApi(({ method, path }) =>
+  beforeEach(() =>
+    polar.answer(({ method, path }) =>
       method === "POST" && path === "/v1/checkouts/"
         ? Response.json(checkoutCreated, { status: 201 })
         : undefined
     )
-    restore = polar.restore
-    return polar
-  }
+  )
 
   it("sends a verified free user to Polar's checkout for Pro", async () => {
-    const polar = fakeCheckout()
-    const { cookie, email } = await signUpVerified()
-    const userId = await userIdOf(email)
+    const { cookie, userId } = await newAccount()
 
     const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
 
@@ -254,11 +322,12 @@ describe("checkout", () => {
       external_customer_id: userId,
       success_url: "http://localhost:3000/pricing?checkout_id={CHECKOUT_ID}",
       return_url: "http://localhost:3000/pricing",
+      // Parley has no discounts: the checkout page shows no code field.
+      allow_discount_codes: false,
     })
   })
 
   it("asks a guest to sign in", async () => {
-    const polar = fakeCheckout()
     const { cookie } = await signInGuest()
 
     const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
@@ -268,7 +337,6 @@ describe("checkout", () => {
   })
 
   it("asks for a confirmed email first", async () => {
-    const polar = fakeCheckout()
     const { cookie } = await signUpUser()
 
     const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
@@ -282,7 +350,6 @@ describe("checkout", () => {
 
   it("never sells Pro twice", async () => {
     const { cookie } = await accountWith(active)
-    const polar = fakeCheckout()
 
     const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
 
@@ -293,15 +360,29 @@ describe("checkout", () => {
     expect(polar.calls).toHaveLength(0)
   })
 
+  it("stops one person from calling Polar over and over", async () => {
+    // Each checkout is a call to Polar's API, whose limit is the whole
+    // organization's. Counted per user, whatever network they are on.
+    const { cookie } = await newAccount()
+    const statuses = []
+    for (const _ of Array.from({ length: 6 }))
+      statuses.push(
+        (await post("/api/auth/checkout", { slug: "pro" }, cookie)).status
+      )
+
+    expect(statuses).toEqual([200, 200, 200, 200, 200, 429])
+    expect(polar.calls).toHaveLength(5)
+  })
+
   it.each([
     ["a free trial", { trialInterval: "year", trialIntervalCount: 1000 }],
     ["another product", { products: [crypto.randomUUID()] }],
     ["its own return page", { successUrl: "https://evil.example/" }],
     ["a discount", { discountId: crypto.randomUUID() }],
+    ["discount codes", { allowDiscountCodes: true }],
     ["checkout metadata", { metadata: { plan: "pro" } }],
   ])("refuses a request that asks for %s", async (_, extra) => {
-    const polar = fakeCheckout()
-    const { cookie } = await signUpVerified()
+    const { cookie } = await newAccount()
 
     const response = await post(
       "/api/auth/checkout",
@@ -315,13 +396,15 @@ describe("checkout", () => {
 })
 
 describe("the billing portal", () => {
-  it("opens Polar's portal for a Pro user", async () => {
-    const polar = fakePolarApi(({ method, path }) =>
+  beforeEach(() =>
+    polar.answer(({ method, path }) =>
       method === "POST" && path === "/v1/customer-sessions/"
         ? Response.json(customerSession, { status: 201 })
         : undefined
     )
-    restore = polar.restore
+  )
+
+  it("opens Polar's portal for a Pro user", async () => {
     const { cookie, userId } = await accountWith(active)
 
     const response = await post("/api/auth/customer/portal", {}, cookie)
@@ -336,15 +419,45 @@ describe("the billing portal", () => {
     })
   })
 
+  it("stays open after Pro ends, for past invoices", async () => {
+    const { cookie } = await accountWith(revoked)
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(200)
+  })
+
+  it("says there is no billing yet for someone who never bought", async () => {
+    const { cookie } = await newAccount()
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(404)
+    expect(((await response.json()) as { code: string }).code).toBe(
+      "NO_BILLING"
+    )
+    expect(polar.calls).toHaveLength(0)
+  })
+
+  it("can't be opened by a link from another site", async () => {
+    // A GET passes the origin check, and cookies go with a link's GET.
+    const { cookie } = await accountWith(active)
+
+    const response = await call("/api/auth/customer/portal", {
+      headers: { cookie },
+    })
+
+    expect(response.status).toBe(405)
+    expect(polar.calls).toHaveLength(0)
+  })
+
   it.each([
     "/api/auth/customer/state",
     "/api/auth/customer/benefits/list",
     "/api/auth/customer/orders/list",
     "/api/auth/customer/subscriptions/list?referenceId=someone-else",
   ])("keeps %s closed: Parley doesn't use it", async (path) => {
-    const polar = fakePolarApi()
-    restore = polar.restore
-    const { cookie } = await signUpVerified()
+    const { cookie } = await newAccount()
 
     const response = await call(path, { headers: { cookie } })
 
@@ -354,20 +467,26 @@ describe("the billing portal", () => {
 })
 
 describe("deleting the account", () => {
-  it("cancels Polar billing with it, so a deleted user is never charged", async () => {
-    const polar = fakePolarApi(({ method, path }) =>
-      method === "DELETE" && path.startsWith("/v1/customers/external/")
-        ? new Response(null, { status: 204 })
-        : undefined
-    )
-    restore = polar.restore
-    const { cookie, userId } = await accountWith(active)
-
-    const response = await post(
+  function deleteUser(cookie: string) {
+    return post(
       "/api/auth/delete-user",
       { password: "correct horse 1" },
       cookie
     )
+  }
+
+  beforeEach(() =>
+    polar.answer(({ method, path }) =>
+      method === "DELETE" && path.startsWith("/v1/customers/external/")
+        ? new Response(null, { status: 204 })
+        : undefined
+    )
+  )
+
+  it("cancels Polar billing with it, so a deleted user is never charged", async () => {
+    const { cookie, userId } = await accountWith(active)
+
+    const response = await deleteUser(cookie)
 
     expect(response.status).toBe(200)
     expect(polar.calls).toEqual([
@@ -380,55 +499,58 @@ describe("deleting the account", () => {
     expect(await planOf(userId)).toBeUndefined()
   })
 
-  it("keeps the account when Polar can't cancel the billing yet", async () => {
-    const polar = fakePolarApi(() =>
-      Response.json({ detail: "down" }, { status: 503 })
-    )
-    restore = polar.restore
-    const { cookie, userId } = await accountWith(active)
+  it("cancels billing even before Polar's webhook has come", async () => {
+    // Paid a moment ago: Polar has the subscription, Parley doesn't know yet.
+    const { cookie, userId } = await newAccount()
 
-    const response = await post(
-      "/api/auth/delete-user",
-      { password: "correct horse 1" },
-      cookie
-    )
+    const response = await deleteUser(cookie)
+
+    expect(response.status).toBe(200)
+    expect(polar.calls).toContainEqual({
+      method: "DELETE",
+      path: `/v1/customers/external/${userId}?anonymize=true`,
+      body: undefined,
+    })
+  })
+
+  it("keeps the account when Polar can't cancel the billing yet", async () => {
+    const { cookie, userId } = await accountWith(active)
+    polar.answer(() => Response.json({ detail: "down" }, { status: 503 }))
+
+    const response = await deleteUser(cookie)
 
     expect(response.status).toBe(503)
     expect(await planOf(userId)).toBe("pro")
   })
 
   it("deletes a user Polar has no customer for", async () => {
-    const polar = fakePolarApi(() =>
+    const { cookie, userId } = await newAccount()
+    polar.answer(() =>
       Response.json(
         { error: "ResourceNotFound", detail: "Not found" },
         { status: 404 }
       )
     )
-    restore = polar.restore
-    const { cookie, userId } = await accountWith(revoked)
 
-    const response = await post(
-      "/api/auth/delete-user",
-      { password: "correct horse 1" },
-      cookie
-    )
+    const response = await deleteUser(cookie)
 
     expect(response.status).toBe(200)
     expect(await planOf(userId)).toBeUndefined()
   })
 
-  it("never calls Polar for a user who never bought", async () => {
-    const polar = fakePolarApi()
-    restore = polar.restore
-    const { cookie } = await signUpVerified()
+  it("is Free once Polar has canceled, even if the account then stays", async () => {
+    const { userId } = await accountWith(active)
 
-    const response = await post(
-      "/api/auth/delete-user",
-      { password: "correct horse 1" },
-      cookie
-    )
+    await cancelBilling({ db: await database(), env, userId })
 
-    expect(response.status).toBe(200)
+    expect(await planOf(userId)).toBe("free")
+  })
+
+  it("never calls Polar for a guest", async () => {
+    const { cookie } = await signInGuest()
+
+    await deleteUser(cookie)
+
     expect(polar.calls).toHaveLength(0)
   })
 })

@@ -26,6 +26,7 @@ export const user = pgTable("user", {
     .default("free")
     .notNull(),
   planUpdatedAt: timestamp("plan_updated_at"),
+  polarCustomerId: text("polar_customer_id").unique(),
 });
 
 export const session = pgTable(

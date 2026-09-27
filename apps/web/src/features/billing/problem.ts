@@ -31,6 +31,11 @@ export function billingProblem(error: AuthError): BillingProblem {
       }
     case "ALREADY_PRO":
       return { message: "You already have Pro." }
+    case "NO_BILLING":
+      return {
+        message: "There is no billing yet. It starts when you upgrade.",
+        action: { label: "See Pro", href: "/pricing" },
+      }
     // Polar's API failed, or (a bug) the checkout asked for something else.
     default:
       return {

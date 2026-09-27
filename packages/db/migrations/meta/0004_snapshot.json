@@ -1,5 +1,5 @@
 {
-  "id": "61079dfe-7b37-47f5-a77f-9f3d819e0308",
+  "id": "e513d209-4557-4f34-96f6-55b90cb4a7a6",
   "prevId": "21bcc51e-9983-45e1-8234-67ce1b38e06d",
   "version": "7",
   "dialect": "postgresql",
@@ -448,6 +448,12 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "polar_customer_id": {
+          "name": "polar_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -459,6 +465,13 @@
           "nullsNotDistinct": false,
           "columns": [
             "email"
+          ]
+        },
+        "user_polar_customer_id_unique": {
+          "name": "user_polar_customer_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "polar_customer_id"
           ]
         }
       },

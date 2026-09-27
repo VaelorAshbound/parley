@@ -92,6 +92,13 @@
       "namespace_id": "2703",
       "simple": { "limit": 10, "period": 60 },
     },
+    // Checkout and the billing portal: each is a call to Polar's API, whose
+    // limit is the whole organization's (T26).
+    {
+      "name": "BILLING_RATE_LIMITER",
+      "namespace_id": "2704",
+      "simple": { "limit": 5, "period": 60 },
+    },
   ],
   // Neon through Hyperdrive with query caching OFF: a cached SELECT would
   // show a stale draft or a revoked share link (spec §5 Database). Local dev
@@ -142,6 +149,11 @@
         "name": "EXPORT_RATE_LIMITER",
         "namespace_id": "2713",
         "simple": { "limit": 10, "period": 60 },
+      },
+      {
+        "name": "BILLING_RATE_LIMITER",
+        "namespace_id": "2714",
+        "simple": { "limit": 5, "period": 60 },
       },
     ],
     // Previews never touch production data. "parley-preview" → the Neon
