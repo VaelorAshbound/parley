@@ -17,6 +17,8 @@ export const RATE_LIMITS = {
   AI_RATE_LIMITER: { limit: 10, period: 10 },
   /** Downloads: each PDF is a ~4 s Browser Run print, re-exports too. */
   EXPORT_RATE_LIMITER: { limit: 10, period: 60 },
+  /** Checkout and the billing portal: each calls Polar's API (T26). */
+  BILLING_RATE_LIMITER: { limit: 5, period: 60 },
 } as const
 
 type Binding = keyof typeof RATE_LIMITS
@@ -28,7 +30,9 @@ export type Limiters = {
   export: Ratelimiter
 }
 
-export function limitersFrom(env: Pick<Env, Binding>): Limiters {
+export function limitersFrom(
+  env: Pick<Env, Exclude<Binding, "BILLING_RATE_LIMITER">>
+): Limiters {
   return {
     rpc: new CloudflareRatelimiter(env.RPC_RATE_LIMITER),
     ai: new CloudflareRatelimiter(env.AI_RATE_LIMITER),
@@ -37,7 +41,7 @@ export function limitersFrom(env: Pick<Env, Binding>): Limiters {
 }
 
 /** AI messages a day, counted per UTC day in `ai_usage` (shared with the UI). */
-export { DAILY_MESSAGES, type LimitTier } from "../lib/limits"
+export { DAILY_MESSAGES, GUEST_DRAFTS, type LimitTier } from "../lib/limits"
 
 /** The UTC day the daily limits count in, and when the next one starts. */
 export function usageDay(now: Temporal.Instant = Temporal.Now.instant()) {
@@ -48,12 +52,6 @@ export function usageDay(now: Temporal.Instant = Temporal.Now.instant()) {
     resetsAt: new Date(next.epochMilliseconds).toISOString(),
   }
 }
-
-/**
- * Drafts a guest may keep (spec §2 Limits). An account has no limit; signing
- * up keeps the guest's draft.
- */
-export const GUEST_DRAFTS = 1
 
 /**
  * New guests from one network (IP address), in production: at most `max`,

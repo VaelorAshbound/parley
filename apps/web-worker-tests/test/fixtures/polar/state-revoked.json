@@ -1,0 +1,35 @@
+{
+  "type": "customer.state_changed",
+  "timestamp": "2026-09-26T03:22:30.384561Z",
+  "api_version": "2026-04",
+  "data": {
+    "id": "7f4d6f86-56cb-4bc5-9b6b-5fa1135d7793",
+    "created_at": "2026-09-26T03:21:36.906837Z",
+    "modified_at": "2026-09-26T03:21:42.448275Z",
+    "metadata": {},
+    "external_id": "t26-fixture-user",
+    "email": "delivered@resend.dev",
+    "email_verified": false,
+    "type": "individual",
+    "name": "Ana Fixture",
+    "billing_name": "Ana Fixture",
+    "billing_address": {
+      "line1": "1 Main St",
+      "line2": null,
+      "postal_code": "10001",
+      "city": "New York",
+      "state": "US-NY",
+      "country": "US"
+    },
+    "tax_id": null,
+    "locale": "en",
+    "organization_id": "57b3fe37-509b-4b63-a8c9-1707a6ec97bb",
+    "default_payment_method_id": null,
+    "deleted_at": null,
+    "first_user_event_at": null,
+    "avatar_url": "https://img.logo.dev/resend.dev?size=64&retina=true&token=pk_fixture&fallback=404",
+    "active_subscriptions": [],
+    "granted_benefits": [],
+    "active_meters": []
+  }
+}

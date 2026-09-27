@@ -7,3 +7,22 @@
  */
 export const DAILY_MESSAGES = { guest: 20, free: 100, pro: 500 } as const
 export type LimitTier = keyof typeof DAILY_MESSAGES
+
+/**
+ * Drafts a guest may keep (spec §2 Limits). An account has no limit; signing
+ * up keeps the guest's draft.
+ */
+export const GUEST_DRAFTS = 1
+
+/** Documents a Free account may download each calendar month (UTC). */
+export const FREE_DOCUMENTS_PER_MONTH = 3
+
+export type Plan = "free" | "pro"
+
+/**
+ * The user's plan: Polar's webhooks keep it on the user row (T26,
+ * server/billing.ts), so the session carries it.
+ */
+export function planOf(user: { plan?: string | null }): Plan {
+  return user.plan === "pro" ? "pro" : "free"
+}

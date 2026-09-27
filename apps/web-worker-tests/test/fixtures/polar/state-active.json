@@ -1,0 +1,61 @@
+{
+  "type": "customer.state_changed",
+  "timestamp": "2026-09-26T03:21:44.058483Z",
+  "api_version": "2026-04",
+  "data": {
+    "id": "7f4d6f86-56cb-4bc5-9b6b-5fa1135d7793",
+    "created_at": "2026-09-26T03:21:36.906837Z",
+    "modified_at": "2026-09-26T03:21:42.448275Z",
+    "metadata": {},
+    "external_id": "t26-fixture-user",
+    "email": "delivered@resend.dev",
+    "email_verified": false,
+    "type": "individual",
+    "name": "Ana Fixture",
+    "billing_name": "Ana Fixture",
+    "billing_address": {
+      "line1": "1 Main St",
+      "line2": null,
+      "postal_code": "10001",
+      "city": "New York",
+      "state": "US-NY",
+      "country": "US"
+    },
+    "tax_id": null,
+    "locale": "en",
+    "organization_id": "57b3fe37-509b-4b63-a8c9-1707a6ec97bb",
+    "default_payment_method_id": null,
+    "deleted_at": null,
+    "first_user_event_at": null,
+    "avatar_url": "https://img.logo.dev/resend.dev?size=64&retina=true&token=pk_fixture&fallback=404",
+    "active_subscriptions": [
+      {
+        "id": "cfe45a74-8133-4514-b458-ae33576a7732",
+        "created_at": "2026-09-26T03:21:41.294000Z",
+        "modified_at": null,
+        "custom_field_data": {},
+        "metadata": {},
+        "status": "active",
+        "amount": 500,
+        "currency": "usd",
+        "recurring_interval": "month",
+        "current_period_start": "2026-09-26T03:21:41.276366Z",
+        "current_period_end": "2026-10-26T03:21:41.276366Z",
+        "trial_start": null,
+        "trial_end": null,
+        "cancel_at_period_end": false,
+        "canceled_at": null,
+        "started_at": "2026-09-26T03:21:41.276366Z",
+        "ends_at": null,
+        "product_id": "c47ef7e0-e925-48a8-9160-bc35f30b4c05",
+        "discount_id": null,
+        "seats": null,
+        "units": null,
+        "price_id": "3df9b891-5688-4550-b2fa-5016e134399f",
+        "meters": []
+      }
+    ],
+    "granted_benefits": [],
+    "active_meters": []
+  }
+}

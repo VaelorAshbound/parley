@@ -1,4 +1,5 @@
 import {
+  billingFields,
   claimUnconfirmedAccount,
   moveGuestData,
   schema,
@@ -22,6 +23,14 @@ import { ResetPassword } from "../emails/reset-password"
 import { VerifyEmail } from "../emails/verify-email"
 
 import { auditHooks } from "./audit"
+import {
+  billingPlugin,
+  cancelBilling,
+  checkoutAllowed,
+  closedPaths,
+  portalAllowed,
+  type BillingEnv,
+} from "./billing"
 import { createMailer } from "./email"
 import {
   GUESTS_PER_NETWORK,
@@ -54,14 +63,21 @@ export function createAuth({
   db,
   env,
   waitUntil,
+  origin,
 }: {
   db: Db
   env: Pick<Env, "BETTER_AUTH_SECRET" | "STAGE" | "TURNSTILE_SECRET_KEY"> & {
     /** Missing on Previews and in local dev: no email is sent there. */
     RESEND_API_KEY?: string | undefined
-  } & OAuthApps
+  } & OAuthApps &
+    BillingEnv
   /** ctx.waitUntil: work that may finish after the response. */
   waitUntil: (promise: Promise<unknown>) => void
+  /**
+   * The origin of the /api/auth request being served, for links back to
+   * Parley from Polar's portal. Only the Hono app serves those routes.
+   */
+  origin?: string
 }) {
   const sendEmail = createMailer(env)
 
@@ -127,11 +143,17 @@ export function createAuth({
       },
     },
     user: {
+      // The plan (T26): set by Polar's webhooks only.
+      additionalFields: billingFields,
       // Settings → Delete account (spec §5 Auth): the password, or for a
       // Google or GitHub account a sign-in in the last 15 minutes
       // (freshAge). The user row goes, and every draft, chat, session and
       // login with it (foreign keys cascade).
-      deleteUser: { enabled: true },
+      deleteUser: {
+        enabled: true,
+        // Pro is canceled with the account, never left billing (T26).
+        beforeDelete: (user) => cancelBilling({ db, env, userId: user.id }),
+      },
       changeEmail: {
         enabled: true,
         // A confirmed address approves the move first; Better Auth then
@@ -200,6 +222,9 @@ export function createAuth({
         if (ctx.path === "/verify-email")
           await newEmailNeedsItsAccount(ctx, env.BETTER_AUTH_SECRET)
         if (ctx.path === "/delete-user") await deleteNeedsThePassword(ctx)
+        // Polar (T26): checkout answers the body it runs with.
+        if (ctx.path === "/checkout") return checkoutAllowed(ctx, env)
+        if (ctx.path === "/customer/portal") await portalAllowed(ctx, env, db)
       }),
     },
     // Who signed in, out, and changed what: IDs only (spec §5 Auth).
@@ -212,8 +237,14 @@ export function createAuth({
         // New guests per network (spec §2 Limits). Better Auth counts per
         // IP and path, before the Turnstile check.
         "/sign-in/anonymous": guestsPerNetwork(env),
+        // Signed by Polar and checked (T26); a burst of renewals must not
+        // be turned away, or Polar gives up on the endpoint. Checkout and
+        // the portal are limited per user (server/billing.ts).
+        "/polar/webhooks": false,
       },
     },
+    // Polar's routes Parley doesn't use (T26).
+    disabledPaths: closedPaths,
     advanced: {
       useSecureCookies: true,
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
@@ -237,6 +268,8 @@ export function createAuth({
       turnstile(env),
       // A cookie only: "Last used" on the sign-in buttons.
       lastLoginMethod(),
+      // Parley Pro: Polar sandbox checkout, portal and webhooks (T26).
+      billingPlugin({ db, env, origin }),
       // No tanstackStartCookies() (spec §5 Auth asked for it; T21 found it
       // does nothing here and breaks things): sign-in, sign-up and sign-out
       // go through /api/auth, whose responses carry their own cookies, and

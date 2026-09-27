@@ -6,18 +6,11 @@ import { Temporal } from "temporal-polyfill"
 // always free. Word files need Pro. The database side (the per-user lock
 // and the counts) is in rpc/export.ts.
 
-export const FREE_DOCUMENTS_PER_MONTH = 3
-
-export type Plan = "free" | "pro"
 export type ExportFormat = "pdf" | "docx"
 
-/**
- * The user's plan. Everyone is on Free until T26 reads the Polar
- * subscription here.
- */
-export function planOf(_user: { id: string }): Plan {
-  return "free"
-}
+import { FREE_DOCUMENTS_PER_MONTH, type Plan } from "../lib/limits"
+
+export { FREE_DOCUMENTS_PER_MONTH, planOf, type Plan } from "../lib/limits"
 
 /** The first moment of the calendar month (UTC) that `now` is in. */
 export function monthStart(now: Temporal.Instant): Temporal.Instant {

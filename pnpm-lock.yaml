@@ -236,6 +236,12 @@ importers:
       '@orpc/tanstack-query':
         specifier: 1.15.4
         version: 1.15.4(@orpc/client@1.15.4)(@tanstack/query-core@5.103.2)
+      '@polar-sh/better-auth':
+        specifier: 1.8.4
+        version: 1.8.4(@polar-sh/sdk@0.47.1)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@stripe/stripe-js@7.10.0)(better-auth@1.7.5(@tanstack/react-start@1.168.57(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(esbuild@0.28.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.9)(supports-color@10.2.2))(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.0))(pg@8.23.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.1))(react@19.3.0)(zod@4.6.5)
+      '@polar-sh/sdk':
+        specifier: 0.47.1
+        version: 0.47.1
       '@tanstack/react-form':
         specifier: ^1.33.5
         version: 1.33.5(@tanstack/react-start@1.168.57(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(esbuild@0.28.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.9)(supports-color@10.2.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -2157,6 +2163,24 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  '@polar-sh/better-auth@1.8.4':
+    resolution: {integrity: sha512-BgWCcBQDRYwQn2NEYYzGSEfnrmBJHaDTvYBXGE2V3mmGPKspUDS8+p1LzbNY0Sw681LT8HB5w5Q81Ysc46CVSQ==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@polar-sh/sdk': ^0.47.0
+      better-auth: ^1.4.12
+      zod: ^3.25.0 || ^4.0.0
+
+  '@polar-sh/checkout@0.2.1':
+    resolution: {integrity: sha512-AEKKw3o4ykApECA4bU6a2YC0+aQKTFUasca4ZgCDIjG8AHlu3SjW3Taxh2nfeYAczhah0m0axVF9AV8VfdYzfw==}
+    peerDependencies:
+      '@stripe/react-stripe-js': ^3.6.0 || ^4.0.2
+      '@stripe/stripe-js': ^7.1.0
+      react: ^18 || ^19
+
+  '@polar-sh/sdk@0.47.1':
+    resolution: {integrity: sha512-fkz7wPLbqfuDmY9LxuXpE2uP2TAV6J0q/YN5hJ4UBxpjbkB0hKM6c4R35N89t83dfzMlG6EOlqOn+Rd1T6XrJQ==}
+
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
@@ -2504,6 +2528,17 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@stripe/react-stripe-js@4.0.2':
+    resolution: {integrity: sha512-l2wau+8/LOlHl+Sz8wQ1oDuLJvyw51nQCsu6/ljT6smqzTszcMHifjAJoXlnMfcou3+jK/kQyVe04u/ufyTXgg==}
+    peerDependencies:
+      '@stripe/stripe-js': '>=1.44.1 <8.0.0'
+      react: '>=16.8.0 <20.0.0'
+      react-dom: '>=16.8.0 <20.0.0'
+
+  '@stripe/stripe-js@7.10.0':
+    resolution: {integrity: sha512-LKrDpCop593iWnPxOHgjYmZGngOdgzPYLjyVzUdQ7f7bSnAEKkBMEwsOmWRrq40TR8KG96woms5xPUmffZkJ0Q==}
+    engines: {node: '>=12.16'}
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
@@ -3603,6 +3638,9 @@ packages:
   culori@4.0.2:
     resolution: {integrity: sha512-1+BhOB8ahCn4O0cep0Sh2l9KCOfOdY+BXJnKMHFFzDEouSr/el18QwXEMRlOj9UY5nCeA8UN3a/82rUWRBeyBw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  date-fns@4.4.0:
+    resolution: {integrity: sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==}
 
   debounce-fn@4.0.0:
     resolution: {integrity: sha512-8pYCQiL9Xdcg0UPSD3d+0KMlOjp+KGU5EPwYddgzQ7DATsg4fuUDjQtsYLmWjnk2obnNHgV3vE2Y4jejSOJVBQ==}
@@ -7272,6 +7310,29 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
+  '@polar-sh/better-auth@1.8.4(@polar-sh/sdk@0.47.1)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@stripe/stripe-js@7.10.0)(better-auth@1.7.5(@tanstack/react-start@1.168.57(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(esbuild@0.28.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.9)(supports-color@10.2.2))(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.0))(pg@8.23.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.1))(react@19.3.0)(zod@4.6.5)':
+    dependencies:
+      '@polar-sh/checkout': 0.2.1(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@stripe/stripe-js@7.10.0)(react@19.3.0)
+      '@polar-sh/sdk': 0.47.1
+      better-auth: 1.7.5(@tanstack/react-start@1.168.57(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(esbuild@0.28.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.9)(supports-color@10.2.2))(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.0))(pg@8.23.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.1)
+      zod: 4.6.5
+    transitivePeerDependencies:
+      - '@stripe/react-stripe-js'
+      - '@stripe/stripe-js'
+      - react
+
+  '@polar-sh/checkout@0.2.1(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@stripe/stripe-js@7.10.0)(react@19.3.0)':
+    dependencies:
+      '@stripe/react-stripe-js': 4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@stripe/stripe-js': 7.10.0
+      date-fns: 4.4.0
+      react: 19.3.0
+
+  '@polar-sh/sdk@0.47.1':
+    dependencies:
+      standardwebhooks: 1.1.1
+      zod: 4.6.5
+
   '@polka/url@1.0.0-next.29': {}
 
   '@poppinss/colors@4.1.6':
@@ -7515,6 +7576,15 @@ snapshots:
   '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@stripe/stripe-js': 7.10.0
+      prop-types: 15.8.1
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
+  '@stripe/stripe-js@7.10.0': {}
 
   '@tailwindcss/node@4.3.3':
     dependencies:
@@ -8590,6 +8660,8 @@ snapshots:
   csstype@3.2.3: {}
 
   culori@4.0.2: {}
+
+  date-fns@4.4.0: {}
 
   debounce-fn@4.0.0:
     dependencies:

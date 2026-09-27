@@ -42,6 +42,11 @@
       "GOOGLE_CLIENT_SECRET",
       "GITHUB_CLIENT_ID",
       "GITHUB_CLIENT_SECRET",
+      // Polar SANDBOX (org parley-legal, T26): an access token for checkout,
+      // the portal and account deletion, and the webhook endpoint's secret.
+      // Previews get theirs from the Previews base config.
+      "POLAR_ACCESS_TOKEN",
+      "POLAR_WEBHOOK_SECRET",
     ],
   },
   "vars": {
@@ -52,6 +57,9 @@
     // Turnstile's widget "parley-auth" (parley.runtimedrift.dev, localhost).
     // Public: the browser shows it.
     "TURNSTILE_SITE_KEY": "0x4AAAAAAFDRY50F_vQ9qvx3",
+    // The "Parley Pro" product in Polar's sandbox ($5/month). Not a secret:
+    // it shows in every checkout URL.
+    "POLAR_PRO_PRODUCT_ID": "c47ef7e0-e925-48a8-9160-bc35f30b4c05",
   },
   // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
   // uses the real service (10 browser hours/month are in Workers Paid).
@@ -84,6 +92,13 @@
       "namespace_id": "2703",
       "simple": { "limit": 10, "period": 60 },
     },
+    // Checkout and the billing portal: each is a call to Polar's API, whose
+    // limit is the whole organization's (T26).
+    {
+      "name": "BILLING_RATE_LIMITER",
+      "namespace_id": "2704",
+      "simple": { "limit": 5, "period": 60 },
+    },
   ],
   // Neon through Hyperdrive with query caching OFF: a cached SELECT would
   // show a stale draft or a revoked share link (spec §5 Database). Local dev
@@ -113,6 +128,7 @@
       "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
       // Its public test secret: every token passes, so it isn't a secret.
       "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA",
+      "POLAR_PRO_PRODUCT_ID": "c47ef7e0-e925-48a8-9160-bc35f30b4c05",
     },
     "browser": {
       "binding": "BROWSER",
@@ -133,6 +149,11 @@
         "name": "EXPORT_RATE_LIMITER",
         "namespace_id": "2713",
         "simple": { "limit": 10, "period": 60 },
+      },
+      {
+        "name": "BILLING_RATE_LIMITER",
+        "namespace_id": "2714",
+        "simple": { "limit": 5, "period": 60 },
       },
     ],
     // Previews never touch production data. "parley-preview" → the Neon
