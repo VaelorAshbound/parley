@@ -90,6 +90,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      # The tests import the document engine (through @workspace/db), whose
+      # typed trees are generated.
+      - run: pnpm documents:build
+
       - name: Wait for the Workers Builds Preview of this commit
         if: github.event_name == 'pull_request'
         timeout-minutes: 8
