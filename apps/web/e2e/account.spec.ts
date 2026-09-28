@@ -1,12 +1,8 @@
-import {
-  test as fresh,
-  type APIRequestContext,
-  type Page,
-} from "@playwright/test"
+import type { APIRequestContext, Page } from "@playwright/test"
 import { connect, schema } from "@workspace/db"
 import { and, eq, like } from "drizzle-orm"
 
-import { expect, open } from "./helpers"
+import { expect, fresh, open } from "./helpers"
 
 // Settings and the password flows (T23), in a real browser against the dev
 // server. Addresses are on example.test, so no email is ever sent; the reset

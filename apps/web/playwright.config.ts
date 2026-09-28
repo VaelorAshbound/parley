@@ -9,7 +9,11 @@ const localUrl = `http://localhost:${process.env.PORT ?? 3000}`
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
+  // One test at a time locally: the dev server, Postgres and browsers share
+  // one laptop (owner's call, 2026-09-28). CI splits the run across machines.
+  workers: isCI ? undefined : 1,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   reporter: isCI ? [["list"], ["html", { open: "never" }]] : [["list"]],

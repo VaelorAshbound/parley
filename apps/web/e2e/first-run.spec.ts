@@ -1,7 +1,6 @@
-import { test as fresh } from "@playwright/test"
 import { DISCLAIMER } from "@workspace/documents"
 
-import { expect, open, test } from "./helpers"
+import { expect, fresh, open, test } from "./helpers"
 
 // First run (T37): the start page as a visitor sees it, and the phone
 // document's bottom bar with Share and Download (brand.md canvas).
