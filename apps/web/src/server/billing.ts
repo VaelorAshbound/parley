@@ -311,7 +311,7 @@ export async function checkoutAllowed(ctx: HookContext, env: BillingEnv) {
       code: "EMAIL_NOT_VERIFIED",
       message: "Please confirm your email first. We sent you a link.",
     })
-  if ((user as { plan?: unknown }).plan === "pro")
+  if ("plan" in user && user.plan === "pro")
     throw APIError.from("CONFLICT", {
       code: "ALREADY_PRO",
       message: "You already have Pro.",
@@ -403,25 +403,20 @@ export async function cancelBilling({
   if (!row || row.isAnonymous) return
   const at = new Date()
   try {
-    await polarApi(env).customers.deleteExternal({
-      externalId: userId,
-      anonymize: true,
-    })
-    logInfo("polar_customer_deleted", { userId })
+    if (await deleteCustomer(env, userId))
+      logInfo("polar_customer_deleted", { userId })
   } catch (error) {
-    if (!(error instanceof ResourceNotFound)) {
-      log(
-        "error",
-        "polar_customer_delete_failed",
-        { userId, ...statusOf(error) },
-        error
-      )
-      throw APIError.from("SERVICE_UNAVAILABLE", {
-        code: "BILLING_NOT_CANCELED",
-        message:
-          "We couldn't cancel your Pro plan just now, so your account is still here. Please try again.",
-      })
-    }
+    log(
+      "error",
+      "polar_customer_delete_failed",
+      { userId, ...statusOf(error) },
+      error
+    )
+    throw APIError.from("SERVICE_UNAVAILABLE", {
+      code: "BILLING_NOT_CANCELED",
+      message:
+        "We couldn't cancel your Pro plan just now, so your account is still here. Please try again.",
+    })
   }
   // Nothing is billed now, even if deleting the account then fails.
   await setPlan(db, { userId, plan: "free", at })
@@ -440,17 +435,30 @@ export async function cancelBillingAgain(
 ) {
   if (user.isAnonymous) return
   try {
-    await polarApi(env).customers.deleteExternal({
-      externalId: user.id,
-      anonymize: true,
-    })
+    await deleteCustomer(env, user.id)
   } catch (error) {
-    if (error instanceof ResourceNotFound) return
     log(
       "error",
       "polar_customer_delete_failed",
       { userId: user.id, after: true, ...statusOf(error) },
       error
     )
+  }
+}
+
+/**
+ * Deletes the user's Polar customer, which cancels any subscription at
+ * once and anonymizes it. False when Polar has no such customer.
+ */
+async function deleteCustomer(env: BillingEnv, userId: string) {
+  try {
+    await polarApi(env).customers.deleteExternal({
+      externalId: userId,
+      anonymize: true,
+    })
+    return true
+  } catch (error) {
+    if (error instanceof ResourceNotFound) return false
+    throw error
   }
 }
