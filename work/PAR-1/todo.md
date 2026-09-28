@@ -841,7 +841,7 @@
   - Deps: T24, T30
 
 ### Checkpoint 6: **stop for owner review**
-- [ ] All 12 documents can be drafted by chat and exported. The eval report is shared with you.
+- [x] All 12 documents can be drafted by chat and exported. The eval report is shared with you. (Owner approved 2026-09-28.)
 
 ---
 
