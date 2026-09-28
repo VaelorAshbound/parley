@@ -568,13 +568,33 @@ describe("deleting the account", () => {
     const response = await deleteUser(cookie)
 
     expect(response.status).toBe(200)
-    expect(polar.calls).toEqual([
-      {
-        method: "DELETE",
-        path: `/v1/customers/external/${userId}?anonymize=true`,
-        body: undefined,
-      },
-    ])
+    const cancel = {
+      method: "DELETE",
+      path: `/v1/customers/external/${userId}?anonymize=true`,
+      body: undefined,
+    }
+    // Once more after the row is gone: a checkout that finished in another
+    // tab meanwhile made a new customer, and its webhook may have come
+    // while the row was still there (Checkpoint 6 review).
+    expect(polar.calls).toEqual([cancel, cancel])
+    expect(await planOf(userId)).toBeUndefined()
+  })
+
+  it("is deleted even when the second cancel fails", async () => {
+    const { cookie, userId } = await accountWith(active)
+    let deletes = 0
+    polar.answer(({ method }) =>
+      method !== "DELETE"
+        ? undefined
+        : ++deletes === 1
+          ? new Response(null, { status: 204 })
+          : Response.json({ detail: "down" }, { status: 503 })
+    )
+
+    const response = await deleteUser(cookie)
+
+    expect(response.status).toBe(200)
+    expect(deletes).toBe(2)
     expect(await planOf(userId)).toBeUndefined()
   })
 

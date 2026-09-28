@@ -426,3 +426,31 @@ export async function cancelBilling({
   // Nothing is billed now, even if deleting the account then fails.
   await setPlan(db, { userId, plan: "free", at })
 }
+
+/**
+ * After the account is deleted: asks Polar once more. A checkout that
+ * finished in another tab during the delete made a new customer, and its
+ * webhook may have come while the user row was still there, so nothing
+ * canceled it (Checkpoint 6 review). The account is gone either way, so a
+ * failure is only logged.
+ */
+export async function cancelBillingAgain(
+  env: BillingEnv,
+  user: { id: string; isAnonymous?: boolean | null | undefined }
+) {
+  if (user.isAnonymous) return
+  try {
+    await polarApi(env).customers.deleteExternal({
+      externalId: user.id,
+      anonymize: true,
+    })
+  } catch (error) {
+    if (error instanceof ResourceNotFound) return
+    log(
+      "error",
+      "polar_customer_delete_failed",
+      { userId: user.id, after: true, ...statusOf(error) },
+      error
+    )
+  }
+}
