@@ -66,6 +66,26 @@ async function newAccount() {
   return { ...account, userId: await userIdOf(account.email) }
 }
 
+/**
+ * The state with its subscriptions sold by `stage`: checkout stamps the
+ * stage in its metadata, and Polar copies it to the subscription.
+ */
+function soldBy<T extends { data: { active_subscriptions: object[] } }>(
+  state: T,
+  stage: string
+) {
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      active_subscriptions: state.data.active_subscriptions.map((each) => ({
+        ...each,
+        metadata: { stage },
+      })),
+    },
+  }
+}
+
 const deleted = (userId: string) => ({
   method: "DELETE",
   path: `/v1/customers/cus-${userId}?anonymize=true`,
@@ -165,10 +185,31 @@ describe("Polar's webhook", () => {
       method === "DELETE" ? new Response(null, { status: 204 }) : undefined
     )
 
-    const response = await send(polar, stateFor(active, ghost))
+    const response = await send(
+      polar,
+      soldBy(stateFor(active, ghost), "production")
+    )
 
     expect(response.status).toBe(200)
     expect(polar.calls).toContainEqual(deleted(ghost))
+  })
+
+  it("never cancels a subscription sold by another stage", async () => {
+    // Previews and production share one Polar organization, and each gets
+    // every webhook: a production buyer is unknown on a Preview's database
+    // (Checkpoint 6 review). Sold before stages were stamped: unknown too.
+    polar.answer(({ method }) =>
+      method === "DELETE" ? new Response(null, { status: 204 }) : undefined
+    )
+
+    const other = await send(
+      polar,
+      soldBy(stateFor(active, crypto.randomUUID()), "preview")
+    )
+    const unstamped = await send(polar, stateFor(active, crypto.randomUUID()))
+
+    expect([other.status, unstamped.status]).toEqual([200, 200])
+    expect(polar.calls.map(({ method }) => method)).not.toContain("DELETE")
   })
 
   it("leaves alone a customer Parley didn't make", async () => {
@@ -332,6 +373,8 @@ describe("checkout", () => {
       return_url: "http://localhost:3000/pricing",
       // Parley has no discounts: the checkout page shows no code field.
       allow_discount_codes: false,
+      // Polar copies it to the subscription: which stage sold it.
+      metadata: { stage: "production" },
     })
   })
 
