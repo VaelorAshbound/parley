@@ -51,11 +51,13 @@ export function toPrintHtml(
             section.table ? listTable(section.table) : ""
           }</section>`
     ),
-    // "By signing…" stays on the page with the table it introduces.
-    `<div class="signing">${coverPage.closing.map(paragraph).join("")}${signatures(document)}</div>`,
-    ...coverPage.footer.map(
-      (each) => `<p class="attribution">${inline(each)}</p>`
-    ),
+    // "By signing…" stays on the page with the table it introduces, and the
+    // license lines below it: alone, the last one got a page of its own.
+    `<div class="signing">${coverPage.closing.map(paragraph).join("")}${signatures(
+      document
+    )}${coverPage.footer
+      .map((each) => `<p class="attribution">${inline(each)}</p>`)
+      .join("")}</div>`,
     "</section>",
     '<section class="terms">',
     `<h1>${escape(standardTerms.title)}</h1>`,
@@ -196,7 +198,10 @@ function clause(node: RenderedClause): string {
   const heading = node.heading
     ? `<strong>${escape(node.heading)}</strong> `
     : ""
-  return `<div class="clause"><p><span class="number">${escape(
+  // A heading with no words of its own ("2.6 Subprocessors.") leads into its
+  // subclauses: alone at the foot of a page, it read as a loose line (T31).
+  const lead = node.content.length === 0 && node.children.length > 0
+  return `<div class="clause"><p${lead ? ' class="lead"' : ""}><span class="number">${escape(
     node.number
   )}</span> ${heading}${inline(node.content)}</p>${node.children
     .map(clause)
@@ -218,11 +223,10 @@ function styles(pageSize: "Letter" | "A4") {
   margin: 0.9in 1in 1in;
 }
 :root {
-  --serif: "Newsreader Variable", Georgia, "Times New Roman", serif;
-  --sans: "Instrument Sans Variable", Arial, sans-serif;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "Instrument Sans", Arial, sans-serif;
   color: #1b1a17;
   font: 10.5pt/1.5 var(--serif);
-  font-optical-sizing: auto;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -230,12 +234,14 @@ body { margin: 0; }
 h1 { font-size: 22pt; font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 6pt; }
 h2 { font-size: 12pt; font-weight: 600; margin: 16pt 0 6pt; break-after: avoid; }
 h3 { font-size: 11pt; font-weight: 600; margin: 0 0 2pt; break-after: avoid; }
-p { margin: 0 0 6pt; orphans: 3; widows: 3; }
+p { margin: 0 0 6pt; orphans: 2; widows: 2; }
 a { color: inherit; }
 .eyebrow, .hint, .label, .subtitle, .signatures th, .attribution { font-family: var(--sans); }
 .eyebrow { font-size: 7.5pt; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6a665d; margin-bottom: 10pt; }
 .subtitle { font-size: 8pt; letter-spacing: 0.08em; color: #57544c; margin: 12pt 0 4pt; }
 .part { font-size: 13pt; margin: 18pt 0 4pt; }
+.part + .hint { break-after: avoid; }
+.lead { break-after: avoid; }
 .field { border-top: 0.5pt solid #e3ded3; padding: 8pt 0 4pt; break-inside: avoid; }
 .hint { display: block; font-size: 8pt; color: #6a665d; margin: 0 0 4pt; }
 .label { font-size: 8.5pt; color: #57544c; }

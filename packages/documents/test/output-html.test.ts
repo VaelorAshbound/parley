@@ -67,6 +67,41 @@ describe("toPrintHtml", () => {
     expect(words).toContain("Expires 2 years from Effective Date.")
   })
 
+  it("keeps the cover page's license lines with the signatures", () => {
+    // A real PDF (T31) printed the last license line alone on a page.
+    expect(toPrintHtml(filled)).toMatch(
+      /<div class="signing">.*<table class="signatures">.*<\/table><p class="attribution">Common Paper Mutual Non-Disclosure Agreement.*?<\/p><\/div>/
+    )
+  })
+
+  it("keeps a clause heading with no words of its own on the page of its first subclause", () => {
+    // A real PDF (T31) ended the DPA's page 9 with "2.6 Subprocessors."
+    const dpa = definitions.dpa
+    const html = toPrintHtml(render(dpa, dpa.schema.parse(examples.dpa)))
+
+    expect(html).toContain(
+      '<p class="lead"><span class="number">2.6</span> <strong>Subprocessors.</strong> </p>'
+    )
+    expect(html).toContain(".lead { break-after: avoid; }")
+    // A clause with words of its own is a normal paragraph.
+    expect(html).toContain('<p><span class="number">2.5</span>')
+  })
+
+  it("keeps two lines of a paragraph together at a page break", () => {
+    // Three and three can't both hold for a four-line paragraph, and Chrome
+    // then drops both: a real PDF (T31) began a page with one line.
+    expect(toPrintHtml(filled)).toContain(
+      "p { margin: 0 0 6pt; orphans: 2; widows: 2; }"
+    )
+  })
+
+  it("keeps a part heading and its hint with the field below them", () => {
+    // A real PDF (T31) ended a page with "Key Terms" and its hint.
+    expect(toPrintHtml(filled)).toContain(
+      ".part + .hint { break-after: avoid; }"
+    )
+  })
+
   it("keeps the closing attribution with the last clause", () => {
     expect(toPrintHtml(filled)).toMatch(
       /<div class="keep"><div class="clause"><p><span class="number">11\.<\/span>.*<p class="attribution">Common Paper Mutual Non-Disclosure Agreement <a /
@@ -123,9 +158,19 @@ describe("toPrintHtml", () => {
   })
 
   it("embeds the fonts it is given, since the PDF browser has none", () => {
-    const fontCss = '@font-face { font-family: "Newsreader Variable"; }'
+    const fontCss = '@font-face { font-family: "Newsreader"; }'
 
     expect(toPrintHtml(filled, { fontCss })).toContain(fontCss)
+  })
+
+  it("asks for the static brand fonts, with no variable font axes", () => {
+    // Chrome embeds variable fonts in a PDF as Type 3 fonts, which lose
+    // their ligatures' letters; static fonts go in as real TrueType (T31).
+    const html = toPrintHtml(filled)
+
+    expect(html).toContain('--serif: "Newsreader", Georgia')
+    expect(html).toContain('--sans: "Instrument Sans", Arial')
+    expect(html).not.toContain("font-optical-sizing")
   })
 
   it("prints sectioned terms with no closing line, and no table with no signers", () => {
