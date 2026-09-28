@@ -59,17 +59,23 @@ export function MessageParts({
         return <PlainText key={index} text={part.text} />
       case "tool-chooseDocument":
         return part.state === "output-available" ? (
-          <Marker key={index} variant="separator">
-            <MarkerContent className="flex items-center gap-1.5">
-              <FileTextIcon aria-hidden="true" className="size-3.5" />
-              {documentName(
-                isDocumentId(part.output.documentId)
-                  ? part.output.documentId
-                  : null
-              )}{" "}
-              selected
-            </MarkerContent>
-          </Marker>
+          <div key={index}>
+            <Marker variant="separator">
+              <MarkerContent className="flex items-center gap-1.5">
+                <FileTextIcon aria-hidden="true" className="size-3.5" />
+                {documentName(
+                  isDocumentId(part.output.documentId)
+                    ? part.output.documentId
+                    : null
+                )}{" "}
+                selected
+              </MarkerContent>
+            </Marker>
+            {/* The one-line reason for the pick (user story 2). */}
+            <p className="mt-1 text-center text-small text-pretty text-ink-2">
+              {part.input.reason}
+            </p>
+          </div>
         ) : part.state === "output-error" ? null : (
           <Working key={index}>Choosing the agreement…</Working>
         )
