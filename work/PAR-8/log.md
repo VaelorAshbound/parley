@@ -15,3 +15,6 @@ Wave B2 saw two more cold-dev-server timeouts (30 s): export.spec 'a guest who w
 
 ### 2026-09-27T20:20:16Z
 More flaky tests seen in CI on 2026-09-27 (PAR-1-parley): (1) e2e drafts.spec 'a signed-out visitor keeps the browser's own Ctrl+K' failed first and passed on retry twice (runs for a510dd0/1dd6594 era and 417b24b; once a page.evaluate timeout at 30 s). (2) Component test src/features/drafts/search-dialog.browser.test.tsx 'arrow keys move the highlight, and Enter opens that draft' failed on 1dd6594 (expected '/d/d1' to be '/d/d2'), passed on the next run. (3) e2e drafts.spec 'renames a draft from its title menu, everywhere at once' passed only on retry on 417b24b. None touched by recent tasks.
+
+### 2026-09-28T17:58:38Z
+Fixed the race in 'a signed-out visitor keeps the browser's own Ctrl+K' (listener added before the key press). Seen locally on a full run on 2026-09-28, not in isolation: 'on a phone: search opens with ⌘K…' (Chromium) and 'signing out and back in' (Firefox); both passed on re-run.
