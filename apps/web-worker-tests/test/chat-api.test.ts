@@ -12,7 +12,7 @@ vi.mock(import("../../web/src/server/ai/model"), async (original) => {
   const { MockLanguageModelV4 } = await import("ai/test")
   return {
     ...(await original()),
-    createModel: () =>
+    requestModel: async () =>
       new MockLanguageModelV4({
         doStream: async () => ({
           stream: simulateReadableStream({
