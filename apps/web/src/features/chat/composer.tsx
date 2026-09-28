@@ -46,7 +46,9 @@ export function Composer({
     if (text.trim() === "") input.current?.focus()
     if (!ready) return
     onSend(text.trim())
-    setText("")
+    // The start page keeps the deal: a start that works leaves the page,
+    // and one that fails can be sent again as typed.
+    if (!start) setText("")
   }
 
   return (

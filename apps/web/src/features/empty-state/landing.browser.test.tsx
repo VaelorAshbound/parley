@@ -47,6 +47,24 @@ describe("the start page", () => {
     expect(onStart).toHaveBeenCalledWith({ text: pilot.prompt })
   })
 
+  test("keeps the typed deal after sending, in case the start fails", async () => {
+    // A failed start (Turnstile, a limit, the network) shows its note; the
+    // deal must still be there to send again (Checkpoint 6 review). A start
+    // that works leaves the page.
+    const { screen, onStart } = await show()
+    const box = screen.getByRole("textbox", { name: "Describe your deal" })
+
+    await box.fill("An NDA with Acme for a roadmap review.")
+    await userEvent.keyboard("{Enter}")
+
+    expect(onStart).toHaveBeenCalledWith({
+      text: "An NDA with Acme for a roadmap review.",
+    })
+    await expect
+      .element(box)
+      .toHaveValue("An NDA with Acme for a roadmap review.")
+  })
+
   test("every example says more than its label", () => {
     for (const starter of starters) {
       expect(starter.prompt.length).toBeGreaterThan(starter.label.length)
