@@ -107,7 +107,15 @@ function TurnOnDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={openChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next, { reason }) => {
+        // The backup codes are shown once: only Done or the close button
+        // ends that step, never Escape or a click beside the dialog.
+        if (!next && setup.step === "codes" && reason !== "close-press") return
+        openChange(next)
+      }}
+    >
       <DialogTrigger render={<Button />}>Turn on</DialogTrigger>
       <DialogContent>
         {setup.step === "password" && (

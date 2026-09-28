@@ -134,6 +134,10 @@ test("two-factor sign-in: on, a code, a backup code once, off", async ({
     .allInnerTexts()
   expect(backupCodes).toHaveLength(10)
   await expect(dialog.getByRole("button", { name: "Download" })).toBeVisible()
+  // Shown once: Escape or a click beside the dialog can't lose them.
+  await page.keyboard.press("Escape")
+  await page.mouse.click(5, 5)
+  await expect(on).toBeVisible()
   await dialog.getByRole("button", { name: "Done" }).click()
   await expect(page.getByText("On", { exact: true })).toBeVisible()
 
