@@ -122,8 +122,15 @@ describe("draft search", () => {
     await expect
       .element(page.getByRole("option", { name: /Acme NDA/ }))
       .toHaveAttribute("aria-selected", "true")
+    // Keys go to the search box only once the dialog has moved focus there
+    // (PAR-8: pressed earlier, they were lost about 1 run in 10 in CI).
+    await expect.element(page.getByRole("combobox")).toHaveFocus()
 
-    await userEvent.keyboard("{ArrowDown}{Enter}")
+    await userEvent.keyboard("{ArrowDown}")
+    await expect
+      .element(page.getByRole("option", { name: /Bolt pilot/ }))
+      .toHaveAttribute("aria-selected", "true")
+    await userEvent.keyboard("{Enter}")
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe("/d/d2"))
   })
