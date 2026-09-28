@@ -12,6 +12,7 @@
   "include": [
     "src",
     "e2e",
+    "test",
     "vite.config.ts",
     "playwright.config.ts",
     "worker-configuration.d.ts"
