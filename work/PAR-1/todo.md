@@ -825,7 +825,14 @@
   - Files: `apps/web/src/server/ai/prompt.ts`, `evals/cases/*.ts`, `evals/report.md`
   - Deps: T8–T11, T20
 
-- [ ] **T31: Real export of all 12 documents + visual checks** (S)
+- [x] **T31: Real export of all 12 documents + visual checks** (S)
+  - Done 2026-09-28 (merge c55fa5d). Skills: build, incremental-implementation, test-driven-development, git-workflow-and-versioning. Continued from worktree wf_af3c2e47-d76-3 (edits only, rebased on 105cb08). Checked:
+    - `pnpm test:real` 44/44 on a fresh real print: 11 files (the NDA with its cover page is the 12th document), 119 PDF pages, each pixel-equal to its baseline; a second real print matched too (the output is stable). All 119 baselines looked at by eye in contact sheets.
+    - Gate: `pnpm check` pass; `pnpm test` 1152 pass, 1 skipped; `pnpm test:workers` 435; `pnpm test:workers:real` pass (the PDF now has TrueType Newsreader + Instrument Sans, no Type 3).
+  - Built: `apps/web/test/real/` (print.ts makes the files in Node with the app's own `buildFile` + `browserRunPrinter`, BROWSER from wrangler's remote platform proxy; the test reads them back in Chromium with unpdf and JSZip). Checks: fully filled (no blank on a chosen line), every heading/clause/value word for word, demo note and "Page n of N" on every page, page count, pixel baselines. `REAL_DOCS`, `REAL_REUSE=1`, `--update`.
+  - Real bugs found and fixed (each with a test): variable fonts went in as Type 3 (now static TrueType, 13% smaller); last license line alone on a page; part heading + hint and heading-only clauses ("2.6 Subprocessors.") alone at a page foot; orphans/widows 3 made Chrome drop both rules (now 2); Word footer page numbers in the default size in LibreOffice.
+  - Decisions: the visual check allows no changed pixels (at 0.1% a missing heading line passed). pdf.js reads the kerning gap in "(f)" as "(f )" in its text layer only; kerning kept, the test ignores a space before ")".
+  - Not in CI yet: it needs the owner's Browser Run; T33 puts it in the nightly run.
   - Accept:
     - `test:real` builds a real PDF (Browser Run) and DOCX for all 12 documents, fully filled, and parses them back to check the text and page count.
     - The PDF pages are turned into PNG and compared with approved baselines.
