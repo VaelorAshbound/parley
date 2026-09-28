@@ -1,6 +1,6 @@
 import { DISCLAIMER } from "@workspace/documents"
 
-import { expect, fresh, open, test } from "./helpers"
+import { draftOpened, expect, fresh, open, test } from "./helpers"
 
 // First run (T37): the start page as a visitor sees it, and the phone
 // document's bottom bar with Share and Download (brand.md canvas).
@@ -133,7 +133,7 @@ test("on a phone, Share and Download sit in a bar under the document", async ({
   await page.setViewportSize({ width: 375, height: 812 })
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   await page.getByRole("button", { name: "Document" }).click()
 
   const bar = page.getByRole("group", { name: "Share or download" })
@@ -153,7 +153,7 @@ test("on a wide screen, Share and Download stay in the header", async ({
 }) => {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   await expect(
     page.getByRole("heading", {
       level: 1,

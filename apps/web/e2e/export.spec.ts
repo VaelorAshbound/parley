@@ -1,4 +1,4 @@
-import { expect, open, test } from "./helpers"
+import { draftOpened, expect, open, test } from "./helpers"
 
 // Downloading (T24). A guest can't download: the menu asks for a free
 // account and comes back to the draft. The server refuses before it makes
@@ -10,7 +10,7 @@ test("a guest who wants the PDF is asked to make an account", async ({
 }) => {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   const draftPath = new URL(page.url()).pathname
 
   await page.getByRole("button", { name: "Download" }).click()

@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { expect, fresh, open, test } from "./helpers"
+import { draftOpened, expect, fresh, open, test } from "./helpers"
 
 // Visual baselines (spec §6, T32): the key screens in light and dark, on
 // desktop and a phone. Compared only in Playwright's image (PW_VISUAL; see
@@ -27,7 +27,7 @@ async function startWith(page: Page, deal: string) {
   await open(page, "/")
   await page.getByRole("textbox", { name: "Describe your deal" }).fill(deal)
   await page.keyboard.press("Enter")
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 }
 
 for (const colorScheme of ["light", "dark"] as const) {

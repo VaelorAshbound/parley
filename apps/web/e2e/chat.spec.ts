@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { expect, open, test } from "./helpers"
+import { draftOpened, expect, open, test } from "./helpers"
 
 // The chat with the scripted AI (T32; its script is in
 // src/server/ai/scripted-model.ts): user stories 1, 2, 3 and 5 end to end.
@@ -9,7 +9,7 @@ async function startWith(page: Page, deal: string) {
   await open(page, "/")
   await page.getByRole("textbox", { name: "Describe your deal" }).fill(deal)
   await page.keyboard.press("Enter")
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 }
 
 const purpose = "Sharing our product roadmap with a vendor."
@@ -59,7 +59,7 @@ test("the AI's questions: a letter picks, a typed answer, a skip, then it goes o
 }) => {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 
   await page.getByRole("textbox", { name: "Message" }).fill("Please ask me.")
   await page.keyboard.press("Enter")

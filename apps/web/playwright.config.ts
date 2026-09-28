@@ -27,7 +27,11 @@ export default defineConfig({
   // a little differently, so screenshots aren't compared.
   // https://playwright.dev/docs/test-snapshots
   ignoreSnapshots: !process.env.PW_VISUAL,
-  expect: { toHaveScreenshot: { animations: "disabled", caret: "hide" } },
+  expect: {
+    // A Preview answers from Frankfurt, and CI's runners are in the US.
+    timeout: 10_000,
+    toHaveScreenshot: { animations: "disabled", caret: "hide" },
+  },
   // Desktop runs every test but the @phone-only ones; phones run the ones
   // tagged @phone (spec §6: every user story on desktop and a phone, in all
   // three engines).

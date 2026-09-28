@@ -13,6 +13,17 @@ export async function open(page: Page, url: string) {
   await page.locator("html[data-hydrated]").waitFor({ state: "attached" })
 }
 
+/**
+ * Waits until a draft that was just started or opened is on screen. The URL
+ * changes before the draft page's code has loaded, and a page.goto made in
+ * between is aborted by Firefox (NS_BINDING_ABORTED) and WebKit ("interrupted
+ * by another navigation"): the PAR-8 flakes.
+ */
+export async function draftOpened(page: Page) {
+  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await page.getByRole("region", { name: "Chat" }).waitFor()
+}
+
 /** Tries at a 429 before a sign-in gives up. */
 const attempts = 10
 
@@ -133,6 +144,9 @@ export async function expectAccessible(page: Page) {
       targets: nodes.map(({ target }) => target.join(" ")),
     }))
   expect(serious).toEqual([])
+  // One main landmark, so "skip to main" lands in one place (axe calls a
+  // second one only "moderate").
+  await expect(page.getByRole("main")).toHaveCount(1)
 }
 
 export { expect }
