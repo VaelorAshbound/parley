@@ -56,10 +56,26 @@ function AppLayout() {
     <UiStoreProvider>
       {/* Motion follows the system's reduced-motion setting everywhere. */}
       <MotionConfig reducedMotion="user">
+        {/* The first Tab: past the sidebar's history, straight to the page
+            (WCAG 2.4.1). Focus moves without changing the URL. */}
+        <a
+          href="#content"
+          onClick={(event) => {
+            event.preventDefault()
+            document.getElementById("content")?.focus()
+          }}
+          className="sr-only rounded-full bg-card text-sm font-medium shadow-float focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2"
+        >
+          Skip to content
+        </a>
         <SidebarProvider defaultOpen={defaultOpen}>
           <AppSidebar viewer={viewer} orpc={orpc} calendarKey={calendar} />
           {/* min-w-0: a truncated row in the chat must not widen the page. */}
-          <SidebarInset className="min-w-0">
+          <SidebarInset
+            id="content"
+            tabIndex={-1}
+            className="min-w-0 outline-none"
+          >
             <Outlet />
           </SidebarInset>
         </SidebarProvider>
