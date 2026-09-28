@@ -99,11 +99,13 @@ export function Landing({
                 </li>
               ))}
             </ul>
-            {/* Next to the box, and scrolled to: a start from the library
-                below may be what failed or needs the click. */}
-            {(turnstile || problem) && (
+            {/* Next to the box. It scrolls itself into view when Cloudflare
+                asks for a click (useTurnstile). */}
+            {turnstile}
+            {/* Scrolled to when it appears: a start from the library below
+                may be what failed. Not on load: the page stays at the top. */}
+            {problem && (
               <div ref={(note) => note?.scrollIntoView({ block: "nearest" })}>
-                {turnstile}
                 {problem}
               </div>
             )}

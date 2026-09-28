@@ -1,3 +1,4 @@
+import { test as fresh } from "@playwright/test"
 import { DISCLAIMER } from "@workspace/documents"
 
 import { expect, open, test } from "./helpers"
@@ -33,6 +34,27 @@ test("the start page fits a phone, with no sideways scroll", async ({
   )
   expect(overflow).toBe(0)
 })
+
+fresh(
+  "a first visit stays at the top of the page on a phone",
+  async ({ page }) => {
+    // A visitor (no guest yet) has the Turnstile box under the examples, and
+    // it scrolled itself into view as the page hydrated (Checkpoint 6 review).
+    await page.setViewportSize({ width: 375, height: 667 })
+    await open(page, "/")
+    // The jump came with hydration; two frames later it had happened.
+    const scrollY = await page.evaluate(
+      () =>
+        new Promise<number>((done) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => done(window.scrollY))
+          )
+        )
+    )
+
+    expect(scrollY).toBe(0)
+  }
+)
 
 test("“Start drafting, free” takes you to the reply box", async ({ page }) => {
   await open(page, "/")
