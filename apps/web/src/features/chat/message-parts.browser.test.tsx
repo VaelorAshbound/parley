@@ -235,3 +235,30 @@ test("says the agreement is complete once nothing is missing", async () => {
     .element(screen.getByRole("button", { name: "Download PDF" }))
     .toBeVisible()
 })
+
+test("shows why the AI picked the agreement, under the pick", async () => {
+  const screen = await renderWithStore(
+    <MessageParts
+      parts={[
+        {
+          type: "tool-chooseDocument",
+          toolCallId: "call-pick",
+          state: "output-available",
+          input: {
+            documentId: "csa",
+            reason: "A CSA usually comes with an SLA and a DPA.",
+          },
+          output: { documentId: "csa", title: "Cloud Service Agreement" },
+        },
+      ]}
+      definition={nda}
+    />
+  )
+
+  await expect
+    .element(screen.getByText("Cloud Service Agreement selected"))
+    .toBeVisible()
+  await expect
+    .element(screen.getByText("A CSA usually comes with an SLA and a DPA."))
+    .toBeVisible()
+})
