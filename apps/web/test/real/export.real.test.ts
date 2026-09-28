@@ -125,13 +125,19 @@ function termsInOrder({ standardTerms }: RenderedDocument) {
   ]
   return [
     standardTerms.title,
-    ...standardTerms.children.flatMap((block) =>
-      block.type === "section"
-        ? [`${block.id}. ${block.heading}`, ...block.children.flatMap(clause)]
-        : block.type === "clause"
-          ? clause(block)
-          : [textOf(block.content)]
-    ),
+    ...standardTerms.children.flatMap((block) => {
+      switch (block.type) {
+        case "section":
+          return [
+            `${block.id}. ${block.heading}`,
+            ...block.children.flatMap(clause),
+          ]
+        case "clause":
+          return clause(block)
+        case "paragraph":
+          return [textOf(block.content)]
+      }
+    }),
   ]
     .map(words)
     .filter((phrase) => phrase !== "")
