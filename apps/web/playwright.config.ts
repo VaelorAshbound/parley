@@ -22,6 +22,14 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
+  // Visual baselines are made in Playwright's own image (CI's container,
+  // or `pnpm test:e2e:docker`, which set PW_VISUAL): elsewhere fonts render
+  // a little differently, so screenshots aren't compared.
+  // https://playwright.dev/docs/test-snapshots
+  ignoreSnapshots: !process.env.PW_VISUAL,
+  expect: { toHaveScreenshot: { animations: "disabled", caret: "hide" } },
+  // Desktop runs every test; phones run the ones tagged @phone (spec §6:
+  // every user story on desktop and a phone, in all three engines).
   projects: [
     {
       name: "chromium",
@@ -35,6 +43,18 @@ export default defineConfig({
     },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    { name: "chromium-phone", grep: /@phone/, use: devices["Pixel 7"] },
+    // Firefox has no mobile mode in Playwright: a phone-sized touch screen.
+    {
+      name: "firefox-phone",
+      grep: /@phone/,
+      use: {
+        ...devices["Desktop Firefox"],
+        viewport: { width: 393, height: 851 },
+        hasTouch: true,
+      },
+    },
+    { name: "webkit-phone", grep: /@phone/, use: devices["iPhone 15"] },
   ],
   ...(previewUrl
     ? {}
