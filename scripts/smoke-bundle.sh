@@ -5,6 +5,13 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../apps/web"
 
+# The scripted AI of the e2e tests (T32) stays in its own chunk, which only
+# a Preview or local dev ever loads; the entry must not start it.
+if grep -q "MockLanguageModel" dist/server/index.js; then
+  echo "The Worker's entry holds the scripted AI; it must load lazily." >&2
+  exit 1
+fi
+
 port=4173
 log="$(mktemp)"
 if curl -fsS "http://localhost:$port" >/dev/null 2>&1; then

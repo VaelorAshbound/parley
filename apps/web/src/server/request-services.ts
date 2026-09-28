@@ -2,7 +2,7 @@ import { connect } from "@workspace/db"
 import { getRequest } from "@tanstack/react-start/server"
 import { env, waitUntil } from "cloudflare:workers"
 
-import { createModel } from "./ai/model"
+import { requestModel } from "./ai/model"
 import { createAuth } from "./auth"
 import { browserRunPrinter } from "./files"
 import { limitersFrom } from "./limits"
@@ -13,12 +13,12 @@ import { limitersFrom } from "./limits"
 // requests in one isolate.
 const byRequest = new WeakMap<Request, ReturnType<typeof create>>()
 
-async function create() {
+async function create(request: Request) {
   const db = await connect(env.HYPERDRIVE.connectionString)
   return {
     db,
     auth: createAuth({ db, env, waitUntil }),
-    model: createModel(env),
+    model: await requestModel(env, request.headers.get("cookie") ?? undefined),
     printPdf: browserRunPrinter(env.BROWSER),
     waitUntil,
     // Page loads count toward the per-user limit too.
@@ -30,7 +30,7 @@ export function requestServices() {
   const request = getRequest()
   let services = byRequest.get(request)
   if (!services) {
-    services = create()
+    services = create(request)
     byRequest.set(request, services)
   }
   return services

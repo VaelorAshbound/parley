@@ -60,6 +60,10 @@
     // The "Parley Pro" product in Polar's sandbox ($5/month). Not a secret:
     // it shows in every checkout URL.
     "POLAR_PRO_PRODUCT_ID": "c47ef7e0-e925-48a8-9160-bc35f30b4c05",
+    // "on" lets a browser with the parley-scripted-ai cookie chat with the
+    // scripted AI instead of the real model (the fast e2e tests, T32).
+    // Production: always off. Local dev turns it on in .dev.vars.
+    "SCRIPTED_AI": "off",
   },
   // Browser Run makes the PDFs. quickAction() has no local simulator, so dev
   // uses the real service (10 browser hours/month are in Workers Paid).
@@ -129,6 +133,8 @@
       // Its public test secret: every token passes, so it isn't a secret.
       "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA",
       "POLAR_PRO_PRODUCT_ID": "c47ef7e0-e925-48a8-9160-bc35f30b4c05",
+      // CI's e2e tests chat with the scripted AI (T32).
+      "SCRIPTED_AI": "on",
     },
     "browser": {
       "binding": "BROWSER",

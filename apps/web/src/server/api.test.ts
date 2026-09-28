@@ -49,10 +49,24 @@ describe("GET /api/version", () => {
       {
         ...env,
         COMMIT_SHA: "35a7e8b",
+        SCRIPTED_AI: "off",
       }
     )
 
-    expect(await response.json()).toEqual({ commit: "35a7e8b" })
+    expect(await response.json()).toEqual({
+      commit: "35a7e8b",
+      scriptedAi: false,
+    })
+  })
+
+  it("says where the scripted AI is on, so e2e never chats with the paid model", async () => {
+    const response = await api.request(
+      "/api/version",
+      {},
+      { ...env, COMMIT_SHA: "", SCRIPTED_AI: "on" }
+    )
+
+    expect(await response.json()).toMatchObject({ scriptedAi: true })
   })
 })
 

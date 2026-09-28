@@ -7,7 +7,7 @@ import { requestId, type RequestIdVariables } from "hono/request-id"
 import { secureHeaders } from "hono/secure-headers"
 import { timing, type TimingVariables } from "hono/timing"
 
-import { createModel } from "./ai/model"
+import { requestModel } from "./ai/model"
 import { createAuth } from "./auth"
 import { browserRunPrinter } from "./files"
 import { limitersFrom } from "./limits"
@@ -37,7 +37,7 @@ async function services(c: Context<AppEnv>) {
   return {
     db,
     auth,
-    model: createModel(c.env),
+    model: await requestModel(c.env, c.req.header("cookie")),
     printPdf: browserRunPrinter(c.env.BROWSER),
     limiters: limitersFrom(c.env),
   }
@@ -94,7 +94,12 @@ export const api = new Hono<AppEnv>()
   .use(secureHeaders())
   // Hono answers HEAD from the GET handler on its own.
   .get("/health", (c) => c.json({ ok: true as const }))
-  .get("/version", (c) => c.json({ commit: c.env.COMMIT_SHA }))
+  // The e2e tests check both before they start: which commit is served, and
+  // that the scripted AI is on, so they never chat with the paid model.
+  .get("/version", (c) => {
+    const scriptedAi: string = c.env.SCRIPTED_AI
+    return c.json({ commit: c.env.COMMIT_SHA, scriptedAi: scriptedAi === "on" })
+  })
   .route("/auth", auth)
   .route("/rpc", rpc)
   // Anything oRPC and Better Auth didn't turn into a response, for example
