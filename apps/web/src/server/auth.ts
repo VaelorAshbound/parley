@@ -26,6 +26,7 @@ import { auditHooks } from "./audit"
 import {
   billingPlugin,
   cancelBilling,
+  cancelBillingAgain,
   checkoutAllowed,
   closedPaths,
   polarWebhooks,
@@ -154,6 +155,7 @@ export function createAuth({
         enabled: true,
         // Pro is canceled with the account, never left billing (T26).
         beforeDelete: (user) => cancelBilling({ db, env, userId: user.id }),
+        afterDelete: (user) => cancelBillingAgain(env, user),
       },
       changeEmail: {
         enabled: true,
