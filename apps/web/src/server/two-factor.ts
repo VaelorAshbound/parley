@@ -1,4 +1,4 @@
-import { forgetTrustedDevices, type Db } from "@workspace/db"
+import { forgetTrustedDevices, hasTwoFactor, type Db } from "@workspace/db"
 import type { BetterAuthPlugin } from "better-auth"
 import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api"
 import { expireCookie } from "better-auth/cookies"
@@ -9,7 +9,9 @@ import { twoFactor } from "better-auth/plugins/two-factor"
 // accounts with a password can turn it on, and it guards the password
 // sign-in: Google and GitHub have their own second step, and Better Auth
 // doesn't gate them ("Non-credential methods like OAuth … are not gated by
-// 2FA by default", https://better-auth.com/docs/plugins/2fa).
+// 2FA by default", https://better-auth.com/docs/plugins/2fa). That holds
+// only for a Google or GitHub login the user added, so none is joined to an
+// account with two-factor on (twoFactorGuests' database hook).
 
 /**
  * How long the code step may take after the password (Better Auth's
@@ -54,7 +56,8 @@ export function twoFactorSignIn() {
  *
  * Turning two-factor off also forgets every trusted device, not only the
  * one that asked (Better Auth's default): turned on again later, it asks
- * for a code everywhere.
+ * for a code everywhere. And no Google or GitHub login is joined to an
+ * account with two-factor on.
  */
 export function twoFactorGuests({
   db,
@@ -66,6 +69,25 @@ export function twoFactorGuests({
 }) {
   return {
     id: "parley-two-factor",
+    init: () => ({
+      options: {
+        databaseHooks: {
+          account: {
+            create: {
+              // Better Auth joins a Google or GitHub sign-in to the account
+              // with the same confirmed email, and a join skips the code:
+              // whoever got into the inbox could make a GitHub account with
+              // the address and walk in. `false` stops the join; the
+              // sign-in ends with an error (Checkpoint 6 review).
+              before: async (account) => {
+                if (account.providerId === "credential") return
+                if (await hasTwoFactor(db, account.userId)) return false
+              },
+            },
+          },
+        },
+      },
+    }),
     hooks: {
       after: [
         {

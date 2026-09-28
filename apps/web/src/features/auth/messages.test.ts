@@ -99,6 +99,13 @@ describe("oauthErrorMessage", () => {
   it("offers the way back to someone who doesn't know that password", () => {
     expect(oauthErrorMessage("account_not_linked")).toMatch(/Forgot password/)
   })
+
+  it("asks for the password and code when the account has two-factor on", () => {
+    // Google and GitHub are never joined to it (server/two-factor.ts).
+    expect(oauthErrorMessage("unable_to_link_account")).toMatch(
+      /password and your code/
+    )
+  })
 })
 
 describe("emailLinkErrorMessage", () => {
