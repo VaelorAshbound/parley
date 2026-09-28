@@ -92,14 +92,35 @@ describe("fileName", () => {
 
 describe("FONT_CSS", () => {
   it("embeds both brand fonts, since Browser Run has neither", () => {
-    expect(FONT_CSS).toContain('font-family:"Newsreader Variable"')
-    expect(FONT_CSS).toContain('font-family:"Instrument Sans Variable"')
-    expect(FONT_CSS.match(/url\(data:font\/woff2;base64,/g)).toHaveLength(4)
+    expect(FONT_CSS).toContain('font-family:"Newsreader"')
+    expect(FONT_CSS).toContain('font-family:"Instrument Sans"')
   })
 
-  it("prints fi and ff as letters, so the PDF's words can be found and copied", () => {
-    // Browser Run embeds these variable fonts as Type 3, whose ligatures
-    // come out of the PDF as blanks ("Con dential").
+  it("embeds a static font for each weight the print page uses", () => {
+    // Static, not variable: Chrome embeds a variable font in the PDF as a
+    // Type 3 font, whose "fi" and "ff" come out as blanks (T24, T31).
+    const faces = [
+      ...FONT_CSS.matchAll(/font-family:"([^"]+)";[^}]*font-weight:(\d+)/g),
+    ].map(([, family, weight]) => `${family} ${weight}`)
+
+    // Latin and Latin Extended files for each: party names can have "ő".
+    expect(faces).toEqual(
+      [
+        "Newsreader 400",
+        "Newsreader 500",
+        "Newsreader 600",
+        "Newsreader 700",
+        "Instrument Sans 400",
+        "Instrument Sans 600",
+        "Instrument Sans 700",
+      ].flatMap((face) => [face, face])
+    )
+    expect(FONT_CSS.match(/url\(data:font\/woff2;base64,/g)).toHaveLength(14)
+  })
+
+  it("prints fi and ff as letters, so every PDF reader can find and copy them", () => {
+    // Chrome marks a ligature's letters with /ActualText, which PDFium reads
+    // but pdf.js (Firefox's viewer) doesn't: "Con dential" (T31).
     expect(FONT_CSS).toContain("font-variant-ligatures:no-common-ligatures")
   })
 })

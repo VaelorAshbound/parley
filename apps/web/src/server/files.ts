@@ -105,7 +105,7 @@ export function browserRunPrinter(browser: BrowserRun): PrintPdf {
 
 /**
  * The draft as a file, and the Browser Run time it took (PDF only). The
- * fonts (about 290 KB) and the `docx` library (about 170 KB) load on first
+ * fonts (about 300 KB) and the `docx` library (about 170 KB) load on first
  * use, so requests that never export don't pay to start them.
  */
 export async function buildFile<F extends Fields>(
