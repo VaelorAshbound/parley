@@ -223,21 +223,26 @@ fresh(
   "a signed-out visitor keeps the browser's own Ctrl+K",
   async ({ page }) => {
     await open(page, "/")
-    // Runs after the page's own listeners.
-    const prevented = page.evaluate(
-      () =>
-        new Promise<boolean>((resolve) =>
-          window.addEventListener(
-            "keydown",
-            (event) => resolve(event.defaultPrevented),
-            { once: true }
-          )
+    // Runs after the page's own listeners. In place before the key is
+    // pressed: pressed while the listener was still being added, the key
+    // was missed and the test waited forever (flaky in CI, PAR-8).
+    await page.evaluate(() => {
+      const seen = new Promise<boolean>((resolve) =>
+        window.addEventListener(
+          "keydown",
+          (event) => resolve(event.defaultPrevented),
+          { once: true }
         )
-    )
+      )
+      Object.assign(window, { seen })
+    })
 
     await page.keyboard.press("ControlOrMeta+k")
 
-    expect(await prevented).toBe(false)
+    const prevented = await page.evaluate(
+      () => (window as unknown as { seen: Promise<boolean> }).seen
+    )
+    expect(prevented).toBe(false)
   }
 )
 
