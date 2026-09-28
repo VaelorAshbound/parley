@@ -7,6 +7,7 @@ import {
   type RenderedClause,
   type RenderedDocument,
   type RenderedInline,
+  type RenderedValue,
 } from "@workspace/documents"
 import JSZip from "jszip"
 import { extractText, getDocumentProxy, renderPageAsImage } from "unpdf"
@@ -75,39 +76,58 @@ function textOf(nodes: RenderedInline[]): string {
 }
 
 /**
- * What a fully filled document must show, each as one phrase: its titles and
- * headings, every paragraph and clause of the standard terms word for word,
- * and every value on its cover page. The eyebrow is left out: CSS writes it
- * in capitals.
+ * What a fully filled cover page must show, each as one phrase: the title,
+ * intro, each section's heading and hint, every line as printed (its
+ * words, values and the blanks of options not chosen), labels, tables and
+ * signatures, and the closing and license lines. The eyebrow is left out:
+ * CSS writes it in capitals. Checked anywhere in the text: a table's cells
+ * don't read back in a fixed order.
  */
-function phrasesOf({ coverPage, standardTerms }: RenderedDocument) {
-  const clause = (node: RenderedClause): string[] => [
-    ...(node.heading ? [node.heading] : []),
-    textOf(node.content),
-    ...node.children.flatMap(clause),
-  ]
-  const values = [
-    ...coverPage.sections.flatMap((section) => [
-      ...section.lines.flatMap((line) =>
-        line.parts.flatMap((part) => (part.type === "value" ? [part] : []))
-      ),
-      ...(section.table?.rows.flat() ?? []),
-    ]),
-    ...coverPage.signatures.rows.flatMap((row) =>
-      row.cells.filter((cell) => cell !== null)
-    ),
-  ]
+function coverPhrasesOf({ coverPage }: RenderedDocument) {
+  const shown = (value: RenderedValue) => value.text ?? value.placeholder
   return [
     coverPage.title,
     ...coverPage.intro.map(textOf),
-    ...coverPage.sections.map((section) => section.heading),
-    ...values.map((value) => value.text ?? ""),
+    ...coverPage.sections.flatMap((section) => [
+      section.heading,
+      section.hint ?? "",
+      ...section.lines.flatMap((line) => [
+        line.label ?? "",
+        line.parts
+          .map((part) => (part.type === "text" ? part.text : shown(part)))
+          .join(""),
+      ]),
+      ...(section.table?.columns ?? []),
+      ...(section.table?.rows.flat().map(shown) ?? []),
+    ]),
+    ...coverPage.signatures.rows.flatMap((row) => [
+      row.label,
+      ...row.cells.flatMap((cell) => (cell ? [shown(cell)] : [])),
+    ]),
     ...coverPage.closing.map(textOf),
     ...coverPage.footer.map(textOf),
+  ]
+    .map(words)
+    .filter((phrase) => phrase !== "")
+}
+
+/**
+ * The standard terms in reading order, each clause as printed: its number,
+ * heading and words ("2.6 Subprocessors."). In order and numbered, so a
+ * heading that went missing can't be found in a later sentence instead.
+ */
+function termsInOrder({ standardTerms }: RenderedDocument) {
+  const clause = (node: RenderedClause): string[] => [
+    [node.number, node.heading, textOf(node.content)]
+      .filter((part) => part)
+      .join(" "),
+    ...node.children.flatMap(clause),
+  ]
+  return [
     standardTerms.title,
     ...standardTerms.children.flatMap((block) =>
       block.type === "section"
-        ? [block.heading, ...block.children.flatMap(clause)]
+        ? [`${block.id}. ${block.heading}`, ...block.children.flatMap(clause)]
         : block.type === "clause"
           ? clause(block)
           : [textOf(block.content)]
@@ -115,6 +135,17 @@ function phrasesOf({ coverPage, standardTerms }: RenderedDocument) {
   ]
     .map(words)
     .filter((phrase) => phrase !== "")
+}
+
+/** Every phrase of the document is in `text`, the terms in their order. */
+function expectAllOf(text: string, document: RenderedDocument) {
+  for (const phrase of coverPhrasesOf(document)) expect(text).toContain(phrase)
+  let from = text.indexOf(words(document.standardTerms.title))
+  for (const phrase of termsInOrder(document)) {
+    const at = text.indexOf(phrase, from)
+    expect(at, `"${phrase}", after character ${from}`).not.toBe(-1)
+    from = at + phrase.length
+  }
 }
 
 async function bytesOf(path: string) {
@@ -188,8 +219,7 @@ describe.for(inject("realExports"))("$id", (made) => {
         words(page).replace(DISCLAIMER, " ").replace(footer(index), " ")
       )
       .join(" ")
-    for (const phrase of phrasesOf(rendered))
-      expect(words(all)).toContain(phrase)
+    expectAllOf(words(all), rendered)
   })
 
   test("prints pages that look like the approved ones", async () => {
@@ -212,7 +242,7 @@ describe.for(inject("realExports"))("$id", (made) => {
 
     expect(made.docxName).toBe(`Real export – ${definition.name}.docx`)
     const all = words(await part("word/document.xml"))
-    for (const phrase of phrasesOf(rendered)) expect(all).toContain(phrase)
+    expectAllOf(all, rendered)
     expect(await part("word/header1.xml")).toContain(DISCLAIMER)
     expect(await part("word/footer1.xml")).toContain(rendered.name)
   })
