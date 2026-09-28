@@ -227,6 +227,7 @@ function styles(pageSize: "Letter" | "A4") {
   --sans: "Instrument Sans", Arial, sans-serif;
   color: #1b1a17;
   font: 10.5pt/1.5 var(--serif);
+  font-synthesis: none;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }

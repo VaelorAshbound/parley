@@ -163,6 +163,13 @@ describe("toPrintHtml", () => {
     expect(toPrintHtml(filled, { fontCss })).toContain(fontCss)
   })
 
+  it("never fakes a bold or italic the embedded fonts don't have", () => {
+    // Each weight used is embedded (apps/web/src/server/fonts.ts); a new
+    // one must be added there, not drawn by smearing another (Checkpoint 6
+    // review).
+    expect(toPrintHtml(filled)).toContain("font-synthesis: none;")
+  })
+
   it("asks for the static brand fonts, with no variable font axes", () => {
     // Chrome embeds variable fonts in a PDF as Type 3 fonts, which lose
     // their ligatures' letters; static fonts go in as real TrueType (T31).
