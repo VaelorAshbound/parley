@@ -12,20 +12,28 @@ import { useTheme } from "@/components/theme-provider"
 /** A Turnstile widget and a way to get a fresh token for one request. */
 export function useTurnstile(siteKey: string) {
   const ref = useRef<TurnstileInstance>(null)
+  const box = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
 
   const widget = (
-    <Turnstile
-      ref={ref}
-      siteKey={siteKey}
-      options={{
-        // One action for every auth form; the server expects it.
-        action: "auth",
-        appearance: "interaction-only",
-        size: "flexible",
-        theme: theme === "system" ? "auto" : theme,
-      }}
-    />
+    <div ref={box}>
+      <Turnstile
+        ref={ref}
+        siteKey={siteKey}
+        options={{
+          // One action for every auth form; the server expects it.
+          action: "auth",
+          appearance: "interaction-only",
+          size: "flexible",
+          theme: theme === "system" ? "auto" : theme,
+        }}
+        // The check box appears only now: bring it on screen, since what
+        // waits for it (a start from the library) may be far below.
+        onBeforeInteractive={() =>
+          box.current?.scrollIntoView({ block: "nearest" })
+        }
+      />
+    </div>
   )
 
   return {
