@@ -1,4 +1,6 @@
+import AxeBuilder from "@axe-core/playwright"
 import {
+  expect,
   test as base,
   type Browser,
   type Page,
@@ -111,4 +113,26 @@ export const accountTest = fresh.extend<object, { accountState: string }>({
   storageState: ({ accountState }, use) => use(accountState),
 })
 
-export { expect } from "@playwright/test"
+/**
+ * Checks the page with axe for WCAG 2.2 A and AA (spec §6: zero serious or
+ * critical violations on every page and state). Lists each one it finds.
+ * https://playwright.dev/docs/accessibility-testing
+ */
+export async function expectAccessible(page: Page) {
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    // The start page's picture of a draft: text in a picture has no
+    // contrast minimum (WCAG 1.4.3, "Incidental"), and screen readers skip it.
+    .exclude("[data-slot=hero-art]")
+    .analyze()
+  const serious = violations
+    .filter(({ impact }) => impact === "serious" || impact === "critical")
+    .map(({ id, help, nodes }) => ({
+      id,
+      help,
+      targets: nodes.map(({ target }) => target.join(" ")),
+    }))
+  expect(serious).toEqual([])
+}
+
+export { expect }

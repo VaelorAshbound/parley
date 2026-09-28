@@ -11,6 +11,7 @@ import type { ReactNode } from "react"
 export function HeroArt({ className }: { className?: string }) {
   return (
     <div
+      data-slot="hero-art"
       aria-hidden="true"
       className={cn("relative h-165 select-none", className)}
     >
