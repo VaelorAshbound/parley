@@ -8,7 +8,7 @@ import { Kbd } from "@workspace/ui/components/kbd"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { ArrowRightIcon, ArrowUpIcon, SquareIcon } from "lucide-react"
-import { useRef, useState, type RefObject } from "react"
+import { useEffect, useRef, useState, type RefObject } from "react"
 
 // The reply box (spec §1: the reply box at the bottom, the demo note under
 // it). Enter sends, Shift+Enter starts a new line; while Parley answers, the
@@ -39,6 +39,15 @@ export function Composer({
   const [text, setText] = useState("")
   const ownRef = useRef<HTMLTextAreaElement>(null)
   const input = inputRef ?? ownRef
+  // Text typed before the page hydrated shows in the box, but React's copy
+  // starts empty, so Start would do nothing (a slow phone; CI found it, T32).
+  // Take it once, when React takes over the box.
+  useEffect(() => {
+    const typed = input.current?.value
+    // Syncing from outside React (the DOM), once; at most one more render.
+    // oxlint-disable-next-line react/set-state-in-effect
+    if (typed) setText(typed)
+  }, [input])
   const start = variant === "start"
   const ready = text.trim() !== "" && !busy
   const send = () => {
