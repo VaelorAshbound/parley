@@ -847,7 +847,7 @@
 
 ## Phase 7: Test depth
 
-- [ ] **T32: Full e2e: every user story × 3 browsers × desktop/phone + a11y** (M)
+- [x] **T32: Full e2e: every user story × 3 browsers × desktop/phone + a11y** (M)
   - Built 2026-09-28 (6dfeb8a..f4dd710). Skills: build, incremental-implementation, test-driven-development, source-driven-development, doubt-driven-development (scripted-AI switch: one fresh review, 3 medium + 3 low fixed; owner skipped cross-model), browser-testing-with-devtools, web-design-guidelines, ci-cd-and-automation, git-workflow-and-versioning.
   - Owner decisions: scripted AI by a test cookie, never in production; all 6 browser projects on every PR (public repo, free minutes); baselines made in Playwright's Docker image; the chat shows the AI's reason for its pick; the option not picked fades to 85% (was 42%, failed contrast); local e2e runs one test at a time.
   - Built: scripted AI (`src/server/ai/scripted-model.ts`, `SCRIPTED_AI` var: off in production, pinned by a test; `/api/version` says `scriptedAi`, and e2e's global setup refuses to run against the paid model). New specs: chat (stories 1, 2, 3, 5), a11y (axe WCAG 2.2 AA on 11 pages/states × light/dark, desktop and phone), keyboard-only golden path (with and without reduced motion), phone golden path (story 11), visual (20 baselines). Phone projects: Pixel 7, iPhone 15, phone-sized Firefox. `pnpm test:e2e:docker` runs the browsers in Playwright's image (remote connection). CI: every job in that image; e2e one job per project, side by side.
