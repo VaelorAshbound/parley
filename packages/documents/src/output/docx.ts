@@ -174,24 +174,19 @@ function header() {
 }
 
 function footer(name: string, width: number) {
+  // Each page number field gets a run of its own: LibreOffice printed a
+  // field that shares a run with text in the default size (T31).
+  const run = (children: IRunOptions["children"]) =>
+    new TextRun({ font: SANS, size: 15, color: INK_3, children })
   return new Footer({
     children: [
       new Paragraph({
         tabStops: [{ type: TabStopType.RIGHT, position: width }],
         children: [
-          new TextRun({
-            font: SANS,
-            size: 15,
-            color: INK_3,
-            children: [
-              name,
-              new Tab(),
-              "Page ",
-              PageNumber.CURRENT,
-              " of ",
-              PageNumber.TOTAL_PAGES,
-            ],
-          }),
+          run([name, new Tab(), "Page "]),
+          run([PageNumber.CURRENT]),
+          run([" of "]),
+          run([PageNumber.TOTAL_PAGES]),
         ],
       }),
     ],
