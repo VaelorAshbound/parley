@@ -38,6 +38,7 @@ export type BillingEnv = Pick<
   | "POLAR_WEBHOOK_SECRET"
   | "POLAR_PRO_PRODUCT_ID"
   | "BILLING_RATE_LIMITER"
+  | "STAGE"
 >
 
 /**
@@ -168,6 +169,19 @@ export function planFromState(
   return pro ? "pro" : "free"
 }
 
+/**
+ * Whether this stage (production, or the Previews) sold the customer's Pro:
+ * checkout stamps its stage in the metadata, and Polar copies it to the
+ * subscription.
+ */
+function soldHere(state: CustomerState, env: BillingEnv) {
+  return state.activeSubscriptions.some(
+    (subscription) =>
+      subscription.productId === env.POLAR_PRO_PRODUCT_ID &&
+      subscription.metadata["stage"] === env.STAGE
+  )
+}
+
 /** The customer's state now, or undefined when Polar has no such customer. */
 async function currentState(env: BillingEnv, customerId: string) {
   try {
@@ -210,9 +224,12 @@ export async function applyCustomerState(
     const state = await currentState(env, customerId)
     const plan = state ? planFromState(state, env.POLAR_PRO_PRODUCT_ID) : "free"
     const result = await setPlan(db, { userId, plan, at, customerId })
-    if (!result && plan === "pro") {
+    if (!result && state && plan === "pro" && soldHere(state, env)) {
       // Paid for an account that is gone (checkout finished in another tab
-      // after it was deleted): cancel, so nobody is charged for it.
+      // after it was deleted): cancel, so nobody is charged for it. Only
+      // what this stage sold: Previews and production share one Polar
+      // organization and each gets every webhook, so an unknown user may be
+      // another stage's paying customer (Checkpoint 6 review).
       await polarApi(env).customers.delete({ id: customerId, anonymize: true })
       log("warn", "polar_state", { ...fields, plan, outcome: "canceled" })
       return
@@ -300,7 +317,16 @@ export async function checkoutAllowed(ctx: HookContext, env: BillingEnv) {
       message: "You already have Pro.",
     })
   await makeCustomer(env, user)
-  return { context: { body: { ...body.data, allowDiscountCodes: false } } }
+  return {
+    context: {
+      body: {
+        ...body.data,
+        allowDiscountCodes: false,
+        // Copied to the subscription: which stage sold it (soldHere).
+        metadata: { stage: env.STAGE },
+      },
+    },
+  }
 }
 
 /**
