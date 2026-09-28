@@ -29,6 +29,21 @@ const shapes = {
   },
 } as const
 
+/** What a code's box is called, and what it says when a code is short. */
+export const codeWords: Record<
+  CodeKind,
+  { label: string; incomplete: string }
+> = {
+  app: {
+    label: "6-digit code",
+    incomplete: "Enter all 6 digits.",
+  },
+  backup: {
+    label: "Backup code",
+    incomplete: "Enter all 10 characters.",
+  },
+}
+
 export function codeLength(kind: CodeKind) {
   return shapes[kind].length
 }

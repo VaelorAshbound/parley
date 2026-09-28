@@ -12,22 +12,17 @@ import { reloadTo } from "@/features/auth/reload-to"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
-import { CodeField, codeFor, codeLength, type CodeKind } from "./code-field"
+import {
+  CodeField,
+  codeFor,
+  codeLength,
+  codeWords,
+  type CodeKind,
+} from "./code-field"
 
 // The second step of signing in with two-factor on (T23b): the code from
 // the authenticator app, or a backup code. The password step left a
 // 10-minute challenge cookie; a right code turns it into a session.
-
-const words: Record<CodeKind, { label: string; incomplete: string }> = {
-  app: {
-    label: "6-digit code",
-    incomplete: "Enter all 6 digits.",
-  },
-  backup: {
-    label: "Backup code",
-    incomplete: "Enter all 10 characters.",
-  },
-}
 
 export function CodeStep({
   kind,
@@ -43,7 +38,7 @@ export function CodeStep({
     validationLogic: revalidateLogic(),
     validators: {
       onDynamic: z.object({
-        code: z.string().length(codeLength(kind), words[kind].incomplete),
+        code: z.string().length(codeLength(kind), codeWords[kind].incomplete),
         trust: z.string(),
       }),
     },
@@ -87,7 +82,7 @@ export function CodeStep({
           {() => (
             <CodeField
               kind={kind}
-              label={words[kind].label}
+              label={codeWords[kind].label}
               onComplete={sendWhenFull}
               // The page has nothing else to fill in.
               // oxlint-disable-next-line jsx-a11y/no-autofocus
