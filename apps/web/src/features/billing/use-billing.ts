@@ -62,6 +62,14 @@ export function usePortal(onProblem?: (problem: BillingProblem) => void) {
 /** How many times the page asks before it says it's still waiting (1 min). */
 const TRIES = 30
 
+/** Asked TRIES times, answered or not: the page says it's still waiting. */
+function outOfTries(state: {
+  dataUpdateCount: number
+  errorUpdateCount: number
+}) {
+  return state.dataUpdateCount + state.errorUpdateCount >= TRIES
+}
+
 /**
  * After Polar's checkout: waits for its webhook to turn Pro on, asking for
  * the session fresh from the database (the cookie cache may say Free for 5
@@ -83,10 +91,7 @@ export function useUpgradeWait(checkoutId: string | undefined) {
     },
     enabled: checkoutId !== undefined,
     refetchInterval: ({ state }) =>
-      state.data?.plan === "pro" ||
-      state.dataUpdateCount + state.errorUpdateCount >= TRIES
-        ? false
-        : 2000,
+      state.data?.plan === "pro" || outOfTries(state) ? false : 2000,
     // One answer per poll; a failed one is just the next poll.
     retry: false,
   })
@@ -94,7 +99,7 @@ export function useUpgradeWait(checkoutId: string | undefined) {
   if (wait.data?.plan === "pro") return { state: "done" as const }
   // Read at each render, and each answer renders again.
   const state = queryClient.getQueryState(queryKey)
-  if (state && state.dataUpdateCount + state.errorUpdateCount >= TRIES)
+  if (state && outOfTries(state))
     return { state: "slow" as const, again: () => void wait.refetch() }
   return { state: "waiting" as const }
 }
