@@ -28,11 +28,13 @@ export default defineConfig({
   // https://playwright.dev/docs/test-snapshots
   ignoreSnapshots: !process.env.PW_VISUAL,
   expect: { toHaveScreenshot: { animations: "disabled", caret: "hide" } },
-  // Desktop runs every test; phones run the ones tagged @phone (spec §6:
-  // every user story on desktop and a phone, in all three engines).
+  // Desktop runs every test but the @phone-only ones; phones run the ones
+  // tagged @phone (spec §6: every user story on desktop and a phone, in all
+  // three engines).
   projects: [
     {
       name: "chromium",
+      grepInvert: /@phone-only/,
       use: {
         ...devices["Desktop Chrome"],
         // A local Chromium when Playwright's own download isn't available.
@@ -41,9 +43,21 @@ export default defineConfig({
         },
       },
     },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
-    { name: "chromium-phone", grep: /@phone/, use: devices["Pixel 7"] },
+    {
+      name: "firefox",
+      grepInvert: /@phone-only/,
+      use: devices["Desktop Firefox"],
+    },
+    {
+      name: "webkit",
+      grepInvert: /@phone-only/,
+      use: devices["Desktop Safari"],
+    },
+    {
+      name: "chromium-phone",
+      grep: /@phone/,
+      use: devices["Pixel 7"],
+    },
     // Firefox has no mobile mode in Playwright: a phone-sized touch screen.
     {
       name: "firefox-phone",
@@ -54,7 +68,11 @@ export default defineConfig({
         hasTouch: true,
       },
     },
-    { name: "webkit-phone", grep: /@phone/, use: devices["iPhone 15"] },
+    {
+      name: "webkit-phone",
+      grep: /@phone/,
+      use: devices["iPhone 15"],
+    },
   ],
   ...(previewUrl
     ? {}
