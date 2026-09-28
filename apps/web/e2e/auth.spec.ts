@@ -4,7 +4,7 @@ import { join } from "node:path"
 import type { Page } from "@playwright/test"
 import { createEmailVerificationToken } from "better-auth/api"
 
-import { expect, fresh, open } from "./helpers"
+import { draftOpened, expect, fresh, open } from "./helpers"
 
 // Signing up, in and out (T21), in a real browser against the dev server
 // or a Preview. Turnstile runs with Cloudflare's "always passes" test key
@@ -22,7 +22,7 @@ function newEmail() {
 async function startNda(page: Page) {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   return new URL(page.url()).pathname
 }
 

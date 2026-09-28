@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { test, type Browser, type Page } from "@playwright/test"
 import { createEmailVerificationToken } from "better-auth/api"
 
-import { expect, open } from "./helpers"
+import { draftOpened, expect, open } from "./helpers"
 
 // Share links (T25): the owner copies a read-only link, a visitor with no
 // account opens it, the owner turns it off, and the link gives a friendly
@@ -76,7 +76,7 @@ test("a shared draft opens read-only for anyone, until it is turned off", async 
     await page.context().grantPermissions(["clipboard-read", "clipboard-write"])
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   const draftPath = new URL(page.url()).pathname
 
   const path = await copyLink(page)

@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { expect, fresh, open, test } from "./helpers"
+import { draftOpened, expect, fresh, open, test } from "./helpers"
 
 // The app shell (T15): start a draft, the three panes, the panel's open and
 // closed states, the phone layout, and no layout shift.
@@ -8,7 +8,7 @@ import { expect, fresh, open, test } from "./helpers"
 async function startNda(page: Page) {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 }
 
 test("the home page lists the eleven agreements", async ({ page }) => {
@@ -88,7 +88,7 @@ test("a draft can be started with the keyboard alone", async ({ page }) => {
   await expect(nda).toBeFocused()
   await page.keyboard.press("Enter")
 
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 })
 
 test("a draft that isn't yours is simply not found", async ({ page }) => {

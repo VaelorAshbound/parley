@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { expect, open, test } from "./helpers"
+import { draftOpened, expect, open, test } from "./helpers"
 
 // The golden path with only a keyboard (spec §6), once as usual and once
 // with reduced motion: start from a deal, answer the AI's questions by
@@ -42,7 +42,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       )
       await page.keyboard.type("Please ask me.")
       await page.keyboard.press("Enter")
-      await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+      await draftOpened(page)
 
       // The questionnaire takes keys: a letter picks, Enter sends a typed
       // answer, and Skip is a Tab away.

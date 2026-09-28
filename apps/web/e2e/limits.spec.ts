@@ -1,4 +1,4 @@
-import { expect, open, test } from "./helpers"
+import { draftOpened, expect, open, test } from "./helpers"
 
 // Spec §2 Limits in the browser (T27). The Worker tests check each limit at
 // its edge; these check what a person sees when they reach one.
@@ -8,7 +8,7 @@ test("a guest with a draft is asked to make an account for a second", async ({
 }) => {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 
   await open(page, "/")
   await page.getByRole("button", { name: /Pilot Agreement/ }).click()

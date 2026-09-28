@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { expect, open, test } from "./helpers"
+import { draftOpened, expect, open, test } from "./helpers"
 
 // Story 4 (T16): click any field in the live document and edit it by hand.
 // A whole Mutual NDA is filled this way, and survives a reload.
@@ -8,7 +8,7 @@ import { expect, open, test } from "./helpers"
 async function startNda(page: Page) {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   return page.getByRole("region", { name: "Live document" })
 }
 

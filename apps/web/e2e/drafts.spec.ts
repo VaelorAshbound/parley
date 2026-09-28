@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { accountTest, expect, fresh, open, test } from "./helpers"
+import { accountTest, draftOpened, expect, fresh, open, test } from "./helpers"
 
 // The draft history (T22): date groups, search, /drafts, and rename,
 // duplicate and delete (with undo) from the sidebar and the title menu.
@@ -8,7 +8,7 @@ import { accountTest, expect, fresh, open, test } from "./helpers"
 async function startNda(page: Page) {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
   // The draft page has loaded: going on from here won't cut its load short
   // (Firefox then aborts the next page.goto). A cold dev server is slow.
   await expect(titleMenu(page)).toBeVisible({ timeout: 15_000 })

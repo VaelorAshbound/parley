@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test"
 
 import {
   accountTest,
+  draftOpened,
   expect,
   expectAccessible,
   fresh,
@@ -17,7 +18,7 @@ async function startWith(page: Page, deal: string) {
   await open(page, "/")
   await page.getByRole("textbox", { name: "Describe your deal" }).fill(deal)
   await page.keyboard.press("Enter")
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 }
 
 for (const colorScheme of ["light", "dark"] as const) {

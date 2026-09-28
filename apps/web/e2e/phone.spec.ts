@@ -1,4 +1,4 @@
-import { expect, open, test } from "./helpers"
+import { draftOpened, expect, open, test } from "./helpers"
 
 // User story 11 (T32): on a phone the whole path works. Chat and document
 // are two tabs, the Document tab says when the AI changed it, and the
@@ -14,7 +14,7 @@ test("@phone-only a guest drafts an NDA on a phone, from chat to document and ba
   await page
     .getByRole("button", { name: "Start drafting", exact: true })
     .click()
-  await page.waitForURL(/\/d\/[0-9a-f-]{36}/)
+  await draftOpened(page)
 
   const chat = page.getByRole("region", { name: "Chat" })
   const document = page.getByRole("region", { name: "Live document" })
