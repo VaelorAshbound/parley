@@ -52,6 +52,15 @@ everything ─► Phase 7 depth (T32–T36) ─► Phase 8 launch (T37–T40)
 
 Checkpoints come after each phase (see todo.md). At the checkpoints after Phases 0, 2 and 6, I stop and ask for your review.
 
+## CI and e2e per task (owner's rule, 2026-09-28)
+
+This project's notes win over a skill's generic steps (for example `/build`'s "verify every slice").
+
+- **A task is checked locally**: `pnpm check`, the unit tests it touches, and its own e2e specs on the dev server, one worker, Chromium. Run the full suite only at checkpoints.
+- **Push once, at the end of the task.** Never push to see if CI passes. Don't wait for CI: go on to the next task.
+- **CI is looked at at checkpoints**, or when it goes red. A red CI gets one batched fix: first collect every failure (all jobs, the logs), then fix them all, then push once. Never fix one failure per push.
+- **`/test` → `/review` → `/code-simplify` run per checkpoint**, not per task.
+
 ## Skills per task
 
 Loaded skills are binding workflows (CLAUDE.md). At the start of each task, **load every skill in its row**, follow them, and name them in the task's commit/log. **Process** skills come from `agent-skills`, and **domain** skills are routed by `using-stack-skills`.
