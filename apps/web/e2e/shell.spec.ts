@@ -1,6 +1,6 @@
-import { test as fresh, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
-import { expect, open, test } from "./helpers"
+import { expect, fresh, open, test } from "./helpers"
 
 // The app shell (T15): start a draft, the three panes, the panel's open and
 // closed states, the phone layout, and no layout shift.

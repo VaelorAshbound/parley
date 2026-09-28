@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-import { test as fresh, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 import { createEmailVerificationToken } from "better-auth/api"
 
-import { expect, open } from "./helpers"
+import { expect, fresh, open } from "./helpers"
 
 // Signing up, in and out (T21), in a real browser against the dev server
 // or a Preview. Turnstile runs with Cloudflare's "always passes" test key

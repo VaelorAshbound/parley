@@ -1,6 +1,6 @@
-import { test as fresh, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
-import { accountTest, expect, open, test } from "./helpers"
+import { accountTest, expect, fresh, open, test } from "./helpers"
 
 // The draft history (T22): date groups, search, /drafts, and rename,
 // duplicate and delete (with undo) from the sidebar and the title menu.

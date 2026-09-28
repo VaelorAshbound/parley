@@ -51,11 +51,26 @@ async function signedInState(
 }
 
 /**
+ * Playwright's `test` for a first visit (no session), whose browser chats
+ * with the scripted AI (src/server/ai/scripted-model.ts): fast, the same
+ * every run, and free. Previews and local dev honor the cookie; production
+ * ignores it.
+ */
+export const fresh = base.extend({
+  context: async ({ context, baseURL }, use) => {
+    await context.addCookies([
+      { name: "parley-scripted-ai", value: "1", url: baseURL ?? "" },
+    ])
+    await use(context)
+  },
+})
+
+/**
  * `test` with a new signed-in guest for each test: a guest keeps one draft
  * (T27), and a fresh one can't see what an earlier test left. Tests of the
  * first visit use the plain `test` from Playwright.
  */
-export const test = base.extend<{ guestState: string }>({
+export const test = fresh.extend<{ guestState: string }>({
   guestState: [
     async ({ browser }, use, testInfo) => {
       await use(
@@ -76,7 +91,7 @@ export const test = base.extend<{ guestState: string }>({
  * `test` with a signed-up account per worker (email not confirmed). The
  * address is on example.test, so no email is sent.
  */
-export const accountTest = base.extend<object, { accountState: string }>({
+export const accountTest = fresh.extend<object, { accountState: string }>({
   accountState: [
     async ({ browser }, use, workerInfo) => {
       await use(
