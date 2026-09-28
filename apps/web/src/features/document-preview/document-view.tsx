@@ -307,7 +307,7 @@ function Line({ line, changed }: { line: RenderedLine; changed: boolean }) {
       data-unchosen={line.checked === false ? "" : undefined}
       className={cn(
         "flex items-baseline gap-2 transition-opacity duration-240 ease-out",
-        line.checked === false && "opacity-42"
+        line.checked === false && "opacity-85"
       )}
     >
       {line.checked !== undefined && (
