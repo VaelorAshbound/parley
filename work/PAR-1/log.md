@@ -157,3 +157,6 @@ T31 done (merge c55fa5d, docs e3884c4), pushed; CI green on e3884c4 (Workers Bui
 
 ### 2026-09-28T16:42:30Z
 Checkpoint 6 approved by the owner.
+
+### 2026-09-28T18:06:20Z
+Checkpoint 6 quality pass done (review, simplify, test); CI green on 299bf8e. Review (3 reviewers, each finding verified) fixed with tests: OAuth auto-link skipped 2FA (ec49e5d); a Preview could cancel production Pro, now checkout stamps metadata.stage (b26d4a9, ADR-0008); cancel Polar again after delete (52bfd8b); backup codes survive Escape/outside click (cc27dbd); start page jumped 175 px on a phone first visit (499269c); failed start keeps typed text (0de103a); real export checks terms in order, numbered (ffed319); font-synthesis none (ab16731). 5 simplify refactors. Local gate: check, 1155 unit, 438 worker, 44 real, full e2e. Local .dev.vars lacked POLAR_ACCESS_TOKEN (delete-account e2e failed locally since T26); copied from .env. Filed PAR-18 (high, before T38) .. PAR-23. Next: T32 via /build.
