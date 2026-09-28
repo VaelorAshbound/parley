@@ -277,13 +277,13 @@ function NoDrafts({
 }
 
 /** The page's frame, which the loading view shares: nothing moves. */
-function DraftsFrame(props: ComponentProps<"main">) {
+function DraftsFrame(props: ComponentProps<"div">) {
   return (
     <div className="flex min-h-svh flex-col">
       <div className="flex h-14 items-center px-3 md:hidden">
         <SidebarTrigger />
       </div>
-      <main
+      <div
         className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-8 md:py-14"
         {...props}
       />

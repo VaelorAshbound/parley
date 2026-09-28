@@ -53,7 +53,7 @@ export function Pricing({
           Start drafting
         </Link>
       </SiteHeader>
-      <main className="flex w-full flex-1 flex-col px-6 pt-10 pb-10 md:px-12 md:pt-16 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
+      <div className="flex w-full flex-1 flex-col px-6 pt-10 pb-10 md:px-12 md:pt-16 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
         <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
             Pricing
@@ -128,7 +128,7 @@ export function Pricing({
         <Questions />
 
         <SiteFooter isAccount={isAccount} />
-      </main>
+      </div>
     </div>
   )
 }

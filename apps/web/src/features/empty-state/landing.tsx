@@ -51,7 +51,7 @@ export function Landing({
     // the window: an open sidebar takes 16rem of it.
     <div className="@container flex min-h-svh flex-col">
       <SiteHeader isAccount={isAccount} />
-      <main className="flex w-full flex-1 flex-col px-6 pt-6 pb-10 md:px-12 md:pt-10 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
+      <div className="flex w-full flex-1 flex-col px-6 pt-6 pb-10 md:px-12 md:pt-10 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
         <section className="grid gap-x-10 @min-[72rem]:grid-cols-[minmax(0,560px)_minmax(0,1fr)] @min-[84rem]:grid-cols-[600px_minmax(0,1fr)] @min-[84rem]:pt-4">
           <div className="flex max-w-150 flex-col">
             {!isAccount && (
@@ -210,7 +210,7 @@ export function Landing({
         </section>
 
         <SiteFooter isAccount={isAccount} />
-      </main>
+      </div>
     </div>
   )
 }

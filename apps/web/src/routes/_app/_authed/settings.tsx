@@ -65,12 +65,12 @@ function Page({ children }: { children: React.ReactNode }) {
       <div className="flex h-14 items-center px-3 md:hidden">
         <SidebarTrigger />
       </div>
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-4 pb-16 md:px-6 md:pt-14">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-4 pb-16 md:px-6 md:pt-14">
         <h1 className="font-serif text-4xl leading-none font-normal tracking-[-0.03em]">
           Settings
         </h1>
         {children}
-      </main>
+      </div>
     </div>
   )
 }
