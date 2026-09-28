@@ -50,11 +50,13 @@ describe("a real export", () => {
       // Words with "fi" and "ff" can be found and copied.
       expect(text).toContain("Confidential Information")
       expect(text).toContain("Effective Date")
-      // The brand fonts, not a fallback serif (T2 found Liberation Serif).
-      // Browser Run embeds the variable fonts as Type 3 fonts, which carry
-      // no font name; the header and footer's sans is the only named font.
+      // The brand fonts as real embedded TrueType subsets (T31), not Type 3
+      // outlines and not a fallback serif (T2 found Liberation Serif).
       const raw = new TextDecoder("latin1").decode(await file.arrayBuffer())
-      expect(raw).toMatch(/\/Subtype\s*\/Type3/)
+      expect(raw).toMatch(/\/BaseFont\s*\/[A-Z]{6}\+Newsreader/)
+      expect(raw).toMatch(/\/BaseFont\s*\/[A-Z]{6}\+InstrumentSans/)
+      expect(raw).toMatch(/\/FontFile2/)
+      expect(raw).not.toMatch(/\/Subtype\s*\/Type3/)
       expect(raw).not.toMatch(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?\w*Serif/)
       expect(browserMs).toBeGreaterThan(0)
     }
