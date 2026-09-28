@@ -2,13 +2,9 @@ import { expect, open, test } from "./helpers"
 
 // User story 11 (T32): on a phone the whole path works. Chat and document
 // are two tabs, the Document tab says when the AI changed it, and the
-// sidebar is a drawer. Only in the phone projects.
+// sidebar is a drawer. @phone-only: desktop projects leave it out.
 
-test.beforeEach(({}, testInfo) => {
-  test.skip(!testInfo.project.name.endsWith("-phone"), "A phone test")
-})
-
-test("@phone a guest drafts an NDA on a phone, from chat to document and back", async ({
+test("@phone-only a guest drafts an NDA on a phone, from chat to document and back", async ({
   page,
 }) => {
   await open(page, "/")
