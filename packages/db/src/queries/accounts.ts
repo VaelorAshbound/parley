@@ -25,6 +25,15 @@ export async function claimUnconfirmedAccount(db: Db, userId: string) {
   })
 }
 
+/** Whether the user signs in with a password and a code (T23b). */
+export async function hasTwoFactor(db: Db, userId: string) {
+  const [row] = await db
+    .select({ on: user.twoFactorEnabled })
+    .from(user)
+    .where(eq(user.id, userId))
+  return row?.on === true
+}
+
 /**
  * Forgets every device the user trusted to skip the two-factor code ("Trust
  * this device for 30 days", T23b). Better Auth's twoFactor plugin keeps each

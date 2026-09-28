@@ -67,9 +67,15 @@ export function needsNewSignIn(code: string | undefined) {
 
 /** `?error=` after Google or GitHub sends the user back. */
 export function oauthErrorMessage(code: string) {
-  return code === "account_not_linked"
-    ? "This email already has a Parley account. Sign in with your password and confirm your email; then Google and GitHub work too. Don’t know the password? Use “Forgot password?”."
-    : "Signing in didn’t work. Please try again."
+  switch (code) {
+    case "account_not_linked":
+      return "This email already has a Parley account. Sign in with your password and confirm your email; then Google and GitHub work too. Don’t know the password? Use “Forgot password?”."
+    // Refused to join an account with two-factor on (server/two-factor.ts).
+    case "unable_to_link_account":
+      return "This email’s Parley account uses two-factor sign-in. Sign in with your password and your code."
+    default:
+      return "Signing in didn’t work. Please try again."
+  }
 }
 
 /**

@@ -1,6 +1,14 @@
+import { schema } from "@workspace/db"
+import { eq } from "drizzle-orm"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { call, cookiesFrom, serverClient, signInGuest } from "./helpers"
+import {
+  call,
+  cookiesFrom,
+  database,
+  serverClient,
+  signInGuest,
+} from "./helpers"
 import { fakeResend } from "./resend"
 
 // Signing in with GitHub (Google works the same way in Better Auth): a
@@ -136,6 +144,28 @@ describe("signing in with GitHub", () => {
     const response = await signInWithGitHub(newGitHubUser(email))
 
     expect((await whoIs(cookiesFrom(response)))?.user.id).toBe(owner?.user.id)
+  })
+
+  it("never joins an account with two-factor sign-in on", async () => {
+    // Joining skips the code: whoever gets into the inbox could make a
+    // GitHub account with the address and walk in (Checkpoint 6 review).
+    const email = `ana-${crypto.randomUUID()}@acme.dev`
+    const { cookie, link } = await signUp(email)
+    await call(link.pathname + link.search, { redirect: "manual" })
+    const owner = await whoIs(cookie)
+    await (
+      await database()
+    )
+      .update(schema.user)
+      .set({ twoFactorEnabled: true })
+      .where(eq(schema.user.id, owner?.user.id ?? ""))
+
+    const response = await signInWithGitHub(newGitHubUser(email))
+
+    expect(response.headers.get("location")).toContain(
+      "error=unable_to_link_account"
+    )
+    expect(cookiesFrom(response)).not.toContain("session_token=")
   })
 
   it("never joins an account whose email isn't confirmed yet", async () => {
