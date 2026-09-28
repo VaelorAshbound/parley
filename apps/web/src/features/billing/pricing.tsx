@@ -280,7 +280,15 @@ function UpgradeStatus({ upgrade }: { upgrade: NonNullable<Upgrade> }) {
   return (
     // <output> is a live status region: each step is read out.
     <output className="mx-auto mt-10 flex w-full max-w-[56.5rem] items-center gap-3 rounded-xl border bg-card px-5 py-4 text-[15px]">
-      {upgrade.state === "done" ? (
+      <UpgradeMessage upgrade={upgrade} />
+    </output>
+  )
+}
+
+function UpgradeMessage({ upgrade }: { upgrade: NonNullable<Upgrade> }) {
+  switch (upgrade.state) {
+    case "done":
+      return (
         <>
           <CircleCheckIcon
             className="size-5 shrink-0 text-blue-ink"
@@ -296,12 +304,16 @@ function UpgradeStatus({ upgrade }: { upgrade: NonNullable<Upgrade> }) {
             Start drafting
           </Link>
         </>
-      ) : upgrade.state === "waiting" ? (
+      )
+    case "waiting":
+      return (
         <>
           <Spinner className="size-5 shrink-0" />
           <span className="flex-1">Thanks! Turning on Pro…</span>
         </>
-      ) : (
+      )
+    case "slow":
+      return (
         <>
           <Spinner className="size-5 shrink-0 opacity-0" />
           <span className="flex-1">
@@ -318,9 +330,8 @@ function UpgradeStatus({ upgrade }: { upgrade: NonNullable<Upgrade> }) {
             Check again
           </Button>
         </>
-      )}
-    </output>
-  )
+      )
+  }
 }
 
 const questions = [
