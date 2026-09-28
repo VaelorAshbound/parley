@@ -124,6 +124,20 @@ describe("toDocx", () => {
     expect(footer).toContain("NUMPAGES")
   })
 
+  it("prints the page numbers as small as the words around them", async () => {
+    // A field that shares a run with text came out in the default size in
+    // LibreOffice: "Page" small, "1 of 5" large (T31). Each field gets its
+    // own run, with the footer's size.
+    const { footer } = await unzip(await toDocx(filled))
+    const runs = footer.split("<w:r>").slice(1)
+
+    for (const field of ["PAGE", "NUMPAGES"]) {
+      const run = runs.find((each) => each.includes(`>${field}<`))
+      expect(run).toContain('<w:sz w:val="15"/>')
+      expect(run).not.toContain("<w:t")
+    }
+  })
+
   it("says on every page that it is a demo, not for real agreements", async () => {
     const { header } = await unzip(await toDocx(filled))
 
