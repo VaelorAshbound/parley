@@ -848,6 +848,11 @@
 ## Phase 7: Test depth
 
 - [ ] **T32: Full e2e: every user story × 3 browsers × desktop/phone + a11y** (M)
+  - Built 2026-09-28 (6dfeb8a..f4dd710). Skills: build, incremental-implementation, test-driven-development, source-driven-development, doubt-driven-development (scripted-AI switch: one fresh review, 3 medium + 3 low fixed; owner skipped cross-model), browser-testing-with-devtools, web-design-guidelines, ci-cd-and-automation, git-workflow-and-versioning.
+  - Owner decisions: scripted AI by a test cookie, never in production; all 6 browser projects on every PR (public repo, free minutes); baselines made in Playwright's Docker image; the chat shows the AI's reason for its pick; the option not picked fades to 85% (was 42%, failed contrast); local e2e runs one test at a time.
+  - Built: scripted AI (`src/server/ai/scripted-model.ts`, `SCRIPTED_AI` var: off in production, pinned by a test; `/api/version` says `scriptedAi`, and e2e's global setup refuses to run against the paid model). New specs: chat (stories 1, 2, 3, 5), a11y (axe WCAG 2.2 AA on 11 pages/states × light/dark, desktop and phone), keyboard-only golden path (with and without reduced motion), phone golden path (story 11), visual (20 baselines). Phone projects: Pixel 7, iPhone 15, phone-sized Firefox. `pnpm test:e2e:docker` runs the browsers in Playwright's image (remote connection). CI: every job in that image; e2e one job per project, side by side.
+  - Real bugs found and fixed: the reason for the AI's pick never showed; the chat box faded to 50% whenever empty (shadcn input group dimmed on a disabled Send button); unpicked options failed contrast; no Skip to content link (WCAG 2.4.1). PAR-8: search-dialog arrow-keys race fixed.
+  - Not covered on the Preview: tests that need a confirmed email (share, email flows) run locally only; T33's Neon branch per PR lets CI confirm emails in the database. WebKit can't run against http://localhost (it drops the Secure session cookie); it runs on the Preview.
   - Accept:
     - The Playwright specs cover user stories 1–11 with the fake LLM, sharded to fit the 20-minute build limit.
     - Every page and state has zero serious or critical axe violations. The golden path is tested keyboard-only and in reduced-motion mode.
@@ -861,6 +866,7 @@
     - `test:real` runs a real-LLM NDA from start to PDF, a Polar sandbox checkout, a Resend OTP, and a Turnstile test, on every PR against a fresh Neon branch.
     - Nightly runs all 12 documents with the real LLM, plus the evals, mutation tests, the load test and a real Turnstile check. It sends a report link.
     - After deploy, a smoke test runs on the live site.
+    - (From T32) The e2e tests that need a confirmed email (share links, the email flows) run on the PR Preview too: CI confirms the address in the PR's Neon branch.
   - Verify: A PR run and a nightly run are both green, with the costs recorded.
   - Files: `scripts/ci-*.sh`, `apps/web/test/real/*`, `apps/web/e2e/smoke.prod.spec.ts`
   - Deps: T3, T32 · Skills: `neon:neon-postgres-branches`, `ci-cd-and-automation`
