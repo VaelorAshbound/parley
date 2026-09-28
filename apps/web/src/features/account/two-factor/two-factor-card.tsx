@@ -33,7 +33,7 @@ import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
 import { BackupCodes } from "./backup-codes"
-import { CodeField } from "./code-field"
+import { CodeField, codeLength, codeWords } from "./code-field"
 import { PasswordStep } from "./password-step"
 
 // Settings → Two-factor sign-in (spec §5 Auth, T23b). Turning it on takes
@@ -48,13 +48,7 @@ export function TwoFactorCard({ account }: { account: Login }) {
         <CardTitle>
           <h2>Two-factor sign-in</h2>
         </CardTitle>
-        <CardDescription>
-          {!account.hasPassword
-            ? "Add a password first. Google and GitHub have their own two-factor sign-in."
-            : account.twoFactor
-              ? "When you sign in with your password, Parley also asks for a code from your authenticator app."
-              : "Also ask for a code from an authenticator app when you sign in with your password."}
-        </CardDescription>
+        <CardDescription>{descriptionOf(account)}</CardDescription>
         {account.twoFactor && (
           <CardAction>
             <Badge>On</Badge>
@@ -75,6 +69,14 @@ export function TwoFactorCard({ account }: { account: Login }) {
       )}
     </Card>
   )
+}
+
+function descriptionOf(account: Login) {
+  if (!account.hasPassword)
+    return "Add a password first. Google and GitHub have their own two-factor sign-in."
+  if (account.twoFactor)
+    return "When you sign in with your password, Parley also asks for a code from your authenticator app."
+  return "Also ask for a code from an authenticator app when you sign in with your password."
 }
 
 /** Reads the account again: the card, and the renewed session's device. */
@@ -190,7 +192,7 @@ function secretOf(uri: string) {
 }
 
 const codeSchema = z.object({
-  code: z.string().length(6, "Enter all 6 digits."),
+  code: z.string().length(codeLength("app"), codeWords.app.incomplete),
 })
 
 function ScanStep({
@@ -254,7 +256,7 @@ function ScanStep({
           {() => (
             <CodeField
               kind="app"
-              label="6-digit code"
+              label={codeWords.app.label}
               onComplete={() => {
                 if (!form.state.isSubmitting) void form.handleSubmit()
               }}
