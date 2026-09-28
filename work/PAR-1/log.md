@@ -151,3 +151,9 @@ T26 merged and pushed (last 417b24b). Real sandbox run on the Preview passed: te
 
 ### 2026-09-27T20:21:01Z
 Session end. Finished: T23b (two-factor) and T26 (Parley Pro via Polar sandbox, real run passed) merged; CI green on 417b24b. 33 of 42 tasks done. Local commit 3e6e52f (PAR-8 flaky-test notes) not pushed yet: goes with the next push. Next session: T31 from worktree wf_af3c2e47-d76-3 (base 5d273a6, edits only: check them first, rebase on PAR-1-parley), then Checkpoint 6 with /test, /review, /code-simplify. Worktrees -1 (T23b) and -2 (T26) are merged and can be removed. Open: T38 production needs Polar endpoint + secrets + migration 0004 (owner OK); PAR-17; owner checks (one PDF, one DOCX in Word, chat_turn log).
+
+### 2026-09-28T16:38:56Z
+T31 done (merge c55fa5d, docs e3884c4), pushed; CI green on e3884c4 (Workers Builds + e2e; e2e re-run once because the build sat 9 min in Cloudflare's queue behind priced). pnpm test:real: all 12 documents (11 files) printed by real Browser Run + Word, read back word for word, 119 PDF pages pixel-equal to approved baselines (0 pixels allowed; a second real print matched). Real print bugs fixed with tests: variable fonts embedded as Type 3 (now static TrueType, 13% smaller), lone license line on a page, heading-only clauses and part headings alone at a page foot, orphans/widows 3 dropped by Chrome (now 2), Word footer page numbers too big in LibreOffice. Worktrees -1..-3 removed. 34 of 42 tasks done. STOP at Checkpoint 6 (owner review): look at a few exported PDFs; eval report is evals/report.md. Next: T32 alone, then wave T33+T34+T35, then T36. test:real is not in CI yet (T33 nightly).
+
+### 2026-09-28T16:42:30Z
+Checkpoint 6 approved by the owner.
