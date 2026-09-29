@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:real": "vitest run --config vitest.real.config.ts"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.2.0",
     "@orpc/client": "1.15.4",
     "@orpc/server": "1.15.4",
+    "@vitest/coverage-istanbul": "4.1.11",
     "@workspace/db": "workspace:*",
     "@workspace/documents": "workspace:*",
     "ai": "7.0.112",

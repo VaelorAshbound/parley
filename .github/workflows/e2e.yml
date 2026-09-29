@@ -57,12 +57,16 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       # Vitest browser mode (spec §6): the UI's component tests in real
       # Chromium and Firefox (a Firefox-only bug reached the Checkpoint 2 demo).
-      - name: Component tests
+      - name: Component tests (Firefox)
         env:
-          TEST_BROWSERS: chromium,firefox
+          TEST_BROWSERS: firefox
         run: |
           pnpm documents:build
           pnpm test:browser
+      # Chromium's run also measures the UI's coverage and fails under its
+      # floor (T34); V8 coverage needs Chromium.
+      - name: Component tests (Chromium) and the UI coverage gate
+        run: pnpm test:coverage:ui
 
   e2e:
     # Nightly needs a live URL; until production exists (T38) it doesn't start,
