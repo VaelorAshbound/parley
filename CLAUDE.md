@@ -28,7 +28,7 @@ Default stack for all projects here unless a project says otherwise:
 - PostgreSQL on Neon (+ pgvector for RAG; local Postgres for dev) · Drizzle ORM · Hyperdrive · KV · R2 · Cloudflare Images
 - Better-Auth · Resend (email) · Polar.sh (sandbox version) (payments)
 - Cloudflare Rate Limiting · Turnstile · CDN/DNS/WAF
-- Vitest · Playwright
+- Vitest · Playwright · agent-browser · Claude in Chrome · Chrome DevTools (MCP) · React DevTools · TanStack Devtools (Router, Query, Form)
 - Cloudflare Containers (Bun 1.4+) for what cannot run on Workers: CPU-bound, memory-bound, long-lived
 - `wi` (work tracker): Rust CLI, source in `~/Projects/wi`
 
