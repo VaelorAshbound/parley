@@ -60,6 +60,12 @@ export default defineConfig({
           // 2026-09-08 (test/polar.ts signs with its base64 key).
           POLAR_WEBHOOK_SECRET:
             "whsec_dGVzdCBvbmx5OiBub3QgYSByZWFsIHNlY3JldCBrZXk=",
+          // `pnpm test:mutation` (stryker.workers.config.mjs): Stryker names
+          // the mutant to turn on in this variable, and workerd's
+          // process.env holds bindings, not the shell's variables.
+          ...(process.env.__STRYKER_ACTIVE_MUTANT__ && {
+            __STRYKER_ACTIVE_MUTANT__: process.env.__STRYKER_ACTIVE_MUTANT__,
+          }),
         },
       },
     })),
