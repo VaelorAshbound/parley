@@ -108,9 +108,11 @@ export function Composer({
               <InputGroupButton
                 type="submit"
                 variant="default"
+                // Focusable while busy: a failed start must not drop focus.
                 disabled={busy}
+                focusableWhenDisabled
                 aria-busy={busy}
-                className="h-10 rounded-full pr-3.5 pl-4.5 text-[14.5px]"
+                className="h-10 rounded-full pr-3.5 pl-4.5 text-[14.5px] data-disabled:opacity-50"
               >
                 Start drafting
                 {busy ? (

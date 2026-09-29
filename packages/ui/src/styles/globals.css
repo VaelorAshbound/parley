@@ -482,9 +482,11 @@
   .hero-fan-r {
     animation: hero-fan-r 1000ms var(--ease-out) 450ms both;
   }
-  /* The delay is set where it is used. */
+  /* The delay is set where it is used, through --hero-delay: a Tailwind
+     animation-delay utility would lose to the unlayered reduced-motion
+     shorthand below, and every pop would show at once. */
   .hero-pop {
-    animation: hero-pop 600ms var(--ease-out) both;
+    animation: hero-pop 600ms var(--ease-out) var(--hero-delay, 0ms) both;
   }
   .hero-ink {
     --ink: var(--highlighter);
@@ -539,9 +541,12 @@
   }
   .hero-rise,
   .hero-fan-l,
-  .hero-fan-r,
-  .hero-pop {
+  .hero-fan-r {
     animation: fade-in 220ms ease both;
+  }
+  /* Same order as with motion: the change marker after Purpose's ink. */
+  .hero-pop {
+    animation: fade-in 220ms ease var(--hero-delay, 0ms) both;
   }
   .hero-ink {
     animation:
