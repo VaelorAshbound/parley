@@ -1,19 +1,7 @@
 # The bar
 
 Each project proves I can build at the level of the best (Apple, Google, top engineers).
-Three people should say "WOW" with no explanation:
-
-- **User:** looks and feels good. No flash, no jump, fast, clear words.
-- **Engineer:** well built. Typed end to end, tested, simple, no leaks, best tool over hand-rolled code.
-- **Exec:** cost efficient. Every dollar buys something the user feels. Nothing burns money
-  while idle, and it scales without bill shock. Spend well, but don't cut features to save.
-
-# Build like the best
-
-Follow the official guides and known best practices, not the quick way. Learn them first.
-Break one only for a real reason, and write the reason down. Don't overengineer.
-
-Build a piece, check it hard, fix what's off, then move on. Done all the way, not just "works".
+Websites should look stunning, go full creative mode, make it tasteful.
 
 # Testing
 
@@ -57,8 +45,7 @@ skill before each new task — drift is the known failure mode.
 
 # Standards & communication
 
-- I have ADHD and English is not my first language. Speak simple, plain,
-  sweet, short English. Always.
+- I have ADHD and English is not my first language.
 - Load `agent-skills:documentation-and-adrs` before writing docs.
 - Load `agent-skills:observability-and-instrumentation` before adding logs, traces, metrics or alerts.
 
