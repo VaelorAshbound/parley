@@ -24,3 +24,4 @@ packages/db/.data/
 .vitest/
 apps/web/test/real/output/
 .lighthouseci/
+load/*-report.json
