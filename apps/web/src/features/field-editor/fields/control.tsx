@@ -35,6 +35,7 @@ export function errorsOf(errors: readonly unknown[]) {
 export function useControl() {
   const field = useFieldContext<string>()
   const errors = errorsOf(field.state.meta.errors)
+  const value = field.state.value ?? ""
   return {
     field,
     errors,
@@ -42,9 +43,16 @@ export function useControl() {
     props: {
       id: field.name,
       name: field.name,
-      value: field.state.value ?? "",
+      value,
       onBlur: field.handleBlur,
       "aria-invalid": errors.length > 0,
+      // Text typed before the page hydrated shows in the box, but the form's
+      // copy starts empty, so WebKit clears it on the next render and the
+      // form sends nothing (a slow phone; CI's WebKit found it). Take it
+      // once, when React takes over the box, as the composer does.
+      ref: (node: HTMLInputElement | HTMLTextAreaElement | null) => {
+        if (node?.value && node.value !== value) field.handleChange(node.value)
+      },
     },
   }
 }
