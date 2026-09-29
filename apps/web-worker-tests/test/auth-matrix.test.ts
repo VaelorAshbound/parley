@@ -282,6 +282,30 @@ describe("the auth matrix", async () => {
     })
   })
 
+  // The browser shows these words (and the AI reads them): each refusal
+  // says what to do, and "not yours" reads the same as "doesn't exist".
+  it("words each refusal for the person who gets it", async () => {
+    const draft = { id: owner.draftId }
+    const message = async (promise: Promise<unknown>) => {
+      const { error } = await safe(promise)
+      return error instanceof ORPCError ? error.message : error
+    }
+
+    expect(await message(callers.nobody.client.drafts.get(draft))).toBe(
+      "Please sign in to continue."
+    )
+    expect(await message(callers.otherGuest.client.drafts.get(draft))).toBe(
+      "We couldn't find that draft."
+    )
+    expect(
+      await message(
+        callers.accountOwner.client.export.pdf({
+          id: callers.accountOwner.draftId,
+        })
+      )
+    ).toBe("Please confirm your email first. We sent you a link.")
+  })
+
   it("covers every procedure in the router", () => {
     const procedures = Object.entries(router).flatMap(([group, procedures]) =>
       Object.keys(procedures).map((name) => `${group}.${name}`)
