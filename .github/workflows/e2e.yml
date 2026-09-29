@@ -88,15 +88,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project:
-          [
-            chromium,
-            firefox,
-            webkit,
-            chromium-phone,
-            firefox-phone,
-            webkit-phone,
-          ]
+        # A push runs Chromium; the nightly run all six (owner, 2026-09-29).
+        project: ${{ fromJSON(github.event_name == 'schedule' && '["chromium","firefox","webkit","chromium-phone","firefox-phone","webkit-phone"]' || '["chromium"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
