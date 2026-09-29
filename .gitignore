@@ -26,3 +26,5 @@ packages/db/.data/
 apps/web/test/real/output/
 .lighthouseci/
 load/*-report.json
+reports/
+.stryker-tmp/

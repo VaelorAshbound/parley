@@ -102,6 +102,31 @@ describe("Polar's webhook", () => {
     expect(await planOf(userId)).toBe("pro")
   })
 
+  it("turns Pro on during a free trial", async () => {
+    const { userId } = await newAccount()
+    const trial = stateFor(active, userId)
+    trial.data.active_subscriptions = trial.data.active_subscriptions.map(
+      (subscription) => ({ ...subscription, status: "trialing" })
+    )
+
+    await send(polar, trial)
+
+    expect(await planOf(userId)).toBe("pro")
+  })
+
+  it("gives no Pro to a customer deleted in Polar, whatever it still lists", async () => {
+    const { userId } = await accountWith(active)
+    const base = stateFor(active, userId)
+    const gone = {
+      ...base,
+      data: { ...base.data, deleted_at: new Date().toISOString() },
+    }
+
+    await send(polar, gone)
+
+    expect(await planOf(userId)).toBe("free")
+  })
+
   it("keeps Pro after a cancel, until the paid month ends", async () => {
     const { userId } = await accountWith(active)
 

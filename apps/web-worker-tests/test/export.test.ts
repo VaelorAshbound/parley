@@ -324,6 +324,35 @@ describe("export.pdf", () => {
     )
   })
 
+  // Closing the tab mid-print is not a failure: it is logged as info, so it
+  // never pages anyone.
+  it("logs a download the user gave up as aborted, not as an error", async () => {
+    const { cookie, email } = await signUpVerified()
+    const leaving = new AbortController()
+    const printPdf: PrintPdf = async () => {
+      leaving.abort()
+      throw new DOMException("The user left", "AbortError")
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    const id = await completeNda(client)
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
+    const infos = vi.spyOn(console, "log").mockImplementation(() => {})
+
+    const { error } = await safe(
+      client.export.pdf({ id }, { signal: leaving.signal })
+    )
+
+    expect(error).toBeTruthy()
+    expect((await countedFor(email)).rows).toEqual([])
+    expect(errors).not.toHaveBeenCalled()
+    const line = infos.mock.calls
+      .map(([entry]) => entry as Record<string, unknown>)
+      .find((entry) => entry.event === "export")
+    expect(line).toMatchObject({ level: "info", outcome: "aborted" })
+    expect(line).not.toHaveProperty("status")
+    expect(line).not.toHaveProperty("error")
+  })
+
   it("logs each download without the draft's words", async () => {
     const { cookie } = await signUpVerified()
     const client = await serverClient(cookie)
