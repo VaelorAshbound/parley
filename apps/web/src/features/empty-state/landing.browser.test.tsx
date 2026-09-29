@@ -16,7 +16,7 @@ import { starters } from "./starters"
 // The start page (T37): a warm first run. One click on an example or an
 // agreement starts a draft; the credit and the demo note are always there.
 
-async function show({ isAccount = false } = {}) {
+async function show({ isAccount = false, busy = false } = {}) {
   const onStart = vi.fn<(from: Start) => void>()
   const router = createRouter({
     routeTree: createRootRoute(),
@@ -28,7 +28,7 @@ async function show({ isAccount = false } = {}) {
       router={router}
       defaultComponent={() => (
         <SidebarProvider defaultOpen={false}>
-          <Landing isAccount={isAccount} busy={false} onStart={onStart} />
+          <Landing isAccount={isAccount} busy={busy} onStart={onStart} />
         </SidebarProvider>
       )}
     />
@@ -63,6 +63,27 @@ describe("the start page", () => {
     await expect
       .element(box)
       .toHaveValue("An NDA with Acme for a roadmap review.")
+  })
+
+  test("while a start runs, its buttons keep focus but do nothing", async () => {
+    // A disabled button drops keyboard focus to the page, and a failed start
+    // leaves you nowhere (Checkpoint 6 review, PAR-22): aria-disabled keeps
+    // each button focusable and blocks the action instead.
+    const { screen, onStart } = await show({ busy: true })
+    const example = screen.getByRole("button", { name: starters[0]!.label })
+    const agreement = screen
+      .getByRole("list", { name: "The library" })
+      .getByRole("button", { name: /Pilot Agreement/ })
+    const send = screen.getByRole("button", { name: "Start drafting" })
+
+    for (const button of [example, agreement, send]) {
+      await expect.element(button).not.toHaveAttribute("disabled")
+      await expect.element(button).toHaveAttribute("aria-disabled", "true")
+      button.element().focus()
+      await userEvent.keyboard("{Enter}")
+      await expect.element(button).toHaveFocus()
+    }
+    expect(onStart).not.toHaveBeenCalled()
   })
 
   test("every example says more than its label", () => {

@@ -5,12 +5,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { ArrowRightIcon } from "lucide-react"
 import { useRef, type ReactNode } from "react"
 
-import {
-  CommonPaperLink,
-  LicenseLink,
-  SiteFooter,
-  SiteHeader,
-} from "@/components/site"
+import { CommonPaperLink, LicenseLink, SiteHeader } from "@/components/site"
 import { Composer } from "@/features/chat/composer"
 import { documentList } from "@/lib/documents"
 
@@ -49,9 +44,9 @@ export function Landing({
   return (
     // The art and the two-column library follow the room the page has, not
     // the window: an open sidebar takes 16rem of it.
-    <div className="@container flex min-h-svh flex-col">
+    <div className="@container flex flex-1 flex-col">
       <SiteHeader isAccount={isAccount} />
-      <div className="flex w-full flex-1 flex-col px-6 pt-6 pb-10 md:px-12 md:pt-10 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
+      <div className="flex w-full flex-1 flex-col px-6 pt-6 md:px-12 md:pt-10 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
         <section className="grid gap-x-10 @min-[72rem]:grid-cols-[minmax(0,560px)_minmax(0,1fr)] @min-[84rem]:grid-cols-[600px_minmax(0,1fr)] @min-[84rem]:pt-4">
           <div className="flex max-w-150 flex-col">
             {!isAccount && (
@@ -90,8 +85,11 @@ export function Landing({
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-8.5 rounded-full bg-transparent px-3.5 text-[13.5px] font-normal text-ink-2 max-md:h-11"
+                    className="h-8.5 rounded-full bg-transparent px-3.5 text-[13.5px] font-normal text-ink-2 max-md:h-11 data-disabled:opacity-50"
+                    // Keeps keyboard focus while a start runs (and after
+                    // one fails), where plain disabled would drop it.
                     disabled={busy}
+                    focusableWhenDisabled
                     onClick={() => onStart({ text: starter.prompt })}
                   >
                     {starter.label}
@@ -156,9 +154,12 @@ export function Landing({
               <li key={document.id} className="border-t">
                 <button
                   type="button"
-                  disabled={busy}
-                  onClick={() => onStart({ documentId: document.id })}
-                  className="group grid w-full grid-cols-[2.5rem_1fr_auto] items-start gap-y-1 pt-4.5 pb-5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+                  // aria-disabled, not disabled: focus stays on the button.
+                  aria-disabled={busy || undefined}
+                  onClick={() => {
+                    if (!busy) onStart({ documentId: document.id })
+                  }}
+                  className="group grid w-full grid-cols-[2.5rem_1fr_auto] items-start gap-y-1 pt-4.5 pb-5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-disabled:opacity-60"
                 >
                   <span className="font-serif text-[15px] leading-relaxed text-muted-foreground italic tabular-nums">
                     {String(index + 1).padStart(2, "0")}
@@ -208,8 +209,6 @@ export function Landing({
             <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
           </Button>
         </section>
-
-        <SiteFooter isAccount={isAccount} />
       </div>
     </div>
   )

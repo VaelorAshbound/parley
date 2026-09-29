@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Outlet } from "@tanstack/react-router"
-import { SidebarInset, SidebarProvider } from "@workspace/ui/components/sidebar"
+import { createFileRoute, Outlet, useMatches } from "@tanstack/react-router"
+import { SidebarProvider } from "@workspace/ui/components/sidebar"
+
+import { SiteFooter } from "@/components/site"
 
 import {
   readTimeZone,
@@ -42,6 +44,10 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const { viewer, orpc } = Route.useRouteContext()
   const { sidebarCookie, calendar } = Route.useLoaderData()
+  // The start page and pricing end with the site footer (staticData.footer).
+  const footer = useMatches({
+    select: (matches) => matches.some((match) => match.staticData.footer),
+  })
   const drafts = useQuery({
     ...orpc.drafts.list.queryOptions({ input: {} }),
     enabled: viewer !== null,
@@ -70,14 +76,31 @@ function AppLayout() {
         </a>
         <SidebarProvider defaultOpen={defaultOpen}>
           <AppSidebar viewer={viewer} orpc={orpc} calendarKey={calendar} />
-          {/* min-w-0: a truncated row in the chat must not widen the page. */}
-          <SidebarInset
-            id="content"
-            tabIndex={-1}
-            className="min-w-0 outline-none"
+          {/* shadcn's SidebarInset, but a div: the page is the main
+              landmark and the site footer comes after it, so it is the
+              contentinfo landmark (PAR-22). min-w-0: a truncated row in the
+              chat must not widen the page. */}
+          <div
+            data-slot="sidebar-inset"
+            className="relative flex w-full min-w-0 flex-1 flex-col bg-background"
           >
-            <Outlet />
-          </SidebarInset>
+            <main
+              id="content"
+              tabIndex={-1}
+              className="flex flex-1 flex-col outline-none"
+            >
+              <Outlet />
+            </main>
+            {footer && (
+              <div className="@container">
+                <div className="px-6 pb-10 md:px-12 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
+                  <SiteFooter
+                    isAccount={viewer !== null && !viewer.isAnonymous}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </SidebarProvider>
       </MotionConfig>
     </UiStoreProvider>

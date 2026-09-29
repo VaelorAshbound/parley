@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [{ title: "Parley" }], links: [italicPreload] }),
   // The Turnstile site key, for the first visit's guest (spec §2 Limits).
   loader: ({ context }) => context.queryClient.ensureQueryData(authConfigQuery),
+  staticData: { footer: true },
   component: Home,
 })
 
