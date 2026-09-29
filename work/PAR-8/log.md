@@ -27,3 +27,6 @@ Seen 2026-09-29 on WebKit (CI run 36596008423 and local Docker vs the Preview): 
 
 ### 2026-09-29T17:37:53Z
 CI run 36603240369 (0e1d808): desktop WebKit green (2 flaky), webkit-phone a11y specs time out (axe, chat reply). Preview wall time, last 2 h (Workers Observability): drafts/get p99 282 ms max 5.3 s; chat/send (scripted AI) p99 4.5 s max 17 s; GET / max 7.6 s. Previews share one Neon branch and took CI, local probes and the T35 load test at once. Owner: keep CI as is; re-check after the T33-T35 wave merges.
+
+### 2026-09-29T20:16:47Z
+CI 36622923385 (f0d2aea): WebKit again crashes/timeouts in changing tests (chat.spec:17/:57, drafts:41, editing:96, shell:42 twice; phone a11y:45/:53). Locally shell:42 3/3, chat:57 3/3 on a rerun (2/3 failed the run before, one after 4 s: a crash). No code bug found.
