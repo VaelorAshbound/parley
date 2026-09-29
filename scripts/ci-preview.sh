@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
-# Workers Builds "Preview command" for non-production branches: create the
-# Worker Preview and print its URL. Browser tests run in GitHub Actions
+# Workers Builds "Preview command" for non-production branches: give the
+# branch its own fresh, migrated Neon database (T33), then create the Worker
+# Preview and print its URL. Browser tests run in GitHub Actions
 # (.github/workflows/e2e.yml), because this image can't start browsers.
 # https://developers.cloudflare.com/workers/previews/examples/
+# The database needs the build variables NEON_API_KEY and NEON_PROJECT_ID,
+# and Hyperdrive: Edit on the build's API token. Without NEON_API_KEY the
+# Preview keeps the shared preview database, as before T33.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../apps/web"
 
+branch="${WORKERS_CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
+echo "==> Preparing the database of $branch"
+# Patches the built Worker's config (the Vite plugin's output, which wrangler
+# reads through .wrangler/deploy/config.json).
+node --no-warnings ../../packages/db/scripts/preview-database.ts \
+  prepare "$branch" dist/server/wrangler.json
+
 echo "==> Creating the Worker Preview"
 # The commit lets the e2e job wait for this exact version (/api/version).
-if ! output="$(pnpm exec wrangler preview --json --var "COMMIT_SHA:${WORKERS_CI_COMMIT_SHA:-}")"; then
+# --name is wrangler's default (the git branch), made explicit so the
+# Preview and its database always share the name.
+if ! output="$(pnpm exec wrangler preview --json --name "$branch" --var "COMMIT_SHA:${WORKERS_CI_COMMIT_SHA:-}")"; then
   printf '%s\n' "$output"
   echo "wrangler preview failed" >&2
   exit 1

@@ -2,10 +2,13 @@ import AxeBuilder from "@axe-core/playwright"
 import {
   expect,
   test as base,
+  type APIRequestContext,
   type Browser,
   type Page,
   type WorkerInfo,
 } from "@playwright/test"
+import { connect, schema, type Db } from "@workspace/db"
+import { eq } from "drizzle-orm"
 
 /** Opens a page and waits until React handles it (html[data-hydrated]). */
 export async function open(page: Page, url: string) {
@@ -123,6 +126,99 @@ export const accountTest = fresh.extend<object, { accountState: string }>({
   ],
   storageState: ({ accountState }, use) => use(accountState),
 })
+
+/**
+ * The database the app under test serves from. CI sets E2E_DATABASE_URL to
+ * the Preview's own Neon branch (T33, e2e.yml); local dev uses `pnpm
+ * db:dev`'s. Undefined against a Preview when CI has no Neon access: the
+ * tests that need it skip.
+ */
+export const databaseUrl =
+  process.env.E2E_DATABASE_URL ||
+  (process.env.PREVIEW_URL
+    ? undefined
+    : "postgres://postgres:postgres@localhost:54320/parley")
+
+/** Runs `use` on the app's database (see databaseUrl). */
+export async function withDatabase<T>(use: (db: Db) => Promise<T>) {
+  if (!databaseUrl) throw new Error("No database for this run")
+  const db = await connect(databaseUrl)
+  try {
+    return await use(db)
+  } finally {
+    await db.$client.end()
+  }
+}
+
+/**
+ * Marks the account's email as confirmed, as its emailed link would. The
+ * link is signed with the server's secret, which CI doesn't have for a
+ * Preview; the database is the Preview's own branch, so this touches no one
+ * else's data. The session cookie keeps the old value for up to 5 minutes
+ * (cookieCache): sign in again after this.
+ */
+export async function confirmEmail(email: string) {
+  await withDatabase((db) =>
+    db
+      .update(schema.user)
+      .set({ emailVerified: true })
+      .where(eq(schema.user.email, email))
+  )
+}
+
+/** What Cloudflare's "always passes" Turnstile test widget answers. */
+const testCaptcha = { "x-captcha-response": "XXXX.DUMMY.TOKEN.XXXX" }
+
+/**
+ * Posts to Better Auth, waiting out its per-IP limit (3 sign-ups or
+ * sign-ins per 10 s). Needs Turnstile's test keys (local dev, Previews).
+ */
+export async function authPost(
+  request: APIRequestContext,
+  baseURL: string,
+  path: string,
+  data: object
+) {
+  for (let attempt = 1; ; attempt++) {
+    const response = await request.post(path, {
+      headers: { origin: new URL(baseURL).origin, ...testCaptcha },
+      data,
+    })
+    if (response.ok()) return
+    if (response.status() !== 429 || attempt === 5)
+      throw new Error(`${path} failed: ${response.status()}`)
+    await new Promise((resolve) => setTimeout(resolve, 10_000))
+  }
+}
+
+/**
+ * A browser context signed in as a new account whose email is confirmed
+ * in the database (confirmEmail), for what needs one: sharing, downloads,
+ * checkout. Its address is on example.test (no email is sent) unless one
+ * is given.
+ */
+export async function confirmedAccount(
+  browser: Browser,
+  baseURL: string,
+  email = `e2e-${crypto.randomUUID()}@example.test`
+) {
+  const password = "correct horse 1"
+  const context = await browser.newContext({ baseURL })
+  await authPost(context.request, baseURL, "/api/auth/sign-up/email", {
+    name: "Ana Tester",
+    email,
+    password,
+  })
+  await confirmEmail(email)
+  // A new session reads the confirmed email; the sign-up's cookie still
+  // holds the old value.
+  await context.clearCookies()
+  await authPost(context.request, baseURL, "/api/auth/sign-in/email", {
+    email,
+    password,
+  })
+  return { context, email }
+}
 
 /**
  * Checks the page with axe for WCAG 2.2 A and AA (spec §6: zero serious or

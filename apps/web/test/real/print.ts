@@ -13,7 +13,7 @@ import { getPlatformProxy } from "wrangler"
 import { examples } from "../../../../packages/documents/test/examples"
 import { browserRunPrinter, buildFile } from "../../src/server/files"
 
-// Makes the real files for `pnpm test:real` (T31), once per run, in Node:
+// Makes the real files for `pnpm test:real:export` (T31), once per run, in Node:
 // every agreement fully filled (its example), as a PDF printed by real
 // Browser Run and as a Word file. The code is the app's own (buildFile,
 // browserRunPrinter); only the BROWSER binding comes from wrangler's
