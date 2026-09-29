@@ -39,8 +39,18 @@ export function useUndo(orpc: Orpc, draftId: string) {
     onError: () => void queryClient.invalidateQueries({ queryKey: draftKey }),
   })
 
-  return ({ row, change }: Undo) => {
-    const draft = queryClient.getQueryData(draftKey)
+  return async ({ row, change }: Undo) => {
+    // The AI's pick of an agreement loads the draft again (useDocumentSync),
+    // and its Undo shows before that's in. Wait for it instead of doing
+    // nothing (a slow Preview; CI's WebKit found it).
+    const loading =
+      !queryClient.getQueryData(draftKey)?.documentId ||
+      queryClient.isFetching({ queryKey: draftKey }) > 0
+    const draft = loading
+      ? await queryClient
+          .fetchQuery(orpc.drafts.get.queryOptions({ input: { id: draftId } }))
+          .catch(() => undefined)
+      : queryClient.getQueryData(draftKey)
     if (!draft?.documentId) return
     const definition = definitionOf(draft.documentId)
     const { values, rejected } = applyFieldChanges(
