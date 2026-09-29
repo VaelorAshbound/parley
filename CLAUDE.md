@@ -37,6 +37,9 @@ Default stack for all projects here unless a project says otherwise:
 - Cloudflare Containers (Bun 1.4+) for what cannot run on Workers: CPU-bound, memory-bound, long-lived
 - `wi` (work tracker): Rust CLI, source in `~/Projects/wi`
 
+How to use each tool: `~/Projects/guides/`. Read the guides for the tools a project uses
+before writing its spec and plan, so their rules shape the tasks from day one.
+
 # Skill routing
 
 Two meta-skills govern all skill use. Load both at session start and route
