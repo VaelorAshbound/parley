@@ -60,6 +60,7 @@ This project's notes win over a skill's generic steps (for example `/build`'s "v
 - **Push once, at the end of the task.** Never push to see if CI passes. Don't wait for CI: go on to the next task.
 - **CI is looked at at checkpoints**, or when it goes red. A red CI gets one batched fix: first collect every failure (all jobs, the logs), then fix them all, then push once. Never fix one failure per push.
 - **`/test` → `/review` → `/code-simplify` run per checkpoint**, not per task.
+- **All 6 e2e projects run on every push until the build is finished.** Once no task or `wi` item is left, the e2e tests move to the nightly run (owner's call, 2026-09-29).
 
 ## Skills per task
 
