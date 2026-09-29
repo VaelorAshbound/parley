@@ -23,7 +23,7 @@ ADR-0001 put only the browser tests in GitHub Actions and kept Cloudflare secret
 **The real tests run in GitHub Actions** against that Preview, like the e2e tests (ADR-0001: Workers Builds has no browsers):
 
 - `real.yml` on every PR: `pnpm test:real` (`apps/web/playwright.real.config.ts`).
-- `nightly.yml`: evals, the 12-document export, `test:workers:real`, mutation, performance, production checks, then a report emailed with the run's link.
+- `nightly.yml`: evals, the 12-document export, `test:workers:real`, performance, production checks, then a report emailed with the run's link.
 - `smoke.yml` after each production deploy.
 - The e2e job and the real job look up the Preview's branch URL with `NEON_API_KEY` and confirm emails there.
 

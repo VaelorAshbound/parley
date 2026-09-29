@@ -24,11 +24,6 @@ overrides:
   # Cloudflare plugin, which broke the Worker bundle (T14).
   "@types/node": ^24.13.6
 
-# Stryker 10 names tests the way Vitest 4 matched them; Vitest 5 joins the
-# names with " > ", and without this every mutant ran no test (T34, PAR-26).
-patchedDependencies:
-  "@stryker-mutator/vitest-runner@10.0.0": patches/@stryker-mutator__vitest-runner@10.0.0.patch
-
 peerDependencyRules:
   allowAny:
     - vite

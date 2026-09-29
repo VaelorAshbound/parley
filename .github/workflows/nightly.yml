@@ -6,7 +6,7 @@
 # - export: all 12 documents printed by real Browser Run and built as Word,
 #   read back word for word and compared with the approved PDF baselines
 #   (T31), plus the real PDF/DOCX in workerd.
-# - mutation (T34) and performance + load (T35): their own scripts.
+# - performance + load (T35): its own script.
 # - production: the real Turnstile keys and the smoke test on the live
 #   site. Skipped until production exists (NIGHTLY_URL, T38).
 # The fast e2e suite has its own nightly run (e2e.yml).
@@ -108,22 +108,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  mutation:
-    needs: start
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm documents:build
-      # T34's Stryker run (packages/documents, quota, auth).
-      - run: pnpm test:mutation
-
   performance:
     needs: start
     runs-on: ubuntu-24.04
@@ -172,7 +156,7 @@ jobs:
         run: pnpm exec playwright test -c playwright.real.config.ts turnstile.real.ts smoke.prod.spec.ts
 
   report:
-    needs: [start, evals, export, mutation, performance, production]
+    needs: [start, evals, export, performance, production]
     # Also after a failed job, but not when the run didn't start (another label).
     if: always() && needs.start.result != 'skipped'
     runs-on: ubuntu-24.04
