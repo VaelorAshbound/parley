@@ -178,3 +178,6 @@ Wave D2 merged (T33 c1d6083, T34 70dae18, T35 merge), pushed. T35 done (owner ac
 
 ### 2026-09-29T21:21:21Z
 Session end. Real services green on 73bf59a (real model NDA->PDF, Polar sandbox with a new payer email per run, Resend email, Turnstile, smoke). T33 setup done: GitHub secrets/vars, Preview build NEON_API_KEY/NEON_PROJECT_ID (via cf CLI), Browser Run token, Preview RESEND_API_KEY; old parley-ci Neon key revoked. CI sped up (67e38de): Previews build without the test gate (main keeps it), push e2e Chromium only (6 browsers nightly), Real services on PR label 'real'. Open: re-run Nightly export + performance (export failed on the empty token, now set; perf was noise on a busy Preview), then mark T33 done with costs. Owner to delete 2 unused Cloudflare tokens (older 'parley-nightly-browser-run', 'browser-run'). Next session: quick batch PAR-9, PAR-12, PAR-11, PAR-22, PAR-16; then PAR-18 (before T38); then T36.
+
+### 2026-09-29T21:47:51Z
+Session: PAR-9, 11, 12, 22, 28 done and merged; PAR-16 merged, in verify (Preview check left). Filed PAR-29, PAR-30. Next: quick ones PAR-13, PAR-14, PAR-29; PAR-18 before T38.
