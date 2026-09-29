@@ -1,0 +1,81 @@
+# After deploy (spec §6, T33): Workers Builds deploys production from main;
+# once it has, this checks the live site serves that commit and passes the
+# smoke test (health, the start and sign-in pages, one real chat turn:
+# apps/web/e2e/smoke.prod.spec.ts). Until production exists (T38),
+# PRODUCTION_URL is empty and the job is skipped.
+name: Smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    if: vars.PRODUCTION_URL != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001 --ipc=host --init
+    env:
+      WORKER: parley
+      PREVIEW_URL: ${{ vars.PRODUCTION_URL }}
+      EXPECTED_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm documents:build
+
+      - name: Wait for the Workers Builds deploy of this commit
+        timeout-minutes: 12
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # curl, not gh: Playwright's image has no gh.
+          while true; do
+            result="$(curl --silent --fail-with-body \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/commits/$EXPECTED_COMMIT/check-runs" |
+              node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const run=JSON.parse(s).check_runs?.find(r=>r.name==="Workers Builds: "+process.env.WORKER);console.log(run?run.status+" "+run.conclusion:"")})')"
+            echo "Workers Builds: ${result:-not started}"
+            case "$result" in
+              "completed success") break ;;
+              completed*) echo "::error::The deploy failed"; exit 1 ;;
+            esac
+            sleep 15
+          done
+
+      - name: Wait until the live site serves this commit
+        timeout-minutes: 3
+        run: |
+          until [ "$(curl --silent "$PREVIEW_URL/api/version" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit??"")}catch{console.log("")}})')" = "$EXPECTED_COMMIT" ]; do
+            sleep 5
+          done
+
+      - name: Smoke test
+        working-directory: apps/web
+        run: pnpm exec playwright test -c playwright.real.config.ts smoke.prod.spec.ts
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: smoke-${{ github.run_id }}
+          path: apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
