@@ -880,6 +880,36 @@
   - Deps: T32
 
 - [ ] **T35: Performance budgets + load test** (S)
+  - Built 2026-09-29 (49fe6c0..e872dd1), not marked done: 3 acceptance points are open (below). Skills: build, incremental-implementation, test-driven-development, performance-optimization (measure → fix → re-measure, reverted what didn't beat the noise), source-driven-development (LHCI assertMatrix, Cloudflare Previews' noindex, k6), git-workflow-and-versioning; domain: cloudflare:web-perf, cloudflare:wrangler, neon:neon-postgres, vercel-react-best-practices. `improve-animations` and `neon-postgres-egress-optimizer` not needed: no animation or egress finding came up.
+  - Checked:
+    - Gate (2026-09-29): `pnpm check` pass; `pnpm test` 1183 pass, 1 skipped; `pnpm test:workers` 438 pass; `pnpm db:check` pass; build + `smoke-bundle.sh` (with the devtools check) pass. e2e `performance.spec.ts` Chromium + Chromium phone 5 pass.
+    - `pnpm test:perf` on test Previews (this laptop, Bucharest colo; its TCP connect to Cloudflare is ~350 ms, which Lighthouse's simulation adds on top of 4G): landing 97-98 perf, LCP 1.78-1.98 s, CLS 0.018; pricing 97-99, LCP 1.68-2.0 s; sign-in 87-94, LCP 2.4-3.3 s in the last run (1.3-2.0 s in the run before: the network's jitter); draft page 88-92, LCP 1.86-2.09 s (was 5.8 s), TBT 257-367 ms. Accessibility, best practices, SEO 100 everywhere. JS sent: landing 444 KB, pricing/sign-in ~407 KB, draft 607 KB.
+    - Time to first token, scripted AI (the Worker + database + stream part), 20 turns: p50 781-819 ms, p95 834-937 ms. With vs without `placement.region` (one build, two Previews, from Bucharest): p50 781/819 vs 820/740 ms, `drafts.get` server time 47 vs 47 ms: no difference from Europe.
+    - Time to first token, real `gpt-6-luna` on the PAR-1 Preview, 3 turns: **p50 4.0 s, p95 4.8 s** (budget 1.5 s). Cost $0.0014 (1415 micro-USD in `ai_usage`), plus one more turn for the timeline (~$0.0005). Timeline of one turn: the stream opens at 0.63 s (server work 0.34 s), the model's first reasoning arrives at 2.7 s, its first tool call at 3.9 s.
+    - k6 (`load/chat.k6.js`, PAR-1 Preview, scripted AI): 50 guests, 1360 requests, **0 5xx**, 50/50 concurrent first turns answered, 115 refused by the AI limit (10/10 s), 135 by the daily limit, no guest over 20 replies. Full reply stream under the burst: p50 3.2 s, p95 4.7 s.
+    - `neon inspect db` on the `preview` branch: seq-scans only on small tables (rate_limit 48 kB, verification 32 kB: Postgres reads a small table whole; their lookups have unique/identifier indexes); unused-indexes: `draft_search_idx` (0 scans on the Preview, but the search plan below uses it), `twoFactor_secret_idx` (Better Auth's, generated), `share_draft_id_idx` (49 scans, used). **outliers can't run: `pg_stat_statements` isn't installed** on `preview` or `production` (owner action below). `packages/db/scripts/bench-history.ts` re-run (42k drafts): every sidebar, next-page and search query uses its index, under 0.5 ms.
+    - The TanStack devtools check: fails on a planted marker, passes on the real build.
+  - Built:
+    - `pnpm test:perf` (`load/perf.ts`): Lighthouse CI (`lighthouserc.json`) on `/`, `/pricing`, `/sign-in` and a new guest's draft page (its session cookie as a header), then `load/first-token.ts` (scripted AI, p50 1.5 s / p95 3 s; `REAL_LLM=1 SAMPLES≤5` for the real model). Reports in `.lighthouseci/`. Every page is requested once first, so a cold isolate isn't counted as a page load. `load/guest.ts` chats over HTTP like the browser. The scripts refuse any host that isn't `*.workers.dev` or localhost, and any target whose `/api/version` says the scripted AI is off.
+    - `load/chat.k6.js`: the burst above (`k6 run -e PREVIEW_URL=… load/chat.k6.js`, report in `load/chat.k6-report.json`, ignored by git).
+    - **Fix: a new draft showed nothing until the scripts ran.** The message scroller hides the chat until it has scrolled to the end, and on a server-rendered page that lasts until hydration: the draft page's LCP was 5.8 s on a phone. An empty chat has nothing to scroll, so its viewport stays visible (`chat-panel.tsx`). e2e `performance.spec.ts` checks it with JavaScript off.
+    - **Fix: every page has a meta description** (SEO was 54 with it missing).
+    - `scripts/smoke-bundle.sh` fails when the browser bundle holds a TanStack devtools panel (`tsqd-`/`tsrd-` classes, "TanStack … Devtools" titles; TanStack Form's small event client is allowed).
+  - Decisions:
+    - **The 95 performance budget applies to the public pages** (spec §8 names the landing page); the draft page gets an 85 floor and a 200 ms TBT warning until its definitions load per document. The other categories, LCP and CLS apply to every page.
+    - **JS budget per route = today's bytes + ~5%** (a ratchet): landing 480 000, pricing/sign-in 440 000, draft 655 000 bytes sent. All are over the usual 200 KB; see "For later".
+    - `is-crawlable` is skipped on `*.workers.dev`: Cloudflare adds `X-Robots-Tag: noindex` to every workers.dev Preview on purpose (https://developers.cloudflare.com/workers/previews/custom-domains/#protect-preview-content). Production keeps the audit.
+    - **`placement.region` stays**: no difference from Europe, and T16 measured the gain from a US edge (0.8 s saves). Not verified that a Preview built without it really ran unplaced (no `cf-placement` header on either).
+    - Tried and reverted (inside the noise, measured with a 4× CPU profile of the draft page, 5 runs each): building the documents' aggregate schemas lazily (Zod time 196-211 ms vs 151-238 ms), sharing one `plainText` schema per length (140-190 vs 151-238 ms). Zod's cost is spread over every field of all twelve definitions.
+  - Left for later (the T35 notes other tasks left):
+    - **Real first token 4.0 s vs 1.5 s** (owner decision, the model is the owner's choice): the time is the model's (OpenRouter + `gpt-6-luna` reasoning before its first output), not ours. Options to measure with the evals: lower reasoning effort, OpenRouter provider sorting by latency, show the reasoning as it streams.
+    - **1 MB draft chunk / per-draft definitions**: this is what keeps the draft page at 88-92 (TBT 250-370 ms). Load the twelve definitions per document, or build field schemas on first use; a refactor of the document engine (sync `definitionOf`).
+    - Entry chunk with Zod (landing JS 444 KB, `schemas` chunk 26 KB gz + Turnstile 28 KB): under budget, not needed now.
+    - Per-field JSON Schema cache: not needed; the server's part of the first token is ~0.3 s.
+    - cmdk dialog chunk: lazy already, not in the entry; not needed.
+    - Fonts preload warning (dev only): Lighthouse flags nothing on any page; not needed.
+    - `rate_limit.last_request` index: the table is 48 kB on the Preview; not needed now (T28's note stands).
+    - Lighthouse from CI: numbers from this laptop include ~350 ms of network RTT; the nightly run (T33) should be the reference.
   - Accept:
     - `neon inspect db` (outliers, seq-scans, unused-indexes) is clean. Time to first token is measured with and without `placement.region`.
     - Lighthouse CI on the preview: LCP under 2.0 s, CLS under 0.05, and all categories 95 or more. Time to first AI token p50 under 1.5 s. JS budget per route.
