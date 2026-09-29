@@ -1,11 +1,11 @@
 ---
 id: PAR-22
 title: Start page polish from the Checkpoint 6 review
-phase: backlog
+phase: done
 priority: low
 origin: PAR-1
 created: 2026-09-28T17:21:40Z
-updated: 2026-09-28T17:21:40Z
+updated: 2026-09-29T21:46:59Z
 ---
 
 - Keyboard focus is lost when a start fails (the focused button turns disabled): use aria-disabled, or move focus to the problem note.
