@@ -1,11 +1,11 @@
 ---
 id: PAR-25
 title: "UI coverage to the spec's 85% lines / 80% branches: component tests for account, sign-in and billing screens"
-phase: backlog
+phase: cancelled
 priority: medium
 origin: PAR-1
 created: 2026-09-29T19:14:47Z
-updated: 2026-09-29T19:14:47Z
+updated: 2026-09-29T20:40:15Z
 ---
 
 Found in T34 (coverage gates). spec §6 asks the UI (`apps/web/src/features`, `components`) for 85% lines and 80% branches. The unit + Chromium component tests reach 63% / 62% (features) and 86% / 76% (components) on 2026-09-29. `pnpm test:coverage:ui` (E2E workflow, component job) enforces that floor today, so it can't drop.

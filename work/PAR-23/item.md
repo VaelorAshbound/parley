@@ -1,11 +1,11 @@
 ---
 id: PAR-23
 title: test:real robustness, and check the PDF title's optical size
-phase: backlog
+phase: cancelled
 priority: low
 origin: PAR-1
 created: 2026-09-28T17:21:40Z
-updated: 2026-09-28T17:21:40Z
+updated: 2026-09-29T20:40:15Z
 ---
 
 - print.ts: Promise.all rejects on the first failed print and disposes the proxy while others run; use allSettled (or a small concurrency limit), report every failure, dispose after all settle. Check 11 parallel prints stay under Browser Run's rate limit.
