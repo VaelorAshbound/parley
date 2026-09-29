@@ -493,7 +493,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 |---|---|
 | `packages/documents` | 100% / 100% |
 | `packages/db` and server code (`apps/web/src/server`) | ≥ 95% / ≥ 90% |
-| UI (`apps/web/src/features`, `components`) | ≥ 85% / ≥ 80% |
+| ~~UI (`apps/web/src/features`, `components`)~~ | no gate (removed 2026-09-29, owner; e2e and component tests cover the UI) |
 
 - ~~Mutation testing (Stryker)~~: removed 2026-09-29 (owner). It took ~50 min a night; T34 measured 89% once and fixed the gaps it found.
 
