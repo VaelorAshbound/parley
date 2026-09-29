@@ -590,7 +590,7 @@
   - Deps: T23 · Skills: `two-factor-authentication-best-practices`
 
 ### Checkpoint 3
-- [ ] A guest's work survives sign-in. History, search and settings work on desktop and on a phone.
+- [x] A guest's work survives sign-in. History, search and settings work on desktop and on a phone. (Ticked 2026-09-29 from T21–T23b's evidence; the phone projects came in T32.)
 
 ---
 
@@ -693,7 +693,7 @@
   - Deps: T24 · Owner: Polar sandbox
 
 ### Checkpoint 4
-- [ ] Export, share and upgrade all work end to end with the real sandbox services.
+- [x] Export, share and upgrade all work end to end with the real sandbox services. (Ticked 2026-09-29: T26's real Polar sandbox run on the Preview; T31's real Browser Run export of all 12 documents; T25's share e2e.)
 
 ---
 
@@ -788,7 +788,7 @@
   - Deps: T17 · Skills: `observability-and-instrumentation`
 
 ### Checkpoint 5
-- [ ] The budget can't be exceeded (tested). Logs are clean of personal data. The cron is verified.
+- [x] The budget can't be exceeded (tested). Logs are clean of personal data. The cron is verified. (Ticked 2026-09-29: T27's budget tests, T29's redaction test and PAR-16, T28's workerd cron tests. The cron runs on production only, so its first live run comes with T38.)
 
 ---
 
