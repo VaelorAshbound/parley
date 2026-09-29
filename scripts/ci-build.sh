@@ -9,7 +9,7 @@ pnpm check
 pnpm documents:build
 # Schema changes must ship with a migration.
 pnpm db:check
+# The Node and workerd tests, with the coverage gates (spec §6).
 pnpm test:coverage
-pnpm test:workers
 pnpm build
 bash scripts/smoke-bundle.sh

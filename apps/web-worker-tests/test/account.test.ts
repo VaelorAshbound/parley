@@ -461,6 +461,24 @@ describe("changing the email", () => {
     })
   })
 
+  it("never sends a signed-out browser on to another site from that link", async () => {
+    const ana = await confirmedAccount()
+    const newEmail = address()
+    await changeEmail(ana.cookie, newEmail)
+    await open(resend?.linkFor(ana.email) ?? new URL(origin), ana.cookie)
+    const link = resend?.linkFor(newEmail) ?? new URL(origin)
+    link.searchParams.set("callbackURL", "https://evil.example/settings")
+
+    const elsewhere = await open(link)
+
+    expect(elsewhere.status).toBe(401)
+    expect(elsewhere.headers.get("location")).toBeNull()
+    expect(await elsewhere.json()).toMatchObject({ code: "SIGN_IN_FIRST" })
+    expect(await session(ana.cookie)).toMatchObject({
+      user: { email: ana.email },
+    })
+  })
+
   it("does nothing when the link is opened by someone else who is signed in", async () => {
     const ana = await confirmedAccount()
     const newEmail = address()
@@ -557,6 +575,15 @@ describe("deleting the account", () => {
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({ code: "INVALID_PASSWORD" })
     expect(await rowsOf(ana.userId)).toMatchObject({ user: 1, accounts: 1 })
+  })
+
+  it("deletes nothing without a session", async () => {
+    const ana = await signUp()
+
+    const response = await post("/api/auth/delete-user", {})
+
+    expect(response.status).toBe(401)
+    expect((await rowsOf(ana.userId)).user).toBe(1)
   })
 
   it("lets a Google or GitHub account delete itself right after signing in", async () => {

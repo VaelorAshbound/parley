@@ -1,0 +1,6238 @@
+=== word/document.xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document mc:Ignorable="w14 w15 wp14" xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex">
+<w:body>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:caps/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Cover page by Parley, not by Common Paper</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading1"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Data Processing Agreement</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">USING THIS DPA</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:t xml:space="preserve">This DPA has 2 parts: (1) the Key Terms on this Cover Page and (2) the Common Paper DPA Standard Terms Version 1.1 posted at </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-1">
+<w:r>
+<w:rPr>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">https://commonpaper.com/standards/data-processing-agreement/1.1/</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:t xml:space="preserve"> (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">DPA Standard Terms</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”), which is incorporated by reference. If there is any inconsistency between the parts of the DPA, the Cover Page will control over the DPA Standard Terms. Capitalized and highlighted words have the meanings given on the Cover Page. However, if the Cover Page omits or does not define a highlighted word, the default meaning will be “none” or “not applicable” and the correlating clause, sentence, or section does not apply to this DPA. All other capitalized words have the meanings given in the DPA Standard Terms or the Agreement.</w:t>
+</w:r>
+</w:p>
+<w:tbl>
+<w:tblPr>
+<w:tblW w:type="dxa" w:w="9360"/>
+<w:tblBorders>
+<w:top w:val="single" w:color="auto" w:sz="4"/>
+<w:left w:val="single" w:color="auto" w:sz="4"/>
+<w:bottom w:val="single" w:color="auto" w:sz="4"/>
+<w:right w:val="single" w:color="auto" w:sz="4"/>
+<w:insideH w:val="single" w:color="auto" w:sz="4"/>
+<w:insideV w:val="single" w:color="auto" w:sz="4"/>
+</w:tblBorders>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="2995"/>
+<w:gridCol w:w="6365"/>
+</w:tblGrid>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Key Terms</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:t xml:space="preserve">This DPA supplements the </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Cloud Service Agreement between Northwind Health Analytics, Inc. and Lumen Clinics GmbH, dated October 1, 2026</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Approved Subprocessors</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">List of Subprocessors available at </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Subprocessor list URL]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The Subprocessors listed below</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">None</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Subprocessors</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:tbl>
+<w:tblPr>
+<w:tblW w:type="dxa" w:w="6123"/>
+<w:tblBorders>
+<w:top w:val="single" w:color="auto" w:sz="4"/>
+<w:left w:val="single" w:color="auto" w:sz="4"/>
+<w:bottom w:val="single" w:color="auto" w:sz="4"/>
+<w:right w:val="single" w:color="auto" w:sz="4"/>
+<w:insideH w:val="single" w:color="auto" w:sz="4"/>
+<w:insideV w:val="single" w:color="auto" w:sz="4"/>
+</w:tblBorders>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="2041"/>
+<w:gridCol w:w="2041"/>
+<w:gridCol w:w="2041"/>
+</w:tblGrid>
+<w:tr>
+<w:trPr>
+<w:tblHeader/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Subprocessor name</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Country of location</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Anticipated Processing task</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Stratus Cloud Hosting, Inc.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">United States, Germany</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Hosting and storage of the Service</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Parcel Mail Ltd.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Ireland</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2041"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Sending account emails</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+</w:tbl>
+<w:p/>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Provider Security Contact</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">security@northwind.test</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Security Policy</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">As defined in the Agreement.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider will use commercially reasonable efforts to secure the Service from unauthorized access, alteration, or use and other unlawful tampering.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Security Policy available at </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">https://northwind.test/security</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider will maintain annually updated reports or annual certifications of compliance with the following: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">ISO 27001; SOC 2 Type II; Annual third-party penetration test</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Changes to the Agreement</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">DPA Covered Claim</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">None</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The Agreement includes an additional Provider Covered Claim for any action, proceeding, or claim arising out of or relating to </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Covered claim]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Without limiting the indemnity obligations in the Agreement, if any, Provider will indemnify, defend, and hold harmless Customer from and against any action, proceeding, or claim made by someone other than Customer, Customer’s Affiliates, or Users, and all out-of-pocket damages, awards, settlements, costs, and expenses, including reasonable attorneys’ fees and other legal expenses, that arise from </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">(1) Provider’s breach or alleged breach of the DPA, or (2) Provider’s gross negligence or willful misconduct, in each case, that results in a Security Incident.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">DPA Liability Cap</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">None</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The Agreement includes an additional Increased Claim for DPA Covered Claims, with a separate Increased Cap Amount of the greater of </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Cap amount]</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> or </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Fee multiple]</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> times the fees paid or payable by Customer to Provider in the 12 month period immediately before the claim.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The following is added to the end of Section 8.1 of the DPA Standard Terms: However, Provider’s total cumulative liability arising out of or related to DPA Covered Claims will not be more than the greater of </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">$1,000,000.00</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> or </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">3</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> times the fees paid or payable by Customer to Provider in the 12 month period immediately before the claim.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Governing Law and Chosen Courts</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">None</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Notwithstanding the governing law or similar clauses of the Agreement, all interpretations and disputes about this DPA will be governed by the laws of the Governing State without regard to its conflict of laws provisions. In addition, and notwithstanding the forum selection, jurisdiction, or similar clauses of the Agreement, the parties agree to bring any legal suit, action, or proceeding about this DPA in, and each party irrevocably submits to the exclusive jurisdiction of, the courts of the Governing State. Governing State means: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Governing State]</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Service Provider Relationship</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">None</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">To the extent California Consumer Privacy Act, Cal. Civ. Code § 1798.100 et seq (“CCPA”) applies, the parties acknowledge and agree that Provider is a service provider and is receiving Personal Data from Customer to provide the Service as agreed in the Agreement and detailed below (see Nature and Purpose of Processing), which constitutes a limited and specified business purpose. Provider will not sell or share any Personal Data provided by Customer under the Agreement. In addition, Provider will not retain, use, or disclose any Personal Data provided by Customer under the Agreement except as necessary for providing the Service for Customer, as stated in the Agreement, or as permitted by Applicable Data Protection Laws. Provider certifies that it understands the restrictions of this paragraph and will comply with all Applicable Data Protection Laws. Provider will notify Customer if it can no longer meet its obligations under the CCPA.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Restricted Transfers</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Governing Member State</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">EEA Transfers: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Ireland</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">UK Transfers: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Laws of England and Wales</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Annex I(A) List of Parties</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Data Exporter</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Activities relevant to transfer: See Annex I(B).</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Name: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Lumen Clinics GmbH</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Address: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Torstraße 12, 10119 Berlin, Germany</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Contact person: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Lena Vogel</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Position: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Data Protection Officer</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Contact details: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">privacy@lumen.test</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Role: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Controller</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Data Importer</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Role: Processor. Activities relevant to transfer: See Annex I(B).</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Name: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Northwind Health Analytics, Inc.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Address: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">500 Howard St, San Francisco, CA 94105</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Contact person: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Omar Haddad</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Position: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">General Counsel</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Contact details: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">legal@northwind.test</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Annex I(B) Description of Transfer and Processing Activities</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Service</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Northwind Patient Insights</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Categories of Data Subjects</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s end users or customers</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s employees</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Other: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Patients of Customer’s clinics</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Categories of Personal Data</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Name</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Contact information such as email, phone number, or address</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Employment information such as employee ID or compensation</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Financial information such as bank account numbers</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Professional or biographic information such as resume or CV</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Transactional information such as account information or purchases</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">User activity and analysis such as device information or IP address</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Location information</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Other: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Appointment history</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Special Category Data</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Is special category data Processed?</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Yes</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">No</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Special Category Data Restrictions or Safeguards</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">See Security Policy</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Other: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Health data is encrypted with per-customer keys and only named support staff can access it.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Frequency of Transfer</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Continuous</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Other: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Other]</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Nature and Purpose of Processing</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Provider will Process Customer Personal Data as instructed in Section 2.3 of the DPA Standard Terms. The nature of processing includes:</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Receiving data, including collection, accessing, retrieval, recording, and data entry</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Holding data, including storage, organization, and structuring</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Using data, including analysis, consultation, testing, automated decision making, and profiling</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Updating data, including correcting, adaptation, alteration, alignment, and combination</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Protecting data, including restricting, encrypting, and security testing</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Sharing data, including disclosure, dissemination, allowing access, or otherwise making available</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Returning data to the data exporter or data subject</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Erasing data, including destruction and deletion</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Other: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Other]</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Duration of Processing</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider will process Customer Personal Data as long as required (i) to conduct the Processing activities instructed in Section 2.2(a)-(d) of the Standard Terms; or (ii) by Applicable Laws.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Annex I(C)</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Competent Supervisory Authority</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The supervisory authority will be the supervisory authority of the data exporter, as determined in accordance with Clause 13 of the EEA SCCs or the relevant provision of the UK Addendum.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="9360"/>
+<w:gridSpan w:val="2"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="200"/>
+<w:bottom w:type="dxa" w:w="80"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Annex II</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Technical and Organizational Security Measures</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">See Security Policy</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The measures described below</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Described Security Measures</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Pseudonymization and encryption of personal data: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Pseudonymization and encryption of personal data]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Ensuring ongoing confidentiality, integrity, availability, and resilience of processing systems and services: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Ensuring ongoing confidentiality, integrity, availability, and resilience of processing systems and services]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Ability to restore the availability of and access to Customer Personal Data in a timely manner following a physical or technical incident: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Daily backups are kept for 30 days and restored in tests.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Regular testing, assessment, and evaluation of the effectiveness of technical and organizational measures used to secure Processing: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Regular testing, assessment, and evaluation of the effectiveness of technical and organizational measures used to secure Processing]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">User identification and authorization process and protection: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: User identification and authorization process and protection]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Protecting Customer Personal Data during transmission (in transit): </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">All traffic uses TLS 1.2 or newer.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Protecting Customer Personal Data during storage (at rest): </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Databases and backups use AES-256 encryption.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Physical security where Customer Personal Data is processed: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Physical security where Customer Personal Data is processed]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Events logging: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Events logging]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Systems configuration, including default configuration: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Systems configuration, including default configuration]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Internal IT and IT security governance and management: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Internal IT and IT security governance and management]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Certification or assurance of processes and products: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Certification or assurance of processes and products]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Ensuring data minimization: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Ensuring data minimization]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Ensuring data quality: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Ensuring data quality]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Ensuring limited data retention: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Ensuring limited data retention]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Ensuring accountability: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Ensuring accountability]</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Allowing data portability and ensuring erasure: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="6A665D"/>
+</w:rPr>
+<w:t xml:space="preserve">[Described security measures: Allowing data portability and ensuring erasure]</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+</w:tbl>
+<w:p>
+<w:r>
+<w:t xml:space="preserve">Provider and Customer have not changed the DPA Standard Terms except for the details on the Cover Page above. By signing this Cover Page, each party agrees to enter into this DPA as of the last date of signature below.</w:t>
+</w:r>
+</w:p>
+<w:tbl>
+<w:tblPr>
+<w:tblW w:type="dxa" w:w="9360"/>
+<w:tblBorders>
+<w:top w:val="single" w:color="auto" w:sz="4"/>
+<w:left w:val="single" w:color="auto" w:sz="4"/>
+<w:bottom w:val="single" w:color="auto" w:sz="4"/>
+<w:right w:val="single" w:color="auto" w:sz="4"/>
+<w:insideH w:val="single" w:color="auto" w:sz="4"/>
+<w:insideV w:val="single" w:color="auto" w:sz="4"/>
+</w:tblBorders>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="2246"/>
+<w:gridCol w:w="3557"/>
+<w:gridCol w:w="3557"/>
+</w:tblGrid>
+<w:tr>
+<w:trPr>
+<w:tblHeader/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Signature</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Print Name</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Omar Haddad</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Lena Vogel</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Title</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">General Counsel</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Data Protection Officer</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Company</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Northwind Health Analytics, Inc.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Lumen Clinics GmbH</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Date</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+</w:tr>
+</w:tbl>
+<w:p/>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Cover page adapted by Parley from Common Paper&apos;s </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-2">
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">Data Processing Agreement cover page</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">, free to use under </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-3">
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">CC BY 4.0</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Common Paper Data Processing Agreement Standard Terms (Version 1.1) free to use under </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-4">
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">CC BY 4.0</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading1"/>
+<w:pageBreakBefore/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Data Processing Agreement</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">1. Processor and Subprocessor Relationships</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">1.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Provider as Processor. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In situations where </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is a Controller of the Customer Personal Data, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will be deemed a Processor that is Processing Personal Data on behalf of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">1.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Provider as Subprocessor. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In situations where </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is a Processor of the Customer Personal Data, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will be deemed a Subprocessor of the Customer Personal Data.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">2. Processing</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Processing Details. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Annex I(B) on the Cover Page describes the subject matter, nature, purpose, and duration of this Processing, as well as the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Categories of Personal Data</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> collected and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Categories of Data Subjects</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Processing Instructions. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> instructs </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to Process Customer Personal Data: (a) to provide and maintain the Service; (b) as may be further specified through </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> use of the Service; (c) as documented in the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">; and (d) as documented in any other written instructions given by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and acknowledged by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> about Processing Customer Personal Data under this DPA. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will abide by these instructions unless prohibited from doing so by Applicable Laws. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will immediately inform </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> if it is unable to follow the Processing instructions. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> has given and will only give instructions that comply with Applicable Laws.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2.3 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Processing by Provider. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will only Process Customer Personal Data in accordance with this DPA, including the details in the Cover Page. If </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> updates the Service to update existing or include new products, features, or functionality, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> may change the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Categories of Data Subjects</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Categories of Personal Data</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Special Category Data</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Special Category Data Restrictions or Safeguards</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Frequency of Transfer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Nature and Purpose of Processing</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Duration of Processing</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> as needed to reflect the updates by notifying </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> of the updates and changes.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2.4 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Customer Processing. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Where </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is a Processor and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is a Subprocessor, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will comply with all Applicable Laws that apply to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> Processing of Customer Personal Data. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agreement with its Controller will similarly require </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to comply with all Applicable Laws that apply to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> as a Processor. In addition, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will comply with the Subprocessor requirements in </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agreement with its Controller.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2.5 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Consent to Processing. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> has complied with and will continue to comply with all Applicable Data Protection Laws concerning its provision of Customer Personal Data to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and/or the Service, including making all disclosures, obtaining all consents, providing adequate choice, and implementing relevant safeguards required under Applicable Data Protection Laws.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2.6 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Subprocessors. </w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">a. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will not provide, transfer, or hand over any Customer Personal Data to a Subprocessor unless </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> has approved the Subprocessor. The current list of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Approved Subprocessors</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> includes the identities of the Subprocessors, their country of location, and their anticipated Processing tasks. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will inform </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> at least 10 business days in advance and in writing of any intended changes to the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Approved Subprocessors</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> whether by addition or replacement of a Subprocessor, which allows </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to have enough time to object to the changes before the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> begins using the new Subprocessor(s). </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will give </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> the information necessary to allow </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to exercise its right to object to the change to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Approved Subprocessors</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> has 30 days after notice of a change to the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Approved Subprocessors</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to object, otherwise </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will be deemed to accept the changes. If </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> objects to the change within 30 days of notice, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will cooperate in good faith to resolve </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> objection or concern.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">b. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">When engaging a Subprocessor, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have a written agreement with the Subprocessor that ensures the Subprocessor only accesses and uses Customer Personal Data (i) to the extent required to perform the obligations subcontracted to it, and (ii) consistent with the terms of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">c. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">If the GDPR applies to the Processing of Customer Personal Data, (i) the data protection obligations described in this DPA (as referred to in Article 28(3) of the GDPR, if applicable) are also imposed on the Subprocessor, and (ii) </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agreement with the Subprocessor will incorporate these obligations, including details about how </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and its Subprocessor will coordinate to respond to inquiries or requests about the Processing of Customer Personal Data. In addition, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will share, at </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> request, a copy of its agreements (including any amendments) with its Subprocessors. To the extent necessary to protect business secrets or other confidential information, including personal data, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> may redact the text of its agreement with its Subprocessor prior to sharing a copy.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">d. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> remains fully liable for all obligations subcontracted to its Subprocessors, including the acts and omissions of its Subprocessors in Processing Customer Personal Data. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will notify Customer of any failure by its Subprocessors to fulfill a material obligation about Customer Personal Data under the agreement between </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and the Subprocessor.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">3. Restricted Transfers</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">3.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Authorization. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agrees that </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> may transfer Customer Personal Data outside the EEA, the United Kingdom, or other relevant geographic territory as necessary to provide the Service. If </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> transfers Customer Personal Data to a territory for which the European Commission or other relevant supervisory authority has not issued an adequacy decision, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will implement appropriate safeguards for the transfer of Customer Personal Data to that territory consistent with Applicable Data Protection Laws.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">3.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Ex-EEA Transfers. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agree that if the GDPR protects the transfer of Customer Personal Data, the transfer is from </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> from within the EEA to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> outside of the EEA, and the transfer is not governed by an adequacy decision made by the European Commission, then by entering into this DPA, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> are deemed to have signed the EEA SCCs and their Annexes, which are incorporated by reference. Any such transfer is made pursuant to the EEA SCCs, which are completed as follows:</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">a. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Module Two (Controller to Processor) of the EEA SCCs apply when </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is a Controller and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is Processing Customer Personal Data for </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> as a Processor.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">b. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Module Three (Processor to Sub-Processor) of the EEA SCCs apply when </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is a Processor and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is Processing Customer Personal Data on behalf of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> as a Subprocessor.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">c. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">For each module, the following applies (when applicable):</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">i. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The optional docking clause in Clause 7 does not apply;</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">ii. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In Clause 9, Option 2 (general written authorization) applies, and the minimum time period for prior notice of Subprocessor changes is 10 business days;</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">iii. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In Clause 11, the optional language does not apply;</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">iv. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">All square brackets in Clause 13 are removed;</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">v. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In Clause 17 (Option 1), the EEA SCCs will be governed by the laws of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Governing Member State</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">;</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">vi. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In Clause 18(b), disputes will be resolved in the courts of the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Governing Member State</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">; and</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="720"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">vii. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The Cover Page to this DPA contains the information required in Annex I, Annex II, and Annex III of the EEA SCCs.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">3.3 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Ex-UK Transfers. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agree that if the UK GDPR protects the transfer of Customer Personal Data, the transfer is from </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> from within the United Kingdom to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> outside of the United Kingdom, and the transfer is not governed by an adequacy decision made by the United Kingdom Secretary of State, then by entering into this DPA, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> are deemed to have signed the UK Addendum and their Annexes, which are incorporated by reference. Any such transfer is made pursuant to the UK Addendum, which is completed as follows:</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">a. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Section 3.2 of this DPA contains the information required in Table 2 of the UK Addendum.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">b. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Table 4 of the UK Addendum is modified as follows: Neither party may end the UK Addendum as set out in Section 19 of the UK Addendum; to the extent ICO issues a revised Approved Addendum under Section ‎18 of the UK Addendum, the parties will work in good faith to revise this DPA accordingly.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">c. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">The Cover Page contains the information required by Annex 1A, Annex 1B, Annex II, and Annex III of the UK Addendum.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">3.4 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Other International Transfers. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">For Personal Data transfers where Swiss law (and not the law in any EEA member state or the United Kingdom) applies to the international nature of the transfer, references to the GDPR in Clause 4 of the EEA SCCs are, to the extent legally required, amended to refer to the Swiss Federal Data Protection Act or its successor instead, and the concept of supervisory authority will include the Swiss Federal Data Protection and Information Commissioner.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">4. Security Incident Response</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">4.1 </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Upon becoming aware of any Security Incident, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will: (a) notify </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> without undue delay when feasible, but no later than 72 hours after becoming aware of the Security Incident; (b) provide timely information about the Security Incident as it becomes known or as is reasonably requested by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">; and (c) promptly take reasonable steps to contain and investigate the Security Incident. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> notification of or response to a Security Incident as required by this DPA will not be construed as an acknowledgment by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> of any fault or liability for the Security Incident.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">5. Audit &amp; Reports</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">5.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Audit Rights. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will give </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> all information reasonably necessary to demonstrate its compliance with this DPA and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will allow for and contribute to audits, including inspections by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, to assess </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> compliance with this DPA. However, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> may restrict access to data or information if </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> access to the information would negatively impact </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> intellectual property rights, confidentiality obligations, or other obligations under Applicable Laws. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> acknowledges and agrees that it will only exercise its audit rights under this DPA and any audit rights granted by Applicable Data Protection Laws by instructing </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to comply with the reporting and due diligence requirements below. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will maintain records of its compliance with this DPA for 3 years after the DPA ends.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">5.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Security Reports. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> acknowledges that </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is regularly audited against the standards defined in the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Security Policy</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> by independent third-party auditors. Upon written request, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will give </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, on a confidential basis, a summary copy of its then-current Report so that </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> can verify </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> compliance with the standards defined in the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Security Policy</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">5.3 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Security Due Diligence. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In addition to the Report, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will respond to reasonable requests for information made by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to confirm </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> compliance with this DPA, including responses to information security, due diligence, and audit questionnaires, or by giving additional information about its information security program. All such requests must be in writing and made to the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider Security Contact</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and may only be made once a year.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">6. Coordination &amp; Cooperation</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">6.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Response to Inquiries. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">If </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> receives any inquiry or request from anyone else about the Processing of Customer Personal Data, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will notify </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> about the request and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will not respond to the request without </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> prior consent. Examples of these kinds of inquiries and requests include a judicial or administrative or regulatory agency order about Customer Personal Data where notifying </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> is not prohibited by Applicable Law, or a request from a data subject. If allowed by Applicable Law, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will follow </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> reasonable instructions about these requests, including providing status updates and other information reasonably requested by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. If a data subject makes a valid request under Applicable Data Protection Laws to delete or opt out of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> giving of Customer Personal Data to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will assist </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> in fulfilling the request according to the Applicable Data Protection Law. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will cooperate with and provide reasonable assistance to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, at </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> expense, in any legal response or other procedural action taken by </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> in response to a third-party request about </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> Processing of Customer Personal Data under this DPA.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">6.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">DPIAs and DTIAs. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">If required by Applicable Data Protection Laws, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will reasonably assist </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> in conducting any mandated data protection impact assessments or data transfer impact assessments and consultations with relevant data protection authorities, taking into consideration the nature of the Processing and Customer Personal Data.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">7. Deletion of Customer Personal Data</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">7.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Deletion by Customer. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will enable </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to delete Customer Personal Data in a manner consistent with the functionality of the Services. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will comply with this instruction as soon as reasonably practicable except where further storage of Customer Personal Data is required by Applicable Law.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">7.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Deletion at DPA Expiration. </w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">a. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">After the DPA expires, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will return or delete Customer Personal Data at </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer’s</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> instruction unless further storage of Customer Personal Data is required or authorized by Applicable Law. If return or destruction is impracticable or prohibited by Applicable Laws, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will make reasonable efforts to prevent additional Processing of Customer Personal Data and will continue to protect the Customer Personal Data remaining in its possession, custody, or control. For example, Applicable Laws may require </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> to continue hosting or Processing Customer Personal Data.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="360"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">b. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">If </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> have entered the EEA SCCs or the UK Addendum as part of this DPA, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will only give </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> the certification of deletion of Personal Data described in Clause 8.1(d) and Clause 8.5 of the EEA SCCs if </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> asks for one.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">8. Limitation of Liability</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">8.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Liability Caps and Damages Waiver. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">To the maximum extent permitted under Applicable Data Protection Laws, each party’s total cumulative liability to the other party arising out of or related to this DPA will be subject to the waivers, exclusions, and limitations of liability stated in the </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">8.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Related-Party Claims. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Any claims made against </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve"> or its Affiliates arising out of or related to this DPA may only be brought by the </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve"> entity that is a party to the </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">8.3 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Exceptions. </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">This DPA does not limit any liability to an individual about the individual’s data protection rights under Applicable Data Protection Laws. In addition, this DPA does not limit any liability between the parties for violations of the EEA SCCs or UK Addendum.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">9. Conflicts Between Documents</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">9.1 </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">This DPA forms part of and supplements the Agreement. If there is any inconsistency between this DPA, the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, or any of their parts, the part listed earlier will control over the part listed later for that inconsistency: (1) the EEA SCCs or the UK Addendum, (2) this DPA, and then (3) the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">10. Term of Agreement</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">10.1 </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">This DPA will start when </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> agree to a Cover Page for the DPA and sign or electronically accept the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and will continue until the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> expires or is terminated. However, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will each remain subject to the obligations in this DPA and Applicable Data Protection Laws until </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> stops transferring Customer Personal Data to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> stops Processing Customer Personal Data.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading2"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">11. Definitions</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.1 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Applicable Laws&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means the laws, rules, regulations, court orders, and other binding requirements of a relevant government authority that apply to or govern a party.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.2 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Applicable Data Protection Laws&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means the Applicable Laws that govern how the Service may process or use an individual’s personal information, personal data, personally identifiable information, or other similar term.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.3 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Controller&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have the meaning(s) given in the Applicable Data Protection Laws for the company that determines the purpose and extent of Processing Personal Data.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.4 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Cover Page&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means a document that is signed or electronically accepted by the parties that incorporates these DPA Standard Terms and identifies </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, and the subject matter and details of the data processing.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.5 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Customer Personal Data&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means Personal Data that </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> uploads or provides to </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> as part of the Service and that is governed by this DPA.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.6 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;DPA&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means these DPA Standard Terms, the Cover Page between </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Provider</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Customer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, and the policies and documents referenced in or attached to the Cover Page.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.7 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;EEA SCCs&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means the standard contractual clauses annexed to the European Commission&apos;s Implementing Decision 2021/914 of 4 June 2021 on standard contractual clauses for the transfer of personal data to third countries pursuant to Regulation (EU) 2016/679 of the European Parliament and of the European Council.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.8 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;European Economic Area&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> or </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;EEA&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means the member states of the European Union, Norway, Iceland, and Liechtenstein.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.9 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;GDPR&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means European Union Regulation 2016/679 as implemented by local law in the relevant EEA member nation.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.10 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Personal Data&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have the meaning(s) given in the Applicable Data Protection Laws for personal information, personal data, or other similar term.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.11 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Processing&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> or </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Process&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have the meaning(s) given in the Applicable Data Protection Laws for any use of, or performance of a computer operation on, Personal Data, including by automatic methods.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.12 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Processor&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have the meaning(s) given in the Applicable Data Protection Laws for the company that Processes Personal Data on behalf of the Controller.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.13 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Report&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means audit reports prepared by another company according to the standards defined in the Security Policy on behalf of Provider.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.14 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Restricted Transfer&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means (a) where the GDPR applies, a transfer of personal data from the EEA to a country outside of the EEA which is not subject to an adequacy determination by the European Commission; and (b) where the UK GDPR applies, a transfer of personal data from the United Kingdom to any other country which is not subject to adequacy regulations adopted pursuant to Section 17A of the United Kingdom Data Protection Act 2018.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.15 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Security Incident&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means a Personal Data Breach as defined in Article 4 of the GDPR.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.16 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Service&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means the product and/or services described in the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Agreement</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.17 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Special Category Data&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have the meaning given in Article 9 of the GDPR.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.18 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;Subprocessor&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> will have the meaning(s) given in the Applicable Data Protection Laws for a company that, with the approval and acceptance of Controller, assists the Processor in Processing Personal Data on behalf of the Controller.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.19 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;UK GDPR&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means European Union Regulation 2016/679 as implemented by section 3 of the United Kingdom’s European Union (Withdrawal) Act of 2018 in the United Kingdom.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11.20 </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">&quot;UK Addendum&quot;</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> means the international data transfer addendum to the EEA SCCs issued by the Information Commissioner for Parties making Restricted Transfers under S119A(1) Data Protection Act 2018.</w:t>
+</w:r>
+</w:p>
+<w:sectPr>
+<w:headerReference w:type="default" r:id="link-5"/>
+<w:footerReference w:type="default" r:id="link-6"/>
+<w:pgSz w:w="12240" w:h="15840" w:orient="portrait"/>
+<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/>
+<w:pgNumType/>
+<w:docGrid w:linePitch="360"/>
+</w:sectPr>
+</w:body>
+</w:document>
+=== word/styles.xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles mc:Ignorable="w14 w15" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml">
+<w:docDefaults>
+<w:rPrDefault>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="21"/>
+<w:szCs w:val="21"/>
+</w:rPr>
+</w:rPrDefault>
+<w:pPrDefault>
+<w:pPr>
+<w:spacing w:after="120" w:line="312"/>
+</w:pPr>
+</w:pPrDefault>
+</w:docDefaults>
+<w:style w:type="paragraph" w:styleId="Title">
+<w:name w:val="Title"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:sz w:val="56"/>
+<w:szCs w:val="56"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading1">
+<w:name w:val="Heading 1"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:pPr>
+<w:keepNext/>
+<w:spacing w:after="120" w:before="240"/>
+</w:pPr>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="40"/>
+<w:szCs w:val="40"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading2">
+<w:name w:val="Heading 2"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:pPr>
+<w:keepNext/>
+<w:spacing w:after="120" w:before="240"/>
+</w:pPr>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="24"/>
+<w:szCs w:val="24"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading3">
+<w:name w:val="Heading 3"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:pPr>
+<w:keepNext/>
+<w:spacing w:after="120" w:before="240"/>
+</w:pPr>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="22"/>
+<w:szCs w:val="22"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading4">
+<w:name w:val="Heading 4"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:i/>
+<w:iCs/>
+<w:color w:val="2E74B5"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading5">
+<w:name w:val="Heading 5"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:color w:val="2E74B5"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading6">
+<w:name w:val="Heading 6"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:color w:val="1F4D78"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Strong">
+<w:name w:val="Strong"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="ListParagraph">
+<w:name w:val="List Paragraph"/>
+<w:basedOn w:val="Normal"/>
+<w:qFormat/>
+</w:style>
+<w:style w:type="character" w:styleId="Hyperlink">
+<w:name w:val="Hyperlink"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:uiPriority w:val="99"/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:color w:val="0563C1"/>
+<w:u w:val="single"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="FootnoteReference">
+<w:name w:val="footnote reference"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:vertAlign w:val="superscript"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="FootnoteText">
+<w:name w:val="footnote text"/>
+<w:basedOn w:val="Normal"/>
+<w:link w:val="FootnoteTextChar"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:pPr>
+<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+</w:pPr>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="FootnoteTextChar">
+<w:name w:val="Footnote Text Char"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:link w:val="FootnoteText"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="EndnoteReference">
+<w:name w:val="endnote reference"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:vertAlign w:val="superscript"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="EndnoteText">
+<w:name w:val="endnote text"/>
+<w:basedOn w:val="Normal"/>
+<w:link w:val="EndnoteTextChar"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:pPr>
+<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+</w:pPr>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="EndnoteTextChar">
+<w:name w:val="Endnote Text Char"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:link w:val="EndnoteText"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+</w:styles>
+=== word/footer1.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<w:ftr xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+<w:p>
+<w:pPr>
+<w:tabs>
+<w:tab w:val="right" w:pos="9360"/>
+</w:tabs>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Data Processing Agreement</w:t>
+<w:tab/>
+<w:t xml:space="preserve">Page </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:fldChar w:fldCharType="begin"/>
+<w:instrText xml:space="preserve">PAGE</w:instrText>
+<w:fldChar w:fldCharType="separate"/>
+<w:fldChar w:fldCharType="end"/>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve"> of </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:fldChar w:fldCharType="begin"/>
+<w:instrText xml:space="preserve">NUMPAGES</w:instrText>
+<w:fldChar w:fldCharType="separate"/>
+<w:fldChar w:fldCharType="end"/>
+</w:r>
+</w:p>
+</w:ftr>

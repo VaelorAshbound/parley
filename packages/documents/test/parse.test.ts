@@ -245,41 +245,84 @@ describe("parseStandardTerms", () => {
 })
 
 describe("parseStandardTerms rejects what it does not understand", () => {
+  // Each says what is wrong and on which line, for whoever updates a
+  // template (pnpm documents:build).
   it.each([
-    ["an item that skips a number", "# T\n\n1. One\n3. Three\n"],
-    ["an item indented too deep", "# T\n\n1. One\n        a. Deep\n"],
-    ["a line that is not an item", "# T\n\n1. One\nloose words\n1. Again\n"],
+    [
+      "an item that skips a number",
+      "# T\n\n1. One\n3. Three\n",
+      'Line 4: Expected item "2", found "3"',
+    ],
+    [
+      "an item indented too deep",
+      "# T\n\n1. One\n        a. Deep\n",
+      "Line 4: Unexpected indentation",
+    ],
+    [
+      "a line that is not an item",
+      "# T\n\n1. One\nloose words\n1. Again\n",
+      "Line 5: A list item after the closing text",
+    ],
     [
       "an unknown span class",
       '# T\n\n1. <span class="mystery_link">X</span>\n',
+      'Line 3: Unknown span class "mystery_link"',
     ],
-    ["a missing title", "1. One\n"],
-    ["an empty file", ""],
-    ["a first item that is not 1, a or i", "# T\n\n2. Two\n"],
-    ["an indented line that is not an item", "# T\n\n1. One\n    loose\n"],
+    ["a missing title", "1. One\n", "Line 1: Expected a # title"],
+    ["an empty file", "", "Expected a # title"],
+    [
+      "a first item that is not 1, a or i",
+      "# T\n\n2. Two\n",
+      'Line 3: Expected item "1, a or i", found "2"',
+    ],
+    [
+      "an indented line that is not an item",
+      "# T\n\n1. One\n    loose\n",
+      "Line 4: Expected a list item",
+    ],
     [
       "a section heading with text after it",
       '# T\n\n1. <span class="header_2" id="1">S</span> words\n',
+      "Line 3: A section holds text",
     ],
-    ["an item that is not one line of text", "# T\n\n1. > quoted\n"],
-    ["an HTML comment", "# T\n\n1. One <!-- note -->\n"],
-    ["a link with no href", "# T\n\n1. <a>here</a>\n"],
-    ["emphasis the engine has no node for", "# T\n\n1. *soft*\n"],
+    [
+      "an item that is not one line of text",
+      "# T\n\n1. > quoted\n",
+      "Line 3: Expected one line of text",
+    ],
+    [
+      "an HTML comment",
+      "# T\n\n1. One <!-- note -->\n",
+      "Line 3: Unexpected inline comment",
+    ],
+    [
+      "a link with no href",
+      "# T\n\n1. <a>here</a>\n",
+      "Line 3: A link has no href",
+    ],
+    [
+      "emphasis the engine has no node for",
+      "# T\n\n1. *soft*\n",
+      "Line 3: Unexpected <em>",
+    ],
     [
       "a span with two classes",
       '# T\n\n1. <span class="coverpage_link x">X</span>\n',
+      'Line 3: Unknown span class "coverpage_link x"',
     ],
     [
       "a linked term holding markup",
       '# T\n\n1. <span class="coverpage_link">**X**</span>\n',
+      "Line 3: A linked term holds markup",
     ],
-  ])("%s", (_name, markdown) => {
+  ])("%s", (_name, markdown, message) => {
     expect(() => parseStandardTerms(markdown)).toThrow(TemplateParseError)
+    expect(() => parseStandardTerms(markdown)).toThrow(message)
   })
 
-  it("names the line of the problem", () => {
-    expect(() => parseStandardTerms("# T\n\n1. One\n3. Three\n")).toThrow(
-      'Line 4: Expected item "2", found "3"'
+  it("is a TemplateParseError by name too", () => {
+    expect(() => parseStandardTerms("")).toThrow(
+      expect.objectContaining({ name: "TemplateParseError" })
     )
   })
 })
@@ -310,11 +353,20 @@ describe("parseStandardTerms reads bold text that holds other nodes", () => {
 
 describe("parseCoverPage rejects what it does not understand", () => {
   it.each([
-    ["a quote block", "> quoted\n"],
-    ["a list item with no checkbox", "- plain\n"],
-    ["an HTML comment between blocks", "# T\n\n<!-- note -->\n"],
-  ])("%s", (_name, markdown) => {
+    ["a quote block", "> quoted\n", "Unexpected <blockquote>"],
+    [
+      "a list item with no checkbox",
+      "- plain\n",
+      "A cover page list item has no checkbox",
+    ],
+    [
+      "an HTML comment between blocks",
+      "# T\n\n<!-- note -->\n",
+      "Unexpected comment outside a block",
+    ],
+  ])("%s", (_name, markdown, message) => {
     expect(() => parseCoverPage(markdown)).toThrow(TemplateParseError)
+    expect(() => parseCoverPage(markdown)).toThrow(message)
   })
 })
 
