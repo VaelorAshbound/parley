@@ -9,6 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
+  useSidebar,
 } from "@workspace/ui/components/sidebar"
 import { ArrowRightIcon, MoreHorizontalIcon } from "lucide-react"
 
@@ -36,6 +37,9 @@ export function DraftHistory({
   const hidden = useUiStore((state) => state.hidden)
   const calendar = useCalendar(calendarKey)
   const matchRoute = useMatchRoute()
+  // On a phone the sidebar is a drawer; a picked draft must not stay under it.
+  const { setOpenMobile } = useSidebar()
+  const closeDrawer = () => setOpenMobile(false)
 
   if (!drafts.data)
     return (
@@ -72,7 +76,11 @@ export function DraftHistory({
                       })
                     )}
                     render={
-                      <Link to="/d/$draftId" params={{ draftId: draft.id }} />
+                      <Link
+                        to="/d/$draftId"
+                        params={{ draftId: draft.id }}
+                        onClick={closeDrawer}
+                      />
                     }
                   >
                     <span className="truncate">{draft.title}</span>
@@ -96,7 +104,10 @@ export function DraftHistory({
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="sm" render={<Link to="/drafts" />}>
+              <SidebarMenuButton
+                size="sm"
+                render={<Link to="/drafts" onClick={closeDrawer} />}
+              >
                 <span>View all</span>
                 <ArrowRightIcon />
               </SidebarMenuButton>
