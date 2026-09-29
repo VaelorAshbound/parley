@@ -896,6 +896,7 @@
   - Deps: T3, T32 · Skills: `neon:neon-postgres-branches`, `ci-cd-and-automation`
 
 - [x] **T34: Coverage gates + mutation testing** (S)
+  - **2026-09-29, owner: Stryker removed entirely** (nightly job, `test:mutation`, configs, the vitest-runner patch; PAR-26 closed). It took ~50 min a night. The coverage gates stay.
   - Closed 2026-09-29 by the owner (it ran ~3 h in the wave). Skills: build, incremental-implementation, test-driven-development, source-driven-development, code-review-and-quality, ci-cd-and-automation, git-workflow-and-versioning. The agent was stopped before its own final gate and write-up; the lead committed the last work and wrote this entry.
   - Checked: `pnpm check` pass; `packages/db` exports test 12 pass. The full gate (`pnpm test`, `test:workers`, `test:coverage`) runs at merge.
   - Built:

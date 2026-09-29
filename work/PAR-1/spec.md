@@ -209,7 +209,6 @@ pnpm test:e2e                # playwright test (local, or PREVIEW_URL=... for a 
 pnpm test:coverage           # all tests + coverage gates
 pnpm test:workers            # Worker runtime tests in workerd
 pnpm test:real               # real-service suite (OpenRouter, Browser Run, Polar, Resend); costs a little
-pnpm test:mutation           # Stryker mutation tests
 pnpm test:perf               # Lighthouse CI against a URL (PREVIEW_URL=...)
 pnpm evals                   # AI eval suite (real gpt-6-luna)
 pnpm build                   # vp run -r build
@@ -496,7 +495,7 @@ Testing is part of the showpiece. It is thorough, it covers a lot, and it tests 
 | `packages/db` and server code (`apps/web/src/server`) | ≥ 95% / ≥ 90% |
 | UI (`apps/web/src/features`, `components`) | ≥ 85% / ≥ 80% |
 
-- Mutation testing (Stryker + Vitest) on `packages/documents` and the quota and auth logic. Target: a mutation score of 85% or more. This proves the tests really catch bugs, not only that they run the code.
+- ~~Mutation testing (Stryker)~~: removed 2026-09-29 (owner). It took ~50 min a night; T34 measured 89% once and fixed the gaps it found.
 
 ### Test levels
 
@@ -567,7 +566,7 @@ These use a separate test OpenRouter key with its own hard limit ($5, `OPENROUTE
 |---|---|
 | Before each commit | `pnpm check` + unit + Worker runtime tests for the changed packages. |
 | Every PR | Everything above except the nightly items. That includes the real NDA run, real PDF/DOCX, real Polar and real Resend, on a preview + Neon branch. |
-| Nightly | The full real-LLM run of all 12 documents, AI evals, mutation tests, load test, the real Turnstile check, and an agent-browser QA run. |
+| Nightly | The full real-LLM run of all 12 documents, AI evals, load test, the real Turnstile check, and an agent-browser QA run. |
 | After deploy | The smoke test on the live site. |
 
 ## 7. Boundaries
