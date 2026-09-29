@@ -1,55 +1,29 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { test, type Page } from "@playwright/test"
 
-import { test, type Browser, type Page } from "@playwright/test"
-import { createEmailVerificationToken } from "better-auth/api"
-
-import { draftOpened, expect, open } from "./helpers"
+import {
+  confirmedAccount,
+  databaseUrl,
+  draftOpened,
+  expect,
+  open,
+} from "./helpers"
 
 // Share links (T25): the owner copies a read-only link, a visitor with no
 // account opens it, the owner turns it off, and the link gives a friendly
 // 404. Sharing needs a confirmed email, so the owner's email is confirmed
-// with the dev server's secret: this runs locally, not against a Preview.
+// in the app's database: local dev's, or the Preview's own Neon branch in
+// CI (T33).
 
-test.skip(
-  Boolean(process.env.PREVIEW_URL),
-  "Needs the dev server's auth secret to confirm the owner's email"
-)
-
-const password = "correct horse 1"
-
-/** The confirmation link from the email, made with .dev.vars' secret. */
-async function confirmationPath(email: string) {
-  const vars = readFileSync(join(import.meta.dirname, "../.dev.vars"), "utf8")
-  const secret = /^BETTER_AUTH_SECRET=(.+)$/m.exec(vars)?.[1]?.trim()
-  if (!secret) throw new Error("No BETTER_AUTH_SECRET in .dev.vars")
-  const token = await createEmailVerificationToken(secret, email)
-  return `/api/auth/verify-email?${new URLSearchParams({ token, callbackURL: "/" })}`
-}
-
-/** A page signed in as a new account with a confirmed email. */
-async function confirmedOwner(browser: Browser, baseURL: string) {
-  const context = await browser.newContext({ baseURL })
-  const email = `e2e-${crypto.randomUUID()}@example.test`
-  for (let attempt = 1; ; attempt++) {
-    const response = await context.request.post("/api/auth/sign-up/email", {
-      headers: {
-        origin: new URL(baseURL).origin,
-        "x-captcha-response": "XXXX.DUMMY.TOKEN.XXXX",
-      },
-      data: { name: "Ana Tester", email, password },
-    })
-    if (response.ok()) break
-    // Sign-ups are rate limited per IP (3 per 10 s).
-    if (response.status() !== 429 || attempt === 5)
-      throw new Error(`sign-up failed: ${response.status()}`)
-    await new Promise((resolve) => setTimeout(resolve, 10_000))
-  }
-  const confirmed = await context.request.get(await confirmationPath(email), {
-    maxRedirects: 0,
-  })
-  expect(confirmed.status()).toBe(302)
-  return { page: await context.newPage(), email }
+/**
+ * The X-Robots-Tag a share page answers with. On a workers.dev Preview,
+ * Cloudflare puts its own `noindex` in place of the app's header (seen on
+ * the first Preview run, T33; https://developers.cloudflare.com/workers/previews/#urls);
+ * the page's robots meta tag still says nofollow.
+ */
+function robotsHeader(baseURL: string | undefined) {
+  return new URL(baseURL ?? "").hostname.endsWith(".workers.dev")
+    ? "noindex"
+    : "noindex, nofollow"
 }
 
 /** Copies the link from the Share menu; gives the address it copied. */
@@ -69,9 +43,11 @@ test("a shared draft opens read-only for anyone, until it is turned off", async 
   browserName,
   baseURL,
 }) => {
+  test.skip(!databaseUrl, "Needs the Preview's database (E2E_DATABASE_URL)")
   // Several pages, each compiled on first use by the dev server.
   test.slow()
-  const { page, email } = await confirmedOwner(browser, baseURL ?? "")
+  const { context, email } = await confirmedAccount(browser, baseURL ?? "")
+  const page = await context.newPage()
   if (browserName === "chromium")
     await page.context().grantPermissions(["clipboard-read", "clipboard-write"])
   await open(page, "/")
@@ -91,7 +67,7 @@ test("a shared draft opens read-only for anyone, until it is turned off", async 
   expect(shown?.status()).toBe(200)
   expect(shown?.headers()).toMatchObject({
     "cache-control": "private, no-store",
-    "x-robots-tag": "noindex, nofollow",
+    "x-robots-tag": robotsHeader(baseURL),
     "referrer-policy": "no-referrer",
   })
   await expect(
@@ -125,7 +101,7 @@ test("a shared draft opens read-only for anyone, until it is turned off", async 
   expect(gone?.status()).toBe(404)
   expect(gone?.headers()).toMatchObject({
     "cache-control": "private, no-store",
-    "x-robots-tag": "noindex, nofollow",
+    "x-robots-tag": robotsHeader(baseURL),
   })
   await expect(
     visitor.getByRole("heading", { name: "This link doesn’t work" })

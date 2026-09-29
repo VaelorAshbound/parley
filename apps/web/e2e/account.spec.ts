@@ -1,12 +1,12 @@
 import type { APIRequestContext, Page } from "@playwright/test"
-import { connect, schema } from "@workspace/db"
+import { schema } from "@workspace/db"
 import { and, eq, like } from "drizzle-orm"
 
-import { expect, fresh, open } from "./helpers"
+import { databaseUrl, expect, fresh, open, withDatabase } from "./helpers"
 
 // Settings and the password flows (T23), in a real browser against the dev
-// server. Addresses are on example.test, so no email is ever sent; the reset
-// link's token is read from the dev database instead.
+// server or a Preview. Addresses are on example.test, so no email is ever
+// sent; the reset link's token is read from the app's database instead.
 
 // Sign-up and sign-in allow 3 tries per 10 s per IP: one at a time.
 fresh.describe.configure({ mode: "serial" })
@@ -109,14 +109,12 @@ async function signIn(page: Page, email: string, pass: string) {
 }
 
 /**
- * The token in the reset email, from the dev database (the email itself
- * isn't sent to test addresses). Not available against a Preview.
+ * The token in the reset email, from the app's database (the email itself
+ * isn't sent to test addresses): local dev's, or the Preview's own Neon
+ * branch in CI (T33).
  */
 async function resetToken(email: string) {
-  const db = await connect(
-    "postgres://postgres:postgres@localhost:54320/parley"
-  )
-  try {
+  return withDatabase(async (db) => {
     const [user] = await db
       .select({ id: schema.user.id })
       .from(schema.user)
@@ -131,11 +129,9 @@ async function resetToken(email: string) {
         )
       )
     const token = row?.identifier.replace("reset-password:", "")
-    if (!token) throw new Error("No reset token in the dev database")
+    if (!token) throw new Error("No reset token in the database")
     return token
-  } finally {
-    await db.$client.end()
-  }
+  })
 }
 
 fresh("the account menu leads to settings", async ({ page }) => {
@@ -197,8 +193,8 @@ fresh(
     // Up to a minute more if the IP used its 3 reset emails this minute.
     fresh.setTimeout(180_000)
     fresh.skip(
-      Boolean(process.env.PREVIEW_URL),
-      "Reads the reset token from the local dev database"
+      !databaseUrl,
+      "Reads the reset token from the Preview's database (E2E_DATABASE_URL)"
     )
     const email = await signUpOn(page, "/")
     await context.clearCookies()

@@ -9,6 +9,8 @@ const localUrl = `http://localhost:${process.env.PORT ?? 3000}`
 
 export default defineConfig({
   testDir: "./e2e",
+  // The post-deploy smoke test uses the real model: playwright.real.config.ts.
+  testIgnore: "**/*.prod.spec.ts",
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   // One test at a time locally: the dev server, Postgres and browsers share
