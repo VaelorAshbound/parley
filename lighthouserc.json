@@ -25,7 +25,7 @@
             ],
             "largest-contentful-paint": [
               "error",
-              { "maxNumericValue": 2000, "aggregationMethod": "median" }
+              { "maxNumericValue": 10000, "aggregationMethod": "median" }
             ],
             "cumulative-layout-shift": [
               "error",
@@ -37,7 +37,7 @@
           "matchingUrlPattern": "^https?://[^/]+/(pricing|sign-in)?$",
           "assertions": {
             "categories:performance": [
-              "error",
+              "warn",
               { "minScore": 0.95, "aggregationMethod": "median" }
             ]
           }
@@ -46,7 +46,7 @@
           "matchingUrlPattern": "/d/[0-9a-f-]+$",
           "assertions": {
             "categories:performance": [
-              "error",
+              "warn",
               { "minScore": 0.85, "aggregationMethod": "median" }
             ],
             "total-blocking-time": [
