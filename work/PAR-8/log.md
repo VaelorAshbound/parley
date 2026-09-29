@@ -30,3 +30,6 @@ CI run 36603240369 (0e1d808): desktop WebKit green (2 flaky), webkit-phone a11y 
 
 ### 2026-09-29T20:16:47Z
 CI 36622923385 (f0d2aea): WebKit again crashes/timeouts in changing tests (chat.spec:17/:57, drafts:41, editing:96, shell:42 twice; phone a11y:45/:53). Locally shell:42 3/3, chat:57 3/3 on a rerun (2/3 failed the run before, one after 4 s: a crash). No code bug found.
+
+### 2026-09-29T22:37:14Z
+CI 36637331506 (cd4e517): Chromium first-run.spec.ts:70 'the start page doesn't shift while it loads' failed once (5.4 s), passed on retry. Same test as the Firefox local flake in this item's title; now also seen on Chromium in CI.

@@ -181,3 +181,6 @@ Session end. Real services green on 73bf59a (real model NDA->PDF, Polar sandbox 
 
 ### 2026-09-29T21:47:51Z
 Session: PAR-9, 11, 12, 22, 28 done and merged; PAR-16 merged, in verify (Preview check left). Filed PAR-29, PAR-30. Next: quick ones PAR-13, PAR-14, PAR-29; PAR-18 before T38.
+
+### 2026-09-29T22:37:14Z
+Session end. Finished: checked CI after the Stryker removal (install fixed at 1edebf1). UI coverage gate removed (owner; c77bbae): test:coverage:ui, UI thresholds, spec §6 row; component job still runs Chromium + Firefox. documents/db/server gates stay. CI green on c77bbae (Workers Builds, component 2m10s, e2e 7m04s). Checkpoints 3-5 ticked with evidence (b685e3a, local: owner pushes it with the next change). No wi items were done-but-open; the wave (PAR-9, 11, 12, 16, 22, 28) is closed. Flaky first-run:70 noted on PAR-8. Slowest e2e: two-factor.spec:107 at 45.7 s. Next: T36 (QA pass), Checkpoint 7, PAR-18, then T38-T40.
