@@ -21,3 +21,6 @@ Fixed the race in 'a signed-out visitor keeps the browser's own Ctrl+K' (listene
 
 ### 2026-09-29T16:11:41Z
 Seen 2026-09-29: (1) CI desktop WebKit on 56f2347: page crash in chat.spec.ts:40 ('the AI suggests an agreement', page.waitForURL: page crashed), passed on retry; --ipc=host made crashes rare but not gone. (2) Local full 'pnpm test' (chromium,firefox): search-dialog.browser.test 'asks the server once per pause, not once per key' failed once under load, 3/3 alone.
+
+### 2026-09-29T17:11:44Z
+Seen 2026-09-29 on WebKit (CI run 36596008423 and local Docker vs the Preview): tests that passed 2/2 locally but failed in CI: shell.spec:25 and :121, drafts.spec:114 (page crash), first-run.spec:151, editing.spec:114 (also 1/2 locally). webkit-phone a11y.spec:53: 'Target crashed' during axe, and drafts/get + drafts/list never answered for 10 s (chat stuck on 'Updating the document…'); 2/6 local runs. Not a code bug found; WebKit instability.
