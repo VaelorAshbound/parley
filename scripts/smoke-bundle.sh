@@ -12,6 +12,17 @@ if grep -q "MockLanguageModel" dist/server/index.js; then
   exit 1
 fi
 
+# The TanStack devtools (Router, Query, Form, and their shell) are for local
+# dev only (spec §6): the browser's bundle must not carry them. These are
+# strings each devtools panel ships (its CSS class prefixes and titles); TanStack
+# Form's small event client ("tanstack-devtools-…") is allowed.
+devtools='tsqd-|tsrd-|TanStack (Router |Query |Form )?Devtools'
+if found="$(grep -lE "$devtools" dist/client/assets/*.js)"; then
+  echo "The browser bundle holds the TanStack devtools:" >&2
+  echo "$found" >&2
+  exit 1
+fi
+
 port=4173
 log="$(mktemp)"
 if curl -fsS "http://localhost:$port" >/dev/null 2>&1; then
