@@ -10,8 +10,9 @@
 name: Real services
 
 on:
+  # Only on demand: the label "real" on a PR (owner, 2026-09-29).
   pull_request:
-    paths-ignore: ["work/**", "docs/**", "**/*.md"]
+    types: [labeled]
   workflow_dispatch:
 
 permissions:
@@ -31,6 +32,7 @@ env:
 
 jobs:
   real:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'real'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     container:
