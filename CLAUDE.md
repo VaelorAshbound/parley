@@ -15,6 +15,11 @@ Break one only for a real reason, and write the reason down. Don't overengineer.
 
 Build a piece, check it hard, fix what's off, then move on. Done all the way, not just "works".
 
+# Testing
+
+Test what can hurt, for real. Every outside service (payments, email, auth, AI) must
+work in its real sandbox, not only with mocks, before the feature is done.
+
 # Standard tech stack
 
 Default stack for all projects here unless a project says otherwise:
