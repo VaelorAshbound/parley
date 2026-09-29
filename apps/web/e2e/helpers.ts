@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright"
 import {
   expect,
   test as base,
+  type APIRequestContext,
   type Browser,
   type Page,
   type WorkerInfo,
@@ -163,6 +164,60 @@ export async function confirmEmail(email: string) {
       .set({ emailVerified: true })
       .where(eq(schema.user.email, email))
   )
+}
+
+/** What Cloudflare's "always passes" Turnstile test widget answers. */
+const testCaptcha = { "x-captcha-response": "XXXX.DUMMY.TOKEN.XXXX" }
+
+/**
+ * Posts to Better Auth, waiting out its per-IP limit (3 sign-ups or
+ * sign-ins per 10 s). Needs Turnstile's test keys (local dev, Previews).
+ */
+export async function authPost(
+  request: APIRequestContext,
+  baseURL: string,
+  path: string,
+  data: object
+) {
+  for (let attempt = 1; ; attempt++) {
+    const response = await request.post(path, {
+      headers: { origin: new URL(baseURL).origin, ...testCaptcha },
+      data,
+    })
+    if (response.ok()) return
+    if (response.status() !== 429 || attempt === 5)
+      throw new Error(`${path} failed: ${response.status()}`)
+    await new Promise((resolve) => setTimeout(resolve, 10_000))
+  }
+}
+
+/**
+ * A browser context signed in as a new account whose email is confirmed
+ * in the database (confirmEmail), for what needs one: sharing, downloads,
+ * checkout. Its address is on example.test (no email is sent) unless one
+ * is given.
+ */
+export async function confirmedAccount(
+  browser: Browser,
+  baseURL: string,
+  email = `e2e-${crypto.randomUUID()}@example.test`
+) {
+  const password = "correct horse 1"
+  const context = await browser.newContext({ baseURL })
+  await authPost(context.request, baseURL, "/api/auth/sign-up/email", {
+    name: "Ana Tester",
+    email,
+    password,
+  })
+  await confirmEmail(email)
+  // A new session reads the confirmed email; the sign-up's cookie still
+  // holds the old value.
+  await context.clearCookies()
+  await authPost(context.request, baseURL, "/api/auth/sign-in/email", {
+    email,
+    password,
+  })
+  return { context, email }
 }
 
 /**

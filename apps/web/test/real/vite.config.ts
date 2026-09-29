@@ -3,11 +3,11 @@ import { resolve } from "node:path"
 import { defineConfig } from "vite-plus"
 import { playwright } from "vite-plus/test/browser-playwright"
 
-// `pnpm test:real` (T31): all 12 documents exported for real and checked.
+// `pnpm test:real:export` (T31; nightly since T33): all 12 documents exported for real and checked.
 // print.ts makes the files in Node (real Browser Run for the PDFs); the test
 // reads them back in a real Chromium, where pdf.js draws each PDF page and
 // Vitest's toMatchScreenshot compares it with the approved baseline in
-// baselines/. Accept new baselines with `pnpm test:real --update`, after
+// baselines/. Accept new baselines with `pnpm test:real:export --update`, after
 // looking at them.
 // https://vitest.dev/guide/browser/visual-regression-testing
 export default defineConfig({

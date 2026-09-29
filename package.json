@@ -20,7 +20,8 @@
     "test:workers": "vp run --filter web-worker-tests test",
     "deploy": "vp run --filter web deploy",
     "test:workers:real": "vp run --filter web-worker-tests test:real",
-    "test:real": "vp test run --config apps/web/test/real/vite.config.ts",
+    "test:real": "vp run --filter web test:real",
+    "test:real:export": "vp test run --config apps/web/test/real/vite.config.ts",
     "test:e2e": "vp run --filter web test:e2e",
     "test:e2e:docker": "bash scripts/e2e-docker.sh",
     "evals": "vp run --filter evals evals"
