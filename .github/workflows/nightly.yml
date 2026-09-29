@@ -16,6 +16,10 @@ on:
   schedule:
     - cron: "30 2 * * *"
   workflow_dispatch:
+  # The label "nightly" on a PR runs it now: GitHub only starts scheduled and
+  # manual runs from main, and PR #1 stays open until launch.
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: read
@@ -27,6 +31,8 @@ concurrency:
 jobs:
   start:
     # The test key's spend before the run: the report shows the difference.
+    # Every other job waits for this one, so a different label stops them all.
+    if: github.event_name != 'pull_request' || github.event.label.name == 'nightly'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -167,7 +173,8 @@ jobs:
 
   report:
     needs: [start, evals, export, mutation, performance, production]
-    if: always()
+    # Also after a failed job, but not when the run didn't start (another label).
+    if: always() && needs.start.result != 'skipped'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
