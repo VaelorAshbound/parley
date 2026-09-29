@@ -21,11 +21,13 @@
     "deploy": "vp run --filter web deploy",
     "test:workers:real": "vp run --filter web-worker-tests test:real",
     "test:real": "vp test run --config apps/web/test/real/vite.config.ts",
+    "test:perf": "node load/perf.ts",
     "test:e2e": "vp run --filter web test:e2e",
     "test:e2e:docker": "bash scripts/e2e-docker.sh",
     "evals": "vp run --filter evals evals"
   },
   "devDependencies": {
+    "@lhci/cli": "0.15.1",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/browser-playwright": "5.0.1",
