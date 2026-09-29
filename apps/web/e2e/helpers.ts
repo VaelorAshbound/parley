@@ -6,6 +6,8 @@ import {
   type Page,
   type WorkerInfo,
 } from "@playwright/test"
+import { connect, schema, type Db } from "@workspace/db"
+import { eq } from "drizzle-orm"
 
 /** Opens a page and waits until React handles it (html[data-hydrated]). */
 export async function open(page: Page, url: string) {
@@ -123,6 +125,45 @@ export const accountTest = fresh.extend<object, { accountState: string }>({
   ],
   storageState: ({ accountState }, use) => use(accountState),
 })
+
+/**
+ * The database the app under test serves from. CI sets E2E_DATABASE_URL to
+ * the Preview's own Neon branch (T33, e2e.yml); local dev uses `pnpm
+ * db:dev`'s. Undefined against a Preview when CI has no Neon access: the
+ * tests that need it skip.
+ */
+export const databaseUrl =
+  process.env.E2E_DATABASE_URL ||
+  (process.env.PREVIEW_URL
+    ? undefined
+    : "postgres://postgres:postgres@localhost:54320/parley")
+
+/** Runs `use` on the app's database (see databaseUrl). */
+export async function withDatabase<T>(use: (db: Db) => Promise<T>) {
+  if (!databaseUrl) throw new Error("No database for this run")
+  const db = await connect(databaseUrl)
+  try {
+    return await use(db)
+  } finally {
+    await db.$client.end()
+  }
+}
+
+/**
+ * Marks the account's email as confirmed, as its emailed link would. The
+ * link is signed with the server's secret, which CI doesn't have for a
+ * Preview; the database is the Preview's own branch, so this touches no one
+ * else's data. The session cookie keeps the old value for up to 5 minutes
+ * (cookieCache): sign in again after this.
+ */
+export async function confirmEmail(email: string) {
+  await withDatabase((db) =>
+    db
+      .update(schema.user)
+      .set({ emailVerified: true })
+      .where(eq(schema.user.email, email))
+  )
+}
 
 /**
  * Checks the page with axe for WCAG 2.2 A and AA (spec §6: zero serious or
