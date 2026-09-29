@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vite-plus/test"
 
-import { nightlyReport } from "./nightly-report-text.ts"
+import { nightlyReport, reportIdempotencyKey } from "./nightly-report-text.ts"
 
 const runUrl = "https://github.com/o/parley/actions/runs/42"
 
@@ -63,5 +63,19 @@ describe("nightlyReport", () => {
     })
 
     expect(report.text).toContain(`Evals:\n${table}`)
+  })
+})
+
+describe("reportIdempotencyKey", () => {
+  test("a re-run of the same run gets a new key, so Resend does not answer 409", () => {
+    const first = reportIdempotencyKey({ runUrl, attempt: "1", subject: "s" })
+    const rerun = reportIdempotencyKey({ runUrl, attempt: "2", subject: "s" })
+
+    expect(first).toBe(`nightly-report/${runUrl}/1`)
+    expect(rerun).not.toBe(first)
+  })
+
+  test("falls back to attempt 1 and the subject when the run env is missing", () => {
+    expect(reportIdempotencyKey({ subject: "s" })).toBe("nightly-report/s/1")
   })
 })
