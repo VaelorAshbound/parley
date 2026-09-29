@@ -118,6 +118,34 @@ describe("chat messages", () => {
     )
   })
 
+  test("saves a reply with NUL characters, which jsonb refuses, without them", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    const withNul = {
+      id: "m-assistant-nul",
+      role: "assistant",
+      parts: [
+        { type: "text", text: "A\u0000 Mutual NDA\u0000 fits." },
+        { type: "tool-x", input: { note: ["deep\u0000"] }, "k\u0000": 1 },
+      ],
+    } as const
+
+    expect(await saveMessages(db, key, [withNul])).toBe(true)
+
+    expect(await listMessages(db, key)).toEqual([
+      {
+        ...withNul,
+        parts: [
+          { type: "text", text: "A Mutual NDA fits." },
+          { type: "tool-x", input: { note: ["deep"] }, k: 1 },
+        ],
+      },
+    ])
+  })
+
   test("says whether the draft is the user's, even with nothing to save", async ({
     db,
   }) => {
