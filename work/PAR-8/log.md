@@ -18,3 +18,6 @@ More flaky tests seen in CI on 2026-09-27 (PAR-1-parley): (1) e2e drafts.spec 'a
 
 ### 2026-09-28T17:58:38Z
 Fixed the race in 'a signed-out visitor keeps the browser's own Ctrl+K' (listener added before the key press). Seen locally on a full run on 2026-09-28, not in isolation: 'on a phone: search opens with ⌘K…' (Chromium) and 'signing out and back in' (Firefox); both passed on re-run.
+
+### 2026-09-29T16:11:41Z
+Seen 2026-09-29: (1) CI desktop WebKit on 56f2347: page crash in chat.spec.ts:40 ('the AI suggests an agreement', page.waitForURL: page crashed), passed on retry; --ipc=host made crashes rare but not gone. (2) Local full 'pnpm test' (chromium,firefox): search-dialog.browser.test 'asks the server once per pause, not once per key' failed once under load, 3/3 alone.
