@@ -58,8 +58,11 @@ describe("recordExport", () => {
     const key = { id: draft.id, userId: owner.id }
     const first = new Date("2026-09-10T12:00:00Z")
 
-    await recordExport(db, key, first)
-    await recordExport(db, key, new Date("2026-09-11T12:00:00Z"))
+    // True only for the export that counted.
+    expect(await recordExport(db, key, first)).toBe(true)
+    expect(await recordExport(db, key, new Date("2026-09-11T12:00:00Z"))).toBe(
+      false
+    )
 
     expect((await getDraft(db, key))?.firstExportedAt).toEqual(first)
   })
