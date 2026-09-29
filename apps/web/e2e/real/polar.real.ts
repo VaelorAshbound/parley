@@ -33,10 +33,14 @@ test("a Polar sandbox checkout turns on Pro, and deleting the account cancels it
 
   // Polar refuses reserved domains like the account's example.test (and
   // leaves the field empty): pay as Resend's test inbox instead. Polar ties
-  // the payment to the account by its id, not the email (T26).
+  // the payment to the account by its id, not the email (T26). A new address
+  // each run: the sandbox keeps the customer of an earlier run under that
+  // email with another account's id, and refuses the payment (409, PAR-17).
   await page
     .getByRole("textbox", { name: "Email" })
-    .fill("delivered+parley-polar@resend.dev")
+    .fill(
+      `delivered+parley-polar-${crypto.randomUUID().slice(0, 8)}@resend.dev`
+    )
   // Stripe's card fields live in its own frame; 4242… is its test card.
   const card = page
     .frameLocator('iframe[title="Secure payment input frame"]')
