@@ -172,3 +172,6 @@ Process session (no code). Audit vs agent-skills: 23 contradictions (report in c
 
 ### 2026-09-29T15:37:47Z
 Next session: wave T33+T34+T35 in parallel worktrees (owner OK: Priced won't run at the same time). Check each task locally, merge, then one push for the whole wave; check CI at the start (last push 56f2347 adds --ipc=host for the WebKit crash). Then T36, Checkpoint 7, PAR-18, T38-T40. PR #1 stays open until launch; e2e moves to nightly after the build (PAR-24).
+
+### 2026-09-29T20:35:10Z
+Wave D2 merged (T33 c1d6083, T34 70dae18, T35 merge), pushed. T35 done (owner accepted real first token 4.0 s and sign-in LCP; pg_stat_statements on preview+production, outliers clean). T34 closed by owner (coverage gates on; mutation 89.2% documents/quota, 96.2% auth; survivors left; PAR-25, PAR-26). T33 built: owner set GitHub secrets/vars, Workers Builds Neon vars, Browser Run token, Preview RESEND_API_KEY; nightly also runs on the PR label 'nightly' (GitHub runs schedule/dispatch only from main). Fixed today: form text typed before hydration (13281e9), Undo while the picked agreement loads (cb653e6), search test race (f0d2aea), UI coverage typecheck in CI (390ac8a). WebKit CI still flaky (PAR-8). Next: real email on the Preview, first Nightly run green with costs -> T33 done; then T36, Checkpoint 7.
