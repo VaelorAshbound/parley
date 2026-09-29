@@ -177,6 +177,7 @@
       "enabled": true,
       "head_sampling_rate": 1,
       "redact_query_string": true,
+      "logs": { "invocation_logs": false },
       "traces": { "enabled": true, "head_sampling_rate": 1 },
     },
   },
@@ -194,6 +195,14 @@
     // keep them out of invocation logs and traces. (Wrangler's config
     // schema, 4.136; not on the docs page yet.)
     "redact_query_string": true,
+    // PAR-16: an invocation log keeps the request path, and /s/:token (a
+    // share link) and some Better Auth links carry a bearer token there;
+    // nothing redacts a path. So no invocation logs: our own request line
+    // (src/server/middleware.ts) logs the route pattern, never the path.
+    // Traces keep the path too (url.full, url.path on the root span);
+    // src/server.ts overwrites those for /s/:token.
+    // https://developers.cloudflare.com/workers/observability/logs/workers-logs/#invocation-logs
+    "logs": { "invocation_logs": false },
     "traces": { "enabled": true, "head_sampling_rate": 1 },
   },
   "upload_source_maps": true,
