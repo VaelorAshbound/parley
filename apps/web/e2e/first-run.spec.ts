@@ -17,6 +17,8 @@ test("the start page credits Common Paper and says it's a demo", async ({
   await expect(
     page.getByRole("list", { name: "Examples" }).getByRole("button")
   ).toHaveCount(4)
+  // The footer is outside <main>, so it is the page's contentinfo (PAR-22).
+  await expect(page.getByRole("contentinfo")).toBeVisible()
 })
 
 test("the start page fits a phone, with no sideways scroll", async ({
@@ -109,6 +111,11 @@ test("with reduced motion, the start page fades in place", async ({ page }) => {
     "transform",
     "none"
   )
+  // Still in order: the change marker fades in after Purpose's ink (PAR-22).
+  await expect(page.locator(".hero-pop").last()).toHaveCSS(
+    "animation-delay",
+    "2.3s"
+  )
 })
 
 test("when a start from the library fails, the note is on screen", async ({
@@ -120,11 +127,14 @@ test("when a start from the library fails, the note is on screen", async ({
   await page.setViewportSize({ width: 375, height: 812 })
   await open(page, "/")
 
-  await page
-    .getByRole("button", { name: /Business Associate Agreement/ })
-    .click()
+  const agreement = page.getByRole("button", {
+    name: /Business Associate Agreement/,
+  })
+  await agreement.click()
 
   await expect(page.getByRole("alert")).toBeInViewport()
+  // Keyboard focus is still where it was, not lost to the page (PAR-22).
+  await expect(agreement).toBeFocused()
 })
 
 test("on a phone, Share and Download sit in a bar under the document", async ({
