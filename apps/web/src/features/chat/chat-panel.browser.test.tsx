@@ -29,9 +29,12 @@ const unused = async () => {
 // would (the Undo tests).
 let server: Record<string, unknown> = {}
 let serverChat: ChatMessage[] = []
+// drafts.get answers when a test lets it (the draft loading again after the
+// AI picks an agreement); the other tests never call it.
+let loadDraft: () => Promise<unknown> = unused
 const orpc = createTanstackQueryUtils({
   drafts: {
-    get: unused,
+    get: () => loadDraft(),
     list: unused,
     updateFields: async ({
       changes,
@@ -103,6 +106,7 @@ async function show({
   children,
   script = conversation(),
   transport = (base) => base,
+  documentId = "mutual-nda",
 }: {
   initialMessages?: ChatMessage[]
   pending?: string
@@ -110,13 +114,15 @@ async function show({
   script?: ReturnType<typeof conversation>
   /** Wraps the scripted transport, to make a request fail. */
   transport?: (base: ChatTransport<ChatMessage>) => ChatTransport<ChatMessage>
+  /** null: a new draft, before the AI picks its agreement. */
+  documentId?: string | null
 } = {}) {
   server = {}
   store = { changed: {} }
   const queryClient = new QueryClient()
   queryClient.setQueryData(draftKey, {
     id: draftId,
-    documentId: "mutual-nda",
+    documentId,
     fields: {},
   } as never)
   const screen = await render(
@@ -234,6 +240,35 @@ describe("the chat", () => {
     expect(queryClient.getQueryData(draftKey)?.fields).toEqual({})
     await expect.element(screen.getByText("Undone")).toBeVisible()
     await expect.poll(() => server).toEqual({})
+  })
+
+  test("an Undo pressed while the picked agreement loads waits for it, then undoes", async () => {
+    // A new draft: the AI picks the agreement in this turn, so the page
+    // loads the draft again, slowly (a Preview far away; CI's WebKit).
+    let loaded = () => {}
+    loadDraft = () =>
+      new Promise((resolve) => {
+        loaded = () =>
+          resolve({
+            id: draftId,
+            documentId: "mutual-nda",
+            fields: { purpose },
+          })
+      })
+    const { screen, queryClient } = await show({ documentId: null })
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "We share a roadmap with a vendor.{Enter}"
+    )
+    server = { purpose }
+
+    await screen.getByRole("button", { name: /Undo Purpose/i }).click()
+    loaded()
+
+    await expect.element(screen.getByText("Undone")).toBeVisible()
+    await expect.poll(() => server).toEqual({})
+    expect(queryClient.getQueryData(draftKey)?.fields).toEqual({})
+    loadDraft = unused
   })
 
   test("won't undo over a newer edit, and says the field changed since", async () => {
