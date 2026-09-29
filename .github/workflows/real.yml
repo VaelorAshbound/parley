@@ -101,6 +101,7 @@ jobs:
         if: always()
         working-directory: apps/web
         run: |
+          # shellcheck disable=SC2016 # JavaScript, not shell, in the quotes
           node -e '
             const fs = require("node:fs")
             if (!fs.existsSync("test-results/real.json")) process.exit(0)
