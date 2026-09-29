@@ -22,7 +22,11 @@ import { fakeResend } from "./resend"
 // Export, share and upgrade need a confirmed email (spec §2 Limits). They
 // come in T24–T26 and build on `verified`; this probe stands in for them.
 
-const probe = { export: verified.handler(({ context }) => context.user.id) }
+const probe = {
+  export: verified.handler(({ context }) => ({
+    emailVerified: context.user.emailVerified,
+  })),
+}
 
 async function probeClient(cookie?: string) {
   const db = await connect(env.HYPERDRIVE.connectionString)
@@ -103,6 +107,9 @@ describe("a procedure that needs a confirmed email", () => {
     await open(link)
 
     expect(await outcome(cookie)).toBe("OK")
+    // The procedure gets the user as the database has it now.
+    const { client } = await probeClient(cookie)
+    expect(await client.export()).toEqual({ emailVerified: true })
   })
 
   it("sends the refreshed session cookie back to the browser", async () => {
