@@ -7,7 +7,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router"
-import { SidebarProvider } from "@workspace/ui/components/sidebar"
+import { SidebarProvider, useSidebar } from "@workspace/ui/components/sidebar"
 import { Toaster } from "@workspace/ui/components/toast"
 import { Temporal } from "temporal-polyfill"
 import { describe, expect, test, vi } from "vite-plus/test"
@@ -63,6 +63,7 @@ async function setUp({ isAccount = true } = {}) {
             router={router}
             defaultComponent={() => (
               <SidebarProvider>
+                <DrawerProbe />
                 <DraftHistory
                   orpc={orpc}
                   isAccount={isAccount}
@@ -81,7 +82,31 @@ async function setUp({ isAccount = true } = {}) {
   return { screen, removed }
 }
 
+// The phone drawer's state, and a button that opens it as the menu would.
+function DrawerProbe() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  return (
+    <button type="button" onClick={() => setOpenMobile(true)}>
+      {openMobile ? "Drawer open" : "Drawer closed"}
+    </button>
+  )
+}
+
 describe("the draft history", () => {
+  test("picking a draft closes the phone drawer", async () => {
+    const { screen } = await setUp()
+    await screen.getByRole("button", { name: "Drawer closed" }).click()
+    await expect
+      .element(screen.getByRole("button", { name: "Drawer open" }))
+      .toBeVisible()
+
+    await screen.getByRole("link", { name: "Acme NDA" }).click()
+
+    await expect
+      .element(screen.getByRole("button", { name: "Drawer closed" }))
+      .toBeVisible()
+  })
+
   test("puts each draft under its day", async () => {
     const { screen } = await setUp()
 
