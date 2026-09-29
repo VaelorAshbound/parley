@@ -163,3 +163,12 @@ Checkpoint 6 quality pass done (review, simplify, test); CI green on 299bf8e. Re
 
 ### 2026-09-28T18:09:15Z
 Session end. Finished: T31 (real export of all 12 documents, 5 print bugs fixed), Checkpoint 6 approved by owner, Checkpoint 6 quality pass (8 review fixes incl. 2FA OAuth-link bypass and cross-stage Polar cancel, 5 refactors, PAR-8 Ctrl+K race fixed). CI green on 299bf8e. 34 of 42 tasks done. Next session: T32 alone via /build (full e2e x 3 browsers x desktop/phone + a11y; fold in PAR-8), then wave T33+T34+T35, then T36, Checkpoint 7, then T38 (PAR-18 first) -> T39 -> T40. Local e2e needs 'pnpm db:dev'; apps/web/.dev.vars now has POLAR_ACCESS_TOKEN (sandbox).
+
+### 2026-09-28T21:11:26Z
+T32 done (6dfeb8a..1274e8d), pushed. Scripted AI for e2e (cookie, off in production), chat/a11y/keyboard/phone/visual specs, 6 browser projects in Playwright's image on PRs, pnpm test:e2e:docker. Real bugs fixed: pick reason not shown, chat box faded when empty, unpicked option contrast, no skip link, text typed before hydration lost, nested main. PAR-8: search race and navigation-abort flakes fixed. CI on 1274e8d: 7/8 green, desktop WebKit still running at close (not waited on). New owner rule in plan.md: check locally, push once per task, batch CI fixes, CI at checkpoints. Next: wave T33+T34+T35 (T33 also runs confirmed-email e2e on Previews), then T36, Checkpoint 7.
+
+### 2026-09-29T15:25:45Z
+Process session (no code). Audit vs agent-skills: 23 contradictions (report in chat; causes traced to CLAUDE.md, intent, plan). CLAUDE.md rewritten by owner and made identical in ~/Projects, parley and priced: dropped one-branch-per-item, one-item-per-session, Workers Preview/Builds lines; added Testing rule (outside services must work in their real sandbox), hands-on test tools, pointer to ~/Projects/guides. New ~/Projects/guides/: 12 cleaned tool guides from the Vault, read before spec and plan. Local commits not pushed (7a4a138..8ed414a); priced/CLAUDE.md changed but not committed. Next: decide on the audit items (red WebKit CI, never-merged branch, e2e scope), then T33+T34+T35.
+
+### 2026-09-29T15:37:47Z
+Next session: wave T33+T34+T35 in parallel worktrees (owner OK: Priced won't run at the same time). Check each task locally, merge, then one push for the whole wave; check CI at the start (last push 56f2347 adds --ipc=host for the WebKit crash). Then T36, Checkpoint 7, PAR-18, T38-T40. PR #1 stays open until launch; e2e moves to nightly after the build (PAR-24).
