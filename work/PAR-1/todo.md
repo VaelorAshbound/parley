@@ -871,7 +871,19 @@
   - Files: `scripts/ci-*.sh`, `apps/web/test/real/*`, `apps/web/e2e/smoke.prod.spec.ts`
   - Deps: T3, T32 · Skills: `neon:neon-postgres-branches`, `ci-cd-and-automation`
 
-- [ ] **T34: Coverage gates + mutation testing** (S)
+- [x] **T34: Coverage gates + mutation testing** (S)
+  - Closed 2026-09-29 by the owner (it ran ~3 h in the wave). Skills: build, incremental-implementation, test-driven-development, source-driven-development, code-review-and-quality, ci-cd-and-automation, git-workflow-and-versioning. The agent was stopped before its own final gate and write-up; the lead committed the last work and wrote this entry.
+  - Checked: `pnpm check` pass; `packages/db` exports test 12 pass. The full gate (`pnpm test`, `test:workers`, `test:coverage`) runs at merge.
+  - Built:
+    - **Coverage gates (spec §6), all enforced:** documents and `packages/db` as before; server code (`apps/web/src/server`) 95% lines / 90% branches, measured across the Node and workerd runs (Istanbul in workerd, merged by `scripts/coverage-server.ts`): 97.9% / 90.5%. `pnpm test:coverage` runs every gate; Workers Builds runs it instead of `test:workers`. UI: `pnpm test:coverage:ui` in the E2E workflow's component job, at today's floor (features 63/61, components 86/76), not yet the spec's 85/80 (PAR-25).
+    - **Mutation testing, `pnpm test:mutation`:** Stryker on the documents engine, quota and limits (`stryker.config.mjs`, Node tests): **89.2%** (2,490 killed, 294 survived, 6 no coverage; measured before the test fixes below). Auth's `server/rpc/base.ts` (`stryker.workers.config.mjs`, workerd tests): **96.2%** (51 of 53 killed). Both over the 85% break threshold.
+    - Tests added from surviving mutants: document-engine checks its tests ran but never asserted, server paths the workerd tests never took, the words of each auth refusal, and `recordExport`'s answer.
+  - Decisions:
+    - Stryker's Vitest runner (10.0.0) names tests the Vitest 4 way, so under Vitest 5 every mutant ran no test (0% that looks like weak tests). Patched with pnpm `patchedDependencies` until a release supports Vitest 5 (PAR-26).
+    - Mutation runs nightly only (T33); auth reruns the whole workerd suite per mutant, so it is slow.
+  - Left (not done, owner's call to close):
+    - The 294 surviving mutants in the documents engine were not all fixed or documented; lowest files: `fields/party.ts` 70%, `zod.ts` 75%, `fields/jurisdiction.ts` 79%, `fields/basic.ts` 80%, `parse/catalog.ts` 80%, `parse/parse.ts` 80%. Report: `reports/mutation/index.html` (not committed; `pnpm test:mutation` makes it).
+    - UI coverage to 85/80: PAR-25.
   - Accept:
     - The Vitest coverage thresholds from the spec are enforced in CI.
     - Stryker on `packages/documents`, quota and auth reaches a score of 85% or more. Surviving mutants are fixed or documented.
