@@ -76,6 +76,11 @@ jobs:
       # crash (desktop WebKit did, 2026-09-28); --init reaps their child
       # processes. https://playwright.dev/docs/docker#recommended-docker-configuration
       options: --user 1001 --ipc=host --init
+    env:
+      # The Neon project's API key and id (T33), used here only to look up
+      # the Preview's branch URL. Set by the owner; empty until then.
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
     strategy:
       fail-fast: false
       matrix:
@@ -149,6 +154,17 @@ jobs:
             if [ "$commit" = "$SHA" ]; then break; fi
             sleep 5
           done
+
+      # The Preview's own Neon branch (T33, scripts/ci-preview.sh made it for
+      # this commit): the tests that confirm an email or read a reset token
+      # use it. Without the NEON_API_KEY secret they skip.
+      - name: Find the Preview's database
+        if: github.event_name == 'pull_request' && env.NEON_API_KEY != ''
+        run: |
+          url="$(node --no-warnings packages/db/scripts/preview-database.ts url "$HEAD_REF")"
+          echo "::add-mask::$url"
+          echo "::add-mask::$(node -p 'decodeURIComponent(new URL(process.argv[1]).password)' "$url")"
+          echo "E2E_DATABASE_URL=$url" >> "$GITHUB_ENV"
 
       - name: Playwright
         working-directory: apps/web
