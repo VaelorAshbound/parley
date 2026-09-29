@@ -51,7 +51,7 @@ export async function saveMessages(
         id: each.id,
         draftId: key.id,
         role: each.role,
-        parts: [...each.parts],
+        parts: each.parts.map(withoutNul),
         // The chat's order. clock_timestamp(), not the default now(): now()
         // is fixed for a whole transaction, so a batch (or two saves in one
         // transaction) would tie; the offset keeps a batch in its order.
@@ -69,4 +69,23 @@ export async function saveMessages(
       ),
     })
   return true
+}
+
+/**
+ * A copy of a JSON value with every NUL character (U+0000) taken out of its
+ * strings and keys. jsonb refuses NUL (Postgres 22P05), so one stray NUL in a
+ * model's reply would fail the whole save and lose the reply.
+ */
+function withoutNul(value: unknown): unknown {
+  if (typeof value === "string") return value.replaceAll("\u0000", "")
+  if (Array.isArray(value)) return value.map(withoutNul)
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, each]) => [
+        key.replaceAll("\u0000", ""),
+        withoutNul(each),
+      ])
+    )
+  }
+  return value
 }
