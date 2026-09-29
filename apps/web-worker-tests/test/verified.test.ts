@@ -1,7 +1,8 @@
 import { safe } from "@orpc/client"
 import { createRouterClient, ORPCError } from "@orpc/server"
-import { connect } from "@workspace/db"
+import { connect, schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
+import { eq } from "drizzle-orm"
 import { afterEach, describe, expect, it, onTestFinished } from "vitest"
 
 import { createAuth } from "../../web/src/server/auth"
@@ -10,7 +11,9 @@ import { verified } from "../../web/src/server/rpc/base"
 import {
   call,
   cookiesFrom,
+  database,
   fakePrinter,
+  post,
   scriptedModel,
   signInGuest,
 } from "./helpers"
@@ -59,7 +62,7 @@ async function signUp() {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "Ana", email, password: "correct horse 1" }),
   })
-  return { cookie: cookiesFrom(response), link: resend.linkFor(email) }
+  return { email, cookie: cookiesFrom(response), link: resend.linkFor(email) }
 }
 
 async function open(link: URL, cookie?: string) {
@@ -110,5 +113,37 @@ describe("a procedure that needs a confirmed email", () => {
     await client.export()
 
     expect(resHeaders.getSetCookie().join()).toContain("session_data")
+  })
+
+  it("lets a confirmed account in on its session cookie alone", async () => {
+    const { email, link } = await signUp()
+    await open(link)
+    // A sign-in after confirming: the cookie cache already says confirmed.
+    const signedIn = await post("/api/auth/sign-in/email", {
+      email,
+      password: "correct horse 1",
+    })
+    const { client, resHeaders } = await probeClient(cookiesFrom(signedIn))
+
+    const { error } = await safe(client.export())
+
+    expect(error).toBeNull()
+    // No second session read was needed to let it in.
+    expect(resHeaders.getSetCookie()).toEqual([])
+  })
+
+  // The cookie cache can say "signed in" for up to 5 minutes after the
+  // session was ended (signed out on another device, or revoked); the
+  // database read that `verified` makes must win.
+  it("refuses an ended session whose cookie cache is still fresh", async () => {
+    const { email, cookie } = await signUp()
+    const db = await database()
+    const [user] = await db
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.email, email))
+    await db.delete(schema.session).where(eq(schema.session.userId, user!.id))
+
+    expect(await outcome(cookie)).toBe("UNAUTHORIZED")
   })
 })
