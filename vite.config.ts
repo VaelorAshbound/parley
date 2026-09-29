@@ -260,6 +260,15 @@ export default defineConfig({
           include: ["src/**/*.test.{ts,tsx}"],
         },
       },
+      {
+        // The performance scripts' own logic; the measurements themselves
+        // run against a Preview with `pnpm test:perf` and k6 (T35).
+        test: {
+          name: "load",
+          root: "load",
+          include: ["**/*.test.ts"],
+        },
+      },
     ],
   },
 })

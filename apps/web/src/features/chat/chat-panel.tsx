@@ -140,7 +140,15 @@ export function ChatPanel({
     <div className="flex min-h-0 flex-1 flex-col">
       <MessageScrollerProvider autoScroll>
         <MessageScroller className="min-h-0 flex-1">
-          <MessageScrollerViewport>
+          {/* The scroller hides the chat until it has scrolled to the end,
+              which on a server-rendered page means until the scripts run: a
+              phone's LCP waited 4 s for it (T35). An empty chat has nothing
+              to scroll, so its welcome shows with the HTML. */}
+          <MessageScrollerViewport
+            className={cn(
+              initialMessages.length === 0 && "data-pending-scroll:visible"
+            )}
+          >
             <MessageScrollerContent className="mx-auto w-full max-w-2xl gap-5 px-5 pt-6 pb-4 md:px-8">
               {messages.length === 0 && !pending ? (
                 <ChatWelcome document={definition?.name ?? null} />
