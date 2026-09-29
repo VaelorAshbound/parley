@@ -203,6 +203,50 @@ describe("toDocx", () => {
   })
 })
 
+/**
+ * A WordprocessingML part, one tag per line, so a diff shows what moved.
+ * The docx package names each hyperlink with a random id: numbered here.
+ */
+function tagPerLine(xml: string) {
+  const ids = new Map<string, number>()
+  return xml
+    .replaceAll(/r:id="(rId[\w-]+)"/g, (_match, id: string) => {
+      if (!ids.has(id)) ids.set(id, ids.size + 1)
+      return `r:id="link-${ids.get(id)}"`
+    })
+    .replaceAll("><", ">\n<")
+}
+
+// The text snapshots below miss how the file looks: page size and margins,
+// fonts, bold headings, column widths, tables that don't split across pages.
+// These pin the whole Word layout of two documents that between them use
+// every part of it (cover table, list table, signers, nested clauses).
+const layoutSnapshots = registered.filter(
+  ({ id }) => id === "mutual-nda" || id === "dpa"
+)
+
+describe.each(layoutSnapshots)(
+  "$id DOCX layout",
+  ({ id, definition, example }) => {
+    it("matches the reviewed snapshot of its Word XML", async () => {
+      const values = definition.schema.parse(example)
+      const zip = await JSZip.loadAsync(
+        await toDocx(render(definition, values))
+      )
+      const parts = await Promise.all(
+        ["word/document.xml", "word/styles.xml", "word/footer1.xml"].map(
+          async (name) =>
+            `=== ${name}\n${tagPerLine((await zip.file(name)?.async("string")) ?? "")}`
+        )
+      )
+
+      await expect(parts.join("\n")).toMatchFileSnapshot(
+        `__outputs__/${id}.docx.xml`
+      )
+    })
+  }
+)
+
 describe.each(registered)("$id DOCX", ({ id, definition, example }) => {
   it("matches the reviewed snapshot of its text", async () => {
     const values = definition.schema.parse(example)
