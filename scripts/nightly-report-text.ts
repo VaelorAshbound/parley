@@ -41,3 +41,21 @@ export function nightlyReport({
   if (evals) lines.push("", `Evals:\n${evals}`)
   return { subject, text: lines.join("\n") }
 }
+
+/**
+ * Resend's idempotency key for the report email. The same attempt sent twice
+ * sends one email; a re-run of the workflow run is a new attempt, so it gets
+ * a new key (the old one would answer 409 invalid_idempotent_request).
+ */
+export function reportIdempotencyKey({
+  runUrl,
+  attempt,
+  subject,
+}: {
+  runUrl?: string | undefined
+  /** GITHUB_RUN_ATTEMPT: 1 on the first run, +1 on each re-run. */
+  attempt?: string | undefined
+  subject: string
+}) {
+  return `nightly-report/${runUrl || subject}/${attempt || "1"}`
+}
