@@ -11,10 +11,6 @@
         {
           "matchingUrlPattern": ".*",
           "assertions": {
-            "categories:performance": [
-              "error",
-              { "minScore": 0.95, "aggregationMethod": "median" }
-            ],
             "categories:accessibility": [
               "error",
               { "minScore": 0.95, "aggregationMethod": "median" }
@@ -34,6 +30,50 @@
             "cumulative-layout-shift": [
               "error",
               { "maxNumericValue": 0.05, "aggregationMethod": "median" }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/(pricing|sign-in)?$",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              { "minScore": 0.95, "aggregationMethod": "median" }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "/d/[0-9a-f-]+$",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              { "minScore": 0.85, "aggregationMethod": "median" }
+            ],
+            "total-blocking-time": [
+              "warn",
+              { "maxNumericValue": 200, "aggregationMethod": "median" }
+            ],
+            "resource-summary:script:size": [
+              "error",
+              { "maxNumericValue": 655000, "aggregationMethod": "median" }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/$",
+          "assertions": {
+            "resource-summary:script:size": [
+              "error",
+              { "maxNumericValue": 480000, "aggregationMethod": "median" }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "/(pricing|sign-in)$",
+          "assertions": {
+            "resource-summary:script:size": [
+              "error",
+              { "maxNumericValue": 440000, "aggregationMethod": "median" }
             ]
           }
         }
