@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from "react"
 
 import { ProblemNote } from "@/components/problem-note"
-import { SiteFooter, SiteHeader } from "@/components/site"
+import { SiteHeader } from "@/components/site"
 import {
   DAILY_MESSAGES,
   FREE_DOCUMENTS_PER_MONTH,
@@ -41,7 +41,7 @@ export function Pricing({
   const pro = viewer?.plan === "pro" || upgrade?.state === "done"
 
   return (
-    <div className="@container flex min-h-svh flex-col">
+    <div className="@container flex flex-1 flex-col">
       <SiteHeader isAccount={isAccount}>
         <Link
           to="/"
@@ -53,7 +53,7 @@ export function Pricing({
           Start drafting
         </Link>
       </SiteHeader>
-      <div className="flex w-full flex-1 flex-col px-6 pt-10 pb-10 md:px-12 md:pt-16 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
+      <div className="flex w-full flex-1 flex-col px-6 pt-10 md:px-12 md:pt-16 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
         <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
             Pricing
@@ -126,8 +126,6 @@ export function Pricing({
         </p>
 
         <Questions />
-
-        <SiteFooter isAccount={isAccount} />
       </div>
     </div>
   )

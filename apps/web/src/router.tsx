@@ -28,4 +28,8 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>
   }
+  interface StaticDataRouteOption {
+    /** The page ends with the site footer, outside <main> (routes/_app). */
+    footer?: boolean
+  }
 }

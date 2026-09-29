@@ -8,6 +8,7 @@ import { Pricing } from "@/features/billing/pricing"
 export const Route = createFileRoute("/_app/pricing")({
   validateSearch: z.object({ checkout_id: z.string().optional() }),
   head: () => ({ meta: [{ title: "Pricing · Parley" }] }),
+  staticData: { footer: true },
   component: PricingPage,
 })
 

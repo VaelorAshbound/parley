@@ -78,11 +78,11 @@ export function HeroArt({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="hero-pop absolute top-49 -left-8.5 max-w-61 rounded-[18px_18px_18px_6px] bg-bubble px-3.75 py-2.75 text-sm leading-[1.45] shadow-float [animation-delay:900ms]">
+      <div className="hero-pop absolute top-49 -left-8.5 max-w-61 rounded-[18px_18px_18px_6px] bg-bubble px-3.75 py-2.75 text-sm leading-[1.45] shadow-float [--hero-delay:900ms]">
         We’re sharing our roadmap with a manufacturing partner.
       </div>
 
-      <div className="hero-pop absolute top-143.5 left-68 flex h-10.5 items-center gap-2.25 rounded-xl border bg-card pr-1.5 pl-3.5 text-[13px] whitespace-nowrap shadow-float [animation-delay:2300ms]">
+      <div className="hero-pop absolute top-143.5 left-68 flex h-10.5 items-center gap-2.25 rounded-xl border bg-card pr-1.5 pl-3.5 text-[13px] whitespace-nowrap shadow-float [--hero-delay:2300ms]">
         <PenLineIcon className="size-3.5 text-muted-foreground" />
         <span className="text-ink-2">Purpose</span>
         <span className="text-ink-4">→</span>
