@@ -241,7 +241,10 @@ export default defineConfig({
           include: ["src/**/*.test.{ts,tsx}"],
           exclude: ["src/**/*.browser.test.tsx"],
           typecheck: {
-            enabled: true,
+            // Not in the UI coverage run: type tests run no code, and its CI
+            // job installs without the generated worker-configuration.d.ts
+            // (`pnpm check` type-checks everything).
+            enabled: !uiCoverage,
             include: ["src/**/*.test-d.ts"],
             tsconfig: "./tsconfig.json",
           },
