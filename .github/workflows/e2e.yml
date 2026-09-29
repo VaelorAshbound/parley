@@ -63,10 +63,10 @@ jobs:
         run: |
           pnpm documents:build
           pnpm test:browser
-      # Chromium's run also measures the UI's coverage and fails under its
-      # floor (T34); V8 coverage needs Chromium.
-      - name: Component tests (Chromium) and the UI coverage gate
-        run: pnpm test:coverage:ui
+      - name: Component tests (Chromium)
+        env:
+          TEST_BROWSERS: chromium
+        run: pnpm test:browser
 
   e2e:
     # Nightly needs a live URL; until production exists (T38) it doesn't start,

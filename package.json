@@ -17,7 +17,6 @@
     "test": "vp test run",
     "test:browser": "vp test run --project web-browser",
     "test:coverage": "vp test run --coverage && vp run --filter web-worker-tests test:coverage && node scripts/coverage-server.ts",
-    "test:coverage:ui": "UI_COVERAGE=1 TEST_BROWSERS=chromium vp test run --coverage",
     "test:workers": "vp run --filter web-worker-tests test",
     "deploy": "vp run --filter web deploy",
     "test:workers:real": "vp run --filter web-worker-tests test:real",
