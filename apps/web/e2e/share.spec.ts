@@ -1,61 +1,18 @@
-import {
-  test,
-  type APIRequestContext,
-  type Browser,
-  type Page,
-} from "@playwright/test"
+import { test, type Page } from "@playwright/test"
 
-import { confirmEmail, databaseUrl, draftOpened, expect, open } from "./helpers"
+import {
+  confirmedAccount,
+  databaseUrl,
+  draftOpened,
+  expect,
+  open,
+} from "./helpers"
 
 // Share links (T25): the owner copies a read-only link, a visitor with no
 // account opens it, the owner turns it off, and the link gives a friendly
 // 404. Sharing needs a confirmed email, so the owner's email is confirmed
 // in the app's database: local dev's, or the Preview's own Neon branch in
 // CI (T33).
-
-const password = "correct horse 1"
-
-/** Posts to Better Auth, waiting out the per-IP limit (3 per 10 s). */
-async function authPost(
-  request: APIRequestContext,
-  baseURL: string,
-  path: string,
-  data: object
-) {
-  for (let attempt = 1; ; attempt++) {
-    const response = await request.post(path, {
-      headers: {
-        origin: new URL(baseURL).origin,
-        "x-captcha-response": "XXXX.DUMMY.TOKEN.XXXX",
-      },
-      data,
-    })
-    if (response.ok()) return
-    if (response.status() !== 429 || attempt === 5)
-      throw new Error(`${path} failed: ${response.status()}`)
-    await new Promise((resolve) => setTimeout(resolve, 10_000))
-  }
-}
-
-/** A page signed in as a new account with a confirmed email. */
-async function confirmedOwner(browser: Browser, baseURL: string) {
-  const context = await browser.newContext({ baseURL })
-  const email = `e2e-${crypto.randomUUID()}@example.test`
-  await authPost(context.request, baseURL, "/api/auth/sign-up/email", {
-    name: "Ana Tester",
-    email,
-    password,
-  })
-  await confirmEmail(email)
-  // A new session, which reads the confirmed email (the sign-up's cookie
-  // still holds the old value).
-  await context.clearCookies()
-  await authPost(context.request, baseURL, "/api/auth/sign-in/email", {
-    email,
-    password,
-  })
-  return { page: await context.newPage(), email }
-}
 
 /**
  * The X-Robots-Tag a share page answers with. On a workers.dev Preview,
@@ -89,7 +46,8 @@ test("a shared draft opens read-only for anyone, until it is turned off", async 
   test.skip(!databaseUrl, "Needs the Preview's database (E2E_DATABASE_URL)")
   // Several pages, each compiled on first use by the dev server.
   test.slow()
-  const { page, email } = await confirmedOwner(browser, baseURL ?? "")
+  const { context, email } = await confirmedAccount(browser, baseURL ?? "")
+  const page = await context.newPage()
   if (browserName === "chromium")
     await page.context().grantPermissions(["clipboard-read", "clipboard-write"])
   await open(page, "/")

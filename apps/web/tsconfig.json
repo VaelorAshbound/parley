@@ -15,6 +15,7 @@
     "test",
     "vite.config.ts",
     "playwright.config.ts",
+    "playwright.real.config.ts",
     "worker-configuration.d.ts"
   ]
 }
