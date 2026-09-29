@@ -28,7 +28,7 @@ Default stack for all projects here unless a project says otherwise:
 - PostgreSQL on Neon (+ pgvector for RAG; local Postgres for dev) · Drizzle ORM · Hyperdrive · KV · R2 · Cloudflare Images
 - Better-Auth · Resend (email) · Polar.sh (sandbox version) (payments)
 - Cloudflare Rate Limiting · Turnstile · CDN/DNS/WAF
-- Vitest · Playwright · Workers Preview (NEW!)
+- Vitest · Playwright
 - Cloudflare Containers (Bun 1.4+) for what cannot run on Workers: CPU-bound, memory-bound, long-lived
 - `wi` (work tracker): Rust CLI, source in `~/Projects/wi`
 
@@ -58,13 +58,13 @@ skill before each new task — drift is the known failure mode.
 
 Load `agent-skills:git-workflow-and-versioning` before any branch, commit or merge. On top of it:
 
-- `gh` and `git`. Branches are named `<id>-<slug>`, one per work item.
+- `gh` and `git`.
 - Commits carry the work item ID: `<type>(<ID>): <why>`.
-- CI is Cloudflare Workers Builds. Load `agent-skills:ci-cd-and-automation` before touching it.
+- Load `agent-skills:ci-cd-and-automation` before touching CI.
 
 # Session workflow
 
-- A session works one `wi` item (`wi --help`). Start with `wi show <ID>`; if I did not name one, ask.
+- Start with `wi show <ID>` (`wi --help`); if I did not name one, ask.
 - Follow the agent-skills lifecycle (`using-agent-skills`), sized to the work. Advance a phase when its artifact is approved.
 - Size the process to the task: "Not every task needs every skill" (`using-agent-skills`). Say which phases were skipped and why.
 - Artifacts go in `work/<ID>/` and are committed as they happen, never left in conversation.
