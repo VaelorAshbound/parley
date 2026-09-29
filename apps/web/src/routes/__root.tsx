@@ -23,6 +23,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Parley" },
+      // Search results show it under the title (Lighthouse SEO, T35).
+      {
+        name: "description",
+        content:
+          "Parley drafts your legal agreement with you by chat: an NDA or any of 12 Common Paper standard agreements, filled in live, ready as PDF or Word.",
+      },
     ],
     links: [
       ...fontPreloads,
