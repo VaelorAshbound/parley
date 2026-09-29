@@ -6,13 +6,14 @@
 //   node scripts/nightly-report.ts send    → summary + email
 //
 // `send` reads NEEDS (the workflow's `toJSON(needs)`), RUN_URL,
+// GITHUB_RUN_ATTEMPT (set by Actions),
 // USAGE_BEFORE, OPENROUTER_API_KEY_TEST, EVALS_REPORT (evals/report.md, if
 // the evals ran), RESEND_API_KEY and REPORT_EMAIL. Without the last two it
 // only writes the summary. One email a night, from the verified domain.
 // https://resend.com/docs/api-reference/emails/send-email
 import { appendFileSync, existsSync, readFileSync } from "node:fs"
 
-import { nightlyReport } from "./nightly-report-text.ts"
+import { nightlyReport, reportIdempotencyKey } from "./nightly-report-text.ts"
 
 /** The test key's total spend in dollars, or undefined without it. */
 async function usage() {
@@ -69,8 +70,12 @@ async function send() {
     headers: {
       authorization: `Bearer ${key}`,
       "content-type": "application/json",
-      // A re-run of the same step sends nothing twice.
-      "idempotency-key": `nightly-report/${process.env.RUN_URL ?? report.subject}`,
+      // A retry of the same attempt sends nothing twice; a re-run sends again.
+      "idempotency-key": reportIdempotencyKey({
+        runUrl: process.env.RUN_URL,
+        attempt: process.env.GITHUB_RUN_ATTEMPT,
+        subject: report.subject,
+      }),
     },
     body: JSON.stringify({
       from: "Parley CI <ci@mail.runtimedrift.dev>",
