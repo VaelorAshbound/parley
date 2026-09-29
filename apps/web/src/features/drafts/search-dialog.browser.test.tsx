@@ -109,12 +109,13 @@ describe("draft search", () => {
     await expect
       .element(page.getByRole("option", { name: /Acme NDA/ }))
       .not.toBeInTheDocument()
-    const searches = list.mock.calls
-      .map(([input]) => input.query)
-      .filter(Boolean)
-    // Usually just "bol"; on a busy machine a key can come after the pause.
-    expect(searches.at(-1)).toBe("bol")
-    expect(searches.length).toBeLessThan(3)
+    const searches = () =>
+      list.mock.calls.map(([input]) => input.query).filter(Boolean)
+    // Usually just "bol"; on a busy machine a key can come after the pause,
+    // and "bo" already finds Bolt, so the last search can still be on its
+    // way (PAR-8: under coverage).
+    await expect.poll(() => searches().at(-1)).toBe("bol")
+    expect(searches().length).toBeLessThan(3)
   })
 
   test("arrow keys move the highlight, and Enter opens that draft", async () => {
