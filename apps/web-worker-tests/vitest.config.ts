@@ -1,4 +1,6 @@
 import { createRequire } from "node:module"
+import { dirname } from "node:path"
+import { fileURLToPath } from "node:url"
 
 import { cloudflareTest } from "@cloudflare/vitest-plugin"
 import { defineConfig } from "vitest/config"
@@ -14,6 +16,9 @@ const pgProtocol = fromPg.resolve("pg-protocol")
 const pgCloudflare = fromPg
   .resolve("pg-cloudflare/package.json")
   .replace(/package\.json$/, "dist/index.js")
+
+// The web app (a workspace dependency of this package).
+const web = dirname(fileURLToPath(import.meta.resolve("web/package.json")))
 
 export default defineConfig({
   resolve: {
@@ -63,5 +68,22 @@ export default defineConfig({
     globalSetup: ["./test/setup.ts"],
     setupFiles: ["./test/siteverify.ts"],
     exclude: ["**/node_modules/**", "**/*.real.test.ts"],
+    // Istanbul: workerd has no V8 coverage (Cloudflare's known issues,
+    // https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/#coverage).
+    // Only in `pnpm test:coverage`; the gate for the server code (spec §6).
+    coverage: {
+      provider: "istanbul",
+      allowExternal: true,
+      include: [`${web}/src/server/**`],
+      exclude: ["**/*.test.{ts,tsx}", "**/*.test-d.ts"],
+      reporter: ["text-summary", "json"],
+    },
+    projects: [
+      { extends: true, test: { name: "workers" } },
+      // Runs no tests. Vitest 4.1 reports the files no test loaded only when
+      // they sit inside some project's root, and the server code is outside
+      // this one; without it a file nobody tests would not count as missed.
+      { root: web, test: { name: "web-files", include: [] } },
+    ],
   },
 })
