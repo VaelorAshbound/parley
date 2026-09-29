@@ -260,6 +260,14 @@ export default defineConfig({
           include: ["src/**/*.test.{ts,tsx}"],
         },
       },
+      {
+        // CI's own scripts (the nightly report, T33).
+        test: {
+          name: "scripts",
+          root: "scripts",
+          include: ["**/*.test.ts"],
+        },
+      },
     ],
   },
 })
