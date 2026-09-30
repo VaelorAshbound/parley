@@ -120,6 +120,19 @@ function Steps({
 
   const current = questions.find((question) => question.name === item)
   const keys = current?.choices.length ?? 0
+  // A question with only a text box has no letter keys, so the box takes
+  // the focus the question just got: typing goes straight in (T36 lost it
+  // on the fieldset). Its legend is still read out, as the box's group.
+  useEffect(() => {
+    if (keys > 0) return
+    const step = card.current?.querySelector<HTMLElement>(
+      "fieldset:not([hidden])"
+    )
+    if (!step || document.activeElement !== step) return
+    step
+      .querySelector<HTMLInputElement>("input:not(:disabled)")
+      ?.focus({ preventScroll: true })
+  }, [item, keys])
 
   const go = (next: string, latest = answers) => {
     clearTimeout(advance.current)
