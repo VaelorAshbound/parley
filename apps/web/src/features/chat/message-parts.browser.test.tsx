@@ -43,6 +43,28 @@ test("names a change by its field and shows the value in the document's words", 
   )
 })
 
+test("shows the whole new value at a narrow width, and names the row by it", async () => {
+  // T36: at 375 px the row read "Purpose → Sharing our pro...", and its
+  // accessible name was the field's hint.
+  const purpose =
+    "Sharing our product roadmap to evaluate a possible distribution partnership in Europe."
+  const screen = await renderWithStore(
+    <div style={{ width: 320 }}>
+      <MessageParts parts={[changed("purpose", purpose)]} definition={nda} />
+    </div>
+  )
+
+  const row = screen.getByRole("listitem", {
+    name: `Purpose set to ${purpose}`,
+  })
+  await expect.element(row).toBeVisible()
+  const value = screen.getByText(purpose).element()
+  expect(value.scrollWidth).toBeLessThanOrEqual(value.clientWidth)
+  expect(value.getBoundingClientRect().right).toBeLessThanOrEqual(
+    row.element().getBoundingClientRect().right
+  )
+})
+
 test("shows the parts of a party that changed, not just its company", async () => {
   const part = changed("party1", {
     company: "Acme",

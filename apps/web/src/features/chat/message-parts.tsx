@@ -251,30 +251,43 @@ function Changes({
         const row = `${call}:${change.key}`
         const state = undo[row]
         const back = inverse.find((each) => each.key === change.key)
+        const name = field?.label ?? change.key
+        const value = shown(field, change)
         return (
           <Marker
             key={change.key}
             render={<li />}
+            // Named by what it did; the explanation (the tooltip) is its
+            // description. A list item takes no name from its text.
+            aria-label={[
+              change.after === undefined
+                ? `${name} cleared`
+                : `${name} set to ${value}`,
+              state === "undone" && "undone",
+              state === "stale" && "changed since",
+            ]
+              .filter(Boolean)
+              .join(", ")}
             title={change.explanation}
-            className="h-10.5 gap-2.5 border-t pr-1.5 pl-3.5 text-[13.5px] first:border-t-0"
+            className="min-h-10.5 gap-2.5 border-t py-1.5 pr-1.5 pl-3.5 text-[13.5px] first:border-t-0"
           >
             <MarkerIcon>
               <PenLineIcon className="size-3.5 text-ink-3" />
             </MarkerIcon>
-            <span className="shrink-0 text-ink-2">
-              {field?.label ?? change.key}
-            </span>
+            <span className="shrink-0 text-ink-2">{name}</span>
             <span aria-hidden="true" className="text-ink-3">
               →
             </span>
             <span className="sr-only">set to</span>
+            {/* Wraps, never cut: a long value (a purpose, a sentence) is
+                read in full at any width (PAR-42). */}
             <MarkerContent
               className={cn(
-                "flex-1 truncate font-serif text-[15px] text-blue-ink",
+                "flex-1 font-serif text-[15px] leading-snug text-pretty text-blue-ink",
                 state === "undone" && "text-ink-3 line-through"
               )}
             >
-              {shown(field, change)}
+              {value}
             </MarkerContent>
             {state === "undone" ? (
               <span className="px-2.5 text-xs text-muted-foreground">
