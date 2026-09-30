@@ -1,3 +1,4 @@
+import { resolve } from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig, type TestProjectInlineConfiguration } from "vite-plus"
@@ -31,7 +32,18 @@ const emulateReducedMotion: BrowserCommand<[reduce: boolean]> = async (
 }
 
 const browserProject = {
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    // Only Workers has this module. Without a stand-in, Vite's dependency
+    // scan stops at it (the sidebar test reaches the server code through the
+    // session module) and every cold run, like CI's, reloads mid-test.
+    alias: {
+      "cloudflare:workers": resolve(
+        import.meta.dirname,
+        "apps/web/src/test/cloudflare-workers.ts"
+      ),
+    },
+  },
   plugins: [tailwindcss(), react()],
   // A test that mocks the session module (vi.mock("@/lib/session"), the
   // sidebar's) still has Vite look at its imports. TanStack Start can't be
