@@ -196,6 +196,34 @@ describe("the AI's questionnaire", () => {
       .toEqual({ company: ["Acme Robotics"] })
   })
 
+  test("a text box that takes the focus reads out its question's description", async () => {
+    const typed: QuestionSet = {
+      title: "Deal parties",
+      questions: [
+        {
+          name: "company",
+          prompt: "What is your company called?",
+          description: "The legal name, as it goes on the NDA.",
+          required: true,
+          choices: [],
+          multiple: false,
+        },
+      ],
+    }
+    const screen = await render(
+      <AiQuestionnaire toolCallId="call-11" set={typed} onAnswer={vi.fn()} />
+    )
+
+    // Focus skips the group, so the box itself must carry the description.
+    const box = screen.getByRole("textbox", {
+      name: "What is your company called?",
+    })
+    await expect.element(box).toHaveFocus()
+    await expect
+      .element(box)
+      .toHaveAccessibleDescription("The legal name, as it goes on the NDA.")
+  })
+
   test("takes another answer typed in the Other row", async () => {
     const { screen, onAnswer } = await show()
     await pick(screen, "a", "Do you know who signs for Northwind?")
