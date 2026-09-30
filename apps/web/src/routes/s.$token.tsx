@@ -6,6 +6,8 @@ import { SharePage, ShareNotFound } from "@/features/share/share-page"
 import { sharePageHeaders } from "@/features/share/headers"
 import { sharedDraftQuery } from "@/features/share/shared-query"
 
+import { showsNotFound } from "./-components/states"
+
 // /s/:token, a draft shared read-only (spec §5 Routing; T25). Public and
 // outside the app shell: no session is read, so a visitor gets no guest.
 
@@ -25,10 +27,14 @@ export const Route = createFileRoute("/s/$token")({
   // Also on the 404: no shared cache keeps the page after the link is
   // turned off, and search engines never list it.
   headers: () => sharePageHeaders,
-  head: ({ loaderData }) => ({
+  head: ({ loaderData, match }) => ({
     meta: [
       {
-        title: loaderData ? `${loaderData.title} · Parley` : "Parley",
+        title: showsNotFound(match)
+          ? "Link not found · Parley"
+          : loaderData
+            ? `${loaderData.title} · Parley`
+            : "Parley",
       },
       { name: "robots", content: "noindex, nofollow" },
       // Links out of the page never carry the token (Referer).

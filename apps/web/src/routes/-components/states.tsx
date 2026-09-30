@@ -27,6 +27,11 @@ export const notFoundTitle = "Page not found · Parley"
 /**
  * Whether a route match shows a not-found page, for its head's title: a
  * route that caught notFound(), or the root when no route matched.
+ *
+ * `_notFound` is router-core's internal flag, and the only sign of the
+ * root's global not-found (no route matched: status stays "success" and
+ * error is unset). A router update may rename it: e2e/not-found.spec.ts
+ * checks the /nope-404 title, so that breaks loudly.
  */
 export function showsNotFound(
   match: Pick<AnyRouteMatch, "status" | "error" | "_notFound">

@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-import { expect, fresh, test } from "./helpers"
+import { accountTest, expect, fresh, test } from "./helpers"
 
 // The not-found pages (PAR-36, found in T36's QA): a bad or unknown draft
 // link and an unknown path are one friendly 404, a real page with a heading,
@@ -25,6 +25,10 @@ test("a draft link that isn't a draft id is a 404, not an error", async ({
   expect(response?.status()).toBe(404)
   await expectNotFoundPage(page)
   await expect(page.getByText("Something went wrong")).toBeHidden()
+  // The draft route's own 404, inside the app shell: the sidebar stays.
+  await expect(
+    page.getByRole("link", { name: "New draft", exact: true })
+  ).toBeVisible()
 })
 
 test("an unknown draft's 404 keeps the app's sidebar", async ({ page }) => {
@@ -66,5 +70,29 @@ fresh(
       "href",
       `/sign-in?redirect=${encodeURIComponent(unknownDraft)}`
     )
+  }
+)
+
+test("a guest on a draft's 404 can sign in too", async ({ page }) => {
+  await page.goto(unknownDraft)
+
+  await expectNotFoundPage(page)
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Sign in" })
+  ).toBeVisible()
+})
+
+accountTest(
+  "an account on a draft's 404 isn't asked to sign in",
+  async ({ page }) => {
+    await page.goto(unknownDraft)
+
+    await expectNotFoundPage(page)
+    await expect(
+      page.getByRole("main").getByRole("link", { name: "Start a new draft" })
+    ).toBeVisible()
+    await expect(
+      page.getByRole("main").getByRole("link", { name: "Sign in" })
+    ).toHaveCount(0)
   }
 )
