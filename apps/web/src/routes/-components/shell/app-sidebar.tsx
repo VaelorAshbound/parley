@@ -52,6 +52,10 @@ export function AppSidebar({
   // browser's until then.
   const search = useSearchDialog(viewer !== null)
   const isAccount = viewer !== null && !viewer.isAnonymous
+  // On a phone the sidebar is a drawer; the page a link opens must not stay
+  // under it (PAR-29, like the history's links in PAR-12).
+  const { setOpenMobile } = useSidebar()
+  const closeDrawer = () => setOpenMobile(false)
 
   return (
     <>
@@ -60,6 +64,7 @@ export function AppSidebar({
           <Link
             to="/"
             aria-label="Parley home"
+            onClick={closeDrawer}
             className="flex h-8 items-center px-1.5 text-xl group-data-[collapsible=icon]:hidden"
           >
             <Logo />
@@ -67,6 +72,7 @@ export function AppSidebar({
           <Link
             to="/"
             aria-label="Parley home"
+            onClick={closeDrawer}
             className="hidden size-8 items-center justify-center group-data-[collapsible=icon]:flex"
           >
             <LogoMark className="size-5" />
@@ -93,7 +99,10 @@ export function AppSidebar({
                 </SidebarMenuItem>
               )}
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="New draft" render={<Link to="/" />}>
+                <SidebarMenuButton
+                  tooltip="New draft"
+                  render={<Link to="/" onClick={closeDrawer} />}
+                >
                   <PlusIcon />
                   <span>New draft</span>
                 </SidebarMenuButton>
