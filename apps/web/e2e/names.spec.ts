@@ -27,6 +27,10 @@ fresh(
     await expect(
       page.getByText("Enter to start", { exact: true })
     ).toBeVisible()
+    // The hint is for the eye; the button carries the shortcut.
+    await expect(
+      page.getByRole("button", { name: "Start drafting", exact: true })
+    ).toHaveAttribute("aria-keyshortcuts", "Enter")
   }
 )
 
@@ -50,8 +54,10 @@ fresh(
       "Describe the deal. Watch the contract fill itself in."
     )
     expect(named("heading")).toContain("Eleven agreements. One conversation.")
-    expect(named("group")).not.toContain("Enterto startStart drafting")
-    expect(named("group").join("|")).not.toContain("Enterto")
+    // The composer's group: no name, or just its button's, never the hint
+    // run into the button ("Enterto startStart drafting").
+    const composer = named("group").filter((name) => /enter|start/i.test(name))
+    expect(composer).toEqual(composer.map(() => "Start drafting"))
   }
 )
 
@@ -87,6 +93,8 @@ test("the draft page's separator, More button and sidebar toggle", async ({
   for (let press = 0; press < 30; press++)
     await page.keyboard.press("ArrowLeft")
   await expect(separator).toHaveAttribute("aria-valuenow", /^\d+$/)
+  await expect(separator).toHaveAttribute("aria-valuemin", /^\d+$/)
+  await expect(separator).toHaveAttribute("aria-valuemax", /^\d+$/)
 
   // The sidebar's More button is at least 24 px (WCAG 2.5.8). With a draft,
   // the sidebar opens on the next load.
