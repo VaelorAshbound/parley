@@ -156,8 +156,9 @@ function PlanCard({
       className={cn(
         "flex flex-col rounded-2xl border p-8",
         featured
-          ? // A dark island on a light page; on a dark page, a raised card.
-            "dark border-transparent bg-background text-foreground shadow-float dark:border-border dark:bg-card"
+          ? // A dark island on a light page; on a dark page, a raised card
+            // with a blue edge and a hint of blue, so it stays the pick.
+            "dark border-transparent bg-background text-foreground shadow-float dark:border-blue-border dark:bg-[linear-gradient(to_bottom,var(--blue-tint),var(--card)_60%)]"
           : "bg-card"
       )}
     >
