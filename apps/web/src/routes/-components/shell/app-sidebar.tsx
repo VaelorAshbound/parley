@@ -17,6 +17,7 @@ import { PlusIcon, SearchIcon } from "lucide-react"
 import {
   lazy,
   Suspense,
+  type MouseEvent,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -52,76 +53,85 @@ export function AppSidebar({
   // browser's until then.
   const search = useSearchDialog(viewer !== null)
   const isAccount = viewer !== null && !viewer.isAnonymous
+  const closeDrawerOnLink = useCloseDrawerOnLink()
 
   return (
     <>
       <Sidebar collapsible="icon" aria-label="Drafts">
-        <SidebarHeader className="flex-row items-center justify-between">
-          <Link
-            to="/"
-            aria-label="Parley home"
-            className="flex h-8 items-center px-1.5 text-xl group-data-[collapsible=icon]:hidden"
-          >
-            <Logo />
-          </Link>
-          <Link
-            to="/"
-            aria-label="Parley home"
-            className="hidden size-8 items-center justify-center group-data-[collapsible=icon]:flex"
-          >
-            <LogoMark className="size-5" />
-          </Link>
-          <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
-        </SidebarHeader>
+        {/* Only catches clicks that bubble up from the links inside; a
+          link's own Enter key fires the same click. */}
+        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+        <div className="contents" onClick={closeDrawerOnLink}>
+          <SidebarHeader className="flex-row items-center justify-between">
+            <Link
+              to="/"
+              aria-label="Parley home"
+              className="flex h-8 items-center px-1.5 text-xl group-data-[collapsible=icon]:hidden"
+            >
+              <Logo />
+            </Link>
+            <Link
+              to="/"
+              aria-label="Parley home"
+              className="hidden size-8 items-center justify-center group-data-[collapsible=icon]:flex"
+            >
+              <LogoMark className="size-5" />
+            </Link>
+            <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+          </SidebarHeader>
 
-        <SidebarContent className="scroll-fade-y">
-          <SidebarGroup>
-            <SidebarMenu>
-              {viewer && (
+          <SidebarContent className="scroll-fade-y">
+            <SidebarGroup>
+              <SidebarMenu>
+                {viewer && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      tooltip="Search"
+                      aria-keyshortcuts="Meta+K Control+K"
+                      onClick={() => search.setOpen(true)}
+                      onPointerEnter={() => void loadSearch()}
+                      onFocus={() => void loadSearch()}
+                    >
+                      <SearchIcon />
+                      <span>Search</span>
+                      <ShortcutHint />
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    tooltip="Search"
-                    aria-keyshortcuts="Meta+K Control+K"
-                    onClick={() => search.setOpen(true)}
-                    onPointerEnter={() => void loadSearch()}
-                    onFocus={() => void loadSearch()}
+                    tooltip="New draft"
+                    render={<Link to="/" />}
                   >
-                    <SearchIcon />
-                    <span>Search</span>
-                    <ShortcutHint />
+                    <PlusIcon />
+                    <span>New draft</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )}
+              </SidebarMenu>
+            </SidebarGroup>
+            {viewer && (
+              <DraftHistory
+                orpc={orpc}
+                calendarKey={calendarKey}
+                isAccount={isAccount}
+              />
+            )}
+          </SidebarContent>
+
+          <SidebarFooter>
+            <SidebarMenu>
+              <SidebarMenuItem className="hidden group-data-[collapsible=icon]:block">
+                <SidebarTrigger />
+              </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="New draft" render={<Link to="/" />}>
-                  <PlusIcon />
-                  <span>New draft</span>
-                </SidebarMenuButton>
+                <ThemeToggle />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <AccountMenu viewer={viewer} />
               </SidebarMenuItem>
             </SidebarMenu>
-          </SidebarGroup>
-          {viewer && (
-            <DraftHistory
-              orpc={orpc}
-              calendarKey={calendarKey}
-              isAccount={isAccount}
-            />
-          )}
-        </SidebarContent>
-
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem className="hidden group-data-[collapsible=icon]:block">
-              <SidebarTrigger />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <ThemeToggle />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <AccountMenu viewer={viewer} />
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
+          </SidebarFooter>
+        </div>
         <SidebarRail />
       </Sidebar>
       {/* Beside the sidebar, not in it: on a phone the sidebar is a drawer,
@@ -139,6 +149,22 @@ export function AppSidebar({
       )}
     </>
   )
+}
+
+/**
+ * On a phone the sidebar is a drawer, and its open state outlives moving
+ * between the app's pages. So a link in it that opens a page must close it,
+ * or the page opens under the drawer (PAR-12, PAR-29). One handler for every
+ * link, the history's and the account menu's too: React sends a click in a
+ * portal (the menus) up through the component that opened it. A click, not a
+ * change of page, so a link to the page already open closes the drawer too.
+ */
+function useCloseDrawerOnLink() {
+  const { setOpenMobile } = useSidebar()
+  return (event: MouseEvent) => {
+    if (event.target instanceof Element && event.target.closest("a[href]"))
+      setOpenMobile(false)
+  }
 }
 
 /**
