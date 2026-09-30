@@ -6,7 +6,7 @@ import {
   useLocation,
 } from "@tanstack/react-router"
 import type { DocumentId } from "@workspace/documents"
-import { afterEach, describe, expect, test } from "vite-plus/test"
+import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { page, userEvent } from "vite-plus/test/browser"
 import { render } from "vitest-browser-react"
 
@@ -18,7 +18,12 @@ import { ReopenCard } from "./reopen-card"
 async function setUp({
   documentId = "mutual-nda",
   path = "/d/d1?panel=closed",
-}: { documentId?: DocumentId | null; path?: string } = {}) {
+  onOpen,
+}: {
+  documentId?: DocumentId | null
+  path?: string
+  onOpen?: () => void
+} = {}) {
   const router = createRouter({
     routeTree: createRootRoute(),
     history: createMemoryHistory({ initialEntries: [path] }),
@@ -27,18 +32,26 @@ async function setUp({
   const screen = await render(
     <RouterProvider
       router={router}
-      defaultComponent={() => <Draft documentId={documentId} />}
+      defaultComponent={() => <Draft documentId={documentId} onOpen={onOpen} />}
     />
   )
   return { screen, router }
 }
 
 // The draft page's rule: the URL says whether the panel is open.
-function Draft({ documentId }: { documentId: DocumentId | null }) {
+function Draft({
+  documentId,
+  onOpen,
+}: {
+  documentId: DocumentId | null
+  onOpen?: () => void
+}) {
   const closed = useLocation({
     select: (location) => location.searchStr.includes("panel=closed"),
   })
-  return <ReopenCard panelOpen={!closed} documentId={documentId} />
+  return (
+    <ReopenCard panelOpen={!closed} documentId={documentId} onOpen={onOpen} />
+  )
 }
 
 describe("the reopen card", () => {
@@ -48,7 +61,9 @@ describe("the reopen card", () => {
 
   test("names the agreement and opens the panel", async () => {
     await page.viewport(1280, 800)
-    const { screen, router } = await setUp()
+    // The chat moves focus with onOpen, since the card goes away.
+    const onOpen = vi.fn<() => void>()
+    const { screen, router } = await setUp({ onOpen })
     const card = screen.getByRole("group", { name: "Document closed" })
     await expect.element(card).toBeVisible()
     await expect
@@ -60,6 +75,7 @@ describe("the reopen card", () => {
 
     await open.click()
 
+    expect(onOpen).toHaveBeenCalledOnce()
     expect(router.state.location.searchStr).not.toContain("panel=closed")
     await expect.element(card).not.toBeInTheDocument()
   })
