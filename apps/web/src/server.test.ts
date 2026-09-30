@@ -1,3 +1,4 @@
+import handler from "@tanstack/react-start/server-entry"
 import { describe, expect, it, vi } from "vite-plus/test"
 
 import worker from "./server"
@@ -6,7 +7,7 @@ import { scheduled } from "./server/cron"
 // The Start server entry is a virtual module only the TanStack Start plugin
 // can build; this test is about the Worker's handlers, not SSR.
 vi.mock(import("@tanstack/react-start/server-entry"), () => ({
-  default: { fetch: vi.fn<(request: Request) => Response>() },
+  default: { fetch: vi.fn(() => new Response("<p>page</p>")) },
 }))
 
 describe("the Worker entry", () => {
@@ -35,4 +36,30 @@ describe("the Worker entry", () => {
       "url.path": "/s/:token",
     })
   })
+
+  it("gives each page a new nonce, in Start's context and in its CSP", async () => {
+    const start = vi.mocked(handler.fetch)
+    const nonces = []
+    for (let visit = 0; visit < 2; visit += 1) {
+      const response = await worker.fetch(
+        new Request("https://parley.app/") as Parameters<
+          typeof worker.fetch
+        >[0],
+        {} as Env,
+        noTracing
+      )
+      const [, options] = start.mock.lastCall ?? []
+      const nonce = options?.context.cspNonce
+      expect(nonce).toBeTruthy()
+      expect(response.headers.get("Content-Security-Policy")).toContain(
+        `'nonce-${nonce}'`
+      )
+      nonces.push(nonce)
+    }
+    expect(nonces[0]).not.toBe(nonces[1])
+  })
 })
+
+const noTracing = {
+  tracing: { getActiveSpan: () => undefined },
+} as unknown as ExecutionContext

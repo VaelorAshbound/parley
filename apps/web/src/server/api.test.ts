@@ -26,6 +26,16 @@ describe("GET /api/health", () => {
 
     expect(response.headers.get("x-content-type-options")).toBe("nosniff")
     expect(response.headers.get("server-timing")).toBeNull()
+    // JSON only, never a page: nothing may run or frame it (T38).
+    expect(response.headers.get("content-security-policy")).toBe(
+      "default-src 'none'; frame-ancestors 'none'"
+    )
+    expect(response.headers.get("strict-transport-security")).toBe(
+      "max-age=31536000; includeSubDomains"
+    )
+    expect(response.headers.get("referrer-policy")).toBe(
+      "strict-origin-when-cross-origin"
+    )
   })
 
   it("adds Server-Timing on previews only", async () => {
