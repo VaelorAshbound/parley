@@ -348,6 +348,53 @@ describe("the chat", () => {
       .toHaveTextContent("Key terms answered · 2 years")
   })
 
+  test("sending the answers leaves the cursor in the reply box", async () => {
+    const script = createChat<ChatMessage>()
+      .user("Help me with the terms.")
+      .assistant(({ writer }) => {
+        writer.tool("askQuestions", {
+          input: {
+            title: "Key terms",
+            questions: [
+              {
+                name: "term",
+                prompt: "How long should the NDA last?",
+                required: true,
+                choices: [
+                  { value: "1y", label: "1 year" },
+                  { value: "2y", label: "2 years" },
+                ],
+                multiple: false,
+              },
+            ],
+          },
+        })
+      })
+      .assistant(({ writer }) => {
+        writer.text("Two years it is.")
+      })
+    const { screen } = await show({ script })
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "Help me with the terms.{Enter}"
+    )
+    await expect
+      .element(
+        screen.getByRole("group", { name: "How long should the NDA last?" })
+      )
+      .toBeVisible()
+
+    // Only keys: pick, then Enter sends the answers.
+    await userEvent.keyboard("b")
+    await userEvent.keyboard("{Enter}")
+
+    await expect.element(screen.getByText("Two years it is.")).toBeVisible()
+    // Not dropped to <body> with the questionnaire (T36).
+    await expect
+      .element(screen.getByRole("textbox", { name: "Message" }))
+      .toHaveFocus()
+  })
+
   test("brings the questions back, answers kept, when the server refuses them", async () => {
     const set = {
       title: "Deal parties",

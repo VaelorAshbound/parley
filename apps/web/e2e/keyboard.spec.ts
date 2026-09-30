@@ -53,11 +53,9 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       const company = page.getByRole("textbox", {
         name: "What is your company called?",
       })
-      // The next question takes focus, so it is read out; its box is a Tab away.
-      await expect(
-        page.getByRole("group", { name: "What is your company called?" })
-      ).toBeFocused()
-      await tabTo(page, company)
+      // The next question has only a text box, which takes the focus: typing
+      // goes straight in (T36 lost it on the question's fieldset).
+      await expect(company).toBeFocused()
       await page.keyboard.type("Acme Robotics")
       await page.keyboard.press("Enter")
       await tabTo(page, page.getByRole("button", { name: "Skip" }))
@@ -66,9 +64,14 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
         page.getByText("Thanks, that's everything I needed.")
       ).toBeVisible()
 
-      // A change by the AI, undone from the keyboard.
-      await tabTo(page, page.getByRole("textbox", { name: "Message" }))
+      // A change by the AI, undone from the keyboard. Sending the answers
+      // left the cursor in the reply box (T36).
+      await expect(page.getByRole("textbox", { name: "Message" })).toBeFocused()
       await page.keyboard.type("We share our roadmap with a vendor.")
+      // The reply's text can show before its turn ends, and Enter does
+      // nothing while Parley answers: wait for Send, as a person would
+      // (PAR-30).
+      await expect(page.getByRole("button", { name: "Send" })).toBeEnabled()
       await page.keyboard.press("Enter")
       const undo = page.getByRole("button", { name: "Undo Purpose" })
       await expect(undo).toBeVisible()

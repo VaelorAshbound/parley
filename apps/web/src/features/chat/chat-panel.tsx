@@ -17,7 +17,7 @@ import {
   MessageScrollerViewport,
 } from "@workspace/ui/components/message-scroller"
 import type { ChatTransport } from "ai"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { ChatWelcome } from "@/features/empty-state/chat-welcome"
 import { DownloadButton } from "@/features/export/download"
@@ -103,6 +103,7 @@ export function ChatPanel({
   const pending = useUiStore((state) => state.pending)
   const setPending = useUiStore((state) => state.setPending)
   const settle = useUiStore((state) => state.settle)
+  const reply = useRef<HTMLTextAreaElement>(null)
   // A new message settles the last turn's highlights in the document.
   const send = (text: string) => {
     settle()
@@ -121,6 +122,11 @@ export function ChatPanel({
       toolCallId,
       output: { answers },
     })
+    // The questionnaire goes, and focus with it: the reply box is next, not
+    // the top of the page (T36). A touch screen keeps its keyboard closed
+    // for reading the reply.
+    if (!matchMedia("(pointer: coarse)").matches)
+      reply.current?.focus({ preventScroll: true })
   }
 
   const [loaded] = useState(
@@ -226,7 +232,12 @@ export function ChatPanel({
         </MessageScroller>
       </MessageScrollerProvider>
       <div className="mx-auto w-full max-w-2xl shrink-0 px-5 pt-1 md:px-8">
-        <Composer busy={busy} onSend={send} onStop={() => void stop()} />
+        <Composer
+          busy={busy}
+          onSend={send}
+          onStop={() => void stop()}
+          inputRef={reply}
+        />
       </div>
     </div>
   )

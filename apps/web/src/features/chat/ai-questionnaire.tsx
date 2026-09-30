@@ -18,7 +18,14 @@ import {
 import { Kbd } from "@workspace/ui/components/kbd"
 import { cn } from "@workspace/ui/lib/utils"
 import { ChevronLeftIcon } from "lucide-react"
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 
 import type { ChatMessage } from "@/server/ai/chat"
 import {
@@ -78,6 +85,16 @@ type Progress = { item: string; answers: Answers }
 /** Hydration is the only change useSyncExternalStore watches for here. */
 const noChanges = () => () => {}
 
+/** The user is typing a message of their own. */
+function typing() {
+  const active = document.activeElement
+  return (
+    (active instanceof HTMLTextAreaElement ||
+      active instanceof HTMLInputElement) &&
+    active.value !== ""
+  )
+}
+
 function Steps({
   set,
   saved,
@@ -103,23 +120,36 @@ function Steps({
   const [moved, setMoved] = useState(false)
   const advance = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(advance.current), [])
-  // Letter keys work at once, as the hint says: the question takes focus
-  // when it appears, unless the user is typing a message of their own.
-  const card = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const active = document.activeElement
-    const typing =
-      (active instanceof HTMLTextAreaElement ||
-        active instanceof HTMLInputElement) &&
-      active.value !== ""
-    if (!typing)
-      card.current
-        ?.querySelector<HTMLElement>("fieldset:not([hidden])")
-        ?.focus({ preventScroll: true })
-  }, [])
-
   const current = questions.find((question) => question.name === item)
   const keys = current?.choices.length ?? 0
+  // One rule for where the cursor goes when a question appears. Letter keys
+  // work at once, as the hint says, so a question with choices takes the
+  // focus itself. A question with only a text box has no letter keys, so the
+  // box takes it: typing goes straight in (T36 lost it on the fieldset). The
+  // legend is still read out as the box's group, and the box carries the
+  // description (see describe).
+  // The first question takes the focus unless the user is typing a message
+  // of their own. Later ones: the primitive has just focused the step (its
+  // layout effect runs first, as a child), and this moves it on to the box
+  // before paint, so a screen reader never hears the group on its own.
+  const card = useRef<HTMLElement>(null)
+  const shown = useRef(false)
+  useLayoutEffect(() => {
+    const step = card.current?.querySelector<HTMLElement>(
+      "fieldset:not([hidden])"
+    )
+    if (!step) return
+    const first = !shown.current
+    shown.current = true
+    if (first ? typing() : document.activeElement !== step) return
+    const box =
+      keys > 0
+        ? null
+        : step.querySelector<HTMLInputElement>("input:not(:disabled)")
+    ;(box ?? step).focus({ preventScroll: true })
+  }, [item, keys])
+  // Ids for each question's description, so a text box can point at it.
+  const describe = useId()
 
   const go = (next: string, latest = answers) => {
     clearTimeout(advance.current)
@@ -188,7 +218,8 @@ function Steps({
           />
         </div>
 
-        {questions.map((question) => {
+        {questions.map((question, index) => {
+          const description = `${describe}-${index}`
           const earlier = before?.answers[question.name] ?? []
           const typed = earlier.find(
             (value) => !question.choices.some((each) => each.value === value)
@@ -204,7 +235,7 @@ function Steps({
             >
               <QuestionnaireTitle>{question.prompt}</QuestionnaireTitle>
               {question.description || question.multiple ? (
-                <QuestionnaireDescription>
+                <QuestionnaireDescription id={description}>
                   {question.description ?? "Pick all that apply."}
                 </QuestionnaireDescription>
               ) : null}
@@ -234,6 +265,13 @@ function Steps({
                     question.choices.length > 0
                       ? "Something else…"
                       : "Type your answer…"
+                  }
+                  // Focus lands in a lone text box, past its group, so the
+                  // box reads out the question's description itself.
+                  aria-describedby={
+                    question.choices.length === 0 && question.description
+                      ? description
+                      : undefined
                   }
                   maxLength={MAX_ANSWER}
                   defaultValue={typed}
