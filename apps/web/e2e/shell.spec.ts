@@ -81,8 +81,14 @@ test("the closed document panel can be dragged open again", async ({
 }) => {
   await startNda(page)
   await open(page, `${new URL(page.url()).pathname}?panel=closed`)
-  const document = page.getByRole("region", { name: "Live document" })
-  await expect(document).toBeHidden()
+  const livePanel = page.getByRole("region", { name: "Live document" })
+  await expect(livePanel).toBeHidden()
+  // Not just zero width: not rendered at all, so its links are out of the
+  // Tab order (a zero-width panel also counts as hidden to toBeHidden).
+  const laidOut = await page
+    .getByRole("region", { name: "Live document", includeHidden: true })
+    .evaluate((element) => element.checkVisibility())
+  expect(laidOut).toBe(false)
 
   // A closed panel's content isn't laid out (PAR-6); dragging the edge
   // opens it and says so in the URL, like the Open document button.
@@ -95,7 +101,7 @@ test("the closed document panel can be dragged open again", async ({
   await page.mouse.up()
 
   await expect(page).not.toHaveURL(/panel=closed/)
-  await expect(document).toBeVisible()
+  await expect(livePanel).toBeVisible()
 })
 
 test("a draft can be started with the keyboard alone", async ({ page }) => {
