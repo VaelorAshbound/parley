@@ -60,7 +60,9 @@ export function DraftWorkspace({
     if (tab === "document" || !isMobile) seeDocument()
   }, [tab, isMobile, unseen, seeDocument])
 
-  // The URL decides open or closed; the panel follows it.
+  // The URL decides open or closed; the panel follows it. onResize below
+  // writes the URL back when the panel is dragged. Both sides only act when
+  // the two disagree, so a stale value just asks for the same state again.
   useEffect(() => {
     const panel = documentPanel.current
     if (!panel || isMobile) return
