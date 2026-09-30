@@ -12,9 +12,13 @@ const question: ChatMessage = {
   id: "user-1",
   role: "user",
   parts: [{ type: "text", text: "Is this mutual?" }],
-  // Saved just now: its turn can still be running.
-  metadata: { savedAt: Date.now() },
 }
+/** The question, saved just now: its turn can still be running. Made per
+ * test, since a time taken when the file loads can be older than the wait. */
+const asked = (): ChatMessage => ({
+  ...question,
+  metadata: { savedAt: Date.now() },
+})
 const reply: ChatMessage = {
   id: "reply-1",
   role: "assistant",
@@ -43,6 +47,7 @@ describe("useUnfinishedTurn", () => {
   })
 
   test("hands over the saved chat once the reply is in it", async () => {
+    const question = asked()
     let saved = [question]
     const onReply = vi.fn<(messages: ChatMessage[]) => void>()
     const { result } = await renderHook(() =>
@@ -62,6 +67,7 @@ describe("useUnfinishedTurn", () => {
   })
 
   test("keeps waiting through a failed read", async () => {
+    const question = asked()
     let calls = 0
     const onReply = vi.fn<(messages: ChatMessage[]) => void>()
     await renderHook(() =>
@@ -81,6 +87,7 @@ describe("useUnfinishedTurn", () => {
   })
 
   test("gives up when no reply comes, so the chat can offer Try again", async () => {
+    const question = asked()
     const { result } = await renderHook(() =>
       useUnfinishedTurn({
         initialMessages: [question],
