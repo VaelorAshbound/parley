@@ -107,6 +107,7 @@ async function show({
   script = conversation(),
   transport = (base) => base,
   documentId = "mutual-nda",
+  height,
 }: {
   initialMessages?: ChatMessage[]
   pending?: string
@@ -116,6 +117,8 @@ async function show({
   transport?: (base: ChatTransport<ChatMessage>) => ChatTransport<ChatMessage>
   /** null: a new draft, before the AI picks its agreement. */
   documentId?: string | null
+  /** Puts the chat in a box this tall (px), as on the page, so it scrolls. */
+  height?: number
 } = {}) {
   server = {}
   store = { changed: {} }
@@ -130,13 +133,15 @@ async function show({
       <UiStoreProvider>
         {pending && <Pending text={pending} />}
         <Peek />
-        <ChatPanel
-          draftId={draftId}
-          initialMessages={initialMessages}
-          definition={nda}
-          transport={transport(script.transport({ delayMs: 0 }))}
-          orpc={orpc}
-        />
+        <div className="flex flex-col" style={{ height }}>
+          <ChatPanel
+            draftId={draftId}
+            initialMessages={initialMessages}
+            definition={nda}
+            transport={transport(script.transport({ delayMs: 0 }))}
+            orpc={orpc}
+          />
+        </div>
         {children}
       </UiStoreProvider>
     </QueryClientProvider>
@@ -463,5 +468,65 @@ describe("the chat", () => {
     await expect
       .element(screen.getByRole("button", { name: "Try again" }))
       .toBeVisible()
+  })
+})
+
+describe("a long chat", () => {
+  /** Twenty turns saved before this visit. */
+  const history = (): ChatMessage[] =>
+    Array.from({ length: 20 }, (_, turn): ChatMessage[] => [
+      {
+        id: `user-${turn}`,
+        role: "user",
+        parts: [{ type: "text", text: `Question ${turn} about the deal.` }],
+      },
+      {
+        id: `reply-${turn}`,
+        role: "assistant",
+        parts: [
+          {
+            type: "text",
+            text: `Answer ${turn}. ${"The clause stays as it is. ".repeat(12)}`,
+          },
+        ],
+      },
+    ]).flat()
+
+  test("stays at the end when the day's limit refuses a send, the note in view (PAR-34)", async () => {
+    const { screen } = await show({
+      height: 600,
+      initialMessages: history(),
+      transport: (base) => ({
+        ...base,
+        // Refused after a moment, as over the network.
+        sendMessages: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 150))
+          throw new ORPCError("DAILY_LIMIT", {
+            defined: true,
+            status: 429,
+            data: {
+              limit: 100,
+              tier: "free",
+              resetsAt: "2026-09-26T00:00:00Z",
+            },
+          })
+        },
+      }),
+    })
+    await expect
+      .element(screen.getByText("Answer 19.", { exact: false }))
+      .toBeInViewport()
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "One more thing{Enter}"
+    )
+    const upgrade = screen.getByRole("link", { name: "Get Pro" })
+    await expect.element(upgrade).toBeVisible()
+    // Past the frames in which the scroller settles after the note appears.
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    await expect.element(upgrade).toBeInViewport()
+    await expect.element(screen.getByText("One more thing")).toBeInViewport()
   })
 })
