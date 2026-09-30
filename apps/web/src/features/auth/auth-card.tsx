@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 
 // The card of every auth page (sign-in, sign-up, password, email, code),
 // in the start and pricing pages' Paper & Ink: a Newsreader title at the
@@ -20,14 +20,15 @@ export function AuthCard({
   /** The way to the other auth page ("New to Parley? Create an account"). */
   footer?: ReactNode
 }) {
+  const titleId = useId()
   return (
     <section
-      aria-labelledby="auth-title"
+      aria-labelledby={titleId}
       className="flex flex-col rounded-2xl border bg-card px-6 py-8 text-card-foreground sm:p-10"
     >
       <h1
-        id="auth-title"
-        className="font-serif text-[2.375rem] leading-[1.04] font-normal tracking-[-0.024em] text-balance sm:text-title"
+        id={titleId}
+        className="font-serif text-title-sm text-balance sm:text-title"
       >
         {title}
       </h1>

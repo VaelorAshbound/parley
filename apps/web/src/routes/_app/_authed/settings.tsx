@@ -81,7 +81,7 @@ function Page({ children }: { children: React.ReactNode }) {
           "[&_[data-slot=card-description]]:text-[15px] [&_[data-slot=card-description]]:leading-relaxed"
         )}
       >
-        <h1 className="mb-2 font-serif text-[2.375rem] leading-[1.04] font-normal tracking-[-0.024em] sm:text-title">
+        <h1 className="mb-2 font-serif text-title-sm sm:text-title">
           Settings
         </h1>
         {children}
