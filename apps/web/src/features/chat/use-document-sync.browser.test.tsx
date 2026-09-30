@@ -127,13 +127,14 @@ async function renderPage() {
       .fields[field]
   const loading = () => queryClient.isFetching({ queryKey: key })
   /** Lets every held read answer, until none is left. */
-  const answerAll = () =>
-    expect
+  const answerAll = async () => {
+    await expect
       .poll(() => {
         server.release()
         return loading()
       })
       .toBe(0)
+  }
   return { server, rerender, shown, loading, answerAll }
 }
 
