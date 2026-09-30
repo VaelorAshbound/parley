@@ -19,6 +19,7 @@ import {
   type UIMessage,
 } from "ai"
 
+import { MAX_MESSAGE } from "../../lib/limits"
 import { DAILY_MESSAGES, usageDay } from "../limits"
 import {
   currentRequestId,
@@ -57,8 +58,6 @@ type OpenQuestions = Extract<
 >
 type DraftKey = { id: string; userId: string }
 
-/** The longest message a user may send; the reply box stops there too. */
-const MAX_MESSAGE = 4000
 /**
  * What the model sees of a long chat: its latest messages, up to about 12k
  * tokens. With the instructions, a step stays under ~20k input tokens.
