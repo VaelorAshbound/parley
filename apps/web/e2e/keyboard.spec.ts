@@ -64,8 +64,9 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
         page.getByText("Thanks, that's everything I needed.")
       ).toBeVisible()
 
-      // A change by the AI, undone from the keyboard.
-      await tabTo(page, page.getByRole("textbox", { name: "Message" }))
+      // A change by the AI, undone from the keyboard. Sending the answers
+      // left the cursor in the reply box (T36).
+      await expect(page.getByRole("textbox", { name: "Message" })).toBeFocused()
       await page.keyboard.type("We share our roadmap with a vendor.")
       await page.keyboard.press("Enter")
       const undo = page.getByRole("button", { name: "Undo Purpose" })
