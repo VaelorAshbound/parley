@@ -110,23 +110,23 @@ Technical and Organizational Security Measures
 ☒ See Security Policy
 ☒ The measures described below
 Described Security Measures
-☐ Pseudonymization and encryption of personal data: 
-☐ Ensuring ongoing confidentiality, integrity, availability, and resilience of processing systems and services: 
+☐ Pseudonymization and encryption of personal data
+☐ Ensuring ongoing confidentiality, integrity, availability, and resilience of processing systems and services
 ☒ Ability to restore the availability of and access to Customer Personal Data in a timely manner following a physical or technical incident: Daily backups are kept for 30 days and restored in tests.
-☐ Regular testing, assessment, and evaluation of the effectiveness of technical and organizational measures used to secure Processing: 
-☐ User identification and authorization process and protection: 
+☐ Regular testing, assessment, and evaluation of the effectiveness of technical and organizational measures used to secure Processing
+☐ User identification and authorization process and protection
 ☒ Protecting Customer Personal Data during transmission (in transit): All traffic uses TLS 1.2 or newer.
 ☒ Protecting Customer Personal Data during storage (at rest): Databases and backups use AES-256 encryption.
-☐ Physical security where Customer Personal Data is processed: 
-☐ Events logging: 
-☐ Systems configuration, including default configuration: 
-☐ Internal IT and IT security governance and management: 
-☐ Certification or assurance of processes and products: 
-☐ Ensuring data minimization: 
-☐ Ensuring data quality: 
-☐ Ensuring limited data retention: 
-☐ Ensuring accountability: 
-☐ Allowing data portability and ensuring erasure: 
+☐ Physical security where Customer Personal Data is processed
+☐ Events logging
+☐ Systems configuration, including default configuration
+☐ Internal IT and IT security governance and management
+☐ Certification or assurance of processes and products
+☐ Ensuring data minimization
+☐ Ensuring data quality
+☐ Ensuring limited data retention
+☐ Ensuring accountability
+☐ Allowing data portability and ensuring erasure
 Provider and Customer have not changed the DPA Standard Terms except for the details on the Cover Page above. By signing this Cover Page, each party agrees to enter into this DPA as of the last date of signature below.
 Provider
 Customer

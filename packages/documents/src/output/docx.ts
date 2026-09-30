@@ -31,6 +31,7 @@ import type {
   RenderedValue,
 } from "../render.ts"
 import { DISCLAIMER } from "../disclaimer.ts"
+import { isNone, isNoneLine, NONE } from "../render/model.ts"
 
 // The editable Word file (T24). It uses Georgia, not the brand's Newsreader:
 // the person opening it in Word almost never has Newsreader installed, and a
@@ -239,9 +240,10 @@ function inline(
   })
 }
 
-function value({ text, placeholder, optional }: RenderedValue): TextRun[] {
-  // A finished document leaves an empty optional field blank (T36).
-  if (text === null && optional) return []
+function value(shown: RenderedValue): TextRun[] {
+  const { text, placeholder } = shown
+  // A finished document says an empty optional field is "None." (PAR-40).
+  if (isNone(shown)) return runs(NONE, { color: BLUE_INK })
   return text === null
     ? runs(placeholder, { color: INK_3 })
     : runs(text, { color: BLUE_INK })
@@ -256,10 +258,14 @@ function line(each: RenderedLine) {
     each.checked === undefined
       ? []
       : [new TextRun({ text: `${each.checked ? "☒" : "☐"} `, font: SYMBOLS })]
+  // Nothing filled in: a checklist part is its box and label; any other line
+  // is "None.", after its label if it has one (PAR-40).
+  const none = isNoneLine(each)
+  const checklist = each.checked !== undefined
   const label = each.label
     ? [
         new TextRun({
-          text: `${each.label}: `,
+          text: none && checklist ? each.label : `${each.label}: `,
           font: SANS,
           size: 17,
           color: INK_2,
@@ -267,7 +273,15 @@ function line(each: RenderedLine) {
       ]
     : []
   return new Paragraph({
-    children: [...box, ...label, ...each.parts.flatMap(part)],
+    children: [
+      ...box,
+      ...label,
+      ...(!none
+        ? each.parts.flatMap(part)
+        : checklist
+          ? []
+          : runs(NONE, { color: BLUE_INK })),
+    ],
   })
 }
 

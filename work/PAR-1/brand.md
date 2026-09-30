@@ -87,7 +87,7 @@ Big text gets negative tracking; small labels get positive tracking. Turn on `fo
 
 | State | Look | Meaning |
 |---|---|---|
-| Empty | Sans chip on `empty` with a dashed `empty-border` border, text in ink-3 (for example "State") | Not filled yet. Never a blank line. PDF/DOCX print it as `[State]`. |
+| Empty | Sans chip on `empty` with a dashed `empty-border` border, text in ink-3 (for example "State") | Not filled yet. Never a blank line. PDF/DOCX print it as `[State]`; an empty optional field prints as "None." in blue ink instead (after its label, if the line has one), and an empty checklist part prints as its box and label alone (PAR-40). |
 | Asking | Dashed `blue-border` frame around the row, `blue-tint` fill, small "Asking in chat" label on the frame | The chat is asking about this field right now. |
 | Just changed | Highlighter sweep, value inks in, blue change bar in the left margin | The AI changed it in this turn. Settles to highlighter-soft until the next message. |
 | Filled | Blue ink | A value you or Parley set. |
