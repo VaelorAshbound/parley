@@ -8,7 +8,7 @@ import { Kbd } from "@workspace/ui/components/kbd"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { ArrowRightIcon, ArrowUpIcon, SquareIcon } from "lucide-react"
-import { useEffect, useRef, useState, type RefObject } from "react"
+import { useEffect, useId, useRef, useState, type RefObject } from "react"
 
 // The reply box (spec §1: the reply box at the bottom, the demo note under
 // it). Enter sends, Shift+Enter starts a new line; while Parley answers, the
@@ -16,6 +16,10 @@ import { useEffect, useRef, useState, type RefObject } from "react"
 // "Start drafting" (brand.md canvas, Main).
 
 export const MAX_MESSAGE = 4000
+/** Where the reply box starts counting: 90% of the limit. */
+const COUNT_FROM = 3600
+/** "3,812", in the reader's own language. */
+const count = new Intl.NumberFormat()
 
 export function Composer({
   busy,
@@ -57,7 +61,26 @@ export function Composer({
     sent.current = false
   })
   const start = variant === "start"
-  const ready = text.trim() !== "" && !busy
+  // Over the limit, nothing is cut (PAR-37): the box keeps all of it, says
+  // it's too long, and won't send until it's shorter. The count shows from
+  // near the limit, so a long message doesn't surprise.
+  const length = text.trim().length
+  const tooLong = length > MAX_MESSAGE
+  const counterId = useId()
+  const counter =
+    length >= COUNT_FROM ? (
+      <span
+        id={counterId}
+        className={cn(
+          "mr-auto text-[12.5px] font-normal tabular-nums",
+          tooLong ? "text-destructive" : "text-muted-foreground"
+        )}
+      >
+        {tooLong && "Too long to send · "}
+        {count.format(length)} / {count.format(MAX_MESSAGE)}
+      </span>
+    ) : null
+  const ready = text.trim() !== "" && !busy && !tooLong
   const send = () => {
     // "Start drafting" with nothing typed shows where to type.
     if (text.trim() === "") input.current?.focus()
@@ -87,7 +110,8 @@ export function Composer({
           ref={input}
           aria-label={label}
           value={text}
-          maxLength={MAX_MESSAGE}
+          aria-invalid={tooLong || undefined}
+          aria-describedby={counter ? counterId : undefined}
           placeholder={placeholder}
           rows={start ? 3 : 1}
           className={cn(
@@ -110,15 +134,17 @@ export function Composer({
         >
           {start ? (
             <>
-              <span className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground pointer-coarse:invisible">
-                <Kbd>Enter</Kbd>
-                to start
-              </span>
+              {counter ?? (
+                <span className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground pointer-coarse:invisible">
+                  <Kbd>Enter</Kbd>
+                  to start
+                </span>
+              )}
               <InputGroupButton
                 type="submit"
                 variant="default"
                 // Focusable while busy: a failed start must not drop focus.
-                disabled={busy}
+                disabled={busy || tooLong}
                 focusableWhenDisabled
                 aria-busy={busy}
                 className="h-10 rounded-full pr-3.5 pl-4.5 text-[14.5px] data-disabled:opacity-50"
@@ -135,29 +161,40 @@ export function Composer({
                 )}
               </InputGroupButton>
             </>
-          ) : busy && onStop ? (
-            <InputGroupButton
-              type="button"
-              size="icon-sm"
-              variant="secondary"
-              aria-label="Stop"
-              onClick={onStop}
-            >
-              <SquareIcon />
-            </InputGroupButton>
           ) : (
-            <InputGroupButton
-              type="submit"
-              size="icon-sm"
-              variant="default"
-              aria-label="Send"
-              disabled={!ready}
-            >
-              <ArrowUpIcon />
-            </InputGroupButton>
+            <>
+              {counter}
+              {busy && onStop ? (
+                <InputGroupButton
+                  type="button"
+                  size="icon-sm"
+                  variant="secondary"
+                  aria-label="Stop"
+                  onClick={onStop}
+                >
+                  <SquareIcon />
+                </InputGroupButton>
+              ) : (
+                <InputGroupButton
+                  type="submit"
+                  size="icon-sm"
+                  variant="default"
+                  aria-label="Send"
+                  disabled={!ready}
+                >
+                  <ArrowUpIcon />
+                </InputGroupButton>
+              )}
+            </>
           )}
         </InputGroupAddon>
       </InputGroup>
+      {/* Said once when crossing the limit, not at every key. */}
+      <span className="sr-only" aria-live="polite">
+        {tooLong
+          ? `Too long to send. The limit is ${count.format(MAX_MESSAGE)} characters.`
+          : ""}
+      </span>
     </form>
   )
 }
