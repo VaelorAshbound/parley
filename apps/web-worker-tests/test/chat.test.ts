@@ -115,6 +115,10 @@ describe("a chat turn", () => {
     })
     const reply = await client.chat.messages({ id: draft.id })
     expect(reply.map((message) => message.role)).toEqual(["user", "assistant"])
+    // When each was saved: a page loaded mid-turn waits only for a young
+    // one (PAR-33).
+    for (const message of reply)
+      expect(message.metadata?.savedAt).toBeGreaterThan(Date.now() - 60_000)
   })
 
   it("drafts a whole NDA over two turns, ending with a complete document", async () => {
@@ -507,6 +511,105 @@ describe("a chat turn", () => {
     tab.abort()
 
     await expect.poll(() => modelSignal?.aborted).toBe(true)
+  })
+
+  it("saves what the reply had so far when the reader goes away (PAR-33)", async () => {
+    const { cookie } = await signInGuest()
+    const model = new MockLanguageModelV4({
+      doStream: async ({ abortSignal }) => ({
+        // One word, then nothing more until the model is stopped, as a
+        // provider's fetch ends when its signal aborts.
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "text-start", id: "t" })
+            controller.enqueue({
+              type: "text-delta",
+              id: "t",
+              delta: "Thinking",
+            })
+            abortSignal?.addEventListener("abort", () =>
+              controller.error(abortSignal.reason)
+            )
+          },
+        }),
+      }),
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const tab = new AbortController()
+    const stream = await client.chat.send(
+      { id: draft.id, message: say("Hello?"), today },
+      { signal: tab.signal }
+    )
+    const iterator = stream[Symbol.asyncIterator]()
+    // Up to the first word of the reply.
+    for (;;) {
+      const { value, done } = await iterator.next()
+      if (done || (value as { type?: string }).type === "text-delta") break
+    }
+
+    // A reload: the page that asked goes away.
+    tab.abort()
+
+    await expect
+      .poll(
+        async () => {
+          await settle()
+          return (await client.chat.messages({ id: draft.id })).at(-1)
+        },
+        { timeout: 3000 }
+      )
+      .toMatchObject({
+        role: "assistant",
+        parts: expect.arrayContaining([
+          expect.objectContaining({ type: "text", text: "Thinking" }),
+        ]),
+      })
+  })
+
+  it("saves no empty bubble when the reader goes away before the first word (PAR-33)", async () => {
+    const { cookie } = await signInGuest()
+    const model = new MockLanguageModelV4({
+      doStream: async ({ abortSignal }) => ({
+        // A text begun, with no word in it yet, when the page goes away.
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "text-start", id: "t" })
+            abortSignal?.addEventListener("abort", () =>
+              controller.error(abortSignal.reason)
+            )
+          },
+        }),
+      }),
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const tab = new AbortController()
+    const stream = await client.chat.send(
+      { id: draft.id, message: say("Hello?"), today },
+      { signal: tab.signal }
+    )
+    const iterator = stream[Symbol.asyncIterator]()
+    for (;;) {
+      const { value, done } = await iterator.next()
+      if (done || (value as { type?: string }).type === "text-start") break
+    }
+
+    tab.abort()
+    // Long enough for the save's copy of the stream to end.
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    await settle()
+
+    // Nothing to show: the chat ends with the question, and a later visit
+    // offers Try again instead of a blank bubble.
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user"])
   })
 
   it("refuses a message over 4,000 characters without calling the model", async () => {

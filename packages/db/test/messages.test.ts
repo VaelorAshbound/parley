@@ -1,7 +1,11 @@
 import { describe, expect } from "vite-plus/test"
 
 import { createDraft, getDraft } from "../src/queries/drafts.ts"
-import { listMessages, saveMessages } from "../src/queries/messages.ts"
+import {
+  listMessages,
+  listSavedMessages,
+  saveMessages,
+} from "../src/queries/messages.ts"
 import { makeUser, test } from "./db.ts"
 
 const nda = { documentId: "mutual-nda", title: "NDA" } as const
@@ -28,6 +32,22 @@ describe("chat messages", () => {
     await saveMessages(db, key, [reply])
 
     expect(await listMessages(db, key)).toEqual([hello, reply])
+  })
+
+  test("says when each message was first saved (PAR-33)", async ({ db }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    const before = Date.now()
+
+    await saveMessages(db, key, [hello])
+    const [saved] = await listSavedMessages(db, key)
+
+    expect(saved).toMatchObject(hello)
+    // The database's clock, near this one.
+    expect(Math.abs((saved?.savedAt.getTime() ?? 0) - before)).toBeLessThan(
+      60_000
+    )
   })
 
   test("updates a message saved again, like a reply that grew", async ({

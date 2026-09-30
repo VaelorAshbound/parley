@@ -107,6 +107,7 @@ async function show({
   script = conversation(),
   transport = (base) => base,
   documentId = "mutual-nda",
+  height,
 }: {
   initialMessages?: ChatMessage[]
   pending?: string
@@ -116,6 +117,8 @@ async function show({
   transport?: (base: ChatTransport<ChatMessage>) => ChatTransport<ChatMessage>
   /** null: a new draft, before the AI picks its agreement. */
   documentId?: string | null
+  /** Puts the chat in a box this tall (px), as on the page, so it scrolls. */
+  height?: number
 } = {}) {
   server = {}
   store = { changed: {} }
@@ -130,13 +133,15 @@ async function show({
       <UiStoreProvider>
         {pending && <Pending text={pending} />}
         <Peek />
-        <ChatPanel
-          draftId={draftId}
-          initialMessages={initialMessages}
-          definition={nda}
-          transport={transport(script.transport({ delayMs: 0 }))}
-          orpc={orpc}
-        />
+        <div className="flex flex-col" style={{ height }}>
+          <ChatPanel
+            draftId={draftId}
+            initialMessages={initialMessages}
+            definition={nda}
+            transport={transport(script.transport({ delayMs: 0 }))}
+            orpc={orpc}
+          />
+        </div>
         {children}
       </UiStoreProvider>
     </QueryClientProvider>
@@ -510,5 +515,131 @@ describe("the chat", () => {
     await expect
       .element(screen.getByRole("button", { name: "Try again" }))
       .toBeVisible()
+  })
+})
+
+describe("a page loaded while Parley answers (PAR-33)", () => {
+  const question: ChatMessage = {
+    id: "user-reloaded",
+    role: "user",
+    parts: [{ type: "text", text: "We share a roadmap with a vendor." }],
+    // Saved a moment ago, by the page that was reloaded away.
+    metadata: { savedAt: Date.now() },
+  }
+  const saved: ChatMessage = {
+    id: "reply-reloaded",
+    role: "assistant",
+    parts: [{ type: "text", text: "A **Mutual NDA** fits." }],
+  }
+
+  test("says Parley is still answering, then shows the reply once it is saved", async () => {
+    // The reply is still streaming to the page that was reloaded away.
+    serverChat = [question]
+    const { screen, queryClient } = await show({ initialMessages: [question] })
+
+    await expect.element(screen.getByText("Thinking…")).toBeVisible()
+    serverChat = [question, saved]
+
+    await expect
+      .element(screen.getByText("Mutual NDA", { exact: true }), {
+        timeout: 5000,
+      })
+      .toBeVisible()
+    expect(screen.getByText("Thinking…").query()).toBeNull()
+    // The next visit starts from it too.
+    expect(
+      queryClient.getQueryData(
+        orpc.chat.messages.queryKey({ input: { id: draftId } })
+      )
+    ).toEqual([question, saved])
+    serverChat = []
+  })
+
+  test("a turn that died long ago offers Try again at once, and the box works", async () => {
+    // A provider error before Parley's first word, days ago: the chat ends
+    // with the user's message, and no reply is coming.
+    const old = { ...question, metadata: { savedAt: Date.now() - 86_400_000 } }
+    serverChat = [old]
+    const { screen } = await show({ initialMessages: [old] })
+
+    await expect
+      .element(screen.getByText("Parley couldn’t answer.", { exact: false }))
+      .toBeVisible()
+    expect(screen.getByText("Thinking…").query()).toBeNull()
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "Still there?"
+    )
+    await expect
+      .element(screen.getByRole("button", { name: "Send" }))
+      .toBeEnabled()
+
+    // Try again asks for the reply to that message.
+    await screen.getByRole("button", { name: "Try again" }).click()
+    await expect.element(screen.getByText("Mutual NDA selected")).toBeVisible()
+    expect(
+      screen.getByText("Parley couldn’t answer.", { exact: false }).query()
+    ).toBeNull()
+    serverChat = []
+  })
+})
+
+describe("a long chat", () => {
+  /** Twenty turns saved before this visit. */
+  const history = (): ChatMessage[] =>
+    Array.from({ length: 20 }, (_, turn): ChatMessage[] => [
+      {
+        id: `user-${turn}`,
+        role: "user",
+        parts: [{ type: "text", text: `Question ${turn} about the deal.` }],
+      },
+      {
+        id: `reply-${turn}`,
+        role: "assistant",
+        parts: [
+          {
+            type: "text",
+            text: `Answer ${turn}. ${"The clause stays as it is. ".repeat(12)}`,
+          },
+        ],
+      },
+    ]).flat()
+
+  test("stays at the end when the day's limit refuses a send, the note in view (PAR-34)", async () => {
+    const { screen } = await show({
+      height: 600,
+      initialMessages: history(),
+      transport: (base) => ({
+        ...base,
+        // Refused after a moment, as over the network.
+        sendMessages: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 150))
+          throw new ORPCError("DAILY_LIMIT", {
+            defined: true,
+            status: 429,
+            data: {
+              limit: 100,
+              tier: "free",
+              resetsAt: "2026-09-26T00:00:00Z",
+            },
+          })
+        },
+      }),
+    })
+    await expect
+      .element(screen.getByText("Answer 19.", { exact: false }))
+      .toBeInViewport()
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "One more thing{Enter}"
+    )
+    const upgrade = screen.getByRole("link", { name: "Get Pro" })
+    await expect.element(upgrade).toBeVisible()
+    // Past the frames in which the scroller settles after the note appears.
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    await expect.element(upgrade).toBeInViewport()
+    await expect.element(screen.getByText("One more thing")).toBeInViewport()
   })
 })

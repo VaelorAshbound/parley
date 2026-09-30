@@ -3,7 +3,7 @@ import {
   addAiUsage,
   claimMessage,
   getDraft,
-  listMessages,
+  listSavedMessages,
   saveMessages,
   type Db,
 } from "@workspace/db"
@@ -19,6 +19,7 @@ import {
   type UIMessage,
 } from "ai"
 
+import { MAX_MESSAGE } from "../../lib/limits"
 import { DAILY_MESSAGES, usageDay } from "../limits"
 import {
   currentRequestId,
@@ -49,7 +50,13 @@ import { chatTools, runningTools, type ChatTools } from "./tools"
 // what is new; the history comes from the database, so a client can't
 // rewrite what was said.
 
-export type ChatMessage = UIMessage<unknown, UIDataTypes, ChatTools>
+/**
+ * What the server adds to a stored message: when it was first saved (epoch
+ * ms), so a page loaded mid-turn knows whether a reply can still come
+ * (PAR-33). Messages the page makes have none.
+ */
+export type ChatMetadata = { savedAt?: number }
+export type ChatMessage = UIMessage<ChatMetadata, UIDataTypes, ChatTools>
 type Part = ChatMessage["parts"][number]
 type OpenQuestions = Extract<
   Part,
@@ -57,8 +64,6 @@ type OpenQuestions = Extract<
 >
 type DraftKey = { id: string; userId: string }
 
-/** The longest message a user may send; the reply box stops there too. */
-const MAX_MESSAGE = 4000
 /**
  * What the model sees of a long chat: its latest messages, up to about 12k
  * tokens. With the instructions, a step stays under ~20k input tokens.
@@ -83,8 +88,12 @@ const userMessage = z.object({
 
 /** The stored chat, checked against the current tools; unfit chats start fresh. */
 async function history(db: Db, key: DraftKey) {
+  const stored = await listSavedMessages(db, key)
   const result = await safeValidateUIMessages<ChatMessage>({
-    messages: await listMessages(db, key),
+    messages: stored.map(({ savedAt, ...each }) => ({
+      ...each,
+      metadata: { savedAt: savedAt.getTime() },
+    })),
     tools: chatTools,
   })
   return result.success ? result.data : []
@@ -276,6 +285,15 @@ function recordUsage(
   )
 }
 
+/** A part with nothing to show: a step's start, or a text with no words. */
+function isEmptyPart(part: Part) {
+  if (part.type === "step-start") return true
+  return (
+    (part.type === "text" || part.type === "reasoning") &&
+    part.text.trim() === ""
+  )
+}
+
 /** Streams the model's reply to the chat so far, and saves it when done. */
 async function reply({
   context,
@@ -323,29 +341,42 @@ async function reply({
     ...metrics.callbacks,
   })
 
-  return streamToEventIterator(
-    toUIMessageStream<typeof tools, ChatMessage>({
-      stream: result.stream,
-      tools,
-      // Ending with the assistant's message (after answers), the reply
-      // continues that message instead of starting a new one: the whole
-      // stored one, not the model's trimmed view, or the save would cut it.
-      originalMessages: all,
-      generateMessageId: () => crypto.randomUUID(),
-      onEnd: ({ responseMessage }) => {
-        metrics.close()
-        // After the response too: the save outlives a closed tab. A failure
-        // is logged here: uncaught, Workers would log Drizzle's message,
-        // which holds the whole reply.
-        context.waitUntil(
-          saveMessages(context.db, key, [responseMessage]).catch(
-            (error: unknown) =>
-              logError("chat_save_failed", error, { draftId: key.id })
-          )
+  const [toPage, toSave] = toUIMessageStream<typeof tools, ChatMessage>({
+    stream: result.stream,
+    tools,
+    // Ending with the assistant's message (after answers), the reply
+    // continues that message instead of starting a new one: the whole
+    // stored one, not the model's trimmed view, or the save would cut it.
+    originalMessages: all,
+    generateMessageId: () => crypto.randomUUID(),
+    onEnd: ({ responseMessage }) => {
+      metrics.close()
+      // A turn stopped before Parley wrote anything leaves nothing to
+      // keep: an empty reply would show as a blank bubble, not Try again.
+      // A text begun with no word in it yet is nothing too.
+      if (responseMessage.parts.every(isEmptyPart)) return
+      // After the response too: the save outlives a closed tab. A failure
+      // is logged here: uncaught, Workers would log Drizzle's message,
+      // which holds the whole reply.
+      context.waitUntil(
+        saveMessages(context.db, key, [responseMessage]).catch(
+          (error: unknown) =>
+            logError("chat_save_failed", error, { draftId: key.id })
         )
-      },
+      )
+    },
+  }).tee()
+  // The save reads its own copy to the end, so a page that leaves (a
+  // reload) still gets the reply so far saved: the signal stops the model,
+  // its stream ends, and onEnd runs. Read only by the page, the stream just
+  // stopped, and nothing was saved (PAR-33).
+  // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#handling-client-disconnects
+  context.waitUntil(
+    toSave.pipeTo(new WritableStream()).catch(() => {
+      // Its failure is the page's too, and logged by onError.
     })
   )
+  return streamToEventIterator(toPage)
 }
 
 const turn = z.object({
