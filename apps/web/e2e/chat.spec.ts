@@ -94,29 +94,30 @@ test("the AI's questions: a letter picks, a typed answer, a skip, then it goes o
   ).toBeHidden()
 })
 
-test("a reload while Parley answers shows the reply once it is saved, with no second reload (PAR-33)", async ({
+test("a reload while Parley answers shows the reply so far once it is saved, with no second reload (PAR-33)", async ({
   page,
 }) => {
   await open(page, "/")
   await page.getByRole("button", { name: /Mutual NDA/ }).click()
   await draftOpened(page)
-  const answering = page.waitForResponse((response) =>
-    response.url().includes("/api/rpc/chat/send")
-  )
   await page
     .getByRole("textbox", { name: "Message" })
     .fill("Give me the slow reply.")
   await page.keyboard.press("Enter")
-  // The server has the message and is writing the reply (the scripted AI
-  // takes a few seconds for this one).
-  await answering
+  // Parley has written its first sentence; the second is seconds away.
+  const first = page.getByText("Here is the slow reply", { exact: false })
+  await expect(first).toBeVisible()
 
+  // The reload closes the stream, and the dev server passes that on as in
+  // production: the model stops (its chat_turn line says "aborted") and the
+  // reply so far is saved. The page loads before or after that save; either
+  // way it shows the saved reply without another reload.
   await page.reload()
 
   await expect(page.getByText("Give me the slow reply.")).toBeVisible()
-  await expect(page.getByText("Thinking…")).toBeVisible()
-  await expect(
-    page.getByText("Here is the slow reply, saved while you were away.")
-  ).toBeVisible({ timeout: 20_000 })
+  await expect(first).toBeVisible({ timeout: 20_000 })
   await expect(page.getByText("Thinking…")).toBeHidden()
+  await expect(
+    page.getByText("Parley couldn’t answer.", { exact: false })
+  ).toBeHidden()
 })
