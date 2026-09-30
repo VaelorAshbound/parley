@@ -2,16 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
 
+import { AuthCard as Page, authButton } from "@/features/auth/auth-card"
 import { authConfigQuery } from "@/features/auth/auth-config"
 import {
   authErrorMessage,
@@ -59,7 +53,7 @@ function VerifyEmail() {
         <Link
           to="/sign-in"
           search={{ redirect: returnTo }}
-          className={buttonVariants({ size: "lg" })}
+          className={buttonVariants({ size: "lg", className: authButton })}
         >
           Sign in
         </Link>
@@ -72,7 +66,10 @@ function VerifyEmail() {
         title="Your email is confirmed"
         description="You can now download and share your drafts."
       >
-        <Link to={returnTo} className={buttonVariants({ size: "lg" })}>
+        <Link
+          to={returnTo}
+          className={buttonVariants({ size: "lg", className: authButton })}
+        >
           Continue
         </Link>
       </Page>
@@ -87,33 +84,14 @@ function VerifyEmail() {
           : `We sent a link to ${account.email}. Open it to confirm your email. It works for 1 hour.`
       }
     >
-      <Link to={returnTo} className={buttonVariants({ size: "lg" })}>
+      <Link
+        to={returnTo}
+        className={buttonVariants({ size: "lg", className: authButton })}
+      >
         Back to your draft
       </Link>
       <ResendLink account={account} returnTo={returnTo} />
     </Page>
-  )
-}
-
-function Page({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description: string
-  children: React.ReactNode
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-          <h1>{title}</h1>
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">{children}</CardContent>
-    </Card>
   )
 }
 
@@ -158,6 +136,7 @@ function ResendLink({
       <Button
         variant="ghost"
         size="lg"
+        className={authButton}
         disabled={state.kind === "sending"}
         onClick={() => void resend()}
       >
@@ -166,7 +145,7 @@ function ResendLink({
       </Button>
       {turnstile.widget}
       {/* <output> is a polite live region: screen readers hear "Sent". */}
-      <output className="text-center text-sm text-muted-foreground">
+      <output className="text-center text-sm text-muted-foreground empty:-mt-5">
         {state.kind === "sent" && `Sent. Check your inbox at ${account.email}.`}
       </output>
       {state.kind === "error" && (

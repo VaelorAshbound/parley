@@ -34,7 +34,9 @@ export function SubmitRow({
         </Alert>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={submitting}>
+        {/* Outline: a settings page has many saves, and one ink button
+            (PAR-45). */}
+        <Button type="submit" variant="outline" disabled={submitting}>
           {submitting && <Spinner data-icon="inline-start" />}
           {children}
         </Button>

@@ -19,15 +19,15 @@ export const Route = createFileRoute("/_auth")({
 
 function AuthLayout() {
   return (
-    <div className="flex min-h-svh flex-col items-center px-4 py-10 md:justify-center">
+    <div className="flex min-h-svh flex-col items-center px-4 py-10 md:justify-center md:py-16">
       <Link
         to="/"
         aria-label="Parley home"
-        className="mb-8 rounded-md text-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="mb-10 rounded-md text-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <Logo />
       </Link>
-      <main className="w-full max-w-sm">
+      <main className="w-full max-w-md">
         <Outlet />
       </main>
       <p className="mt-10 max-w-sm text-center text-[12.5px] text-muted-foreground">
