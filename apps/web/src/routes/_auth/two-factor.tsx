@@ -1,17 +1,10 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 import { useState } from "react"
 
 import type { CodeKind } from "@/features/account/two-factor/code-field"
 import { CodeStep } from "@/features/account/two-factor/code-step"
+import { AuthCard, footerLink } from "@/features/auth/auth-card"
 import { redirectSearch } from "@/features/auth/redirect"
 
 // The code step of signing in with two-factor on (spec §5 Routing, T23b).
@@ -50,32 +43,27 @@ function TwoFactor() {
   const [kind, setKind] = useState<CodeKind>("app")
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-          <h1>{words[kind].title}</h1>
-        </CardTitle>
-        <CardDescription>{words[kind].description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <CodeStep key={kind} kind={kind} returnTo={returnTo} />
-        <Button
-          variant="link"
-          className="self-center"
-          onClick={() => setKind(kind === "app" ? "backup" : "app")}
-        >
-          {words[kind].switchTo}
-        </Button>
-      </CardContent>
-      <CardFooter className="justify-center border-t text-sm text-muted-foreground">
+    <AuthCard
+      title={words[kind].title}
+      description={words[kind].description}
+      footer={
         <Link
           to="/sign-in"
           search={{ redirect: returnTo }}
-          className="font-medium text-blue-ink underline-offset-4 hover:underline"
+          className={footerLink}
         >
           Back to sign in
         </Link>
-      </CardFooter>
-    </Card>
+      }
+    >
+      <CodeStep key={kind} kind={kind} returnTo={returnTo} />
+      <Button
+        variant="link"
+        className="self-center"
+        onClick={() => setKind(kind === "app" ? "backup" : "app")}
+      >
+        {words[kind].switchTo}
+      </Button>
+    </AuthCard>
   )
 }

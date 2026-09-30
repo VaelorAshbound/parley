@@ -7,6 +7,7 @@ import { useId, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 
+import { authButton } from "./auth-card"
 import type { AuthConfig } from "./auth-config"
 import { oauthErrorMessage } from "./messages"
 
@@ -103,6 +104,7 @@ function SocialButtons({
           key={provider}
           variant="outline"
           size="lg"
+          className={authButton}
           disabled={leaving !== undefined}
           onClick={() => void continueWith(provider)}
           // The badge describes the button; its name stays the provider's.
