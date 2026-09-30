@@ -144,6 +144,90 @@ describe("the AI's questionnaire", () => {
       .toEqual({ term: ["2y"], hasSigner: ["yes"], signer: ["Bo Chen"] })
   })
 
+  test("a question with only a text box takes typing as it appears", async () => {
+    const { screen, onAnswer } = await show()
+    await pick(screen, "b", "Do you know who signs for Northwind?")
+    await pick(screen, "a", "Who signs for Northwind?")
+
+    // No click: the box has the cursor already (T36 lost these keys).
+    await expect
+      .element(
+        screen.getByRole("textbox", { name: "Who signs for Northwind?" })
+      )
+      .toHaveFocus()
+    await userEvent.keyboard("Bo Chen{Enter}")
+    await expect
+      .element(screen.getByRole("group", { name: set.questions[3]?.prompt }))
+      .toBeVisible()
+    await screen.getByRole("button", { name: "Skip" }).click()
+
+    await expect
+      .poll(() => onAnswer.mock.calls[0]?.[0])
+      .toEqual({ term: ["2y"], hasSigner: ["yes"], signer: ["Bo Chen"] })
+  })
+
+  test("a first question with only a text box takes typing at once", async () => {
+    const typed: QuestionSet = {
+      title: "Deal parties",
+      questions: [
+        {
+          name: "company",
+          prompt: "What is your company called?",
+          required: true,
+          choices: [],
+          multiple: false,
+        },
+      ],
+    }
+    const onAnswer = vi.fn<(answers: Answers) => void>()
+    const screen = await render(
+      <AiQuestionnaire toolCallId="call-10" set={typed} onAnswer={onAnswer} />
+    )
+
+    await expect
+      .element(
+        screen.getByRole("textbox", { name: "What is your company called?" })
+      )
+      .toHaveFocus()
+    await userEvent.keyboard("Acme Robotics{Enter}")
+
+    await expect
+      .poll(() => onAnswer.mock.calls[0]?.[0])
+      .toEqual({ company: ["Acme Robotics"] })
+  })
+
+  test("a text box that takes the focus reads out its question's description", async () => {
+    const typed: QuestionSet = {
+      title: "Deal parties",
+      questions: [
+        {
+          name: "company",
+          prompt: "What is your company called?",
+          description: "The legal name, as it goes on the NDA.",
+          required: true,
+          choices: [],
+          multiple: false,
+        },
+      ],
+    }
+    const screen = await render(
+      <AiQuestionnaire
+        toolCallId="call-11"
+        set={typed}
+        onAnswer={vi.fn<(answers: Answers) => void>()}
+      />
+    )
+
+    // Focus skips the group, so the box itself must carry the description.
+    const box = screen.getByRole("textbox", {
+      name: "What is your company called?",
+    })
+    await expect.element(box).toHaveFocus()
+    await expect
+      .element(box)
+      .toHaveAccessibleDescription("The legal name, as it goes on the NDA.")
+  })
+
   test("takes another answer typed in the Other row", async () => {
     const { screen, onAnswer } = await show()
     await pick(screen, "a", "Do you know who signs for Northwind?")
