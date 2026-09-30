@@ -193,3 +193,6 @@ T36 done as a workflow wave: PAR-29 and PAR-6 fixed in worktrees and merged (e32
 
 ### 2026-09-30T16:08:25Z
 Owner: the Claude in Chrome gap in T36 is accepted. Polar sandbox checked by the owner: the deleted QA Pro account's customer is anonymized and its subscription is no longer active (only the owner's own 'testing' subscription is active). Nothing left from T36 for the owner. Next: PAR-32, then Checkpoint 7.
+
+### 2026-09-30T18:08:51Z
+QA-fixes wave merged (4 lanes): PAR-30, 32, 33, 34, 35, 36, 37, 38, 39, 41 done; PAR-40, 42 get the owner's choices next. Fixed after merge: an old Worker test broken by PAR-9, and a timing bug in the PAR-33 test. Gate after merge (e87c0ca): pnpm check pass; pnpm test 105/105 files x3; test:workers 448 passed; e2e chromium+firefox+both phone projects 280 passed, 22 skipped, 0 failed. Filed PAR-46 (Enter while busy), PAR-47 (mark stopped replies). Owner decisions logged on PAR-33..45. Next: follow-up wave PAR-40+42, PAR-44, PAR-45; then Checkpoint 7.

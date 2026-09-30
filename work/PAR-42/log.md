@@ -3,3 +3,9 @@ Created.
 
 ### 2026-09-30T16:11:02Z
 phase: backlog -> build
+
+### 2026-09-30T17:56:14Z
+Owner decision: 2-line clamp for the marker value, full value on hover and in the accessible name. Follow-up wave.
+
+### 2026-09-30T18:08:51Z
+First fix merged in the QA-fixes wave. Gate after merge (e87c0ca): pnpm check pass; pnpm test 105/105 files x3; test:workers 448 passed; e2e chromium+firefox+both phone projects 280 passed, 22 skipped, 0 failed. The owner's choice is next (see the decision above).

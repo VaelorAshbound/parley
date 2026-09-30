@@ -3,11 +3,11 @@ id: PAR-34
 title: >-
   Chat jumps to the top when a send is refused by the daily limit, so the limit
   notice is off screen
-phase: build
+phase: done
 priority: medium
 origin: PAR-1
 created: 2026-09-30T15:59:40Z
-updated: 2026-09-30T16:11:02Z
+updated: 2026-09-30T18:08:51Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). Report: work/PAR-1/qa.md.
