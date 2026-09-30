@@ -68,6 +68,10 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       // left the cursor in the reply box (T36).
       await expect(page.getByRole("textbox", { name: "Message" })).toBeFocused()
       await page.keyboard.type("We share our roadmap with a vendor.")
+      // The reply's text can show before its turn ends, and Enter does
+      // nothing while Parley answers: wait for Send, as a person would
+      // (PAR-30).
+      await expect(page.getByRole("button", { name: "Send" })).toBeEnabled()
       await page.keyboard.press("Enter")
       const undo = page.getByRole("button", { name: "Undo Purpose" })
       await expect(undo).toBeVisible()
