@@ -88,6 +88,11 @@
   --text-title--line-height: 1.04;
   --text-title--letter-spacing: -0.024em;
   --text-title--font-weight: 400;
+  /* Title on phones: 46 px would break most auth and Settings headings. */
+  --text-title-sm: 2.375rem;
+  --text-title-sm--line-height: 1.04;
+  --text-title-sm--letter-spacing: -0.024em;
+  --text-title-sm--font-weight: 400;
   --text-question: 1.3125rem;
   --text-question--line-height: 1.25;
   --text-question--letter-spacing: -0.01em;
