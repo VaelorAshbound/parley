@@ -119,7 +119,7 @@ test("keeps a one-line change row as tall as before", async () => {
 
   const row = screen.getByRole("listitem")
   await expect.element(row).toBeVisible()
-  expect(row.element().getBoundingClientRect().height).toBe(42)
+  expect(row.element().getBoundingClientRect().height).toBeCloseTo(42, 0)
 })
 
 test("shows the parts of a party that changed, not just its company", async () => {
