@@ -180,9 +180,11 @@ fresh("changing the password, then signing in with it", async ({ page }) => {
   await expect(page.getByText("Password changed.")).toBeVisible()
 
   await page.getByRole("button", { name: /Ana Tester/ }).click()
-  const reload = page.waitForEvent("framenavigated")
   await page.getByRole("menuitem", { name: "Sign out" }).click()
-  await reload
+  // Signing out loads the start page afresh. A goto made before it has
+  // loaded is aborted by Firefox (NS_BINDING_ABORTED), so wait for it.
+  await page.waitForURL((url) => url.pathname === "/")
+  await page.locator("html[data-hydrated]").waitFor({ state: "attached" })
   await open(page, "/sign-in")
   await signIn(page, email, newPassword)
 })
