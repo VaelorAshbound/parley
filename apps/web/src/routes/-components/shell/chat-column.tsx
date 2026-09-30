@@ -8,12 +8,14 @@ import {
   PanelRightCloseIcon,
   PanelRightOpenIcon,
 } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 import { ChatPanel } from "@/features/chat/chat-panel"
 import { chatTransport } from "@/features/chat/transport"
 import { DraftMenu } from "@/features/drafts/draft-menu"
 import type { ChatMessage } from "@/server/ai/chat"
+
+import { ReopenCard } from "./reopen-card"
 
 // The middle column (spec §1 Layout): the draft's title, the conversation,
 // and the reply box with the demo note under it.
@@ -30,6 +32,7 @@ export function ChatColumn({
 }) {
   const { orpc, viewer } = useRouteContext({ from: "/_app/d/$draftId" })
   const [transport] = useState(() => chatTransport(orpc))
+  const toggle = useRef<HTMLAnchorElement>(null)
 
   return (
     <section aria-label="Chat" className="flex h-full min-w-0 flex-col">
@@ -56,6 +59,7 @@ export function ChatColumn({
           </DraftMenu>
         </h1>
         <Link
+          ref={toggle}
           to="."
           search={(prev) => ({
             ...prev,
@@ -70,6 +74,14 @@ export function ChatColumn({
           {panelOpen ? <PanelRightCloseIcon /> : <PanelRightOpenIcon />}
         </Link>
       </header>
+      {/* The way back to a closed document (spec §1). Its button goes with
+          the card, so focus lands on the header's toggle, now "Close
+          document", instead of the top of the page. */}
+      <ReopenCard
+        panelOpen={panelOpen}
+        documentId={draft.documentId}
+        onOpen={() => toggle.current?.focus()}
+      />
       {/* A failure in the chat never takes the page down with it (spec §5
           Routing); another draft starts clean. */}
       <CatchBoundary
