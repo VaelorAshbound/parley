@@ -1,11 +1,11 @@
 ---
 id: PAR-44
 title: "Document panel: no 'expand to full width' and no card in the chat to reopen it (spec §1)"
-phase: backlog
+phase: build
 priority: low
 origin: PAR-1
 created: 2026-09-30T15:59:40Z
-updated: 2026-09-30T15:59:40Z
+updated: 2026-09-30T18:09:53Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). Report: work/PAR-1/qa.md.
