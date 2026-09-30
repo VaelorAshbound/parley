@@ -570,6 +570,48 @@ describe("a chat turn", () => {
       })
   })
 
+  it("saves no empty bubble when the reader goes away before the first word (PAR-33)", async () => {
+    const { cookie } = await signInGuest()
+    const model = new MockLanguageModelV4({
+      doStream: async ({ abortSignal }) => ({
+        // A text begun, with no word in it yet, when the page goes away.
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "text-start", id: "t" })
+            abortSignal?.addEventListener("abort", () =>
+              controller.error(abortSignal.reason)
+            )
+          },
+        }),
+      }),
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const tab = new AbortController()
+    const stream = await client.chat.send(
+      { id: draft.id, message: say("Hello?"), today },
+      { signal: tab.signal }
+    )
+    const iterator = stream[Symbol.asyncIterator]()
+    for (;;) {
+      const { value, done } = await iterator.next()
+      if (done || (value as { type?: string }).type === "text-start") break
+    }
+
+    tab.abort()
+    // Long enough for the save's copy of the stream to end.
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    await settle()
+
+    // Nothing to show: the chat ends with the question, and a later visit
+    // offers Try again instead of a blank bubble.
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user"])
+  })
+
   it("refuses a message over 4,000 characters without calling the model", async () => {
     const { cookie } = await signInGuest()
     const model = scriptedModel([[{ text: "Hi." }]])
