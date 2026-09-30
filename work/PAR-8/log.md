@@ -36,3 +36,6 @@ CI 36637331506 (cd4e517): Chromium first-run.spec.ts:70 'the start page doesn't 
 
 ### 2026-09-30T17:40:48Z
 Seen in the QA-fixes wave: (1) a fresh worktree's first 'pnpm test' fails from Vite 'optimized dependencies changed. reloading' (import errors, sometimes real-looking failures in share-menu); adding the found deps to optimizeDeps.include in the browser project may fix it. (2) e2e a11y 'dark @phone settings is accessible' failed once in Firefox (axe aria-toggle-field-name on a Base UI toggle), then passed 6/6.
+
+### 2026-09-30T20:42:41Z
+Visual baselines depend on .dev.vars: with GOOGLE_/GITHUB_CLIENT_* set, sign-in shows OAuth buttons and its baseline no longer matches CI (fixed in the next commit after a844490). Take visual baselines with those lines removed, or make scripts/e2e-docker.sh unset them.
