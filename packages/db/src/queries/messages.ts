@@ -19,8 +19,25 @@ export async function listMessages(
   db: Db,
   key: DraftKey
 ): Promise<StoredMessage[]> {
+  const messages = await listSavedMessages(db, key)
+  return messages.map(({ id, role, parts }) => ({ id, role, parts }))
+}
+
+/**
+ * The chat with when each message was first saved: how old the last turn
+ * is tells a page whether Parley can still be answering it (PAR-33).
+ */
+export async function listSavedMessages(
+  db: Db,
+  key: DraftKey
+): Promise<(StoredMessage & { savedAt: Date })[]> {
   return db
-    .select({ id: message.id, role: message.role, parts: message.parts })
+    .select({
+      id: message.id,
+      role: message.role,
+      parts: message.parts,
+      savedAt: message.createdAt,
+    })
     .from(message)
     .innerJoin(draft, eq(draft.id, message.draftId))
     .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))

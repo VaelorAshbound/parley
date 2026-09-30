@@ -20,7 +20,24 @@ type Part =
 type Step = ({ text: string } | { tool: string; input: unknown })[]
 
 /** The scripts, each for the messages its phrase matches. */
-export const scripts: { when: RegExp; steps: Step[] }[] = [
+export const scripts: {
+  when: RegExp
+  steps: Step[]
+  /** Time between the stream's chunks; 20 ms unless a test needs a slow turn. */
+  chunkDelayInMs?: number
+}[] = [
+  {
+    // A turn slow enough to reload the page in the middle of (PAR-33):
+    // the first sentence, then a second a few seconds later.
+    when: /\bslow reply\b/i,
+    chunkDelayInMs: 1000,
+    steps: [
+      [
+        { text: "Here is the slow reply, saved while you were away." },
+        { text: " It goes on after the reload." },
+      ],
+    ],
+  },
   {
     // Stories 1, 2 and 5: picks an agreement, fills a field (a change with
     // Undo), and explains.
@@ -114,7 +131,10 @@ export const scripts: { when: RegExp; steps: Step[] }[] = [
 
 const fallback: Step[] = [[{ text: "I'm a scripted reply for tests." }]]
 
-function nextStep(prompt: Options["prompt"]): Step {
+function nextStep(prompt: Options["prompt"]): {
+  step: Step
+  chunkDelayInMs: number
+} {
   const lastUser = prompt.findLastIndex((message) => message.role === "user")
   const user = prompt[lastUser]
   const text =
@@ -123,14 +143,14 @@ function nextStep(prompt: Options["prompt"]): Step {
           .flatMap((part) => (part.type === "text" ? [part.text] : []))
           .join(" ")
       : ""
-  const { steps } = scripts.find(({ when }) => when.test(text)) ?? {
-    steps: fallback,
-  }
+  const { steps, chunkDelayInMs = 20 } = scripts.find(({ when }) =>
+    when.test(text)
+  ) ?? { steps: fallback }
   const played = prompt
     .slice(lastUser + 1)
     .filter((message) => message.role === "assistant").length
   // Past the end: the script is done, so the turn ends with no more calls.
-  return steps[played] ?? [{ text: "Done." }]
+  return { step: steps[played] ?? [{ text: "Done." }], chunkDelayInMs }
 }
 
 function toParts(step: Step): Part[] {
@@ -156,12 +176,12 @@ export function scriptedModel(): MockLanguageModelV4 {
   return new MockLanguageModelV4({
     modelId: "scripted",
     doStream: async ({ prompt }) => {
-      const step = nextStep(prompt)
+      const { step, chunkDelayInMs } = nextStep(prompt)
       const calls = step.some((part) => "tool" in part)
       return {
         stream: simulateReadableStream({
           // A little delay, so the UI's streaming states show as they would.
-          chunkDelayInMs: 20,
+          chunkDelayInMs,
           chunks: [
             ...toParts(step),
             {

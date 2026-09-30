@@ -33,6 +33,7 @@ import { MessageParts, PlainText } from "./message-parts"
 import { forgetSettledQuestions } from "./ai-questionnaire"
 import { questionsAnswered } from "./transport"
 import { useDocumentSync } from "./use-document-sync"
+import { useUnfinishedTurn } from "./use-unfinished-turn"
 import { useUndo } from "./use-undo"
 
 // The conversation (spec §1 Middle: chat): the shadcn chat primitives, fed by
@@ -97,7 +98,25 @@ export function ChatPanel({
       })
     },
   })
-  const busy = status === "submitted" || status === "streaming"
+  // Loaded mid-reply (a reload): the reply shows once the server saves it.
+  const [unfinished, setUnfinished] = useUnfinishedTurn({
+    initialMessages,
+    load: () =>
+      queryClient.fetchQuery({
+        ...orpc.chat.messages.queryOptions({ input: { id: draftId } }),
+        staleTime: 0,
+      }),
+    onReply: (saved) => {
+      setMessages(saved)
+      void queryClient.invalidateQueries({ queryKey: orpc.drafts.list.key() })
+    },
+  })
+  const waiting = unfinished === "waiting"
+  const busy = status === "submitted" || status === "streaming" || waiting
+  const retry = () => {
+    setUnfinished(null)
+    void regenerate()
+  }
   // A limit reached (spec §2 Limits) says so, with the way past it.
   const limit = error ? limitProblem(error, `/d/${draftId}`) : null
   const pending = useUiStore((state) => state.pending)
@@ -163,7 +182,13 @@ export function ChatPanel({
                 <MessageScrollerItem
                   key={message.id}
                   messageId={message.id}
-                  scrollAnchor={message.role === "user"}
+                  // Only this visit's turns anchor. The scroller never marks
+                  // the turns there on load as handled, so a change that
+                  // keeps the item count (a note replacing "Thinking…")
+                  // scrolled to the first of them, the top (PAR-34).
+                  scrollAnchor={
+                    message.role === "user" && !loaded.has(message.id)
+                  }
                   // New messages rise in; the ones there on load don't move.
                   className={cn(!loaded.has(message.id) && "enter")}
                 >
@@ -201,7 +226,7 @@ export function ChatPanel({
                   )}
                 </MessageScrollerItem>
               ))}
-              {status === "submitted" && (
+              {(status === "submitted" || waiting) && (
                 <Marker render={<output />}>
                   <MarkerContent className="shimmer">Thinking…</MarkerContent>
                 </Marker>
@@ -211,7 +236,7 @@ export function ChatPanel({
                   problem={limit}
                   onRetry={limit.retry ? () => void regenerate() : undefined}
                 />
-              ) : error ? (
+              ) : error || unfinished === "lost" ? (
                 <Alert variant="destructive">
                   <AlertDescription className="flex items-center justify-between gap-3">
                     Parley couldn’t answer. Please try again.
@@ -219,7 +244,7 @@ export function ChatPanel({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => void regenerate()}
+                      onClick={retry}
                     >
                       Try again
                     </Button>
@@ -235,7 +260,8 @@ export function ChatPanel({
         <Composer
           busy={busy}
           onSend={send}
-          onStop={() => void stop()}
+          // Nothing to stop from here while another page's turn ends.
+          onStop={waiting ? undefined : () => void stop()}
           inputRef={reply}
         />
       </div>
