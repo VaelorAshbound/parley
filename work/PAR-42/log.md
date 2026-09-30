@@ -9,3 +9,6 @@ Owner decision: 2-line clamp for the marker value, full value on hover and in th
 
 ### 2026-09-30T18:08:51Z
 First fix merged in the QA-fixes wave. Gate after merge (e87c0ca): pnpm check pass; pnpm test 105/105 files x3; test:workers 448 passed; e2e chromium+firefox+both phone projects 280 passed, 22 skipped, 0 failed. The owner's choice is next (see the decision above).
+
+### 2026-09-30T19:32:41Z
+Owner OK: full value via the native title tooltip. Merged e66baa0; visual baselines 6bdbcd8.
