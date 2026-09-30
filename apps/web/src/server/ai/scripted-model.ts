@@ -27,10 +27,16 @@ export const scripts: {
   chunkDelayInMs?: number
 }[] = [
   {
-    // A turn slow enough to reload the page in the middle of (PAR-33).
+    // A turn slow enough to reload the page in the middle of (PAR-33):
+    // the first sentence, then a second a few seconds later.
     when: /\bslow reply\b/i,
     chunkDelayInMs: 1000,
-    steps: [[{ text: "Here is the slow reply, saved while you were away." }]],
+    steps: [
+      [
+        { text: "Here is the slow reply, saved while you were away." },
+        { text: " It goes on after the reload." },
+      ],
+    ],
   },
   {
     // Stories 1, 2 and 5: picks an agreement, fills a field (a change with
