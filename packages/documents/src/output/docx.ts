@@ -258,13 +258,14 @@ function line(each: RenderedLine) {
     each.checked === undefined
       ? []
       : [new TextRun({ text: `${each.checked ? "☒" : "☐"} `, font: SYMBOLS })]
-  // Nothing filled in: a checklist part is its box and label, any other line
-  // just "None." (PAR-40).
+  // Nothing filled in: a checklist part is its box and label; any other line
+  // is "None.", after its label if it has one (PAR-40).
   const none = isNoneLine(each)
+  const checklist = each.checked !== undefined
   const label = each.label
     ? [
         new TextRun({
-          text: none ? each.label : `${each.label}: `,
+          text: none && checklist ? each.label : `${each.label}: `,
           font: SANS,
           size: 17,
           color: INK_2,
@@ -277,7 +278,7 @@ function line(each: RenderedLine) {
       ...label,
       ...(!none
         ? each.parts.flatMap(part)
-        : each.label
+        : checklist
           ? []
           : runs(NONE, { color: BLUE_INK })),
     ],

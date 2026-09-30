@@ -158,20 +158,19 @@ function line(each: RenderedLine) {
   const box =
     each.checked === undefined ? "" : each.checked ? BOX_CHECKED : BOX_EMPTY
   const unchosen = each.checked === false ? " unchosen" : ""
-  // Nothing filled in: a checklist part is its box and label, any other line
-  // just "None." (PAR-40).
-  if (isNoneLine(each))
+  // Nothing filled in: a checklist part is its box and label; any other line
+  // is "None.", after its label if it has one (PAR-40).
+  if (isNoneLine(each) && each.checked !== undefined)
     return `<p class="line${unchosen}">${box}${
-      each.label
-        ? `<span class="label">${escape(each.label)}</span>`
-        : `<span class="value">${NONE}</span>`
+      each.label ? `<span class="label">${escape(each.label)}</span>` : ""
     }</p>`
   const label = each.label
     ? `<span class="label">${escape(each.label)}:</span> `
     : ""
-  return `<p class="line${unchosen}">${box}${label}${each.parts
-    .map(part)
-    .join("")}</p>`
+  const body = isNoneLine(each)
+    ? `<span class="value">${NONE}</span>`
+    : each.parts.map(part).join("")
+  return `<p class="line${unchosen}">${box}${label}${body}</p>`
 }
 
 // Drawn, not typed: Browser Run's fonts may lack ☒ and ☐ (T2).
