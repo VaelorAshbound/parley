@@ -323,29 +323,42 @@ async function reply({
     ...metrics.callbacks,
   })
 
-  return streamToEventIterator(
-    toUIMessageStream<typeof tools, ChatMessage>({
-      stream: result.stream,
-      tools,
-      // Ending with the assistant's message (after answers), the reply
-      // continues that message instead of starting a new one: the whole
-      // stored one, not the model's trimmed view, or the save would cut it.
-      originalMessages: all,
-      generateMessageId: () => crypto.randomUUID(),
-      onEnd: ({ responseMessage }) => {
-        metrics.close()
-        // After the response too: the save outlives a closed tab. A failure
-        // is logged here: uncaught, Workers would log Drizzle's message,
-        // which holds the whole reply.
-        context.waitUntil(
-          saveMessages(context.db, key, [responseMessage]).catch(
-            (error: unknown) =>
-              logError("chat_save_failed", error, { draftId: key.id })
-          )
+  const [toPage, toSave] = toUIMessageStream<typeof tools, ChatMessage>({
+    stream: result.stream,
+    tools,
+    // Ending with the assistant's message (after answers), the reply
+    // continues that message instead of starting a new one: the whole
+    // stored one, not the model's trimmed view, or the save would cut it.
+    originalMessages: all,
+    generateMessageId: () => crypto.randomUUID(),
+    onEnd: ({ responseMessage }) => {
+      metrics.close()
+      // A turn stopped before Parley wrote anything leaves nothing to
+      // keep: an empty reply would show as a blank bubble, not Try again.
+      if (responseMessage.parts.every((part) => part.type === "step-start"))
+        return
+      // After the response too: the save outlives a closed tab. A failure
+      // is logged here: uncaught, Workers would log Drizzle's message,
+      // which holds the whole reply.
+      context.waitUntil(
+        saveMessages(context.db, key, [responseMessage]).catch(
+          (error: unknown) =>
+            logError("chat_save_failed", error, { draftId: key.id })
         )
-      },
+      )
+    },
+  }).tee()
+  // The save reads its own copy to the end, so a page that leaves (a
+  // reload) still gets the reply so far saved: the signal stops the model,
+  // its stream ends, and onEnd runs. Read only by the page, the stream just
+  // stopped, and nothing was saved (PAR-33).
+  // https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-message-persistence#handling-client-disconnects
+  context.waitUntil(
+    toSave.pipeTo(new WritableStream()).catch(() => {
+      // Its failure is the page's too, and logged by onError.
     })
   )
+  return streamToEventIterator(toPage)
 }
 
 const turn = z.object({
