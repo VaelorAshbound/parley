@@ -8,6 +8,12 @@ import type { ChatMessage } from "@/server/ai/chat"
 // stream store, https://ai-sdk.dev/docs/ai-sdk-ui/chatbot-resume-streams),
 // so the page reads the saved chat again until the reply is in it. A turn
 // that never ends (the server stopped) is said so, with Try again.
+//
+// Only a turn young enough to still be running is waited for: a chat can
+// end with the user's message for good (a provider error or a Stop before
+// Parley's first word), and a later visit must not sit on "Thinking…". A
+// message with no save time (the page's own copy, not the server's) can't
+// be proven young, so it isn't waited for either.
 
 /** How often the saved chat is read, and for how long. */
 export const UNFINISHED = { everyMs: 1500, giveUpAfterMs: 60_000 }
@@ -28,8 +34,20 @@ export function useUnfinishedTurn({
   onReply: (messages: ChatMessage[]) => void
   timing?: typeof UNFINISHED
 }): [UnfinishedTurn, (state: UnfinishedTurn) => void] {
+  // What is left of the turn's time, from when its message was saved. The
+  // server's clock against this one: a skew only moves the wait's end.
+  const [left] = useState(() => {
+    const last = initialMessages.at(-1)
+    if (last?.role !== "user") return null
+    const savedAt = last.metadata?.savedAt
+    if (savedAt === undefined) return 0
+    return Math.min(
+      timing.giveUpAfterMs,
+      savedAt + timing.giveUpAfterMs - Date.now()
+    )
+  })
   const [state, setState] = useState<UnfinishedTurn>(() =>
-    initialMessages.at(-1)?.role === "user" ? "waiting" : null
+    left === null ? null : left > 0 ? "waiting" : "lost"
   )
   // Not dependencies: a new callback mustn't restart the wait.
   // https://react.dev/reference/react/useEffectEvent
@@ -40,7 +58,7 @@ export function useUnfinishedTurn({
     if (state !== "waiting") return
     let stopped = false
     let timer: ReturnType<typeof setTimeout> | undefined
-    const deadline = Date.now() + timing.giveUpAfterMs
+    const deadline = Date.now() + (left ?? 0)
     const check = async () => {
       // A failed read counts as "not yet"; the next tick reads again.
       const saved = await read().catch(() => null)
@@ -61,7 +79,7 @@ export function useUnfinishedTurn({
       stopped = true
       clearTimeout(timer)
     }
-  }, [state, timing])
+  }, [state, timing, left])
 
   return [state, setState]
 }

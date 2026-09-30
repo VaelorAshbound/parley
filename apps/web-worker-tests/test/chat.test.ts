@@ -115,6 +115,10 @@ describe("a chat turn", () => {
     })
     const reply = await client.chat.messages({ id: draft.id })
     expect(reply.map((message) => message.role)).toEqual(["user", "assistant"])
+    // When each was saved: a page loaded mid-turn waits only for a young
+    // one (PAR-33).
+    for (const message of reply)
+      expect(message.metadata?.savedAt).toBeGreaterThan(Date.now() - 60_000)
   })
 
   it("drafts a whole NDA over two turns, ending with a complete document", async () => {
