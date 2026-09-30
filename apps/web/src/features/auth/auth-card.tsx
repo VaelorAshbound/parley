@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react"
+import type { ReactNode } from "react"
 
 // The card of every auth page (sign-in, sign-up, password, email, code),
 // in the start and pricing pages' Paper & Ink: a Newsreader title at the
@@ -20,16 +20,11 @@ export function AuthCard({
   /** The way to the other auth page ("New to Parley? Create an account"). */
   footer?: ReactNode
 }) {
-  const titleId = useId()
+  // A plain box, not a named region: the h1 already names the page, and a
+  // region named after it only repeats it (and matches its field labels).
   return (
-    <section
-      aria-labelledby={titleId}
-      className="flex flex-col rounded-2xl border bg-card px-6 py-8 text-card-foreground sm:p-10"
-    >
-      <h1
-        id={titleId}
-        className="font-serif text-title-sm text-balance sm:text-title"
-      >
+    <div className="flex flex-col rounded-2xl border bg-card px-6 py-8 text-card-foreground sm:p-10">
+      <h1 className="font-serif text-title-sm text-balance sm:text-title">
         {title}
       </h1>
       <p className="mt-3 text-body text-pretty wrap-anywhere text-ink-2">
@@ -44,7 +39,7 @@ export function AuthCard({
           {footer}
         </div>
       )}
-    </section>
+    </div>
   )
 }
 
