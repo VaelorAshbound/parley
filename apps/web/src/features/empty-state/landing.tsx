@@ -58,7 +58,9 @@ export function Landing({
               </Badge>
             )}
             <h1 className="mt-6 font-serif text-[2.75rem] leading-[1.02] font-normal tracking-[-0.03em] text-balance md:mt-7 md:text-6xl lg:text-[4.75rem] lg:leading-[0.98] lg:tracking-[-0.032em]">
-              Describe the deal. Watch the contract{" "}
+              {/* One text node with its space: Chromium's accessibility
+                  tree drops a lone " " before the <em> (PAR-41). */}
+              {"Describe the deal. Watch the contract "}
               <em className="hero-marker -mx-1.5 px-1.5 text-blue-ink">
                 fill itself in.
               </em>
@@ -137,7 +139,7 @@ export function Landing({
               id="library-title"
               className="font-serif text-4xl leading-[1.04] font-normal tracking-[-0.024em] text-balance md:text-[2.875rem]"
             >
-              Eleven agreements.{" "}
+              {"Eleven agreements. "}
               <em className="text-blue-ink">One conversation.</em>
             </h2>
             <p className="leading-relaxed text-pretty text-ink-2">

@@ -81,7 +81,14 @@ export function DraftHistory({
                     draft={draft}
                     orpc={orpc}
                     canDuplicate={isAccount}
-                    render={<SidebarMenuAction showOnHover />}
+                    // 24 px, the smallest target WCAG 2.5.8 allows (the
+                    // default is 20), centred on the 32 px row.
+                    render={
+                      <SidebarMenuAction
+                        showOnHover
+                        className="top-1 size-6 peer-data-[size=default]/menu-button:top-1"
+                      />
+                    }
                     label={`More for ${draft.title}`}
                   >
                     <MoreHorizontalIcon />

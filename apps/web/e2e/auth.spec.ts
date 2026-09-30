@@ -134,9 +134,12 @@ fresh("signing out and back in", async ({ page }) => {
   await hydrated(page)
   await page.getByLabel("Email").fill(email)
   await page.getByLabel("Password", { exact: true }).fill("wrong password 1")
-  // Email was used last on this browser: its button says so.
-  const signIn = /^Sign in Last used$/
-  await page.getByRole("button", { name: signIn }).click()
+  // Email was used last on this browser: its button says so, as its
+  // description (its name stays "Sign in", PAR-41).
+  const signIn = "Sign in"
+  const button = page.getByRole("button", { name: signIn, exact: true })
+  await expect(button).toHaveAccessibleDescription("Last used")
+  await button.click()
   await expect(
     page.getByText("That email and password don’t match.")
   ).toBeVisible()
