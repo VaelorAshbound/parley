@@ -145,6 +145,30 @@ test("starts one draft when Start comes faster than React renders (PAR-39)", asy
   expect(onSend).toHaveBeenCalledOnce()
 })
 
+test("can start again after a start that changed nothing, once the text is edited (PAR-39)", async () => {
+  // A start page whose start did nothing (no busy, no page change): the
+  // guard mustn't stay shut with no render to open it.
+  const onSend = vi.fn<(text: string) => void>()
+  const screen = await render(
+    <Composer
+      variant="start"
+      label="Describe your deal"
+      busy={false}
+      onSend={onSend}
+    />
+  )
+  const box = screen.getByRole("textbox", { name: "Describe your deal" })
+  await userEvent.fill(box, "We share our roadmap")
+  await userEvent.keyboard("{Enter}")
+  expect(onSend).toHaveBeenCalledOnce()
+
+  await userEvent.type(box, " with a vendor.")
+  await userEvent.keyboard("{Enter}")
+
+  expect(onSend).toHaveBeenLastCalledWith("We share our roadmap with a vendor.")
+  expect(onSend).toHaveBeenCalledTimes(2)
+})
+
 test("keeps what was typed before the page hydrated, and sends it", async () => {
   const onSend = vi.fn<(text: string) => void>()
   const box = (

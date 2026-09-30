@@ -32,6 +32,11 @@ export function Composer({
   inputRef,
 }: {
   busy: boolean
+  /**
+   * Must lead to a render (the reply box clears itself; the start page sets
+   * `busy` or leaves): the next send waits for one (PAR-39). A send that
+   * changes nothing sends again once the text is edited.
+   */
   onSend: (text: string) => void
   onStop?: () => void
   placeholder?: string
