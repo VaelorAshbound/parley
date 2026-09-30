@@ -583,7 +583,8 @@
   @apply font-serif;
   border-width: 0 0 1px;
   border-radius: 0;
-  border-color: var(--input);
+  /* The line is the box's only edge: ink-3 keeps it above 3:1 (WCAG 1.4.11). */
+  border-color: var(--ink-3);
   background-color: transparent;
   box-shadow: none;
   padding-inline: 0;

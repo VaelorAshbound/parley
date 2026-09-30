@@ -261,5 +261,9 @@ describe("the inline editor", () => {
       expect(style.borderTopWidth).toBe("0px")
       expect(style.fontFamily).toMatch(/^"?Newsreader/)
     }
+    // The line is each box's only edge, so at rest it is drawn in ink-3
+    // (5.2:1), not the faint rule colour (WCAG 1.4.11 asks 3:1).
+    const email = screen.getByRole("textbox", { name: "Email" }).element()
+    expect(getComputedStyle(email).borderBottomColor).toBe("rgb(106, 102, 93)")
   })
 })
