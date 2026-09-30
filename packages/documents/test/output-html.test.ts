@@ -54,13 +54,52 @@ describe("toPrintHtml", () => {
     expect(html).toContain('<span class="value missing">[Purpose]</span>')
   })
 
-  it("prints an empty optional field blank, never as its [placeholder]", () => {
-    // T36: a finished NDA printed "[MNDA modifications]" in the PDF.
+  it("prints an empty optional field as None. under its heading, never as its [placeholder]", () => {
+    // T36: a finished NDA printed "[MNDA modifications]" in the PDF. The
+    // owner chose "None." over a blank (PAR-40).
     const { modifications: _left, ...values } = examples["mutual-nda"]
     const html = toPrintHtml(render(nda, nda.schema.parse(values)))
 
     expect(html).not.toContain("[MNDA modifications]")
-    expect(wordsOf(html)).toContain("MNDA Modifications")
+    expect(wordsOf(html)).toContain("MNDA Modifications None.")
+  })
+
+  it("prints an empty optional field as None. without its template's words", () => {
+    // PAR-40: "Security Policy available at None." reads as a broken link.
+    const psa = definitions.psa
+    const { securityPolicy: _left, ...values } = examples.psa
+    const words = wordsOf(toPrintHtml(render(psa, psa.schema.parse(values))))
+
+    expect(words).toContain("Security Policy None.")
+    expect(words).not.toContain("available at None.")
+  })
+
+  it("prints an empty optional field on a labelled line as Label: None.", () => {
+    // PAR-40 review: a labelled line that is not a checklist printed a bare
+    // "Travel and expenses" with nothing after it.
+    const psa = definitions.psa
+    const { travelExpenses: _left, ...values } = examples.psa
+    const html = toPrintHtml(render(psa, psa.schema.parse(values)))
+
+    expect(wordsOf(html)).toContain("Travel and expenses: None.")
+    expect(html).toContain(
+      '<span class="label">Travel and expenses:</span> <span class="value">None.</span>'
+    )
+  })
+
+  it("prints an empty part of a checklist as its label alone, no dangling colon", () => {
+    // PAR-40: "☐ Events logging: " read as a value left out.
+    const dpa = definitions.dpa
+    const words = wordsOf(
+      toPrintHtml(render(dpa, dpa.schema.parse(examples.dpa)))
+    )
+
+    expect(words).toContain(" Events logging ")
+    expect(words).not.toMatch(/Events logging:/)
+    expect(words).not.toMatch(/Events logging None\./)
+    expect(words).toContain(
+      "Protecting Customer Personal Data during transmission (in transit): All traffic uses TLS 1.2 or newer."
+    )
   })
 
   it("prints a choice as ticked and empty boxes, drawn so no font can lack them", () => {

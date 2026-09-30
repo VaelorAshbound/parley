@@ -43,14 +43,19 @@ test("names a change by its field and shows the value in the document's words", 
   )
 })
 
-test("shows the whole new value at a narrow width, and names the row by it", async () => {
+test("clamps a long value to two lines, and gives the whole of it on hover and in the row's name", async () => {
   // T36: at 375 px the row read "Purpose → Sharing our pro...", and its
-  // accessible name was the field's hint.
+  // accessible name was the field's hint. The owner chose a 2-line clamp,
+  // with the full value on hover and in the name (PAR-42).
   const purpose =
-    "Sharing our product roadmap to evaluate a possible distribution partnership in Europe."
+    "Sharing our product roadmap to evaluate a possible distribution partnership in Europe, and the pricing that goes with it."
   const screen = await renderWithStore(
     <div style={{ width: 320 }}>
-      <MessageParts parts={[changed("purpose", purpose)]} definition={nda} />
+      <MessageParts
+        parts={[changed("purpose", purpose)]}
+        definition={nda}
+        onUndo={() => {}}
+      />
     </div>
   )
 
@@ -59,10 +64,62 @@ test("shows the whole new value at a narrow width, and names the row by it", asy
   })
   await expect.element(row).toBeVisible()
   const value = screen.getByText(purpose).element()
+  expect(value.getAttribute("title")).toBe(purpose)
+  const line = parseFloat(getComputedStyle(value).lineHeight)
+  expect(value.clientHeight).toBeLessThanOrEqual(2 * line + 1)
+  expect(value.scrollHeight).toBeGreaterThan(value.clientHeight)
   expect(value.scrollWidth).toBeLessThanOrEqual(value.clientWidth)
   expect(value.getBoundingClientRect().right).toBeLessThanOrEqual(
     row.element().getBoundingClientRect().right
   )
+})
+
+test("lines the icon, the field and Undo up with the value's first line", async () => {
+  // PAR-42: centered on a two-line value, they floated between its lines.
+  const purpose =
+    "Sharing our product roadmap to evaluate a possible distribution partnership in Europe."
+  const screen = await renderWithStore(
+    <div style={{ width: 320 }}>
+      <MessageParts
+        parts={[changed("purpose", purpose)]}
+        definition={nda}
+        onUndo={() => {}}
+      />
+    </div>
+  )
+
+  const value = screen.getByText(purpose).element()
+  await expect.element(value).toBeVisible()
+  const box = value.getBoundingClientRect()
+  const line = parseFloat(getComputedStyle(value).lineHeight)
+  expect(box.height).toBeGreaterThan(line * 1.5)
+  const firstLine = box.top + line / 2
+  const middle = (element: Element) => {
+    const { top, height } = element.getBoundingClientRect()
+    return top + height / 2
+  }
+  const row = screen.getByRole("listitem").element()
+  const icon = row.querySelector("[data-slot=marker-icon]")
+  expect(icon).not.toBeNull()
+  expect(Math.abs(middle(icon!) - firstLine)).toBeLessThanOrEqual(1.5)
+  const field = screen.getByText("Purpose", { exact: true }).element()
+  expect(Math.abs(middle(field) - firstLine)).toBeLessThanOrEqual(1.5)
+  const undo = screen.getByRole("button", { name: "Undo Purpose" }).element()
+  expect(Math.abs(middle(undo) - firstLine)).toBeLessThanOrEqual(1.5)
+})
+
+test("keeps a one-line change row as tall as before", async () => {
+  const screen = await renderWithStore(
+    <MessageParts
+      parts={[changed("purpose", "Hiring.")]}
+      definition={nda}
+      onUndo={() => {}}
+    />
+  )
+
+  const row = screen.getByRole("listitem")
+  await expect.element(row).toBeVisible()
+  expect(row.element().getBoundingClientRect().height).toBeCloseTo(42, 0)
 })
 
 test("shows the parts of a party that changed, not just its company", async () => {
