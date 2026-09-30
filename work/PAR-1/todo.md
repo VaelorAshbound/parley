@@ -971,7 +971,9 @@
   - Deps: T32 · Skills: `agent-browser`
 
 ### Checkpoint 7
-- [ ] All the quality gates are green. There are no open high-severity bugs.
+- [x] All the quality gates are green. There are no open high-severity bugs.
+  - Passed 2026-09-30 (owner). CI green on 7fff76a (E2E Chromium, component, Workers Builds). Local on 9cf8efc: check pass, unit 107/107 files, Worker tests 448, e2e 290 passed / 0 failed on Chromium, Firefox and both phone projects. No open high-severity bugs (PAR-32 fixed; PAR-18 is planned work before T38).
+  - Owner decision: the nightly run (6 browsers incl. WebKit, real export, Lighthouse, real services) is skipped here and runs at the next checkpoint.
 
 ---
 

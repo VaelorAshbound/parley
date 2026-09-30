@@ -199,3 +199,6 @@ QA-fixes wave merged (4 lanes): PAR-30, 32, 33, 34, 35, 36, 37, 38, 39, 41 done;
 
 ### 2026-09-30T20:31:07Z
 Follow-up wave merged: PAR-40, 42, 44, 45 done (owner OK on all calls). After merge fixed: CI component job (Vite dep scan stopped at cloudflare:workers, stub alias), stale visual baselines, auth card region name clashing with field labels, a Firefox sign-out race in account.spec. Gate after merge (9cf8efc): pnpm check pass; pnpm test 107/107 files; test:workers 448 passed; e2e chromium+firefox+both phone projects 290 passed, 22 skipped, 0 failed; visual baselines in Playwright's image 20/20. CI was red on 266aef1 and fe93597 (component reloads + draft visual baselines); both causes fixed in this push. Next: check CI, then Checkpoint 7, then PAR-18 before T38.
+
+### 2026-09-30T20:51:48Z
+Checkpoint 7 passed (owner, 2026-09-30): CI green on 7fff76a; local gates green; no open high-severity bugs. Nightly skipped by the owner; it runs at the next checkpoint. Next: PAR-18 (Polar daily reconcile) before T38, then T38 -> T39 -> T40.
