@@ -25,7 +25,7 @@ import { AppSidebar } from "./app-sidebar"
 // the Polar portal, which these tests don't open.
 vi.mock("@/lib/session", () => ({
   viewerQuery: { queryKey: ["viewer"] },
-  freshViewer: vi.fn(),
+  freshViewer: vi.fn<() => Promise<Viewer>>(),
 }))
 
 const account: Viewer = {
