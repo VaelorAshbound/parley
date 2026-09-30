@@ -184,3 +184,6 @@ Session: PAR-9, 11, 12, 22, 28 done and merged; PAR-16 merged, in verify (Previe
 
 ### 2026-09-29T22:37:14Z
 Session end. Finished: checked CI after the Stryker removal (install fixed at 1edebf1). UI coverage gate removed (owner; c77bbae): test:coverage:ui, UI thresholds, spec §6 row; component job still runs Chromium + Firefox. documents/db/server gates stay. CI green on c77bbae (Workers Builds, component 2m10s, e2e 7m04s). Checkpoints 3-5 ticked with evidence (b685e3a, local: owner pushes it with the next change). No wi items were done-but-open; the wave (PAR-9, 11, 12, 16, 22, 28) is closed. Flaky first-run:70 noted on PAR-8. Slowest e2e: two-factor.spec:107 at 45.7 s. Next: T36 (QA pass), Checkpoint 7, PAR-18, then T38-T40.
+
+### 2026-09-30T14:54:56Z
+Next session plan (owner, 2026-09-30): T36 QA pass, folding in PAR-29 (one-line drawer fix) and PAR-6 (sideways scroll + e2e) first, then the QA run; check PAR-30 and PAR-7 when QA reaches the chat. Touch PAR-20/21 screens in QA (already planned). Later: PAR-18 before T38; PAR-13/14/31/5/8 separate. 2 local commits (b685e3a + session log) go out with T36's first push.
