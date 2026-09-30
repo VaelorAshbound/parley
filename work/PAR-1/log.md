@@ -214,3 +214,6 @@ T38 scope (owner, 2026-09-30): core (domain, production config, Polar sandbox we
 
 ### 2026-09-30T21:15:14Z
 T38 deploy path (owner, 2026-09-30): merge PR #1 into main at the end of T38 (after headers, Polar production webhook + secrets, and production migrations 0001-0004 with owner OK), so Workers Builds deploys with the full gate and smoke.yml checks the live domain. T39/T40 then land on main.
+
+### 2026-09-30T22:02:20Z
+T38 step 5: production migrations 0002-0004 applied (owner OK); 5 rows in __drizzle_migrations, plan columns and counted_export present.
