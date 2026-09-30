@@ -957,7 +957,12 @@
   - Files: `lighthouserc.json`, `load/chat.k6.js`
   - Deps: T32 · Skills: `performance-optimization`, `cloudflare:web-perf`
 
-- [ ] **T36: Exploratory QA pass** (S)
+- [x] **T36: Exploratory QA pass** (S)
+  - Done 2026-09-30 as a workflow wave (`waves/wave-t36.js`): 3 QA agents on the Preview, while PAR-29 and PAR-6 were fixed in worktrees and merged (e321a6f, a5b3fe7). Report: `qa.md`. Skills: agent-browser, browser-testing-with-devtools (CDP script in place of the DevTools MCP, which was not in the session), web-design-guidelines, code-review-and-quality (fix reviews), test-driven-development, git-workflow-and-versioning, documentation-and-adrs.
+    - Filed PAR-32 (high: live document misses the first change), PAR-33 to PAR-35 (medium), PAR-36 to PAR-44 (low), PAR-45 (design notes). All planned in the backlog; PAR-32 blocks Checkpoint 7.
+    - Memory: no leak over 100 messages (heap 39.7 → 42.2 MB, listeners flat).
+    - Gate after merge: `pnpm check` pass; `pnpm test` 103/103 files, 1242 passed (the first 2 runs failed from a stale Vite cache after the new `optimizeDeps` setting; a true cold run passes); e2e no-sideways-scroll + shell + phone on Chromium, Firefox and both phone projects: 38 passed.
+    - Deviation: the Claude in Chrome feel check was not possible for agents; headless screenshots were judged instead. The owner does a short look in real Chrome.
   - Accept:
     - An agent-browser dogfood run over all the user journeys and edge cases. A Claude in Chrome check of the feel and layout at many sizes. A Chrome DevTools check for memory leaks over a 100-message chat.
     - Every bug found is filed as `wi new --origin PAR-1` and fixed or planned.
