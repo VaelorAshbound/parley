@@ -10,14 +10,15 @@ import { cn } from "@workspace/ui/lib/utils"
 import { ArrowRightIcon, ArrowUpIcon, SquareIcon } from "lucide-react"
 import { useEffect, useId, useRef, useState, type RefObject } from "react"
 
+import { MAX_MESSAGE } from "@/lib/limits"
+
 // The reply box (spec §1: the reply box at the bottom, the demo note under
 // it). Enter sends, Shift+Enter starts a new line; while Parley answers, the
 // button stops it. The start page's box is bigger and says what it does:
 // "Start drafting" (brand.md canvas, Main).
 
-export const MAX_MESSAGE = 4000
 /** Where the reply box starts counting: 90% of the limit. */
-const COUNT_FROM = 3600
+const COUNT_FROM = Math.round(MAX_MESSAGE * 0.9)
 /** "3,812", in the reader's own language. */
 const count = new Intl.NumberFormat()
 
