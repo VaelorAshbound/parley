@@ -10,7 +10,12 @@ import appCss from "@workspace/ui/globals.css?url"
 import { useEffect } from "react"
 import { fontPreloads } from "@workspace/ui/lib/fonts"
 
-import { NotFound, RouteError } from "./-components/states"
+import {
+  NotFound,
+  notFoundTitle,
+  RouteError,
+  showsNotFound,
+} from "./-components/states"
 
 import { ThemeProvider } from "@/components/theme-provider"
 import type { Orpc } from "@/lib/orpc"
@@ -18,11 +23,11 @@ import type { Orpc } from "@/lib/orpc"
 export type RouterContext = { queryClient: QueryClient; orpc: Orpc }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  head: () => ({
+  head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Parley" },
+      { title: showsNotFound(match) ? notFoundTitle : "Parley" },
       // Search results show it under the title (Lighthouse SEO, T35).
       {
         name: "description",

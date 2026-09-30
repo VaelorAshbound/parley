@@ -141,9 +141,16 @@ export function Composer({
           {start ? (
             <>
               {counter ?? (
-                <span className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground pointer-coarse:invisible">
+                // A hint for the eye: the button carries the shortcut
+                // (aria-keyshortcuts), so the group's name is never the hint
+                // run into the button. The space is in the text; the gap
+                // sets the look.
+                <span
+                  aria-hidden="true"
+                  className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground pointer-coarse:invisible"
+                >
                   <Kbd>Enter</Kbd>
-                  to start
+                  {" to start"}
                 </span>
               )}
               <InputGroupButton
@@ -153,6 +160,7 @@ export function Composer({
                 disabled={busy || tooLong}
                 focusableWhenDisabled
                 aria-busy={busy}
+                aria-keyshortcuts="Enter"
                 className="h-10 rounded-full pr-3.5 pl-4.5 text-[14.5px] data-disabled:opacity-50"
               >
                 Start drafting

@@ -57,7 +57,10 @@ export function listDraftsQuery(
   db: Db,
   { userId, query, documentId, after, limit = 50 }: ListOptions
 ) {
-  const terms = query === undefined ? null : prefixQuery(query)
+  // A blank search is no search; one with no words (an emoji, only
+  // punctuation) matches nothing, rather than every draft.
+  const terms =
+    query === undefined || query.trim() === "" ? null : prefixQuery(query)
   return db
     .select({
       id: draft.id,
@@ -72,7 +75,9 @@ export function listDraftsQuery(
         eq(draft.userId, userId),
         terms === null
           ? undefined
-          : sql`${draft.search} @@ to_tsquery('simple', ${terms})`,
+          : terms === false
+            ? sql`false`
+            : sql`${draft.search} @@ to_tsquery('simple', ${terms})`,
         documentId === undefined ? undefined : eq(draft.documentId, documentId),
         // A row comparison, so Postgres starts the page inside the index.
         after === undefined
@@ -94,12 +99,13 @@ export async function listDrafts(db: Db, options: ListOptions) {
 
 /**
  * A search box's text as a tsquery that matches every word from its start
- * ("acm bol" → `acm:* & bol:*`), or null when it has no words. Only letters
+ * ("acm bol" → `acm:* & bol:*`). Only letters
  * and digits get through, so nothing typed is read as tsquery syntax.
+ * False when the text has no words, so it can match nothing.
  */
 function prefixQuery(text: string) {
   const words = text.match(/[\p{L}\p{M}\p{N}]+/gu)
-  if (!words) return null
+  if (!words) return false
   return words
     .slice(0, 10)
     .map((word) => `${word}:*`)

@@ -7,6 +7,11 @@ import { z } from "zod"
 import { readCookie } from "@/lib/cookies"
 import { documentName } from "@/lib/documents"
 
+import {
+  NotFoundMessage,
+  notFoundTitle,
+  showsNotFound,
+} from "../-components/states"
 import { DraftWorkspace } from "../-components/shell/draft-workspace"
 import { defaultLayout, layoutCookie } from "../-components/shell/layout"
 
@@ -26,7 +31,12 @@ const layoutSchema = z.object({
 export const Route = createFileRoute("/_app/d/$draftId")({
   validateSearch: searchSchema,
   params: {
-    parse: ({ draftId }) => ({ draftId: z.uuid().parse(draftId) }),
+    // A link that can't be a draft is the same 404 as one that isn't yours.
+    parse: ({ draftId }) => {
+      const id = z.uuid().safeParse(draftId)
+      if (!id.success) throw notFound()
+      return { draftId: id.data }
+    },
     stringify: ({ draftId }) => ({ draftId }),
   },
   loader: async ({ context, params }) => {
@@ -54,8 +64,12 @@ export const Route = createFileRoute("/_app/d/$draftId")({
     )
     return { layout: saved.success ? saved.data : defaultLayout }
   },
-  head: () => ({ meta: [{ title: "Draft · Parley" }] }),
+  head: ({ match }) => ({
+    meta: [{ title: showsNotFound(match) ? notFoundTitle : "Draft · Parley" }],
+  }),
   component: DraftPage,
+  // Inside the app shell, so the sidebar stays.
+  notFoundComponent: NotFoundMessage,
   pendingComponent: DraftPending,
 })
 

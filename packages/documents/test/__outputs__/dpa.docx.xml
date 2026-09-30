@@ -2534,12 +2534,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Pseudonymization and encryption of personal data: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Pseudonymization and encryption of personal data]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2556,12 +2550,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">Ensuring ongoing confidentiality, integrity, availability, and resilience of processing systems and services: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Ensuring ongoing confidentiality, integrity, availability, and resilience of processing systems and services]</w:t>
 </w:r>
 </w:p>
 <w:p>
@@ -2603,12 +2591,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Regular testing, assessment, and evaluation of the effectiveness of technical and organizational measures used to secure Processing: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Regular testing, assessment, and evaluation of the effectiveness of technical and organizational measures used to secure Processing]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2625,12 +2607,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">User identification and authorization process and protection: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: User identification and authorization process and protection]</w:t>
 </w:r>
 </w:p>
 <w:p>
@@ -2695,12 +2671,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Physical security where Customer Personal Data is processed: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Physical security where Customer Personal Data is processed]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2717,12 +2687,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">Events logging: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Events logging]</w:t>
 </w:r>
 </w:p>
 <w:p>
@@ -2741,12 +2705,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Systems configuration, including default configuration: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Systems configuration, including default configuration]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2763,12 +2721,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">Internal IT and IT security governance and management: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Internal IT and IT security governance and management]</w:t>
 </w:r>
 </w:p>
 <w:p>
@@ -2787,12 +2739,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Certification or assurance of processes and products: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Certification or assurance of processes and products]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2809,12 +2755,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">Ensuring data minimization: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Ensuring data minimization]</w:t>
 </w:r>
 </w:p>
 <w:p>
@@ -2833,12 +2773,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Ensuring data quality: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Ensuring data quality]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2855,12 +2789,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">Ensuring limited data retention: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Ensuring limited data retention]</w:t>
 </w:r>
 </w:p>
 <w:p>
@@ -2879,12 +2807,6 @@
 </w:rPr>
 <w:t xml:space="preserve">Ensuring accountability: </w:t>
 </w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Ensuring accountability]</w:t>
-</w:r>
 </w:p>
 <w:p>
 <w:r>
@@ -2901,12 +2823,6 @@
 <w:szCs w:val="17"/>
 </w:rPr>
 <w:t xml:space="preserve">Allowing data portability and ensuring erasure: </w:t>
-</w:r>
-<w:r>
-<w:rPr>
-<w:color w:val="6A665D"/>
-</w:rPr>
-<w:t xml:space="preserve">[Described security measures: Allowing data portability and ensuring erasure]</w:t>
 </w:r>
 </w:p>
 </w:tc>

@@ -323,10 +323,22 @@ describe("listDrafts search", () => {
     expect(await search(db, owner.id, "!acme | ' & :* (")).toEqual([
       "Roadmap review",
     ])
-    expect(await search(db, owner.id, "(&)")).toEqual([
-      "Pilot with Zenith",
-      "Roadmap review",
-    ])
+  })
+
+  test("finds nothing for a search with no letters or digits", async ({
+    db,
+  }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "🚀")).toEqual([])
+    expect(await search(db, owner.id, "(&)")).toEqual([])
+  })
+
+  test("lists every draft for an empty or blank search", async ({ db }) => {
+    const { owner } = await seed(db)
+
+    expect(await search(db, owner.id, "")).toHaveLength(2)
+    expect(await search(db, owner.id, "   ")).toHaveLength(2)
   })
 
   test("never finds another user's drafts", async ({ db }) => {

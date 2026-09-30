@@ -5,7 +5,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { useState } from "react"
+import { useId, useState } from "react"
 import { z } from "zod"
 
 import { authClient } from "@/lib/auth-client"
@@ -36,6 +36,7 @@ export function SignInForm({
 }) {
   const turnstile = useTurnstile(siteKey)
   const navigate = useNavigate()
+  const lastUsedId = useId()
   const [error, setError] = useState<string>()
 
   const form = useAppForm({
@@ -107,11 +108,22 @@ export function SignInForm({
         )}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(submitting) => (
-            <Button type="submit" size="lg" disabled={submitting}>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={submitting}
+              // The badge describes the button; its name stays "Sign in".
+              aria-describedby={lastUsed ? lastUsedId : undefined}
+            >
               {submitting && <Spinner data-icon="inline-start" />}
               Sign in
               {lastUsed && (
-                <Badge variant="secondary" className="ml-auto">
+                <Badge
+                  id={lastUsedId}
+                  aria-hidden="true"
+                  variant="secondary"
+                  className="ml-auto"
+                >
                   Last used
                 </Badge>
               )}
