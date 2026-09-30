@@ -9,6 +9,11 @@ export type RenderedValue = {
   label: string
   text: string | null
   placeholder: string
+  /**
+   * The field may stay empty in a complete document. The preview still shows
+   * its placeholder (a prompt to fill it); the PDF and DOCX print it blank.
+   */
+  optional?: true
 }
 
 export type Part =

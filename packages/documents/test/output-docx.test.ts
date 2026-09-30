@@ -48,6 +48,17 @@ describe("toDocx", () => {
     )
   })
 
+  it("prints an empty optional field blank, never as its [placeholder]", async () => {
+    // T36: a finished NDA printed "[MNDA modifications]".
+    const { modifications: _left, ...values } = examples["mutual-nda"]
+    const { document } = await unzip(
+      await toDocx(render(nda, nda.schema.parse(values)))
+    )
+
+    expect(textOf(document)).not.toContain("[MNDA modifications]")
+    expect(textOf(document)).toContain("MNDA Modifications")
+  })
+
   it("uses real headings for the titles and sections", async () => {
     const { document } = await unzip(await toDocx(filled))
 
