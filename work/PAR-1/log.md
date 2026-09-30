@@ -208,3 +208,6 @@ Session end (2026-09-30). Finished: T36 (QA pass, qa.md) and three workflow wave
 
 ### 2026-09-30T21:00:33Z
 PAR-18 cancelled (owner): sandbox-only billing, no real money, so the reconcile protects nothing. T38 no longer waits on it.
+
+### 2026-09-30T21:11:24Z
+T38 scope (owner, 2026-09-30): core (domain, production config, Polar sandbox webhook, security headers, smoke) + anonymized Preview parent + version URLs off. Symptom alerts (5xx, ttft, cost) skipped: portfolio traffic, OpenRouter key cap is the cost guard.
