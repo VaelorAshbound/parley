@@ -285,6 +285,15 @@ function recordUsage(
   )
 }
 
+/** A part with nothing to show: a step's start, or a text with no words. */
+function isEmptyPart(part: Part) {
+  if (part.type === "step-start") return true
+  return (
+    (part.type === "text" || part.type === "reasoning") &&
+    part.text.trim() === ""
+  )
+}
+
 /** Streams the model's reply to the chat so far, and saves it when done. */
 async function reply({
   context,
@@ -344,8 +353,8 @@ async function reply({
       metrics.close()
       // A turn stopped before Parley wrote anything leaves nothing to
       // keep: an empty reply would show as a blank bubble, not Try again.
-      if (responseMessage.parts.every((part) => part.type === "step-start"))
-        return
+      // A text begun with no word in it yet is nothing too.
+      if (responseMessage.parts.every(isEmptyPart)) return
       // After the response too: the save outlives a closed tab. A failure
       // is logged here: uncaught, Workers would log Drizzle's message,
       // which holds the whole reply.
