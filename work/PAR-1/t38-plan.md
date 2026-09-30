@@ -41,7 +41,7 @@ Each task is checked before the next one starts. Production changes (marked
    2026-09-30): a schema-only branch has no migration rows, so every Preview
    build would re-run all migrations and fail; the copies stay in the owner's
    Neon project, and production has 0 users. Not filed.
-5. **Production migrations 0002–0004.** **OK.** Run `pnpm db:migrate`
+5. ✅ (2026-09-30, owner OK) **Production migrations 0002–0004.** **OK.** Run `pnpm db:migrate`
    against the production branch. Verify: `__drizzle_migrations` has 5 rows,
    `db:check` clean.
 6. **Polar production webhook + secrets.** **OK.** New sandbox endpoint
