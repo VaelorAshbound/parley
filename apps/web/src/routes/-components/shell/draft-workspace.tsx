@@ -136,12 +136,24 @@ export function DraftWorkspace({
           minSize={isMobile ? undefined : 420}
           collapsible={!isMobile}
           collapsedSize={0}
+          // Closed means gone, not squeezed to zero width (PAR-6): a closed
+          // panel's content still took its natural width past the window's
+          // edge, kept its links in the Tab order, and when the AI changed
+          // the document, scrolling to the change slid the chat sideways.
+          // Phones show the Document tab whatever the desktop panel says.
+          className={cn(!panelOpen && "md:hidden")}
           onResize={(size) => {
-            // Dragged shut: record it in the URL like the close button does.
-            if (size.asPercentage === 0 && panelOpen && !isMobile)
+            if (isMobile) return
+            // Dragged shut or open: record it in the URL like the buttons do.
+            if (size.asPercentage === 0 && panelOpen)
               void navigate({
                 to: ".",
                 search: (prev) => ({ ...prev, panel: "closed" }),
+              })
+            if (size.asPercentage > 0 && !panelOpen)
+              void navigate({
+                to: ".",
+                search: (prev) => ({ ...prev, panel: undefined }),
               })
           }}
         >

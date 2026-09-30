@@ -76,6 +76,28 @@ test("the document panel closes, stays closed on reload, and opens again", async
   ).toBeVisible()
 })
 
+test("the closed document panel can be dragged open again", async ({
+  page,
+}) => {
+  await startNda(page)
+  await open(page, `${new URL(page.url()).pathname}?panel=closed`)
+  const document = page.getByRole("region", { name: "Live document" })
+  await expect(document).toBeHidden()
+
+  // A closed panel's content isn't laid out (PAR-6); dragging the edge
+  // opens it and says so in the URL, like the Open document button.
+  const handle = page.getByRole("separator")
+  const box = await handle.boundingBox()
+  if (!box) throw new Error("No handle to drag")
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x - 600, box.y + box.height / 2, { steps: 10 })
+  await page.mouse.up()
+
+  await expect(page).not.toHaveURL(/panel=closed/)
+  await expect(document).toBeVisible()
+})
+
 test("a draft can be started with the keyboard alone", async ({ page }) => {
   await open(page, "/")
   const nda = page.getByRole("button", { name: /Mutual NDA/ })
