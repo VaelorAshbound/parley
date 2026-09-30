@@ -211,7 +211,11 @@ describe("the AI's questionnaire", () => {
       ],
     }
     const screen = await render(
-      <AiQuestionnaire toolCallId="call-11" set={typed} onAnswer={vi.fn()} />
+      <AiQuestionnaire
+        toolCallId="call-11"
+        set={typed}
+        onAnswer={vi.fn<(answers: Answers) => void>()}
+      />
     )
 
     // Focus skips the group, so the box itself must carry the description.
