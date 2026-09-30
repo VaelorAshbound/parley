@@ -33,6 +33,11 @@ const emulateReducedMotion: BrowserCommand<[reduce: boolean]> = async (
 const browserProject = {
   resolve: { tsconfigPaths: true },
   plugins: [tailwindcss(), react()],
+  // A test that mocks a module reading the session (vi.mock) still has Vite
+  // look at that module's imports. TanStack Start can't be pre-bundled
+  // outside the app's own build (its "#tanstack-*-entry" imports), and a
+  // failed pre-bundle reloads the page and fails the test file.
+  optimizeDeps: { exclude: ["@tanstack/react-start"] },
   test: {
     name: "web-browser",
     root: "apps/web",
