@@ -33,3 +33,6 @@ CI 36622923385 (f0d2aea): WebKit again crashes/timeouts in changing tests (chat.
 
 ### 2026-09-29T22:37:14Z
 CI 36637331506 (cd4e517): Chromium first-run.spec.ts:70 'the start page doesn't shift while it loads' failed once (5.4 s), passed on retry. Same test as the Firefox local flake in this item's title; now also seen on Chromium in CI.
+
+### 2026-09-30T17:40:48Z
+Seen in the QA-fixes wave: (1) a fresh worktree's first 'pnpm test' fails from Vite 'optimized dependencies changed. reloading' (import errors, sometimes real-looking failures in share-menu); adding the found deps to optimizeDeps.include in the browser project may fix it. (2) e2e a11y 'dark @phone settings is accessible' failed once in Firefox (axe aria-toggle-field-name on a Base UI toggle), then passed 6/6.

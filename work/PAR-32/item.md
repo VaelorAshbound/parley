@@ -3,11 +3,11 @@ id: PAR-32
 title: >-
   Live document keeps the template value after the first message while the chat
   marker shows the AI's value
-phase: build
+phase: done
 priority: high
 origin: PAR-1
 created: 2026-09-30T15:59:40Z
-updated: 2026-09-30T16:11:02Z
+updated: 2026-09-30T18:08:51Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). Report: work/PAR-1/qa.md.
