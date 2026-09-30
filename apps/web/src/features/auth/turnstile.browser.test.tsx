@@ -17,7 +17,10 @@ import { useTurnstile } from "./turnstile"
 // stand-in on `window.turnstile` that hands out numbered tokens, and loads it
 // late, as a slow network would.
 
-type Params = { callback: (token: string) => void }
+type Params = {
+  callback: (token: string) => void
+  "before-interactive-callback"?: () => void
+}
 
 function fakeTurnstile() {
   let issued = 0
@@ -29,6 +32,8 @@ function fakeTurnstile() {
       params?.callback(current)
     }, 10)
   return {
+    /** Cloudflare wants a click: what it does before showing its box. */
+    ask: () => params?.["before-interactive-callback"]?.(),
     render: vi.fn<(element: HTMLElement, options: Params) => string>(
       (_element, options) => {
         params = options
@@ -105,5 +110,26 @@ describe("useTurnstile", () => {
     expect(turnstile.reset).toHaveBeenCalledTimes(1)
     await screen.getByRole("button", { name: "Send" }).click()
     await expect.element(sent).toHaveTextContent("token-1 token-2")
+  })
+
+  test("the widget takes no room until Cloudflare asks for a click", async () => {
+    // Loaded already (the test above, or a page before this one).
+    const turnstile = fakeTurnstile()
+    Object.assign(window, { turnstile })
+    const screen = await mount()
+    ;(
+      window as unknown as Record<string, () => void>
+    ).onloadTurnstileCallback?.()
+    await expect.poll(() => turnstile.render.mock.calls.length).toBe(1)
+    const box = screen.container.querySelector<HTMLElement>(
+      "[data-slot=turnstile]"
+    )
+
+    // Out of the flow: a form's gap doesn't open around an empty widget.
+    expect(box && getComputedStyle(box).position).toBe("absolute")
+    turnstile.ask()
+    await expect
+      .poll(() => box && getComputedStyle(box).position)
+      .toBe("static")
   })
 })
