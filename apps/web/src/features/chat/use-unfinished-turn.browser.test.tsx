@@ -22,7 +22,10 @@ const timing = { everyMs: 20, giveUpAfterMs: 200 }
 
 describe("useUnfinishedTurn", () => {
   test("doesn't wait when the chat ends with Parley's reply", async () => {
-    const load = vi.fn(async () => [question, reply])
+    const load = vi.fn<() => Promise<ChatMessage[]>>(async () => [
+      question,
+      reply,
+    ])
     const { result } = await renderHook(() =>
       useUnfinishedTurn({
         initialMessages: [question, reply],
@@ -39,7 +42,7 @@ describe("useUnfinishedTurn", () => {
 
   test("hands over the saved chat once the reply is in it", async () => {
     let saved = [question]
-    const onReply = vi.fn()
+    const onReply = vi.fn<(messages: ChatMessage[]) => void>()
     const { result } = await renderHook(() =>
       useUnfinishedTurn({
         initialMessages: [question],
@@ -58,7 +61,7 @@ describe("useUnfinishedTurn", () => {
 
   test("keeps waiting through a failed read", async () => {
     let calls = 0
-    const onReply = vi.fn()
+    const onReply = vi.fn<(messages: ChatMessage[]) => void>()
     await renderHook(() =>
       useUnfinishedTurn({
         initialMessages: [question],
