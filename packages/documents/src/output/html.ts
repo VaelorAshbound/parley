@@ -140,7 +140,9 @@ function inline(nodes: RenderedInline[]): string {
   )
 }
 
-function value({ text, placeholder }: RenderedValue) {
+function value({ text, placeholder, optional }: RenderedValue) {
+  // A finished document leaves an empty optional field blank (T36).
+  if (text === null && optional) return ""
   return text === null
     ? `<span class="value missing">${escape(placeholder)}</span>`
     : `<span class="value">${escape(text).replaceAll("\n", "<br>")}</span>`
