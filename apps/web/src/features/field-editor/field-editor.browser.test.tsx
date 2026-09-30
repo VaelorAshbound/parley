@@ -225,6 +225,30 @@ describe("the inline editor", () => {
     expect(style.fontFamily).toMatch(/^"?Newsreader/)
   })
 
+  // iOS Safari zooms the page into any box set under 16 px. The contract
+  // size (14.5 px) is for wide screens only; phones keep 16 px (PAR-45).
+  test("keeps 16 px boxes on phones, so iOS does not zoom in", async () => {
+    await page.viewport(375, 812)
+    try {
+      const { screen } = await edit("party1")
+      const company = screen.getByRole("textbox", { name: "Company" })
+      await expect.element(company).toHaveFocus()
+      for (const name of ["Company", "Address"]) {
+        const box = screen.getByRole("textbox", { name }).element()
+        expect(
+          parseFloat(getComputedStyle(box).fontSize)
+        ).toBeGreaterThanOrEqual(16)
+      }
+
+      await page.viewport(1280, 800)
+      await expect
+        .poll(() => getComputedStyle(company.element()).fontSize)
+        .toBe("14.5px")
+    } finally {
+      await page.viewport(414, 896)
+    }
+  })
+
   test("a party's boxes draw no frames of their own either", async () => {
     const { screen } = await edit("party1")
     const company = screen.getByRole("textbox", { name: "Company" })
