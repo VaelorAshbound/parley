@@ -1,11 +1,11 @@
 ---
 id: PAR-41
 title: "Accessibility details: run-together accessible names, unrounded separator value, 20 px More button, two Toggle Sidebar buttons"
-phase: backlog
+phase: build
 priority: low
 origin: PAR-1
 created: 2026-09-30T15:59:40Z
-updated: 2026-09-30T15:59:40Z
+updated: 2026-09-30T16:11:02Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). Report: work/PAR-1/qa.md.

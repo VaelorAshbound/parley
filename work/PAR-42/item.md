@@ -3,11 +3,11 @@ id: PAR-42
 title: >-
   Change marker cuts the new value to a few characters at narrow widths; its
   title is the field hint, not the value
-phase: backlog
+phase: build
 priority: low
 origin: PAR-1
 created: 2026-09-30T15:59:40Z
-updated: 2026-09-30T15:59:40Z
+updated: 2026-09-30T16:11:02Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). Report: work/PAR-1/qa.md.
