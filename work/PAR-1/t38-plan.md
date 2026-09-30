@@ -20,7 +20,7 @@ the live domain. PAR-18 cancelled (Polar is sandbox only, no real money).
 Each task is checked before the next one starts. Production changes (marked
 **OK**) wait for the owner's OK at that moment.
 
-1. **Security headers (code).** One policy in `src/server/headers.ts`: CSP
+1. ✅ (d9f26db, 15e42ad) **Security headers (code).** One policy in `src/server/headers.ts`: CSP
    (self, Turnstile, Polar checkout redirect, fonts; nonce or hash if Start
    needs inline scripts), HSTS, `frame-ancestors 'none'`,
    `Referrer-Policy: strict-origin-when-cross-origin`, nosniff,
@@ -29,12 +29,14 @@ Each task is checked before the next one starts. Production changes (marked
    `no-referrer`.
    Verify: Worker tests on the headers of each response kind; full e2e on
    Chromium + Firefox with the CSP on (no CSP errors in the console).
-2. **PAR-43 (code).** `/pricing` drops `checkout_id` and
+2. ✅ (ea0bd5e) **PAR-43 (code).** `/pricing` drops `checkout_id` and
    `customer_session_token` from the URL once the banner has read them
    (`history.replaceState`). Verify: e2e.
-3. **Version URLs off for production (config).** `preview_urls: false` at the
-   top level, `true` kept for Previews, if wrangler allows it per Previews
-   block; else leave it and note why. Verify: `wrangler deploy --dry-run`.
+3. ~~**Version URLs off for production (config).**~~ Not possible (checked
+   2026-09-30): `preview_urls` turns on both Version URLs and the per-branch
+   workers.dev Preview URLs that CI tests against, with no separate switch
+   (wrangler 4.136 schema; developers.cloudflare.com/workers/previews/custom-domains).
+   Left on. Sign-in already refuses those hosts in production (`allowedHosts`).
 4. **Previews stop copying production data (config).** T33's per-PR Neon
    branch gets a schema-only parent (or the `preview` branch) instead of
    `production`. Verify: a new PR branch has the tables and no rows.
