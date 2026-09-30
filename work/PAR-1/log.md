@@ -187,3 +187,6 @@ Session end. Finished: checked CI after the Stryker removal (install fixed at 1e
 
 ### 2026-09-30T14:54:56Z
 Next session plan (owner, 2026-09-30): T36 QA pass, folding in PAR-29 (one-line drawer fix) and PAR-6 (sideways scroll + e2e) first, then the QA run; check PAR-30 and PAR-7 when QA reaches the chat. Touch PAR-20/21 screens in QA (already planned). Later: PAR-18 before T38; PAR-13/14/31/5/8 separate. 2 local commits (b685e3a + session log) go out with T36's first push.
+
+### 2026-09-30T16:00:55Z
+T36 done as a workflow wave: PAR-29 and PAR-6 fixed in worktrees and merged (e321a6f, a5b3fe7); 3 QA agents on the Preview; report work/PAR-1/qa.md. Filed PAR-32 (high: live document misses the first change, blocks Checkpoint 7), PAR-33..35 medium, PAR-36..44 low, PAR-45 design notes. No memory leak over 100 messages. Owner: a short Claude in Chrome look (agents could not), and check Polar sandbox cancelled the deleted QA Pro account's subscription. Next: PAR-32, then Checkpoint 7, then PAR-18 before T38.
