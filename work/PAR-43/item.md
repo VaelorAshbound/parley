@@ -1,11 +1,11 @@
 ---
 id: PAR-43
 title: Polar customer_session_token stays in the URL and history after checkout
-phase: backlog
+phase: done
 priority: low
 origin: PAR-1
 created: 2026-09-30T15:59:40Z
-updated: 2026-09-30T15:59:40Z
+updated: 2026-09-30T21:59:25Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). Report: work/PAR-1/qa.md.
