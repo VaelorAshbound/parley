@@ -8,6 +8,7 @@ import type {
   RenderedValue,
 } from "../render.ts"
 import { DISCLAIMER } from "../disclaimer.ts"
+import { isNone, isNoneLine, NONE } from "../render/model.ts"
 
 // The print page Browser Run turns into the PDF (T24), and the header and
 // footer Chrome prints around it (printFrame). Printed paper stays light in
@@ -140,9 +141,10 @@ function inline(nodes: RenderedInline[]): string {
   )
 }
 
-function value({ text, placeholder, optional }: RenderedValue) {
-  // A finished document leaves an empty optional field blank (T36).
-  if (text === null && optional) return ""
+function value(shown: RenderedValue) {
+  const { text, placeholder } = shown
+  // A finished document says an empty optional field is "None." (PAR-40).
+  if (isNone(shown)) return `<span class="value">${NONE}</span>`
   return text === null
     ? `<span class="value missing">${escape(placeholder)}</span>`
     : `<span class="value">${escape(text).replaceAll("\n", "<br>")}</span>`
@@ -155,10 +157,19 @@ function part(each: Part) {
 function line(each: RenderedLine) {
   const box =
     each.checked === undefined ? "" : each.checked ? BOX_CHECKED : BOX_EMPTY
+  const unchosen = each.checked === false ? " unchosen" : ""
+  // Nothing filled in: a checklist part is its box and label, any other line
+  // just "None." (PAR-40).
+  if (isNoneLine(each))
+    return `<p class="line${unchosen}">${box}${
+      each.label
+        ? `<span class="label">${escape(each.label)}</span>`
+        : `<span class="value">${NONE}</span>`
+    }</p>`
   const label = each.label
     ? `<span class="label">${escape(each.label)}:</span> `
     : ""
-  return `<p class="line${each.checked === false ? " unchosen" : ""}">${box}${label}${each.parts
+  return `<p class="line${unchosen}">${box}${label}${each.parts
     .map(part)
     .join("")}</p>`
 }

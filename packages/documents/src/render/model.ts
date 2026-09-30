@@ -11,9 +11,27 @@ export type RenderedValue = {
   placeholder: string
   /**
    * The field may stay empty in a complete document. The preview still shows
-   * its placeholder (a prompt to fill it); the PDF and DOCX print it blank.
+   * its placeholder (a prompt to fill it); the PDF and DOCX print "None.".
    */
   optional?: true
+}
+
+/** What the PDF and DOCX print for an empty optional field (PAR-40). */
+export const NONE = "None."
+
+/** An optional field left empty: printed as {@link NONE}, not a placeholder. */
+export function isNone({ text, optional }: RenderedValue) {
+  return text === null && optional === true
+}
+
+/**
+ * A line with nothing in it but empty optional values. The PDF and DOCX print
+ * a checklist part as its label alone, and any other line as just "None.",
+ * without its template's words ("available at None.") (PAR-40).
+ */
+export function isNoneLine({ parts }: RenderedLine) {
+  const values = parts.filter((part) => part.type === "value")
+  return values.length > 0 && values.every(isNone)
 }
 
 export type Part =
