@@ -48,12 +48,21 @@ export function Composer({
     // oxlint-disable-next-line react/set-state-in-effect
     if (typed) setText(typed)
   }, [input])
+  // One send per render (PAR-39): `text` and `busy` are this render's, so
+  // two sends in one task (Enter twice, then a click) would all see them
+  // unchanged and all go. A ref changes at once; the next render, which has
+  // the cleared box or `busy`, opens it again.
+  const sent = useRef(false)
+  useEffect(() => {
+    sent.current = false
+  })
   const start = variant === "start"
   const ready = text.trim() !== "" && !busy
   const send = () => {
     // "Start drafting" with nothing typed shows where to type.
     if (text.trim() === "") input.current?.focus()
-    if (!ready) return
+    if (!ready || sent.current) return
+    sent.current = true
     onSend(text.trim())
     // The start page keeps the deal: a start that works leaves the page,
     // and one that fails can be sent again as typed.
