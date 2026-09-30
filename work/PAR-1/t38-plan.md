@@ -37,9 +37,10 @@ Each task is checked before the next one starts. Production changes (marked
    workers.dev Preview URLs that CI tests against, with no separate switch
    (wrangler 4.136 schema; developers.cloudflare.com/workers/previews/custom-domains).
    Left on. Sign-in already refuses those hosts in production (`allowedHosts`).
-4. **Previews stop copying production data (config).** T33's per-PR Neon
-   branch gets a schema-only parent (or the `preview` branch) instead of
-   `production`. Verify: a new PR branch has the tables and no rows.
+4. ~~**Previews stop copying production data (config).**~~ Skipped (owner,
+   2026-09-30): a schema-only branch has no migration rows, so every Preview
+   build would re-run all migrations and fail; the copies stay in the owner's
+   Neon project, and production has 0 users. Not filed.
 5. **Production migrations 0002–0004.** **OK.** Run `pnpm db:migrate`
    against the production branch. Verify: `__drizzle_migrations` has 5 rows,
    `db:check` clean.
