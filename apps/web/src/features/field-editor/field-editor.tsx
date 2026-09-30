@@ -131,7 +131,7 @@ export function FieldEditor({
           void form.handleSubmit()
         }
       }}
-      className="@container/field-group flex flex-col gap-4 rounded-lg border-[1.5px] border-blue-ink bg-card p-4 font-sans text-sm text-card-foreground shadow-[0_0_0_3px_var(--color-blue-tint)]"
+      className="field-editor @container/field-group flex flex-col gap-4 rounded-lg border-[1.5px] border-blue-ink bg-card p-4 font-sans text-sm text-card-foreground shadow-[0_0_0_3px_var(--color-blue-tint)]"
     >
       <form.AppForm>
         <FieldInputs form={form} field={field} name={fieldKey} root />

@@ -206,4 +206,64 @@ describe("the inline editor", () => {
       .toHaveValue("ana@acme.test")
     await expect.element(page.getByText("This email is taken.")).toBeVisible()
   })
+
+  // brand.md → A field's life, Editing: one frame, the editor's own 1.5 px
+  // blue border and 3 px halo. The boxes inside draw no second frame, and
+  // the value is set in the contract's serif (PAR-45).
+  test("draws one frame, with the value in the contract's serif", async () => {
+    const { screen } = await edit("purpose", {
+      values: { purpose: "Old." },
+    })
+    const box = screen.getByRole("textbox", { name: "Purpose" })
+    await expect.element(box).toHaveFocus()
+
+    const style = getComputedStyle(box.element())
+    // No ring of its own and no box around it: a line to write on.
+    expect(style.boxShadow).not.toMatch(/0px 0px 0px [1-9]/)
+    expect(style.borderTopWidth).toBe("0px")
+    expect(style.borderLeftWidth).toBe("0px")
+    expect(style.fontFamily).toMatch(/^"?Newsreader/)
+  })
+
+  // iOS Safari zooms the page into any box set under 16 px. The contract
+  // size (14.5 px) is for wide screens only; phones keep 16 px (PAR-45).
+  test("keeps 16 px boxes on phones, so iOS does not zoom in", async () => {
+    await page.viewport(375, 812)
+    try {
+      const { screen } = await edit("party1")
+      const company = screen.getByRole("textbox", { name: "Company" })
+      await expect.element(company).toHaveFocus()
+      for (const name of ["Company", "Address"]) {
+        const box = screen.getByRole("textbox", { name }).element()
+        expect(
+          parseFloat(getComputedStyle(box).fontSize)
+        ).toBeGreaterThanOrEqual(16)
+      }
+
+      await page.viewport(1280, 800)
+      await expect
+        .poll(() => getComputedStyle(company.element()).fontSize)
+        .toBe("14.5px")
+    } finally {
+      await page.viewport(414, 896)
+    }
+  })
+
+  test("a party's boxes draw no frames of their own either", async () => {
+    const { screen } = await edit("party1")
+    const company = screen.getByRole("textbox", { name: "Company" })
+    await expect.element(company).toHaveFocus()
+
+    for (const name of ["Company", "Email"]) {
+      const style = getComputedStyle(
+        screen.getByRole("textbox", { name }).element()
+      )
+      expect(style.borderTopWidth).toBe("0px")
+      expect(style.fontFamily).toMatch(/^"?Newsreader/)
+    }
+    // The line is each box's only edge, so at rest it is drawn in ink-3
+    // (5.2:1), not the faint rule colour (WCAG 1.4.11 asks 3:1).
+    const email = screen.getByRole("textbox", { name: "Email" }).element()
+    expect(getComputedStyle(email).borderBottomColor).toBe("rgb(106, 102, 93)")
+  })
 })

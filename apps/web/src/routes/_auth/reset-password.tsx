@@ -2,18 +2,12 @@ import { revalidateLogic } from "@tanstack/react-form"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
 import { z } from "zod"
 
+import { AuthCard as Page, authButton } from "@/features/auth/auth-card"
 import { authErrorMessage } from "@/features/auth/messages"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
@@ -46,7 +40,10 @@ function ResetPassword() {
         title="This link is incomplete"
         description="Open the link from the email again, or ask for a new one."
       >
-        <Link to="/forgot-password" className={buttonVariants({ size: "lg" })}>
+        <Link
+          to="/forgot-password"
+          className={buttonVariants({ size: "lg", className: authButton })}
+        >
           Ask for a new link
         </Link>
       </Page>
@@ -62,7 +59,7 @@ function ResetPassword() {
         <Link
           to="/sign-in"
           reloadDocument
-          className={buttonVariants({ size: "lg" })}
+          className={buttonVariants({ size: "lg", className: authButton })}
         >
           Sign in
         </Link>
@@ -141,7 +138,12 @@ function NewPasswordForm({
         )}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(submitting) => (
-            <Button type="submit" size="lg" disabled={submitting}>
+            <Button
+              type="submit"
+              size="lg"
+              className={authButton}
+              disabled={submitting}
+            >
               {submitting && <Spinner data-icon="inline-start" />}
               Save password
             </Button>
@@ -149,27 +151,5 @@ function NewPasswordForm({
         </form.Subscribe>
       </FieldGroup>
     </form>
-  )
-}
-
-function Page({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description: string
-  children: React.ReactNode
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-          <h1>{title}</h1>
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">{children}</CardContent>
-    </Card>
   )
 }

@@ -11,6 +11,7 @@ import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
+import { authButton } from "./auth-card"
 import { authErrorMessage, humanCheckFailed } from "./messages"
 import { reloadTo } from "./reload-to"
 import { useTurnstile } from "./turnstile"
@@ -111,6 +112,7 @@ export function SignInForm({
             <Button
               type="submit"
               size="lg"
+              className={authButton}
               disabled={submitting}
               // The badge describes the button; its name stays "Sign in".
               aria-describedby={lastUsed ? lastUsedId : undefined}

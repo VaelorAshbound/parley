@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import { cn } from "@workspace/ui/lib/utils"
 import { z } from "zod"
 
 import { AppearanceCard } from "@/features/account/appearance-card"
@@ -59,14 +60,28 @@ function Settings() {
   )
 }
 
+/**
+ * The page and its cards in Paper & Ink, like the start and pricing pages
+ * (PAR-45): the title at the brand's Title size, each card's title in
+ * Newsreader, and even, roomier padding. The cards are shadcn's; their look
+ * is set here, once, for all of them. One ink button on the page: turning
+ * on two-factor. Saves are outline buttons (SubmitRow).
+ */
 function Page({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-svh flex-col">
       <div className="flex h-14 items-center px-3 md:hidden">
         <SidebarTrigger />
       </div>
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-4 pb-16 md:px-6 md:pt-14">
-        <h1 className="font-serif text-4xl leading-none font-normal tracking-[-0.03em]">
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-4 pb-20 md:gap-8 md:px-6 md:pt-16",
+          "[&_[data-slot=card]]:rounded-2xl [&_[data-slot=card]]:[--card-spacing:--spacing(6)] sm:[&_[data-slot=card]]:[--card-spacing:--spacing(8)]",
+          "[&_[data-slot=card-header]]:gap-1.5 [&_[data-slot=card-title]]:font-serif [&_[data-slot=card-title]]:text-[1.625rem] [&_[data-slot=card-title]]:leading-[1.15] [&_[data-slot=card-title]]:font-normal [&_[data-slot=card-title]]:tracking-[-0.015em]",
+          "[&_[data-slot=card-description]]:text-[15px] [&_[data-slot=card-description]]:leading-relaxed"
+        )}
+      >
+        <h1 className="mb-2 font-serif text-title-sm sm:text-title">
           Settings
         </h1>
         {children}
@@ -82,7 +97,7 @@ function SettingsPending() {
       {[160, 200, 260, 180].map((height) => (
         <Skeleton
           key={height}
-          className="w-full rounded-xl"
+          className="w-full rounded-2xl"
           style={{ height }}
         />
       ))}

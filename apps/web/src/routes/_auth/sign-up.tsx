@@ -1,14 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, redirect } from "@tanstack/react-router"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 
+import { AuthCard, footerLink } from "@/features/auth/auth-card"
 import { authConfigQuery } from "@/features/auth/auth-config"
 import { authSearch } from "@/features/auth/redirect"
 import { SignUpForm } from "@/features/auth/sign-up-form"
@@ -30,38 +23,33 @@ function SignUp() {
   const { data: config } = useSuspenseQuery(authConfigQuery)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-          <h1>Create your account</h1>
-        </CardTitle>
-        <CardDescription>
-          {viewer?.isAnonymous
-            ? "Save your draft and chat, then download and share them."
-            : "Save your drafts, then download and share them."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
-        <SocialSignIn
-          providers={config.providers}
-          lastUsed={undefined}
-          returnTo={returnTo}
-          error={error}
-        />
-        <SignUpForm siteKey={config.turnstileSiteKey} returnTo={returnTo} />
-      </CardContent>
-      <CardFooter className="justify-center border-t text-sm text-muted-foreground">
+    <AuthCard
+      title="Create your account"
+      description={
+        viewer?.isAnonymous
+          ? "Save your draft and chat, then download and share them."
+          : "Save your drafts, then download and share them."
+      }
+      footer={
         <p>
           Have an account?{" "}
           <Link
             to="/sign-in"
             search={{ redirect: returnTo }}
-            className="font-medium text-blue-ink underline-offset-4 hover:underline"
+            className={footerLink}
           >
             Sign in
           </Link>
         </p>
-      </CardFooter>
-    </Card>
+      }
+    >
+      <SocialSignIn
+        providers={config.providers}
+        lastUsed={undefined}
+        returnTo={returnTo}
+        error={error}
+      />
+      <SignUpForm siteKey={config.turnstileSiteKey} returnTo={returnTo} />
+    </AuthCard>
   )
 }

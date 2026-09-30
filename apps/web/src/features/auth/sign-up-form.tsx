@@ -9,6 +9,7 @@ import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
+import { authButton } from "./auth-card"
 import { authErrorMessage, humanCheckFailed } from "./messages"
 import { reloadTo } from "./reload-to"
 import { useTurnstile } from "./turnstile"
@@ -104,7 +105,12 @@ export function SignUpForm({
         )}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(submitting) => (
-            <Button type="submit" size="lg" disabled={submitting}>
+            <Button
+              type="submit"
+              size="lg"
+              className={authButton}
+              disabled={submitting}
+            >
               {submitting && <Spinner data-icon="inline-start" />}
               Create account
             </Button>

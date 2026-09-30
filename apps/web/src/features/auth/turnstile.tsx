@@ -1,5 +1,5 @@
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 
 import { useTheme } from "@/components/theme-provider"
 
@@ -14,9 +14,17 @@ export function useTurnstile(siteKey: string) {
   const ref = useRef<TurnstileInstance>(null)
   const box = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
+  // Most people never see a check box. Until Cloudflare asks for a click,
+  // the empty widget stays out of the layout, so a form's gap doesn't open
+  // an uneven space around it (PAR-45). Once shown, it stays in the flow.
+  const [asking, setAsking] = useState(false)
 
   const widget = (
-    <div ref={box}>
+    <div
+      ref={box}
+      data-slot="turnstile"
+      style={asking ? undefined : { position: "absolute" }}
+    >
       <Turnstile
         ref={ref}
         siteKey={siteKey}
@@ -29,9 +37,13 @@ export function useTurnstile(siteKey: string) {
         }}
         // The check box appears only now: bring it on screen, since what
         // waits for it (a start from the library) may be far below.
-        onBeforeInteractive={() =>
-          box.current?.scrollIntoView({ block: "nearest" })
-        }
+        onBeforeInteractive={() => {
+          setAsking(true)
+          // After React puts it back in the flow.
+          requestAnimationFrame(() =>
+            box.current?.scrollIntoView({ block: "nearest" })
+          )
+        }}
       />
     </div>
   )

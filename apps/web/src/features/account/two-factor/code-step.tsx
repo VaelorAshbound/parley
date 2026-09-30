@@ -7,6 +7,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
 import { z } from "zod"
 
+import { authButton } from "@/features/auth/auth-card"
 import { authErrorMessage, needsNewSignIn } from "@/features/auth/messages"
 import { reloadTo } from "@/features/auth/reload-to"
 import { authClient } from "@/lib/auth-client"
@@ -113,7 +114,12 @@ export function CodeStep({
         )}
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(submitting) => (
-            <Button type="submit" size="lg" disabled={submitting}>
+            <Button
+              type="submit"
+              size="lg"
+              className={authButton}
+              disabled={submitting}
+            >
               {submitting && <Spinner data-icon="inline-start" />}
               Verify
             </Button>

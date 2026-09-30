@@ -3,19 +3,12 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useState } from "react"
 import { z } from "zod"
 
+import { AuthCard, authButton, footerLink } from "@/features/auth/auth-card"
 import { authConfigQuery } from "@/features/auth/auth-config"
 import { authErrorMessage, humanCheckFailed } from "@/features/auth/messages"
 import { redirectSearch } from "@/features/auth/redirect"
@@ -66,76 +59,76 @@ function ForgotPassword() {
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-serif text-2xl font-normal tracking-[-0.02em]">
-          <h1>{sentTo ? "Check your inbox" : "Reset your password"}</h1>
-        </CardTitle>
-        <CardDescription>
-          {sentTo
-            ? `If ${sentTo} has a Parley account, we sent it a link. It works once, for 30 minutes.`
-            : "We’ll email you a link to choose a new one."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {sentTo ? (
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => setSentTo(undefined)}
-          >
-            Use another email
-          </Button>
-        ) : (
-          <form
-            method="post"
-            noValidate
-            onSubmit={(event) => {
-              event.preventDefault()
-              void form.handleSubmit()
-            }}
-          >
-            <FieldGroup>
-              <form.AppField name="email">
-                {(field) => (
-                  <field.TextField
-                    label="Email"
-                    type="email"
-                    autoComplete="email"
-                  />
-                )}
-              </form.AppField>
-              {turnstile.widget}
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <form.Subscribe selector={(state) => state.isSubmitting}>
-                {(submitting) => (
-                  <Button type="submit" size="lg" disabled={submitting}>
-                    {submitting && <Spinner data-icon="inline-start" />}
-                    Email me a link
-                  </Button>
-                )}
-              </form.Subscribe>
-            </FieldGroup>
-          </form>
-        )}
-      </CardContent>
-      <CardFooter className="justify-center border-t text-sm text-muted-foreground">
+    <AuthCard
+      title={sentTo ? "Check your inbox" : "Reset your password"}
+      description={
+        sentTo
+          ? `If ${sentTo} has a Parley account, we sent it a link. It works once, for 30 minutes.`
+          : "We’ll email you a link to choose a new one."
+      }
+      footer={
         <p>
           Remembered it?{" "}
           <Link
             to="/sign-in"
             search={{ redirect: returnTo }}
-            className="font-medium text-blue-ink underline-offset-4 hover:underline"
+            className={footerLink}
           >
             Sign in
           </Link>
         </p>
-      </CardFooter>
-    </Card>
+      }
+    >
+      {sentTo ? (
+        <Button
+          variant="outline"
+          size="lg"
+          className={authButton}
+          onClick={() => setSentTo(undefined)}
+        >
+          Use another email
+        </Button>
+      ) : (
+        <form
+          method="post"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            void form.handleSubmit()
+          }}
+        >
+          <FieldGroup>
+            <form.AppField name="email">
+              {(field) => (
+                <field.TextField
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                />
+              )}
+            </form.AppField>
+            {turnstile.widget}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form.Subscribe selector={(state) => state.isSubmitting}>
+              {(submitting) => (
+                <Button
+                  type="submit"
+                  size="lg"
+                  className={authButton}
+                  disabled={submitting}
+                >
+                  {submitting && <Spinner data-icon="inline-start" />}
+                  Email me a link
+                </Button>
+              )}
+            </form.Subscribe>
+          </FieldGroup>
+        </form>
+      )}
+    </AuthCard>
   )
 }

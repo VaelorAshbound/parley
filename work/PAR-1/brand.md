@@ -54,6 +54,7 @@ All values checked with a script (WCAG 2.x formula). Every text pair passes AA (
 | on-blue | `#FDFDFF` | `#10142A` | Check marks, selected letter keys | 7.7 / 8.6 |
 | highlighter | `#FFE58A` | `#4B3F14` | Field just changed | blue on it: 6.3 / 4.9 |
 | highlighter-soft | `#FFF1BC` | `#342C10` | Settled highlight | blue on it: 6.9 / 6.6 |
+| marker | = highlighter | `rgb(246 223 130 / 0.85)` | The start page's headline marker. Light: a band over the lower 62–92% of the line. Dark: a thin stroke under the words (77–92%), since a wide dark-yellow band reads as olive (PAR-45). The stroke sits at the baseline under the words; only descenders cross it, so it is decorative and needs no text contrast pair. | — |
 | empty | `#F2EFE8` | `#252420` | Empty field chip | ink-3 on it: 5.0 / 5.3 |
 | empty-border | `#CFC8B9` | `#4A4740` | Empty field chip border (dashed) | — |
 | destructive | `#B42318` | `#FF8A7A` | Delete, errors (added in T4 code) | AA on paper and surface (tested) |
@@ -73,6 +74,7 @@ All values checked with a script (WCAG 2.x formula). Every text pair passes AA (
 |---|---|
 | Display | Newsreader 76 / 0.98 · −0.032em · 400 |
 | Title | Newsreader 46 / 1.04 · −0.024em · 400 |
+| Title, phones (below `sm`) | Newsreader 38 / 1.04 · −0.024em · 400 (auth pages, Settings) |
 | Question (questionnaire) | Newsreader 21 / 1.25 · −0.01em · 500 |
 | Contract (preview) | Newsreader 14.5 / 1.55 · 0 · 400 |
 | Body | Instrument Sans 15 / 1.6 · 0 · 400 |
@@ -91,9 +93,9 @@ Big text gets negative tracking; small labels get positive tracking. Turn on `fo
 | Asking | Dashed `blue-border` frame around the row, `blue-tint` fill, small "Asking in chat" label on the frame | The chat is asking about this field right now. |
 | Just changed | Highlighter sweep, value inks in, blue change bar in the left margin | The AI changed it in this turn. Settles to highlighter-soft until the next message. |
 | Filled | Blue ink | A value you or Parley set. |
-| Editing | Inline input, 1.5 px blue border, 3 px `blue-tint` halo, "Enter to save · Esc to cancel" | You are editing the value yourself. |
+| Editing | One frame: 1.5 px blue border, 3 px `blue-tint` halo, "Enter to save · Esc to cancel". Inside it the boxes draw no frame of their own: each is a line to write on (`ink-3` at rest, for 3:1), the value in the contract's serif and blue ink; the line turns blue on focus | You are editing the value yourself. |
 
-Choice fields (checkbox lines on the cover page): the chosen line gets a filled blue box with a check; the other line fades to 42% opacity.
+Choice fields (checkbox lines on the cover page): the chosen line gets a filled blue box with a check; the other line fades to 85% opacity. Why 85%, not the 42% first drawn: the unchosen line is still contract text people read, and at 42% it fell below AA contrast (changed in the build; recorded 2026-09-30, PAR-45).
 
 ## Motion
 
