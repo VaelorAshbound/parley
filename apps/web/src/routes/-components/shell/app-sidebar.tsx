@@ -132,7 +132,10 @@ export function AppSidebar({
             </SidebarMenu>
           </SidebarFooter>
         </div>
-        <SidebarRail />
+        {/* The rail is the mouse's wide edge for the Toggle Sidebar button
+            in the header; hidden from screen readers, so it isn't read as a
+            second one (it is already out of the tab order). */}
+        <SidebarRail aria-hidden="true" />
       </Sidebar>
       {/* Beside the sidebar, not in it: on a phone the sidebar is a drawer,
         and the search must open (and stay open) with the drawer closed. */}

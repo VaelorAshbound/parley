@@ -239,7 +239,9 @@ function inline(
   })
 }
 
-function value({ text, placeholder }: RenderedValue): TextRun[] {
+function value({ text, placeholder, optional }: RenderedValue): TextRun[] {
+  // A finished document leaves an empty optional field blank (T36).
+  if (text === null && optional) return []
   return text === null
     ? runs(placeholder, { color: INK_3 })
     : runs(text, { color: BLUE_INK })

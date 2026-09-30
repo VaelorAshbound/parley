@@ -54,6 +54,15 @@ describe("toPrintHtml", () => {
     expect(html).toContain('<span class="value missing">[Purpose]</span>')
   })
 
+  it("prints an empty optional field blank, never as its [placeholder]", () => {
+    // T36: a finished NDA printed "[MNDA modifications]" in the PDF.
+    const { modifications: _left, ...values } = examples["mutual-nda"]
+    const html = toPrintHtml(render(nda, nda.schema.parse(values)))
+
+    expect(html).not.toContain("[MNDA modifications]")
+    expect(wordsOf(html)).toContain("MNDA Modifications")
+  })
+
   it("prints a choice as ticked and empty boxes, drawn so no font can lack them", () => {
     const html = toPrintHtml(filled)
     const words = wordsOf(html)

@@ -37,11 +37,12 @@ export function render<F extends Fields>(
     const [key = "", part] = path.split(".")
     const field = fields[key]
     const value = valueOf(key)
-    const shown = (label: string, text: string | null) => ({
+    const shown = (label: string, text: string | null): RenderedValue => ({
       field: path,
       label,
       text,
       placeholder: `[${label}]`,
+      ...(field?.optional && { optional: true }),
     })
     if (!field) return shown(path, null)
     if (part === undefined) return shown(field.label, display(field, value))

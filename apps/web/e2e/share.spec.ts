@@ -118,4 +118,6 @@ test("a made-up link is a friendly 404", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Draft your own" }).first()
   ).toBeVisible()
+  // A real title, not the bare app name (PAR-36).
+  await expect(page).toHaveTitle("Link not found · Parley")
 })
