@@ -205,3 +205,6 @@ Checkpoint 7 passed (owner, 2026-09-30): CI green on 7fff76a; local gates green;
 
 ### 2026-09-30T20:53:08Z
 Session end (2026-09-30). Finished: T36 (QA pass, qa.md) and three workflow waves: PAR-29, PAR-6; PAR-30, 32..39, 41; PAR-40, 42, 44, 45 (owner OK on every design call). Checkpoint 7 passed (nightly skipped by the owner, runs at the next checkpoint). CI green on 7fff76a. Fixed on the way: CI component reloads (cloudflare:workers stub), an old Worker test broken by PAR-9, visual baselines that depended on OAuth in .dev.vars. Filed PAR-46, PAR-47. 39 of 42 tasks done; 13 wi items open. Next session: PAR-18 (Polar daily reconcile + alert) before T38, then T38 (fold in PAR-43) -> T39 -> T40; run the nightly at the next checkpoint. Local db:dev runs detached (setsid); stop it with pkill -f scripts/dev.ts when done.
+
+### 2026-09-30T21:00:33Z
+PAR-18 cancelled (owner): sandbox-only billing, no real money, so the reconcile protects nothing. T38 no longer waits on it.
