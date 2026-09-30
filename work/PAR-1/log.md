@@ -196,3 +196,6 @@ Owner: the Claude in Chrome gap in T36 is accepted. Polar sandbox checked by the
 
 ### 2026-09-30T18:08:51Z
 QA-fixes wave merged (4 lanes): PAR-30, 32, 33, 34, 35, 36, 37, 38, 39, 41 done; PAR-40, 42 get the owner's choices next. Fixed after merge: an old Worker test broken by PAR-9, and a timing bug in the PAR-33 test. Gate after merge (e87c0ca): pnpm check pass; pnpm test 105/105 files x3; test:workers 448 passed; e2e chromium+firefox+both phone projects 280 passed, 22 skipped, 0 failed. Filed PAR-46 (Enter while busy), PAR-47 (mark stopped replies). Owner decisions logged on PAR-33..45. Next: follow-up wave PAR-40+42, PAR-44, PAR-45; then Checkpoint 7.
+
+### 2026-09-30T20:31:07Z
+Follow-up wave merged: PAR-40, 42, 44, 45 done (owner OK on all calls). After merge fixed: CI component job (Vite dep scan stopped at cloudflare:workers, stub alias), stale visual baselines, auth card region name clashing with field labels, a Firefox sign-out race in account.spec. Gate after merge (9cf8efc): pnpm check pass; pnpm test 107/107 files; test:workers 448 passed; e2e chromium+firefox+both phone projects 290 passed, 22 skipped, 0 failed; visual baselines in Playwright's image 20/20. CI was red on 266aef1 and fe93597 (component reloads + draft visual baselines); both causes fixed in this push. Next: check CI, then Checkpoint 7, then PAR-18 before T38.

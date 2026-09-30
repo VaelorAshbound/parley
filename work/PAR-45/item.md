@@ -3,11 +3,11 @@ id: PAR-45
 title: >-
   Design and feel notes from T36 QA (dark highlighter, 2560 layout, auth pages,
   pricing in dark, editor frame)
-phase: build
+phase: done
 priority: low
 origin: PAR-1
 created: 2026-09-30T15:59:46Z
-updated: 2026-09-30T18:09:53Z
+updated: 2026-09-30T20:31:07Z
 ---
 
 Found in T36 (exploratory QA on the Preview, 2026-09-30). These are design and feel notes, not bugs. The owner picks which to do. Report: work/PAR-1/qa.md.
