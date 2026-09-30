@@ -189,6 +189,10 @@
   --on-blue: #fdfdff;
   --highlighter: #ffe58a;
   --highlighter-soft: #fff1bc;
+  /* The start page's headline marker: the highlighter, over the lower
+     part of the line. */
+  --marker: var(--highlighter);
+  --marker-top: 62%;
   --empty: #f2efe8;
   --empty-border: #cfc8b9;
   --sheet-shadow:
@@ -251,6 +255,10 @@
   --on-blue: #10142a;
   --highlighter: #4b3f14;
   --highlighter-soft: #342c10;
+  /* In the dark a wide band of dark yellow reads as olive: a soft yellow
+     stroke under the words instead, like a pen's underline (PAR-45). */
+  --marker: rgb(246 223 130 / 0.85);
+  --marker-top: 77%;
   --empty: #252420;
   --empty-border: #4a4740;
   --sheet-shadow:
@@ -462,10 +470,10 @@
    appears, and a highlighter sweeps under the headline. No loops. */
 @layer components {
   .hero-marker {
-    --ink: var(--highlighter);
+    --ink: var(--marker);
     background-image: linear-gradient(
-      transparent 62%,
-      var(--ink) 62% 92%,
+      transparent var(--marker-top),
+      var(--ink) var(--marker-top) 92%,
       transparent 92%
     );
     background-repeat: no-repeat;
