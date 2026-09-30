@@ -39,7 +39,7 @@ Three panes on desktop:
 
   Guests see their one draft and a "Sign in to save" button there.
 - **Middle: chat.** The draft title sits at the top. Its menu has rename, duplicate and delete. The reply box sits at the bottom, with the demo note under it (`DISCLAIMER`: "Parley demo · Not legal advice · Do not use for real agreements").
-- **Right: live document panel.** Its header has the document type, **Share**, **Download** (PDF/DOCX), expand to full width, and close. You can resize the panel. When it is closed, a card in the chat opens it again.
+- **Right: live document panel.** Its header has the document type, **Share**, **Download** (PDF/DOCX) and close. You can resize the panel. When it is closed, a card at the top of the chat (the agreement's name and **Open document**) opens it again; not on a phone, which has the tabs. (Expand to full width was dropped 2026-09-30, owner, PAR-44: the panel is resizable, so you can drag it wider.)
 - **Phone.** The sidebar becomes a drawer. Chat and document become two tabs, and the document tab shows a badge when it changes.
 
 ### The wow moment

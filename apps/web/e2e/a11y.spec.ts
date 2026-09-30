@@ -67,6 +67,22 @@ for (const colorScheme of ["light", "dark"] as const) {
       ).toBeVisible()
       await expectAccessible(page)
     })
+
+    // A closed panel leaves the reopen card in the chat (PAR-44). A phone
+    // hides the card (it has the Document tab), so there this checks the tabs.
+    test("a draft with its document closed is accessible", async ({ page }) => {
+      await open(page, "/")
+      await page.getByRole("button", { name: /Mutual NDA/ }).click()
+      await draftOpened(page)
+      const url = new URL(page.url())
+      url.searchParams.set("panel", "closed")
+      await open(page, url.pathname + url.search)
+      const card = page.getByRole("group", { name: "Document closed" })
+      if ((page.viewportSize()?.width ?? 0) >= 768)
+        await expect(card).toBeVisible()
+      else await expect(card).toBeHidden()
+      await expectAccessible(page)
+    })
   })
 
   accountTest.describe(`${colorScheme} @phone`, () => {
