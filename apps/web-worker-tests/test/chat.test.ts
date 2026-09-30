@@ -509,6 +509,63 @@ describe("a chat turn", () => {
     await expect.poll(() => modelSignal?.aborted).toBe(true)
   })
 
+  it("saves what the reply had so far when the reader goes away (PAR-33)", async () => {
+    const { cookie } = await signInGuest()
+    const model = new MockLanguageModelV4({
+      doStream: async ({ abortSignal }) => ({
+        // One word, then nothing more until the model is stopped, as a
+        // provider's fetch ends when its signal aborts.
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "text-start", id: "t" })
+            controller.enqueue({
+              type: "text-delta",
+              id: "t",
+              delta: "Thinking",
+            })
+            abortSignal?.addEventListener("abort", () =>
+              controller.error(abortSignal.reason)
+            )
+          },
+        }),
+      }),
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const tab = new AbortController()
+    const stream = await client.chat.send(
+      { id: draft.id, message: say("Hello?"), today },
+      { signal: tab.signal }
+    )
+    const iterator = stream[Symbol.asyncIterator]()
+    // Up to the first word of the reply.
+    for (;;) {
+      const { value, done } = await iterator.next()
+      if (done || (value as { type?: string }).type === "text-delta") break
+    }
+
+    // A reload: the page that asked goes away.
+    tab.abort()
+
+    await expect
+      .poll(
+        async () => {
+          await settle()
+          return (await client.chat.messages({ id: draft.id })).at(-1)
+        },
+        { timeout: 3000 }
+      )
+      .toMatchObject({
+        role: "assistant",
+        parts: expect.arrayContaining([
+          expect.objectContaining({ type: "text", text: "Thinking" }),
+        ]),
+      })
+  })
+
   it("refuses a message over 4,000 characters without calling the model", async () => {
     const { cookie } = await signInGuest()
     const model = scriptedModel([[{ text: "Hi." }]])

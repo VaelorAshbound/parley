@@ -32,7 +32,8 @@ export function chatTransport(orpc: Orpc): ChatTransport<ChatMessage> {
       // Unproxied: the AI SDK structuredClones chunks, and oRPC may proxy them.
       return eventIteratorToUnproxiedDataStream(stream)
     },
-    // A turn that was cut off isn't resumed; its saved part shows on reload.
+    // A stream isn't resumed: a page loaded mid-reply waits for the saved
+    // reply instead (use-unfinished-turn.ts).
     reconnectToStream: async () => null,
   }
 }

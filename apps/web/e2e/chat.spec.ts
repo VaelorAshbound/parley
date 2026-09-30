@@ -93,3 +93,30 @@ test("the AI's questions: a letter picks, a typed answer, a skip, then it goes o
     page.getByRole("group", { name: "How long should the agreement last?" })
   ).toBeHidden()
 })
+
+test("a reload while Parley answers shows the reply once it is saved, with no second reload (PAR-33)", async ({
+  page,
+}) => {
+  await open(page, "/")
+  await page.getByRole("button", { name: /Mutual NDA/ }).click()
+  await draftOpened(page)
+  const answering = page.waitForResponse((response) =>
+    response.url().includes("/api/rpc/chat/send")
+  )
+  await page
+    .getByRole("textbox", { name: "Message" })
+    .fill("Give me the slow reply.")
+  await page.keyboard.press("Enter")
+  // The server has the message and is writing the reply (the scripted AI
+  // takes a few seconds for this one).
+  await answering
+
+  await page.reload()
+
+  await expect(page.getByText("Give me the slow reply.")).toBeVisible()
+  await expect(page.getByText("Thinking…")).toBeVisible()
+  await expect(
+    page.getByText("Here is the slow reply, saved while you were away.")
+  ).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText("Thinking…")).toBeHidden()
+})

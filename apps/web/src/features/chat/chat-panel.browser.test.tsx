@@ -471,6 +471,42 @@ describe("the chat", () => {
   })
 })
 
+describe("a page loaded while Parley answers (PAR-33)", () => {
+  const question: ChatMessage = {
+    id: "user-reloaded",
+    role: "user",
+    parts: [{ type: "text", text: "We share a roadmap with a vendor." }],
+  }
+  const saved: ChatMessage = {
+    id: "reply-reloaded",
+    role: "assistant",
+    parts: [{ type: "text", text: "A **Mutual NDA** fits." }],
+  }
+
+  test("says Parley is still answering, then shows the reply once it is saved", async () => {
+    // The reply is still streaming to the page that was reloaded away.
+    serverChat = [question]
+    const { screen, queryClient } = await show({ initialMessages: [question] })
+
+    await expect.element(screen.getByText("Thinking…")).toBeVisible()
+    serverChat = [question, saved]
+
+    await expect
+      .element(screen.getByText("Mutual NDA", { exact: true }), {
+        timeout: 5000,
+      })
+      .toBeVisible()
+    expect(screen.getByText("Thinking…").query()).toBeNull()
+    // The next visit starts from it too.
+    expect(
+      queryClient.getQueryData(
+        orpc.chat.messages.queryKey({ input: { id: draftId } })
+      )
+    ).toEqual([question, saved])
+    serverChat = []
+  })
+})
+
 describe("a long chat", () => {
   /** Twenty turns saved before this visit. */
   const history = (): ChatMessage[] =>
