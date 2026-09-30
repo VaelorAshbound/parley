@@ -3,7 +3,7 @@ import {
   addAiUsage,
   claimMessage,
   getDraft,
-  listMessages,
+  listSavedMessages,
   saveMessages,
   type Db,
 } from "@workspace/db"
@@ -50,7 +50,13 @@ import { chatTools, runningTools, type ChatTools } from "./tools"
 // what is new; the history comes from the database, so a client can't
 // rewrite what was said.
 
-export type ChatMessage = UIMessage<unknown, UIDataTypes, ChatTools>
+/**
+ * What the server adds to a stored message: when it was first saved (epoch
+ * ms), so a page loaded mid-turn knows whether a reply can still come
+ * (PAR-33). Messages the page makes have none.
+ */
+export type ChatMetadata = { savedAt?: number }
+export type ChatMessage = UIMessage<ChatMetadata, UIDataTypes, ChatTools>
 type Part = ChatMessage["parts"][number]
 type OpenQuestions = Extract<
   Part,
@@ -82,8 +88,12 @@ const userMessage = z.object({
 
 /** The stored chat, checked against the current tools; unfit chats start fresh. */
 async function history(db: Db, key: DraftKey) {
+  const stored = await listSavedMessages(db, key)
   const result = await safeValidateUIMessages<ChatMessage>({
-    messages: await listMessages(db, key),
+    messages: stored.map(({ savedAt, ...each }) => ({
+      ...each,
+      metadata: { savedAt: savedAt.getTime() },
+    })),
     tools: chatTools,
   })
   return result.success ? result.data : []

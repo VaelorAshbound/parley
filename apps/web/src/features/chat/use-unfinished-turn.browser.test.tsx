@@ -12,6 +12,8 @@ const question: ChatMessage = {
   id: "user-1",
   role: "user",
   parts: [{ type: "text", text: "Is this mutual?" }],
+  // Saved just now: its turn can still be running.
+  metadata: { savedAt: Date.now() },
 }
 const reply: ChatMessage = {
   id: "reply-1",
@@ -89,5 +91,59 @@ describe("useUnfinishedTurn", () => {
     )
 
     await expect.poll(() => result.current[0]).toBe("lost")
+  })
+
+  test("says at once that a turn from long ago got no answer (PAR-33)", async () => {
+    // A provider error, or a Stop before the first word: the chat ends
+    // with the user's message for good. Nothing is running to wait for.
+    const old = { ...question, metadata: { savedAt: Date.now() - 600_000 } }
+    const load = vi.fn<() => Promise<ChatMessage[]>>(async () => [old])
+    const { result } = await renderHook(() =>
+      useUnfinishedTurn({
+        initialMessages: [old],
+        load,
+        onReply: () => {},
+        timing,
+      })
+    )
+
+    expect(result.current[0]).toBe("lost")
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    expect(load).not.toHaveBeenCalled()
+  })
+
+  test("doesn't wait for a turn whose save time is unknown", async () => {
+    // A chat the page kept from an earlier visit, not the server's copy.
+    const { metadata: _, ...unsaved } = question
+    const { result } = await renderHook(() =>
+      useUnfinishedTurn({
+        initialMessages: [unsaved],
+        load: async () => [unsaved],
+        onReply: () => {},
+        timing,
+      })
+    )
+
+    expect(result.current[0]).toBe("lost")
+  })
+
+  test("waits only for what is left of the turn's time", async () => {
+    const late = {
+      ...question,
+      metadata: { savedAt: Date.now() - (timing.giveUpAfterMs - 40) },
+    }
+    const started = Date.now()
+    const { result } = await renderHook(() =>
+      useUnfinishedTurn({
+        initialMessages: [late],
+        load: async () => [late],
+        onReply: () => {},
+        timing: { everyMs: 20, giveUpAfterMs: 200 },
+      })
+    )
+
+    expect(result.current[0]).toBe("waiting")
+    await expect.poll(() => result.current[0]).toBe("lost")
+    expect(Date.now() - started).toBeLessThan(timing.giveUpAfterMs)
   })
 })

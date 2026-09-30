@@ -476,6 +476,8 @@ describe("a page loaded while Parley answers (PAR-33)", () => {
     id: "user-reloaded",
     role: "user",
     parts: [{ type: "text", text: "We share a roadmap with a vendor." }],
+    // Saved a moment ago, by the page that was reloaded away.
+    metadata: { savedAt: Date.now() },
   }
   const saved: ChatMessage = {
     id: "reply-reloaded",
@@ -503,6 +505,34 @@ describe("a page loaded while Parley answers (PAR-33)", () => {
         orpc.chat.messages.queryKey({ input: { id: draftId } })
       )
     ).toEqual([question, saved])
+    serverChat = []
+  })
+
+  test("a turn that died long ago offers Try again at once, and the box works", async () => {
+    // A provider error before Parley's first word, days ago: the chat ends
+    // with the user's message, and no reply is coming.
+    const old = { ...question, metadata: { savedAt: Date.now() - 86_400_000 } }
+    serverChat = [old]
+    const { screen } = await show({ initialMessages: [old] })
+
+    await expect
+      .element(screen.getByText("Parley couldn’t answer.", { exact: false }))
+      .toBeVisible()
+    expect(screen.getByText("Thinking…").query()).toBeNull()
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "Still there?"
+    )
+    await expect
+      .element(screen.getByRole("button", { name: "Send" }))
+      .toBeEnabled()
+
+    // Try again asks for the reply to that message.
+    await screen.getByRole("button", { name: "Try again" }).click()
+    await expect.element(screen.getByText("Mutual NDA selected")).toBeVisible()
+    expect(
+      screen.getByText("Parley couldn’t answer.", { exact: false }).query()
+    ).toBeNull()
     serverChat = []
   })
 })
