@@ -962,7 +962,7 @@
     - Filed PAR-32 (high: live document misses the first change), PAR-33 to PAR-35 (medium), PAR-36 to PAR-44 (low), PAR-45 (design notes). All planned in the backlog; PAR-32 blocks Checkpoint 7.
     - Memory: no leak over 100 messages (heap 39.7 → 42.2 MB, listeners flat).
     - Gate after merge: `pnpm check` pass; `pnpm test` 103/103 files, 1242 passed (the first 2 runs failed from a stale Vite cache after the new `optimizeDeps` setting; a true cold run passes); e2e no-sideways-scroll + shell + phone on Chromium, Firefox and both phone projects: 38 passed.
-    - Deviation: the Claude in Chrome feel check was not possible for agents; headless screenshots were judged instead. The owner does a short look in real Chrome.
+    - Deviation: the Claude in Chrome feel check was not possible for agents; headless screenshots were judged instead. The owner accepted this. The owner checked in the Polar sandbox that deleting the QA Pro account cancelled its subscription.
   - Accept:
     - An agent-browser dogfood run over all the user journeys and edge cases. A Claude in Chrome check of the feel and layout at many sizes. A Chrome DevTools check for memory leaks over a 100-message chat.
     - Every bug found is filed as `wi new --origin PAR-1` and fixed or planned.

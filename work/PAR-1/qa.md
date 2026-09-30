@@ -74,13 +74,12 @@ worth a profile later (in PAR-45's notes).
 
 | What | Why |
 |---|---|
-| The Claude in Chrome feel check (asked for by T37) | Not available to agents. Headless agent-browser screenshots were judged instead; the notes are in PAR-45. **Owner:** a short look in real Chrome. |
+| The Claude in Chrome feel check (asked for by T37) | Not available to agents. Headless agent-browser screenshots were judged instead; the notes are in PAR-45. The owner accepted this (2026-09-30). |
 | Chrome DevTools MCP | Not in the session. The memory check used a CDP script instead (same data). |
 | WebKit and Firefox by hand | agent-browser is Chromium only. CI runs e2e on all 6 browser projects. |
 | DOCX contents, PDF pages 3–4 in detail | Word is Pro-only in the journeys area; no PDF text tool here. T31's real export test covers both. |
 | Retry after a server-side failure (PAR-7) | Only an offline (client) failure could be caused. |
 | Email change, trust this device, new backup codes, turning off 2FA | Email limit of 2 per area, and time. |
-| Polar cancels the subscription when a Pro account is deleted | No Polar dashboard access. **Owner:** check the sandbox dashboard for the deleted QA account. |
 | Google/GitHub sign-in | Previews have no OAuth apps. |
 
 ## Known items checked
@@ -92,6 +91,7 @@ worth a profile later (in PAR-45's notes).
 - **PAR-20**: turning on 2FA still doesn't offer "Sign out other devices" (as filed). A
   password reset did end the other device's session.
 - **PAR-21**: checkout and the portal work in the sandbox; none of its items came up.
+- **Deleting a Pro account** (owner checked the Polar sandbox dashboard, 2026-09-30): the QA order (Sep 30 15:09, $4.17) now belongs to an anonymized customer, and the only active subscription left is the owner's own. The delete cancels the subscription and removes the Polar customer.
 - **PAR-6**: the filed symptom (a 1368 px page) did not reproduce at 217b041. The fix
   removes the shared cause (a closed panel's content laid out past the edge).
 
