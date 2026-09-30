@@ -211,3 +211,6 @@ PAR-18 cancelled (owner): sandbox-only billing, no real money, so the reconcile 
 
 ### 2026-09-30T21:11:24Z
 T38 scope (owner, 2026-09-30): core (domain, production config, Polar sandbox webhook, security headers, smoke) + anonymized Preview parent + version URLs off. Symptom alerts (5xx, ttft, cost) skipped: portfolio traffic, OpenRouter key cap is the cost guard.
+
+### 2026-09-30T21:15:14Z
+T38 deploy path (owner, 2026-09-30): merge PR #1 into main at the end of T38 (after headers, Polar production webhook + secrets, and production migrations 0001-0004 with owner OK), so Workers Builds deploys with the full gate and smoke.yml checks the live domain. T39/T40 then land on main.
