@@ -480,9 +480,10 @@ describe("the chat's metrics", () => {
 
 describe("a reply that can't be saved", () => {
   it("is logged by its draft and the error's code, with none of the chat", async () => {
-    // Postgres can't store a NUL character in jsonb, so the save after the
-    // reply fails, with the whole reply in Drizzle's error message.
-    const model = scriptedModel([[{ text: "Nightingale\u0000 is next." }]])
+    // Postgres can't store a lone surrogate in jsonb (NUL is stripped since
+    // PAR-9), so the save after the reply fails, with the whole reply in
+    // Drizzle's error message.
+    const model = scriptedModel([[{ text: "Nightingale\ud800 is next." }]])
 
     const { draft, lines, logged } = await turn(model, "Who's next?")
 
@@ -491,7 +492,7 @@ describe("a reply that can't be saved", () => {
         level: "error",
         event: "chat_save_failed",
         draftId: draft.id,
-        error: expect.objectContaining({ code: "22P05" }),
+        error: expect.objectContaining({ code: "22P02" }),
       })
     )
     expect(logged).not.toContain("Nightingale")
