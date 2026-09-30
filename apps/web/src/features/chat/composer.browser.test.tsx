@@ -1,7 +1,7 @@
 import { act, useState } from "react"
 import { hydrateRoot } from "react-dom/client"
 import { renderToString } from "react-dom/server"
-import { expect, test, vi } from "vite-plus/test"
+import { describe, expect, test, vi } from "vite-plus/test"
 import { page, userEvent } from "vite-plus/test/browser"
 import { render } from "vitest-browser-react"
 
@@ -21,6 +21,81 @@ function sendThreeTimes(textarea: HTMLTextAreaElement, button: HTMLElement) {
   enter()
   button.click()
 }
+
+describe("the 4,000-character limit (PAR-37)", () => {
+  /** Prose `length` characters long, ending on a letter (nothing to trim). */
+  const words = (length: number) =>
+    "We share our roadmap with a vendor. ".repeat(200).slice(0, length - 1) +
+    "x"
+
+  test("keeps all of a long paste, says it's too long, and won't send it", async () => {
+    const onSend = vi.fn<(text: string) => void>()
+    const screen = await render(<Composer busy={false} onSend={onSend} />)
+    const box = screen.getByRole("textbox", { name: "Message" })
+
+    await userEvent.fill(box, words(5000))
+
+    expect((box.element() as HTMLTextAreaElement).value).toHaveLength(5000)
+    await expect
+      .element(screen.getByText("Too long to send · 5,000 / 4,000"))
+      .toBeVisible()
+    await expect.element(box).toHaveAttribute("aria-invalid", "true")
+    await expect
+      .element(box)
+      .toHaveAccessibleDescription(/Too long to send · 5,000 \/ 4,000/)
+    await expect
+      .element(screen.getByRole("button", { name: "Send" }))
+      .toBeDisabled()
+    await userEvent.keyboard("{Enter}")
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
+  test("counts the characters near the limit, and not before", async () => {
+    const screen = await render(<Composer busy={false} onSend={() => {}} />)
+    const box = screen.getByRole("textbox", { name: "Message" })
+
+    await userEvent.fill(box, words(3500))
+    expect(screen.getByText("/ 4,000", { exact: false }).query()).toBeNull()
+
+    await userEvent.fill(box, words(3700))
+    await expect.element(screen.getByText("3,700 / 4,000")).toBeVisible()
+  })
+
+  test("sends once the message is short enough again", async () => {
+    const onSend = vi.fn<(text: string) => void>()
+    const screen = await render(<Composer busy={false} onSend={onSend} />)
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.fill(box, words(4100))
+
+    await userEvent.fill(box, words(4000))
+    await screen.getByRole("button", { name: "Send" }).click()
+
+    expect(onSend).toHaveBeenCalledOnce()
+  })
+
+  test("says so on the start page too", async () => {
+    const screen = await render(
+      <Composer
+        variant="start"
+        label="Describe your deal"
+        busy={false}
+        onSend={() => {}}
+      />
+    )
+
+    await userEvent.fill(
+      screen.getByRole("textbox", { name: "Describe your deal" }),
+      words(4200)
+    )
+
+    await expect
+      .element(screen.getByText("Too long to send · 4,200 / 4,000"))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole("button", { name: "Start drafting" }))
+      .toBeDisabled()
+  })
+})
 
 test("sends once when sends come faster than React renders (PAR-39)", async () => {
   const onSend = vi.fn<(text: string) => void>()
