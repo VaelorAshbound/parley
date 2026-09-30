@@ -70,10 +70,44 @@ test("the document panel closes, stays closed on reload, and opens again", async
   await page.locator("html[data-hydrated]").waitFor({ state: "attached" })
   await expect(page.getByRole("region", { name: "Live document" })).toBeHidden()
 
-  await page.getByRole("link", { name: "Open document" }).click()
+  // The chat header's toggle (the card below has its own test).
+  await page
+    .getByRole("region", { name: "Chat" })
+    .locator("header")
+    .getByRole("link", { name: "Open document" })
+    .click()
   await expect(
     page.getByRole("region", { name: "Live document" })
   ).toBeVisible()
+})
+
+test("a closed document leaves a card in the chat that opens it again", async ({
+  page,
+}) => {
+  await startNda(page)
+  const livePanel = page.getByRole("region", { name: "Live document" })
+  const card = page.getByRole("group", { name: "Document closed" })
+  // Open, the card isn't needed.
+  await expect(livePanel).toBeVisible()
+  await expect(card).toBeHidden()
+
+  await livePanel.getByRole("link", { name: "Close document" }).click()
+
+  await expect(livePanel).toBeHidden()
+  await expect(card).toBeVisible()
+  await expect(card).toContainText("Mutual NDA")
+
+  await card.getByRole("link", { name: "Open document" }).click()
+
+  await expect(page).not.toHaveURL(/panel=closed/)
+  await expect(livePanel).toBeVisible()
+  await expect(card).toBeHidden()
+  // The card's button is gone, so focus goes to the header's toggle.
+  await expect(
+    page
+      .getByRole("region", { name: "Chat" })
+      .getByRole("link", { name: "Close document" })
+  ).toBeFocused()
 })
 
 test("the closed document panel can be dragged open again", async ({
