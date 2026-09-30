@@ -60,7 +60,9 @@ export function DraftWorkspace({
     if (tab === "document" || !isMobile) seeDocument()
   }, [tab, isMobile, unseen, seeDocument])
 
-  // The URL decides open or closed; the panel follows it.
+  // The URL decides open or closed; the panel follows it. onResize below
+  // writes the URL back when the panel is dragged. Both sides only act when
+  // the two disagree, so a stale value just asks for the same state again.
   useEffect(() => {
     const panel = documentPanel.current
     if (!panel || isMobile) return
@@ -136,12 +138,24 @@ export function DraftWorkspace({
           minSize={isMobile ? undefined : 420}
           collapsible={!isMobile}
           collapsedSize={0}
+          // Closed means gone, not squeezed to zero width (PAR-6): a closed
+          // panel's content still took its natural width past the window's
+          // edge, kept its links in the Tab order, and when the AI changed
+          // the document, scrolling to the change slid the chat sideways.
+          // Phones show the Document tab whatever the desktop panel says.
+          className={cn(!panelOpen && "md:hidden")}
           onResize={(size) => {
-            // Dragged shut: record it in the URL like the close button does.
-            if (size.asPercentage === 0 && panelOpen && !isMobile)
+            if (isMobile) return
+            // Dragged shut or open: record it in the URL like the buttons do.
+            if (size.asPercentage === 0 && panelOpen)
               void navigate({
                 to: ".",
                 search: (prev) => ({ ...prev, panel: "closed" }),
+              })
+            if (size.asPercentage > 0 && !panelOpen)
+              void navigate({
+                to: ".",
+                search: (prev) => ({ ...prev, panel: undefined }),
               })
           }}
         >
