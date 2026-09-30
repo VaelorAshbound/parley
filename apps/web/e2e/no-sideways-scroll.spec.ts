@@ -11,7 +11,10 @@ import { draftOpened, expect, open, test } from "./helpers"
 
 /** How far the page, `main` and the chat/document split reach or sit sideways. */
 function sideways(page: Page) {
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
+    // Let any scroll queued by the last render land first.
+    for (let frame = 0; frame < 2; frame++)
+      await new Promise(requestAnimationFrame)
     const root = document.documentElement
     const main = document.querySelector("main")
     const split = document.querySelector("[data-group]")
@@ -38,6 +41,9 @@ for (const width of [1440, 1280, 390]) {
     test(`a draft at ${width} px with the document ${panel} never scrolls sideways`, async ({
       page,
     }) => {
+      // Reduced motion makes the panel's follow-the-change scroll instant,
+      // so the check below sees where it lands, not a moment before it.
+      await page.emulateMedia({ reducedMotion: "reduce" })
       await page.setViewportSize({ width, height: 900 })
       await open(page, "/")
       await page.getByRole("button", { name: /Mutual NDA/ }).click()
@@ -56,8 +62,13 @@ for (const width of [1440, 1280, 390]) {
       await expect(
         page.getByText("I picked the Mutual NDA and filled in the purpose.")
       ).toBeVisible()
+      // Wait for the change to reach the document itself (hidden or not),
+      // then measure once: a poll would pass on its first, pre-scroll sample.
+      await expect(
+        page.locator('[data-section="purpose"], [data-edit^="purpose"]').first()
+      ).toContainText(/roadmap/i)
 
-      await expect.poll(() => sideways(page)).toEqual(still)
+      expect(await sideways(page)).toEqual(still)
     })
   }
 }
