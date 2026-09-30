@@ -46,7 +46,9 @@ export function useDocumentSync(
       // A draft load still on its way (the one chooseDocument starts) read
       // the database before this change was saved, and would put the old
       // values back when it lands (PAR-32). Drop it and load again: the
-      // server saved this change before sending its result.
+      // server saved this change before sending its result. Cancelling keeps
+      // the value set just above: TanStack Query rolls a cancelled load back
+      // to the last setQueryData, not to the answer before it.
       if (queryClient.isFetching({ queryKey: draftKey }) > 0) {
         void queryClient
           .cancelQueries({ queryKey: draftKey })

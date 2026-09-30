@@ -73,7 +73,31 @@ const reply = (parts: ChatMessage["parts"]): ChatMessage[] => [
   { id: "reply", role: "assistant", parts },
 ]
 
-test("a draft load that started before a field was saved does not undo the field", async () => {
+const law = "The laws of the State of New York."
+
+const alsoFilled: ChatMessage["parts"][number] = {
+  type: "tool-updateFields",
+  toolCallId: "call-law",
+  state: "output-available",
+  input: {
+    changes: [{ key: "governingLaw", value: law, explanation: "Where." }],
+  },
+  output: {
+    applied: [
+      {
+        key: "governingLaw",
+        before: undefined,
+        after: law,
+        explanation: "Where.",
+      },
+    ],
+    rejected: [],
+    inverse: [{ key: "governingLaw", value: undefined, expected: law }],
+  },
+}
+
+/** The page: the document panel shows the draft, and the chat syncs it. */
+async function renderPage() {
   const server = heldServer()
   const queryClient = new QueryClient()
   const key = server.orpc.drafts.get.queryKey({ input: { id: draftId } })
@@ -98,28 +122,67 @@ test("a draft load that started before a field was saved does not undo the field
     },
     { wrapper, initialProps: { messages: [] as ChatMessage[] } }
   )
-  const shown = () =>
+  const shown = (field: string) =>
     (queryClient.getQueryData(key) as { fields: Record<string, unknown> })
-      .fields.purpose
+      .fields[field]
+  const loading = () => queryClient.isFetching({ queryKey: key })
+  /** Lets every held read answer, until none is left. */
+  const answerAll = () =>
+    expect
+      .poll(() => {
+        server.release()
+        return loading()
+      })
+      .toBe(0)
+  return { server, rerender, shown, loading, answerAll }
+}
+
+test("a draft load that started before a field was saved does not undo the field", async () => {
+  const { server, rerender, shown, loading, answerAll } = await renderPage()
 
   // The server saves the chosen agreement; the page starts loading the draft.
   server.saved.documentId = "mutual-nda"
   server.saved.fields = { purpose: template }
   await rerender({ messages: reply([chose]) })
-  expect(queryClient.isFetching({ queryKey: key })).toBe(1)
+  expect(loading()).toBe(1)
 
   // The server saves the field; its result reaches the page.
   server.saved.fields = { purpose: roadmap }
   await rerender({ messages: reply([chose, filled]) })
-  expect(shown()).toBe(roadmap)
+  expect(shown("purpose")).toBe(roadmap)
 
   // Now the early load answers, with the template's value.
-  server.release()
-  await expect
-    .poll(() => {
-      server.release()
-      return queryClient.isFetching({ queryKey: key })
-    })
-    .toBe(0)
-  expect(shown()).toBe(roadmap)
+  await answerAll()
+  expect(shown("purpose")).toBe(roadmap)
+})
+
+test("a second field saved while the page is loading again keeps both fields", async () => {
+  const { server, rerender, shown, loading, answerAll } = await renderPage()
+
+  server.saved.documentId = "mutual-nda"
+  server.saved.fields = { purpose: template }
+  await rerender({ messages: reply([chose]) })
+
+  // The first field starts a fresh load, which is still on its way ...
+  server.saved.fields = { purpose: roadmap }
+  await rerender({ messages: reply([chose, filled]) })
+  expect(loading()).toBe(1)
+
+  // ... when the second field is saved and its result arrives.
+  server.saved.fields = { purpose: roadmap, governingLaw: law }
+  await rerender({ messages: reply([chose, filled, alsoFilled]) })
+
+  await answerAll()
+  expect(shown("purpose")).toBe(roadmap)
+  expect(shown("governingLaw")).toBe(law)
+})
+
+test("a field change with no load on its way does not load the draft again", async () => {
+  const { server, rerender, shown, loading } = await renderPage()
+
+  server.saved.fields = { purpose: roadmap }
+  await rerender({ messages: reply([filled]) })
+
+  expect(shown("purpose")).toBe(roadmap)
+  expect(loading()).toBe(0)
 })
