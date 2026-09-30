@@ -157,7 +157,13 @@ export function ChatPanel({
                 <MessageScrollerItem
                   key={message.id}
                   messageId={message.id}
-                  scrollAnchor={message.role === "user"}
+                  // Only this visit's turns anchor. The scroller never marks
+                  // the turns there on load as handled, so a change that
+                  // keeps the item count (a note replacing "Thinking…")
+                  // scrolled to the first of them, the top (PAR-34).
+                  scrollAnchor={
+                    message.role === "user" && !loaded.has(message.id)
+                  }
                   // New messages rise in; the ones there on load don't move.
                   className={cn(!loaded.has(message.id) && "enter")}
                 >
