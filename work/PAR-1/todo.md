@@ -281,7 +281,7 @@
     - **`html[data-hydrated]`** marks the page interactive for tests; clicks before hydration were lost in tests.
     - **The draft page shows the short document name** from the app list, which keeps the engine out of its chunk until T16 needs it.
     - **Store leak check**: a unit test for per-provider stores plus a lint rule banning zustand `create`, instead of a workerd SSR test (Start's server entry is a Vite virtual module the workerd runner can't load).
-    - **Later tasks**: component tests in browser mode start with T16's interactive parts; search, date groups and draft actions T22; account menu T21/T23; Share/Download T24/T25; expand to full width T16. **T35**: the entry chunk is 156 KB gzip with Zod in it (route search schemas).
+    - **Later tasks**: component tests in browser mode start with T16's interactive parts; search, date groups and draft actions T22; account menu T21/T23; Share/Download T24/T25; expand to full width: dropped (2026-09-30, PAR-44, owner; the panel is resizable). **T35**: the entry chunk is 156 KB gzip with Zod in it (route search schemas).
     - Local Playwright can use an installed Chromium via `PLAYWRIGHT_CHROMIUM_PATH` (the CDN was unreachable here); CI installs its own.
     - **CI tests the right Preview**: the e2e job waits until `/api/version` returns the commit under test (`ci-preview.sh` passes `COMMIT_SHA`); before, it could test the previous version. 14/14 green in CI.
   - Accept:
