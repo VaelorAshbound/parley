@@ -72,6 +72,18 @@ describe("toDocx", () => {
     expect(textOf(document)).not.toContain("available at None.")
   })
 
+  it("prints an empty optional field on a labelled line as Label: None.", async () => {
+    // PAR-40 review: a labelled line that is not a checklist printed a bare
+    // "Travel and expenses" with nothing after it.
+    const psa = definitions.psa
+    const { travelExpenses: _left, ...values } = examples.psa
+    const { document } = await unzip(
+      await toDocx(render(psa, psa.schema.parse(values)))
+    )
+
+    expect(textOf(document)).toContain("\nTravel and expenses: None.\n")
+  })
+
   it("prints an empty part of a checklist as its label alone, no dangling colon", async () => {
     // PAR-40: "☐ Events logging: " read as a value left out.
     const dpa = definitions.dpa

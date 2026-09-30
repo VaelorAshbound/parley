@@ -26,8 +26,10 @@ export function isNone({ text, optional }: RenderedValue) {
 
 /**
  * A line with nothing in it but empty optional values. The PDF and DOCX print
- * a checklist part as its label alone, and any other line as just "None.",
- * without its template's words ("available at None.") (PAR-40).
+ * a checklist part as its box and label alone, and any other line as "None."
+ * (after its label, if it has one), without its template's words ("available
+ * at None.") (PAR-40). A line that mixes an empty optional value with a filled
+ * one is not a none line: it keeps its words, with "None." inline.
  */
 export function isNoneLine({ parts }: RenderedLine) {
   const values = parts.filter((part) => part.type === "value")
