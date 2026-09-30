@@ -43,6 +43,15 @@ export function useDocumentSync(
         }
         return { ...draft, fields }
       })
+      // A draft load still on its way (the one chooseDocument starts) read
+      // the database before this change was saved, and would put the old
+      // values back when it lands (PAR-32). Drop it and load again: the
+      // server saved this change before sending its result.
+      if (queryClient.isFetching({ queryKey: draftKey }) > 0) {
+        void queryClient
+          .cancelQueries({ queryKey: draftKey })
+          .then(() => queryClient.invalidateQueries({ queryKey: draftKey }))
+      }
       // The changed fields ink in, and the panel scrolls to the first.
       markChanged(part.output.applied.map((change) => change.key))
     }
