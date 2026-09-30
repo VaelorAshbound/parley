@@ -53,11 +53,9 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       const company = page.getByRole("textbox", {
         name: "What is your company called?",
       })
-      // The next question takes focus, so it is read out; its box is a Tab away.
-      await expect(
-        page.getByRole("group", { name: "What is your company called?" })
-      ).toBeFocused()
-      await tabTo(page, company)
+      // The next question has only a text box, which takes the focus: typing
+      // goes straight in (T36 lost it on the question's fieldset).
+      await expect(company).toBeFocused()
       await page.keyboard.type("Acme Robotics")
       await page.keyboard.press("Enter")
       await tabTo(page, page.getByRole("button", { name: "Skip" }))
