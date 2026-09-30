@@ -43,8 +43,9 @@ export function Landing({
 
   return (
     // The art and the two-column library follow the room the page has, not
-    // the window: an open sidebar takes 16rem of it.
-    <div className="@container flex flex-1 flex-col">
+    // the window: an open sidebar takes 16rem of it. On a very wide screen
+    // the whole page keeps to 90rem, centered, so it isn't left-heavy.
+    <div className="@container mx-auto flex w-full max-w-360 flex-1 flex-col">
       <SiteHeader isAccount={isAccount} />
       <div className="flex w-full flex-1 flex-col px-6 pt-6 md:px-12 md:pt-10 @min-[84rem]:pr-14 @min-[84rem]:pl-23">
         <section className="grid gap-x-10 @min-[72rem]:grid-cols-[minmax(0,560px)_minmax(0,1fr)] @min-[84rem]:grid-cols-[600px_minmax(0,1fr)] @min-[84rem]:pt-4">
