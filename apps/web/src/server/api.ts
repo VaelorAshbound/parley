@@ -91,7 +91,18 @@ export const api = new Hono<AppEnv>()
     const stage: string = c.env.STAGE
     return stage === "preview" ? timing()(c, next) : next()
   })
-  .use(secureHeaders())
+  // JSON, never a page: nothing may run in it or frame it. HSTS and the
+  // referrer policy match the pages' (src/server/headers.ts, T38).
+  .use(
+    secureHeaders({
+      contentSecurityPolicy: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+      strictTransportSecurity: "max-age=31536000; includeSubDomains",
+      referrerPolicy: "strict-origin-when-cross-origin",
+    })
+  )
   // Hono answers HEAD from the GET handler on its own.
   .get("/health", (c) => c.json({ ok: true as const }))
   // The e2e tests check both before they start: which commit is served, and
