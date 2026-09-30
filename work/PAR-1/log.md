@@ -217,3 +217,6 @@ T38 deploy path (owner, 2026-09-30): merge PR #1 into main at the end of T38 (af
 
 ### 2026-09-30T22:02:20Z
 T38 step 5: production migrations 0002-0004 applied (owner OK); 5 rows in __drizzle_migrations, plan columns and counted_export present.
+
+### 2026-09-30T22:04:11Z
+T38 step 6: Polar sandbox webhook for parley.runtimedrift.dev (c9ebdb66); production secrets POLAR_WEBHOOK_SECRET, POLAR_ACCESS_TOKEN, and a new sending-only Resend key (parley-production-sending, mail.runtimedrift.dev) as RESEND_API_KEY. Old full-access Resend key left for the owner to delete. Step 7: custom domain route in wrangler.jsonc, live on the merge deploy.

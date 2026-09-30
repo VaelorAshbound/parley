@@ -44,7 +44,7 @@ Each task is checked before the next one starts. Production changes (marked
 5. ✅ (2026-09-30, owner OK) **Production migrations 0002–0004.** **OK.** Run `pnpm db:migrate`
    against the production branch. Verify: `__drizzle_migrations` has 5 rows,
    `db:check` clean.
-6. **Polar production webhook + secrets.** **OK.** New sandbox endpoint
+6. ✅ (2026-09-30, owner OK) **Polar production webhook + secrets.** **OK.** New sandbox endpoint
    `https://parley.runtimedrift.dev/api/auth/polar/webhooks`
    (`customer.state_changed`), then `wrangler secret put` for
    `POLAR_ACCESS_TOKEN` and `POLAR_WEBHOOK_SECRET`. Check `RESEND_API_KEY` in
