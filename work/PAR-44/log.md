@@ -6,3 +6,6 @@ Owner decision: drop 'expand to full width' from the spec (the panel is resizabl
 
 ### 2026-09-30T18:09:53Z
 phase: backlog -> build
+
+### 2026-09-30T19:32:41Z
+Owner OK: card under the chat header; focus goes to the header toggle after Open document. Merged 2b42eb0.
