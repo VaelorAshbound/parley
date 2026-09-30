@@ -269,9 +269,11 @@ function Changes({
               .filter(Boolean)
               .join(", ")}
             title={change.explanation}
-            className="min-h-10.5 gap-2.5 border-t py-1.5 pr-1.5 pl-3.5 text-[13.5px] first:border-t-0"
+            // Top-aligned on one 22 px line box: the icon, the field and Undo
+            // sit on the value's first line, not between its two (PAR-42).
+            className="items-start gap-2.5 border-t py-2.5 pr-1.5 pl-3.5 text-[13.5px] leading-5.5 first:border-t-0"
           >
-            <MarkerIcon>
+            <MarkerIcon className="mt-0.75">
               <PenLineIcon className="size-3.5 text-ink-3" />
             </MarkerIcon>
             <span className="shrink-0 text-ink-2">{name}</span>
@@ -279,22 +281,23 @@ function Changes({
               →
             </span>
             <span className="sr-only">set to</span>
-            {/* Wraps, never cut: a long value (a purpose, a sentence) is
-                read in full at any width (PAR-42). */}
+            {/* Two lines at most, so a long purpose never fills the chat; the
+                whole value is its tooltip and in the row's name (PAR-42). */}
             <MarkerContent
+              title={value}
               className={cn(
-                "flex-1 font-serif text-[15px] leading-snug text-pretty text-blue-ink",
+                "line-clamp-2 flex-1 font-serif text-[15px] leading-5.5 text-pretty text-blue-ink",
                 state === "undone" && "text-ink-3 line-through"
               )}
             >
               {value}
             </MarkerContent>
             {state === "undone" ? (
-              <span className="px-2.5 text-xs text-muted-foreground">
+              <span className="px-2.5 text-xs leading-5.5 text-muted-foreground">
                 Undone
               </span>
             ) : state === "stale" ? (
-              <span className="px-2.5 text-xs text-muted-foreground">
+              <span className="px-2.5 text-xs leading-5.5 text-muted-foreground">
                 Changed since
               </span>
             ) : onUndo && back ? (
@@ -302,7 +305,7 @@ function Changes({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7.5 text-[12.5px] text-ink-2"
+                className="-my-1 h-7.5 text-[12.5px] text-ink-2"
                 aria-label={`Undo ${field?.label ?? change.key}`}
                 onClick={() =>
                   onUndo({
