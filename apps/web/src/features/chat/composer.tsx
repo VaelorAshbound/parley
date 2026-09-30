@@ -102,8 +102,10 @@ export function Composer({
           {start ? (
             <>
               <span className="flex items-center gap-1.5 text-[12.5px] font-normal text-muted-foreground pointer-coarse:invisible">
+                {/* The space is in the text, so it reads "Enter to start",
+                    not "Enterto start"; the gap sets the look. */}
                 <Kbd>Enter</Kbd>
-                to start
+                {" to start"}
               </span>
               <InputGroupButton
                 type="submit"

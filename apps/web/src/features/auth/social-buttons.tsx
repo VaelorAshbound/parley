@@ -3,7 +3,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { FieldSeparator } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 
@@ -77,6 +77,7 @@ function SocialButtons({
   onError: (message: string) => void
 }) {
   const [leaving, setLeaving] = useState<Provider>()
+  const lastUsedId = useId()
 
   async function continueWith(provider: Provider) {
     setLeaving(provider)
@@ -104,6 +105,8 @@ function SocialButtons({
           size="lg"
           disabled={leaving !== undefined}
           onClick={() => void continueWith(provider)}
+          // The badge describes the button; its name stays the provider's.
+          aria-describedby={lastUsed === provider ? lastUsedId : undefined}
         >
           {leaving === provider ? (
             <Spinner data-icon="inline-start" />
@@ -112,7 +115,12 @@ function SocialButtons({
           )}
           Continue with {names[provider]}
           {lastUsed === provider && (
-            <Badge variant="secondary" className="ml-auto">
+            <Badge
+              id={lastUsedId}
+              aria-hidden="true"
+              variant="secondary"
+              className="ml-auto"
+            >
               Last used
             </Badge>
           )}
