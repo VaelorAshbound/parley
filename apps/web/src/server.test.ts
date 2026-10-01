@@ -7,7 +7,9 @@ import { scheduled } from "./server/cron"
 // The Start server entry is a virtual module only the TanStack Start plugin
 // can build; this test is about the Worker's handlers, not SSR.
 vi.mock(import("@tanstack/react-start/server-entry"), () => ({
-  default: { fetch: vi.fn(() => new Response("<p>page</p>")) },
+  default: {
+    fetch: vi.fn<typeof handler.fetch>(() => new Response("<p>page</p>")),
+  },
 }))
 
 describe("the Worker entry", () => {
