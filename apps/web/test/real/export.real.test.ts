@@ -1,6 +1,9 @@
 import {
   DISCLAIMER,
+  NONE,
   definitionOf,
+  isNone,
+  isNoneLine,
   missingFields,
   render,
   type DocumentId,
@@ -84,7 +87,9 @@ function textOf(nodes: RenderedInline[]): string {
  * don't read back in a fixed order.
  */
 function coverPhrasesOf({ coverPage }: RenderedDocument) {
-  const shown = (value: RenderedValue) => value.text ?? value.placeholder
+  // As printed: an empty optional field is "None." (PAR-40).
+  const shown = (value: RenderedValue) =>
+    isNone(value) ? NONE : (value.text ?? value.placeholder)
   return [
     coverPage.title,
     ...coverPage.intro.map(textOf),
@@ -93,9 +98,15 @@ function coverPhrasesOf({ coverPage }: RenderedDocument) {
       section.hint ?? "",
       ...section.lines.flatMap((line) => [
         line.label ?? "",
-        line.parts
-          .map((part) => (part.type === "text" ? part.text : shown(part)))
-          .join(""),
+        // A line of empty optional values prints as "None." without its
+        // words, or as its box and label alone in a checklist (PAR-40).
+        isNoneLine(line)
+          ? line.checked === undefined
+            ? NONE
+            : ""
+          : line.parts
+              .map((part) => (part.type === "text" ? part.text : shown(part)))
+              .join(""),
       ]),
       ...(section.table?.columns ?? []),
       ...(section.table?.rows.flat().map(shown) ?? []),

@@ -42,3 +42,6 @@ Visual baselines depend on .dev.vars: with GOOGLE_/GITHUB_CLIENT_* set, sign-in 
 
 ### 2026-10-01T16:31:33Z
 Flaky (2026-10-01): a11y.spec 'light @phone › a draft with its document closed' fails ~1 in 12 locally: axe aria-required-attr on a React useId element (#_R_…, likely a Base UI part) mid-render. Not T38. Trace: re-run with --repeat-each=6.
+
+### 2026-10-01T20:45:57Z
+Another timing flake (2026-10-01, PR #6 component job): search-dialog.browser.test.tsx 'asks the server once per pause, not once per key' got 3 calls (expected < 3) on a CI runner; passed on re-run. Likely the debounce window vs a slow runner.
