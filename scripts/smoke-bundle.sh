@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Boots the built Worker (dist/) in workerd and asks /api/health. A bundle that
+# fails at startup (T14: a require() left in by the bundler) then fails the
+# build here, instead of at upload. Needs `pnpm build` first.
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../apps/web"
+
+# The scripted AI of the e2e tests (T32) stays in its own chunk, which only
+# a Preview or local dev ever loads; the entry must not start it.
+if grep -q "MockLanguageModel" dist/server/index.js; then
+  echo "The Worker's entry holds the scripted AI; it must load lazily." >&2
+  exit 1
+fi
+
+# The TanStack devtools (Router, Query, Form, and their shell) are for local
+# dev only (spec §6): the browser's bundle must not carry them. These are
+# strings each devtools panel ships (its CSS class prefixes and titles); TanStack
+# Form's small event client ("tanstack-devtools-…") is allowed.
+devtools='tsqd-|tsrd-|TanStack (Router |Query |Form )?Devtools'
+if found="$(grep -lE "$devtools" dist/client/assets/*.js)"; then
+  echo "The browser bundle holds the TanStack devtools:" >&2
+  echo "$found" >&2
+  exit 1
+fi
+
+port=4173
+log="$(mktemp)"
+if curl -fsS "http://localhost:$port" >/dev/null 2>&1; then
+  echo "Port $port is already in use; stop that server first." >&2
+  exit 1
+fi
+# Its own process group, so the workerd children stop with it.
+setsid pnpm exec vp preview --port "$port" --strictPort >"$log" 2>&1 &
+server=$!
+trap 'kill -- "-$server" 2>/dev/null || true; rm -f "$log"' EXIT
+
+for _ in $(seq 1 60); do
+  if curl -fsS "http://localhost:$port/api/health" >/dev/null 2>&1; then
+    echo "The built Worker starts and answers /api/health."
+    exit 0
+  fi
+  if ! kill -0 "$server" 2>/dev/null; then break; fi
+  sleep 1
+done
+echo "The built Worker did not start:" >&2
+cat "$log" >&2
+exit 1

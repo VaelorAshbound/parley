@@ -1,0 +1,128 @@
+# The real-service suite on every PR (spec §6, T33): `pnpm test:real`
+# against the PR's Worker Preview, which runs on its own fresh, migrated
+# Neon branch (scripts/ci-preview.sh). A whole Mutual NDA drafted by the
+# real model and downloaded as a PDF (Browser Run), a Polar sandbox
+# checkout, the confirmation email through Resend, Turnstile, and the
+# post-deploy smoke test. Its OpenRouter spend goes on the run's summary.
+# Secrets (owner-set): NEON_API_KEY (the Preview's branch), RESEND_API_KEY
+# (reads the email back), OPENROUTER_API_KEY_TEST (reads the spend). A test
+# whose secret is missing skips.
+name: Real services
+
+on:
+  # Only on demand: the label "real" on a PR (owner, 2026-09-29).
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: real-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  WORKER: parley
+  ACCOUNT_SUBDOMAIN: vaelorashbound
+  HEAD_REF: ${{ github.head_ref || github.ref_name }}
+  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+  NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+
+jobs:
+  real:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'real'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001 --ipc=host --init
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm documents:build
+
+      - name: Wait for the Workers Builds Preview of this commit
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 8
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # curl, not gh: Playwright's image has no gh.
+          while true; do
+            result="$(curl --silent --fail-with-body \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/commits/$SHA/check-runs" |
+              node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const run=JSON.parse(s).check_runs?.find(r=>r.name==="Workers Builds: "+process.env.WORKER);console.log(run?run.status+" "+run.conclusion:"")})')"
+            echo "Workers Builds: ${result:-not started}"
+            case "$result" in
+              "completed success") break ;;
+              completed*) echo "::error::The Workers Builds run failed, so there's no Preview to test"; exit 1 ;;
+            esac
+            sleep 10
+          done
+
+      - name: Pick the URL, and wait until it serves this commit
+        timeout-minutes: 3
+        env:
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          slug="$(printf '%s' "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-')"
+          url="https://${slug}-${WORKER}.${ACCOUNT_SUBDOMAIN}.workers.dev"
+          echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
+          until [ "$(curl --silent "$url/api/version" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit??"")}catch{console.log("")}})')" = "$SHA" ]; do
+            echo "Waiting for $url to serve $SHA"
+            sleep 5
+          done
+
+      - name: Find the Preview's database
+        if: env.NEON_API_KEY != ''
+        run: |
+          url="$(node --no-warnings packages/db/scripts/preview-database.ts url "$HEAD_REF")"
+          echo "::add-mask::$url"
+          echo "::add-mask::$(node -p 'decodeURIComponent(new URL(process.argv[1]).password)' "$url")"
+          echo "E2E_DATABASE_URL=$url" >> "$GITHUB_ENV"
+
+      - name: pnpm test:real
+        working-directory: apps/web
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPENROUTER_API_KEY_TEST: ${{ secrets.OPENROUTER_API_KEY_TEST }}
+        run: pnpm test:real
+
+      - name: Record the costs
+        if: always()
+        working-directory: apps/web
+        run: |
+          # shellcheck disable=SC2016 # JavaScript, not shell, in the quotes
+          node -e '
+            const fs = require("node:fs")
+            if (!fs.existsSync("test-results/real.json")) process.exit(0)
+            const specs = JSON.parse(fs.readFileSync("test-results/real.json", "utf8"))
+              .suites.flatMap(function walk(s) { return [...(s.specs ?? []), ...(s.suites ?? []).flatMap(walk)] })
+            // Notes added while a test runs are on its result.
+            const rows = specs.flatMap((spec) => spec.tests.flatMap((t) =>
+              [...t.annotations, ...t.results.flatMap((r) => r.annotations ?? [])]
+                .filter((a) => a.type === "cost").map((a) => `| ${spec.title} | ${a.description} |`)))
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              ["## Real-service costs", "", "| Test | Spend |", "| --- | --- |", ...new Set(rows), ""].join("\n"))
+          '
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: real-${{ github.run_id }}
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report-real/
+          retention-days: 7
+          if-no-files-found: ignore

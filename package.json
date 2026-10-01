@@ -1,0 +1,45 @@
+{
+  "name": "parley",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "vp config",
+    "dev": "vp -C apps/web dev",
+    "build": "vp run -r build",
+    "documents:build": "vp run --filter @workspace/documents build",
+    "db:dev": "vp run --filter @workspace/db dev",
+    "db:generate": "vp run --filter @workspace/db generate",
+    "db:migrate": "vp run --filter @workspace/db migrate",
+    "db:check": "vp run --filter @workspace/db check-migrations",
+    "db:auth-schema": "vp run --filter @workspace/db auth-schema",
+    "check": "vp check",
+    "test": "vp test run",
+    "test:browser": "vp test run --project web-browser",
+    "test:coverage": "vp test run --coverage && vp run --filter web-worker-tests test:coverage && node scripts/coverage-server.ts",
+    "test:workers": "vp run --filter web-worker-tests test",
+    "deploy": "vp run --filter web deploy",
+    "test:workers:real": "vp run --filter web-worker-tests test:real",
+    "test:real": "vp run --filter web test:real",
+    "test:real:export": "vp test run --config apps/web/test/real/vite.config.ts",
+    "test:perf": "node load/perf.ts",
+    "test:e2e": "vp run --filter web test:e2e",
+    "test:e2e:docker": "bash scripts/e2e-docker.sh",
+    "evals": "vp run --filter evals evals"
+  },
+  "devDependencies": {
+    "@lhci/cli": "0.15.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/browser-playwright": "5.0.1",
+    "@vitest/coverage-v8": "5.0.1",
+    "playwright": "1.63.0",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "5.0.1"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": "^24.11.0"
+  }
+}

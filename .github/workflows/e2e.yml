@@ -1,0 +1,183 @@
+# Browser tests: the component tests (Vitest browser mode), and the e2e
+# tests against the Worker Preview that Workers Builds makes for each branch.
+# Workers Builds has no root and no GUI libraries, so browsers can't run there
+# (work/PAR-1/spikes.md, docs/adr/0001). Every job runs in Playwright's own
+# image: its browsers are installed, and screenshots match the baselines made
+# with `pnpm test:e2e:docker` (https://playwright.dev/docs/ci#via-containers).
+# e2e runs every browser project on PRs, one job each, side by side (owner's
+# call, T32: a public repo's minutes are free); setup overlaps the Preview
+# build. The image tag must match @playwright/test's version.
+name: E2E
+
+on:
+  pull_request:
+    paths-ignore: ["work/**", "docs/**", "**/*.md"]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Worker Previews live at https://<branch-slug>-parley.<account>.workers.dev
+  WORKER: parley
+  ACCOUNT_SUBDOMAIN: vaelorashbound
+  # Values from the event go through env, never straight into scripts.
+  EVENT: ${{ github.event_name }}
+  HEAD_REF: ${{ github.head_ref }}
+  NIGHTLY_URL: ${{ vars.NIGHTLY_URL }}
+
+jobs:
+  component:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      # --ipc=host: without it the browsers get 64 MB of shared memory and
+      # crash (desktop WebKit did, 2026-09-28); --init reaps their child
+      # processes. https://playwright.dev/docs/docker#recommended-docker-configuration
+      options: --user 1001 --ipc=host --init
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # No postinstall (workerd, wrangler types): the browser tests need none
+      # of it. The whole workspace, because the component tests import the
+      # document engine and run on the root Vite+ config.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      # Vitest browser mode (spec §6): the UI's component tests in real
+      # Chromium and Firefox (a Firefox-only bug reached the Checkpoint 2 demo).
+      - name: Component tests (Firefox)
+        env:
+          TEST_BROWSERS: firefox
+        run: |
+          pnpm documents:build
+          pnpm test:browser
+      - name: Component tests (Chromium)
+        env:
+          TEST_BROWSERS: chromium
+        run: pnpm test:browser
+
+  e2e:
+    # Nightly needs a live URL; until production exists (T38) it doesn't start,
+    # so it costs no minutes.
+    if: github.event_name != 'schedule' || vars.NIGHTLY_URL != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      # --ipc=host: without it the browsers get 64 MB of shared memory and
+      # crash (desktop WebKit did, 2026-09-28); --init reaps their child
+      # processes. https://playwright.dev/docs/docker#recommended-docker-configuration
+      options: --user 1001 --ipc=host --init
+    env:
+      # The Neon project's API key and id (T33), used here only to look up
+      # the Preview's branch URL. Set by the owner; empty until then.
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # A push runs Chromium; the nightly run all six (owner, 2026-09-29).
+        project: ${{ fromJSON(github.event_name == 'schedule' && '["chromium","firefox","webkit","chromium-phone","firefox-phone","webkit-phone"]' || '["chromium"]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      # The tests import the document engine (through @workspace/db), whose
+      # typed trees are generated.
+      - run: pnpm documents:build
+
+      - name: Wait for the Workers Builds Preview of this commit
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 8
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # curl, not gh: Playwright's image has no gh.
+          while true; do
+            result="$(curl --silent --fail-with-body \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/commits/$SHA/check-runs" |
+              node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const run=JSON.parse(s).check_runs?.find(r=>r.name==="Workers Builds: "+process.env.WORKER);console.log(run?run.status+" "+run.conclusion:"")})')"
+            echo "Workers Builds: ${result:-not started}"
+            case "$result" in
+              "completed success") break ;;
+              completed*) echo "::error::The Workers Builds run failed, so there's no Preview to test"; exit 1 ;;
+            esac
+            sleep 10
+          done
+
+      - name: Pick the URL
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            slug="$(printf '%s' "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-')"
+            url="https://${slug}-${WORKER}.${ACCOUNT_SUBDOMAIN}.workers.dev"
+          else
+            url="$NIGHTLY_URL"
+          fi
+          echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
+          echo "Testing $url"
+          curl --fail --silent --show-error --retry 5 --retry-all-errors "$url/api/health"
+
+      # The branch URL can serve the previous version for a moment after the
+      # build finishes; testing that would test the wrong code (T15).
+      - name: Wait until the Preview serves this commit
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 3
+        env:
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          while true; do
+            commit="$(curl --silent "$PREVIEW_URL/api/version" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit??"")}catch{console.log("")}})')"
+            echo "Preview serves: ${commit:-unknown}, want $SHA"
+            if [ "$commit" = "$SHA" ]; then break; fi
+            sleep 5
+          done
+
+      # The Preview's own Neon branch (T33, scripts/ci-preview.sh made it for
+      # this commit): the tests that confirm an email or read a reset token
+      # use it. Without the NEON_API_KEY secret they skip.
+      - name: Find the Preview's database
+        if: github.event_name == 'pull_request' && env.NEON_API_KEY != ''
+        run: |
+          url="$(node --no-warnings packages/db/scripts/preview-database.ts url "$HEAD_REF")"
+          echo "::add-mask::$url"
+          echo "::add-mask::$(node -p 'decodeURIComponent(new URL(process.argv[1]).password)' "$url")"
+          echo "E2E_DATABASE_URL=$url" >> "$GITHUB_ENV"
+
+      - name: Playwright
+        working-directory: apps/web
+        env:
+          PROJECT: ${{ matrix.project }}
+          # This is Playwright's image: compare the screenshots.
+          PW_VISUAL: "1"
+        run: pnpm exec playwright test --project="$PROJECT"
+
+      - name: Keep traces of failures
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-${{ github.run_id }}-${{ matrix.project }}
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

@@ -1,0 +1,1804 @@
+=== word/document.xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document mc:Ignorable="w14 w15 wp14" xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex">
+<w:body>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading1"/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Mutual Non-Disclosure Agreement</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">USING THIS MUTUAL NON-DISCLOSURE AGREEMENT</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:t xml:space="preserve">This Mutual Non-Disclosure Agreement (the “MNDA”) consists of: (1) this Cover Page (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Cover Page</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”) and (2) the Common Paper Mutual NDA Standard Terms Version 1.0 (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Standard Terms</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”) identical to those posted at </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-1">
+<w:r>
+<w:rPr>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">commonpaper.com/standards/mutual-nda/1.0</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:t xml:space="preserve">. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.</w:t>
+</w:r>
+</w:p>
+<w:tbl>
+<w:tblPr>
+<w:tblW w:type="dxa" w:w="9360"/>
+<w:tblBorders>
+<w:top w:val="single" w:color="auto" w:sz="4"/>
+<w:left w:val="single" w:color="auto" w:sz="4"/>
+<w:bottom w:val="single" w:color="auto" w:sz="4"/>
+<w:right w:val="single" w:color="auto" w:sz="4"/>
+<w:insideH w:val="single" w:color="auto" w:sz="4"/>
+<w:insideV w:val="single" w:color="auto" w:sz="4"/>
+</w:tblBorders>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="2995"/>
+<w:gridCol w:w="6365"/>
+</w:tblGrid>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Purpose</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">How Confidential Information may be used</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Evaluating a possible partnership to resell Acme&apos;s analytics product.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Effective Date</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">October 1, 2026</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">MNDA Term</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">The length of this MNDA</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Expires </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">2 years</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> from Effective Date.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Continues until terminated in accordance with the terms of the MNDA.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Term of Confidentiality</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">How long Confidential Information is protected</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☒ </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">3 years</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Segoe UI Symbol" w:cs="Segoe UI Symbol" w:eastAsia="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol"/>
+</w:rPr>
+<w:t xml:space="preserve">☐ </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">In perpetuity.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Governing Law &amp; Jurisdiction</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Governing Law: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Delaware</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Jurisdiction: </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">courts located in New Castle, DE</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2995"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">MNDA Modifications</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="6365"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Section 3(d) does not apply to source code.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+</w:tbl>
+<w:p>
+<w:r>
+<w:t xml:space="preserve">By signing this Cover Page, each party agrees to enter into this MNDA as of the Effective Date.</w:t>
+</w:r>
+</w:p>
+<w:tbl>
+<w:tblPr>
+<w:tblW w:type="dxa" w:w="9360"/>
+<w:tblBorders>
+<w:top w:val="single" w:color="auto" w:sz="4"/>
+<w:left w:val="single" w:color="auto" w:sz="4"/>
+<w:bottom w:val="single" w:color="auto" w:sz="4"/>
+<w:right w:val="single" w:color="auto" w:sz="4"/>
+<w:insideH w:val="single" w:color="auto" w:sz="4"/>
+<w:insideV w:val="single" w:color="auto" w:sz="4"/>
+</w:tblBorders>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="2246"/>
+<w:gridCol w:w="3557"/>
+<w:gridCol w:w="3557"/>
+</w:tblGrid>
+<w:tr>
+<w:trPr>
+<w:tblHeader/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Party 1</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Party 2</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Signature</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Print Name</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Ana Diaz</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Bo Chen</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Title</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">CEO</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Head of Partnerships</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Company</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Acme Analytics, Inc.</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">Bolt Retail LLC</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Notice Address</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">legal@acme.test</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="2743C4"/>
+</w:rPr>
+<w:t xml:space="preserve">100 Market St, San Francisco, CA 94105</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:trPr>
+<w:cantSplit/>
+<w:trHeight w:val="520" w:hRule="atLeast"/>
+</w:trPr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="2246"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="57544C"/>
+<w:sz w:val="17"/>
+<w:szCs w:val="17"/>
+</w:rPr>
+<w:t xml:space="preserve">Date</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:type="dxa" w:w="3557"/>
+<w:tcBorders>
+<w:top w:val="none" w:color="auto" w:sz="0"/>
+<w:left w:val="none" w:color="auto" w:sz="0"/>
+<w:bottom w:val="single" w:color="D5CFC2" w:sz="4"/>
+<w:right w:val="none" w:color="auto" w:sz="0"/>
+</w:tcBorders>
+<w:tcMar>
+<w:top w:type="dxa" w:w="80"/>
+<w:bottom w:type="dxa" w:w="80"/>
+<w:right w:type="dxa" w:w="120"/>
+</w:tcMar>
+</w:tcPr>
+<w:p/>
+</w:tc>
+</w:tr>
+</w:tbl>
+<w:p/>
+<w:p>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Common Paper Mutual Non-Disclosure Agreement (Version 1.0) free to use under </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-2">
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">CC BY 4.0</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pStyle w:val="Heading1"/>
+<w:pageBreakBefore/>
+</w:pPr>
+<w:r>
+<w:t xml:space="preserve">Standard Terms</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">1. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Introduction</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. This Mutual Non-Disclosure Agreement (which incorporates these Standard Terms and the Cover Page (defined below)) (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">MNDA</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”) allows each party (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Disclosing Party</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”) to disclose or make available information in connection with the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Purpose</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> which (1) the Disclosing Party identifies to the receiving party (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Receiving Party</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”) as “confidential”, “proprietary”, or the like or (2) should be reasonably understood as confidential or proprietary due to its nature and the circumstances of its disclosure (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Confidential Information</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”). Each party’s Confidential Information also includes the existence and status of the parties’ discussions and information on the Cover Page. Confidential Information includes technical or business information, product designs or roadmaps, requirements, pricing, security and compliance documentation, technology, inventions and know-how. To use this MNDA, the parties must complete and sign a cover page incorporating these Standard Terms (“</w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Cover Page</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">”). Each party is identified on the Cover Page and capitalized terms have the meanings given herein or on the Cover Page.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">2. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Use and Protection of Confidential Information</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. The Receiving Party shall: (a) use Confidential Information solely for the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Purpose</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">; (b) not disclose Confidential Information to third parties without the Disclosing Party’s prior written approval, except that the Receiving Party may disclose Confidential Information to its employees, agents, advisors, contractors and other representatives having a reasonable need to know for the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Purpose</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, provided these representatives are bound by confidentiality obligations no less protective of the Disclosing Party than the applicable terms in this MNDA and the Receiving Party remains responsible for their compliance with this MNDA; and (c) protect Confidential Information using at least the same protections the Receiving Party uses for its own similar information but no less than a reasonable standard of care.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">3. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Exceptions</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. The Receiving Party’s obligations in this MNDA do not apply to information that it can demonstrate: (a) is or becomes publicly available through no fault of the Receiving Party; (b) it rightfully knew or possessed prior to receipt from the Disclosing Party without confidentiality restrictions; (c) it rightfully obtained from a third party without confidentiality restrictions; or (d) it independently developed without using or referencing the Confidential Information.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">4. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Disclosures Required by Law</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. The Receiving Party may disclose Confidential Information to the extent required by law, regulation or regulatory authority, subpoena or court order, provided (to the extent legally permitted) it provides the Disclosing Party reasonable advance notice of the required disclosure and reasonably cooperates, at the Disclosing Party’s expense, with the Disclosing Party’s efforts to obtain confidential treatment for the Confidential Information.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">5. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Term and Termination</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. This MNDA commences on the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Effective Date</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> and expires at the end of the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">MNDA Term</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. Either party may terminate this MNDA for any or no reason upon written notice to the other party. The Receiving Party’s obligations relating to Confidential Information will survive for the </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Term of Confidentiality</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, despite any expiration or termination of this MNDA.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">6. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Return or Destruction of Confidential Information</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. Upon expiration or termination of this MNDA or upon the Disclosing Party’s earlier request, the Receiving Party will: (a) cease using Confidential Information; (b) promptly after the Disclosing Party’s written request, destroy all Confidential Information in the Receiving Party’s possession or control or return it to the Disclosing Party; and (c) if requested by the Disclosing Party, confirm its compliance with these obligations in writing. As an exception to subsection (b), the Receiving Party may retain Confidential Information in accordance with its standard backup or record retention policies or as required by law, but the terms of this MNDA will continue to apply to the retained Confidential Information.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">7. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Proprietary Rights</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. The Disclosing Party retains all of its intellectual property and other rights in its Confidential Information and its disclosure to the Receiving Party grants no license under such rights.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">8. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Disclaimer</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. ALL CONFIDENTIAL INFORMATION IS PROVIDED “AS IS”, WITH ALL FAULTS, AND WITHOUT WARRANTIES, INCLUDING THE IMPLIED WARRANTIES OF TITLE, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">9. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Governing Law and Jurisdiction</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. This MNDA and all matters relating hereto are governed by, and construed in accordance with, the laws of the State of </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Governing Law</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">, without regard to the conflict of laws provisions of such </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Governing Law</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. Any legal suit, action, or proceeding relating to this MNDA must be instituted in the federal or state courts located in </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Jurisdiction</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. Each party irrevocably submits to the exclusive jurisdiction of such </w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">Jurisdiction</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve"> in any such suit, action, or proceeding.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">10. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">Equitable Relief</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. A breach of this MNDA may cause irreparable harm for which monetary damages are an insufficient remedy. Upon a breach of this MNDA, the Disclosing Party is entitled to seek appropriate equitable relief, including an injunction, in addition to its other remedies.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:ind w:left="0"/>
+<w:jc w:val="left"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">11. </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+<w:t xml:space="preserve">General</w:t>
+</w:r>
+<w:r>
+<w:t xml:space="preserve">. Neither party has an obligation under this MNDA to disclose Confidential Information to the other or proceed with any proposed transaction. Neither party may assign this MNDA without the prior written consent of the other party, except that either party may assign this MNDA in connection with a merger, reorganization, acquisition or other transfer of all or substantially all its assets or voting securities. Any assignment in violation of this Section is null and void. This MNDA will bind and inure to the benefit of each party’s permitted successors and assigns. Waivers must be signed by the waiving party’s authorized representative and cannot be implied from conduct. If any provision of this MNDA is held unenforceable, it will be limited to the minimum extent necessary so the rest of this MNDA remains in effect. This MNDA (including the Cover Page) constitutes the entire agreement of the parties with respect to its subject matter, and supersedes all prior and contemporaneous understandings, agreements, representations, and warranties, whether written or oral, regarding such subject matter. This MNDA may only be amended, modified, waived, or supplemented by an agreement in writing signed by both parties. Notices, requests and approvals under this MNDA must be sent in writing to the email or postal addresses on the Cover Page and are deemed delivered on receipt. This MNDA may be executed in counterparts, including electronic copies, each of which is deemed an original and which together form the same agreement.</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:spacing w:before="240"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">Common Paper Mutual Non-Disclosure Agreement </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-3">
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">Version 1.0</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve"> free to use under </w:t>
+</w:r>
+<w:hyperlink w:history="1" r:id="link-4">
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+<w:u w:val="single"/>
+</w:rPr>
+<w:t xml:space="preserve">CC BY 4.0</w:t>
+</w:r>
+</w:hyperlink>
+<w:r>
+<w:rPr>
+<w:color w:val="57544C"/>
+<w:sz w:val="16"/>
+<w:szCs w:val="16"/>
+</w:rPr>
+<w:t xml:space="preserve">.</w:t>
+</w:r>
+</w:p>
+<w:sectPr>
+<w:headerReference w:type="default" r:id="link-5"/>
+<w:footerReference w:type="default" r:id="link-6"/>
+<w:pgSz w:w="12240" w:h="15840" w:orient="portrait"/>
+<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/>
+<w:pgNumType/>
+<w:docGrid w:linePitch="360"/>
+</w:sectPr>
+</w:body>
+</w:document>
+=== word/styles.xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles mc:Ignorable="w14 w15" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml">
+<w:docDefaults>
+<w:rPrDefault>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="21"/>
+<w:szCs w:val="21"/>
+</w:rPr>
+</w:rPrDefault>
+<w:pPrDefault>
+<w:pPr>
+<w:spacing w:after="120" w:line="312"/>
+</w:pPr>
+</w:pPrDefault>
+</w:docDefaults>
+<w:style w:type="paragraph" w:styleId="Title">
+<w:name w:val="Title"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:sz w:val="56"/>
+<w:szCs w:val="56"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading1">
+<w:name w:val="Heading 1"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:pPr>
+<w:keepNext/>
+<w:spacing w:after="120" w:before="240"/>
+</w:pPr>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="40"/>
+<w:szCs w:val="40"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading2">
+<w:name w:val="Heading 2"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:pPr>
+<w:keepNext/>
+<w:spacing w:after="120" w:before="240"/>
+</w:pPr>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="24"/>
+<w:szCs w:val="24"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading3">
+<w:name w:val="Heading 3"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:pPr>
+<w:keepNext/>
+<w:spacing w:after="120" w:before="240"/>
+</w:pPr>
+<w:rPr>
+<w:rFonts w:ascii="Georgia" w:cs="Georgia" w:eastAsia="Georgia" w:hAnsi="Georgia"/>
+<w:b/>
+<w:bCs/>
+<w:color w:val="1B1A17"/>
+<w:sz w:val="22"/>
+<w:szCs w:val="22"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading4">
+<w:name w:val="Heading 4"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:i/>
+<w:iCs/>
+<w:color w:val="2E74B5"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading5">
+<w:name w:val="Heading 5"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:color w:val="2E74B5"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Heading6">
+<w:name w:val="Heading 6"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:color w:val="1F4D78"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="Strong">
+<w:name w:val="Strong"/>
+<w:basedOn w:val="Normal"/>
+<w:next w:val="Normal"/>
+<w:qFormat/>
+<w:rPr>
+<w:b/>
+<w:bCs/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="ListParagraph">
+<w:name w:val="List Paragraph"/>
+<w:basedOn w:val="Normal"/>
+<w:qFormat/>
+</w:style>
+<w:style w:type="character" w:styleId="Hyperlink">
+<w:name w:val="Hyperlink"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:uiPriority w:val="99"/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:color w:val="0563C1"/>
+<w:u w:val="single"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="FootnoteReference">
+<w:name w:val="footnote reference"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:vertAlign w:val="superscript"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="FootnoteText">
+<w:name w:val="footnote text"/>
+<w:basedOn w:val="Normal"/>
+<w:link w:val="FootnoteTextChar"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:pPr>
+<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+</w:pPr>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="FootnoteTextChar">
+<w:name w:val="Footnote Text Char"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:link w:val="FootnoteText"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="EndnoteReference">
+<w:name w:val="endnote reference"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:vertAlign w:val="superscript"/>
+</w:rPr>
+</w:style>
+<w:style w:type="paragraph" w:styleId="EndnoteText">
+<w:name w:val="endnote text"/>
+<w:basedOn w:val="Normal"/>
+<w:link w:val="EndnoteTextChar"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:pPr>
+<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+</w:pPr>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+<w:style w:type="character" w:styleId="EndnoteTextChar">
+<w:name w:val="Endnote Text Char"/>
+<w:basedOn w:val="DefaultParagraphFont"/>
+<w:link w:val="EndnoteText"/>
+<w:uiPriority w:val="99"/>
+<w:semiHidden/>
+<w:unhideWhenUsed/>
+<w:rPr>
+<w:sz w:val="20"/>
+<w:szCs w:val="20"/>
+</w:rPr>
+</w:style>
+</w:styles>
+=== word/footer1.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<w:ftr xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+<w:p>
+<w:pPr>
+<w:tabs>
+<w:tab w:val="right" w:pos="9360"/>
+</w:tabs>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve">Mutual Non-Disclosure Agreement</w:t>
+<w:tab/>
+<w:t xml:space="preserve">Page </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:fldChar w:fldCharType="begin"/>
+<w:instrText xml:space="preserve">PAGE</w:instrText>
+<w:fldChar w:fldCharType="separate"/>
+<w:fldChar w:fldCharType="end"/>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:t xml:space="preserve"> of </w:t>
+</w:r>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>
+<w:color w:val="6A665D"/>
+<w:sz w:val="15"/>
+<w:szCs w:val="15"/>
+</w:rPr>
+<w:fldChar w:fldCharType="begin"/>
+<w:instrText xml:space="preserve">NUMPAGES</w:instrText>
+<w:fldChar w:fldCharType="separate"/>
+<w:fldChar w:fldCharType="end"/>
+</w:r>
+</w:p>
+</w:ftr>

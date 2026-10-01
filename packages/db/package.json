@@ -1,0 +1,32 @@
+{
+  "name": "@workspace/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./testing/index.ts"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.ts",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "check-migrations": "drizzle-kit check && node scripts/check-drift.ts",
+    "auth-schema": "BETTER_AUTH_TELEMETRY=0 auth generate --config scripts/auth-schema.config.ts --output src/auth-schema.ts --yes"
+  },
+  "dependencies": {
+    "@workspace/documents": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "@types/pg": "^8.23.1",
+    "auth": "1.7.5",
+    "better-auth": "1.7.5",
+    "drizzle-kit": "^0.31.11",
+    "embedded-postgres": "18.4.0-beta.17",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

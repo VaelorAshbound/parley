@@ -1,0 +1,103 @@
+# Professional Services Agreement
+1 Services
+  1.1 Providing Services. [keyterms:Customer, keyterms:Provider, keyterms:Customer Policies]
+  1.2 Cooperation. [keyterms:Customer, keyterms:Provider]
+  1.3 Change Orders. [keyterms:Provider, keyterms:Customer]
+  1.4 Acceptance. [sow:Deliverables, keyterms:Customer, sow:Deliverable, sow:Rejection Period, keyterms:Provider, sow:Resubmission Period]
+  1.5 Subcontractors. [keyterms:Provider, keyterms:Customer]
+  1.6 Customer Obligations. [keyterms:Customer, sow:Customer Obligations]
+2 Intellectual Property
+  2.1 Deliverables. [keyterms:Provider, sow:Deliverables, keyterms:Customer, sow:Time of Assignment]
+  2.2 Customer Materials. [keyterms:Provider, keyterms:Customer]
+  2.3 Pre-Existing Materials. [keyterms:Provider, sow:Deliverables, keyterms:Customer]
+  2.4 Third-Party Materials.
+    2.4.a [keyterms:Provider, sow:Deliverables, keyterms:Customer]
+    2.4.b [keyterms:Provider, sow:Deliverables, keyterms:Customer]
+    2.4.c [keyterms:Customer, sow:Deliverables, keyterms:Provider]
+  2.5 Feedback and Usage Data. [keyterms:Customer, keyterms:Provider]
+  2.6 Reservation of Rights. [keyterms:Customer, sow:Deliverables, keyterms:Provider]
+3 Privacy & Security
+  3.1 Personal Data. [keyterms:DPA]
+  3.2 Security. [keyterms:Provider, keyterms:Security Policy]
+4 Payment & Taxes
+  4.1 Fees and Invoices. [sow:Fees, keyterms:Provider]
+  4.2 Payment. [keyterms:Customer, keyterms:Provider, sow:Fees, sow:Payment Period]
+  4.3 Taxes. [keyterms:Customer, sow:Fees, keyterms:Provider]
+  4.4 Payment Dispute. [keyterms:Customer, keyterms:Provider, sow:Payment Period]
+5 Term & Termination
+  5.1 Term. [keyterms:Effective Date, keyterms:SOW Term]
+  5.2 Termination.
+    5.2.a
+    5.2.b [keyterms:Provider]
+    5.2.c
+    5.2.d
+  5.3 Effect of Termination.
+    5.3.a
+    5.3.b [keyterms:Provider]
+    5.3.c
+    5.3.d [keyterms:Customer, keyterms:Provider, sow:Fees]
+    5.3.e [keyterms:Provider, sow:Fees]
+  5.4 Survival.
+    5.4.a
+    5.4.b
+6 Representations & Warranties
+  6.1 Mutual. [keyterms:Additional Warranties]
+  6.2 From Customer. [keyterms:Customer, keyterms:Provider]
+  6.3 From Provider. [keyterms:Provider, keyterms:Customer, sow:Deliverables]
+  6.4 Warranty Remedy. [keyterms:Provider, keyterms:Customer, sow:Fees, keyterms:SOW Term]
+7 Disclaimer of Warranties
+  7.1 [keyterms:Provider, keyterms:Customer]
+8 Limitation of Liability
+  8.1 Liability Caps. [keyterms:Increased Claims, keyterms:Increased Cap Amount, keyterms:General Cap Amount]
+  8.2 Damages Waiver.
+  8.3 Exceptions. [keyterms:Unlimited Claims, keyterms:Increased Claims]
+9 Indemnification
+  9.1 Protection by Provider. [keyterms:Provider, keyterms:Customer, keyterms:Provider Covered Claims, keyterms:Provider Covered Claim]
+  9.2 Protection by Customer. [keyterms:Customer, keyterms:Provider, keyterms:Customer Covered Claims, keyterms:Customer Covered Claim]
+  9.3 Procedure.
+  9.4 Exclusive Remedy.
+10 Insurance
+  10.1 [keyterms:Insurance Minimums]
+11 Confidentiality
+  11.1 Non-Use and Non-Disclosure.
+  11.2 Exclusions.
+  11.3 Required Disclosures.
+  11.4 Permitted Disclosures.
+12 General Terms
+  12.1 Entire Agreement. [keyterms:Provider, keyterms:Customer]
+  12.2 Modifications, Severability, and Waiver. [keyterms:Provider, keyterms:Customer]
+  12.3 Governing Law and Chosen Courts. [keyterms:Governing Law, keyterms:Chosen Courts]
+  12.4 Injunctive Relief.
+  12.5 Non-Exhaustive Remedies.
+  12.6 Assignment. [keyterms:Customer]
+  12.7 No Publicity.
+  12.8 Notices.
+  12.9 Independent Contractors.
+  12.10 No Third-Party Beneficiary.
+  12.11 Force Majeure. [keyterms:Customer, sow:Fees]
+  12.12 Export Controls. [keyterms:Customer, sow:Deliverables]
+  12.13 Anti-Bribery. [keyterms:Provider, keyterms:Customer]
+  12.14 Titles and Interpretation.
+  12.15 Signature.
+13 Definitions
+  13.1 defines "Affiliate"
+  13.2 defines "Agreement" [keyterms:Provider, keyterms:Customer]
+  13.3 defines "Applicable Laws"
+  13.4 defines "Change Order"
+  13.5 defines "Confidential Information" [keyterms:Effective Date]
+  13.6 defines "Cover Page" [keyterms:Provider, keyterms:Customer]
+  13.7 defines "Covered Claim" [keyterms:Provider Covered Claim, keyterms:Customer Covered Claim]
+  13.8 defines "Customer Materials" [keyterms:Customer]
+  13.9 defines "Discloser"
+  13.10 defines "Feedback"
+  13.11 defines "Force Majeure Event"
+  13.12 defines "Indemnifying Party"
+  13.13 defines "Key Terms" [keyterms:Governing Law]
+  13.14 defines "Pre-Existing Materials" [keyterms:Provider, keyterms:Effective Date, keyterms:Customer]
+  13.15 defines "Protected Party"
+  13.16 defines "Recipient"
+  13.17 defines "Services" [sow:Deliverables]
+  13.18 defines "SOW" [sow:Deliverables, sow:Fees]
+  13.19 defines "Subcontractors" [keyterms:Provider]
+  13.20 defines "Third-Party Materials" [keyterms:Provider, keyterms:Customer]
+  13.21 defines "Usage Data" [keyterms:Customer]

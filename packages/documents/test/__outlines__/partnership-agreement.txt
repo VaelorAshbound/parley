@@ -1,0 +1,85 @@
+# Partnership Agreement
+1 Cooperation
+  1.1 Obligations. [businessterms:Obligations]
+  1.2 Feedback.
+2 Payment & Taxes
+  2.1 [businessterms:Obligations]
+    2.1.a Fees and Billing. [businessterms:Payment Process]
+    2.1.b Payment. [businessterms:Payment Schedule]
+    2.1.c Taxes.
+3 Trademark License
+  3.1 Trademark License. [businessterms:Territory, businessterms:Obligations, keyterms:Brand Guidelines]
+  3.2 Reservation of Rights.
+  3.3 Restrictions on Licensee. [businessterms:Obligations]
+  3.4 Samples and Approvals.
+4 Privacy
+  4.1 [keyterms:DPA]
+5 Escalation Procedure
+  5.1
+6 Term & Termination
+  6.1 Term. [keyterms:Effective Date, businessterms:End Date]
+  6.2 Termination.
+    6.2.a
+    6.2.b
+    6.2.c
+  6.3 Force Majeure. [businessterms:Obligations]
+  6.4 Effect of Termination.
+    6.4.a
+    6.4.b
+    6.4.c
+  6.5 Survival.
+7 Representations & Warranties
+  7.1 [businessterms:Obligations, keyterms:Additional Warranties]
+8 Disclaimer of Warranties
+  8.1 [keyterms:Company, keyterms:Partner]
+9 Limitation of Liability
+  9.1 Liability Caps.
+    9.1.a [keyterms:General Cap Amount]
+    9.1.b [keyterms:Increased Claims, keyterms:Increased Cap Amount]
+  9.2 Damages Waiver.
+  9.3 Exceptions. [keyterms:Increased Claims, keyterms:Unlimited Claims]
+10 Indemnification
+  10.1 Protection by Company. [keyterms:Company, keyterms:Partner, keyterms:Company Covered Claim]
+  10.2 Protection by Partner. [keyterms:Partner, keyterms:Company, keyterms:Partner Covered Claims]
+  10.3 Procedure.
+  10.4 Exclusive Remedy.
+11 Confidentiality
+  11.1 Non-Use and Non-Disclosure.
+  11.2 Exclusions.
+  11.3 Required Disclosures.
+  11.4 Permitted Disclosures.
+12 General Terms
+  12.1 Entire Agreement.
+  12.2 Modifications, Severability, and Waiver.
+  12.3 Governing Law and Chosen Courts. [keyterms:Governing Law, keyterms:Chosen Courts]
+  12.4 Injunctive Relief.
+  12.5 Non-Exhaustive Remedies.
+  12.6 Assignment.
+  12.7 Notices.
+  12.8 Independent Contractors.
+  12.9 No Third-Party Beneficiary.
+  12.10 Force Majeure.
+  12.11 Anti-Bribery.
+  12.12 Titles and Interpretation.
+  12.13 Signature.
+13 Definitions
+  13.1 Defining Variables.
+  13.2 defines "Affiliate"
+  13.3 defines "Agreement" [keyterms:Company, keyterms:Partner]
+  13.4 defines "Applicable Laws"
+  13.5 defines "Brand Elements"
+  13.6 defines "Confidential Information" [keyterms:Effective Date]
+  13.7 defines "Cover Page" [keyterms:Company, keyterms:Partner]
+  13.8 defines "Covered Claim" [keyterms:Company Covered Claim, keyterms:Partner Covered Claim]
+  13.9 defines "Discloser"
+  13.10 defines "Feedback"
+  13.11 defines "Fees"
+  13.12 defines "Force Majeure Event"
+  13.13 defines "Indemnifying Party"
+  13.14 defines "Licensor" [keyterms:Company, keyterms:Partner]
+  13.15 defines "Licensee" [keyterms:Company, keyterms:Partner, businessterms:Obligations]
+  13.16 defines "Personal Data"
+  13.17 defines "Protected Party"
+  13.18 defines "Recipient"
+  13.19 defines "Standard Terms"
+  13.20 defines "Variable" [businessterms:Obligations, keyterms:Governing Law]

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pricing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+%%FONTS%%
+<style>
+%%CSS%%
+</style>
+</helmet>
+<div style="width: 1440px; height: 1680px; overflow: hidden; background: #F6F4EE; color: #1B1A17; font-family: %%SANS%%; display: flex; flex-direction: column;">
+
+  <header style="height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 64px;">
+    <a href="Main.dc.html" aria-label="Parley home" style="display: flex; align-items: center; gap: 9px; color: #1B1A17;">%%MARK:24%%<span style="font-family: %%SERIF%%; font-size: 23px; font-weight: 500; letter-spacing: -0.02em;">Parley</span></a>
+    <nav aria-label="Site" style="display: flex; align-items: center; gap: 6px;">
+      <a href="Pricing.dc.html" aria-current="page" style="height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 9px; font-size: 14px; font-weight: 500; color: #1B1A17;">Pricing</a>
+      <a href="SignIn.dc.html" class="pl-hover" style="height: 36px; display: flex; align-items: center; padding: 0 14px; border-radius: 9px; font-size: 14px; font-weight: 500; color: #57544C;">Sign in</a>
+      <a href="Main.dc.html" class="pl-press pl-ink-btn" style="height: 38px; display: flex; align-items: center; padding: 0 18px; margin-left: 6px; border-radius: 999px; background: #1B1A17; color: #FAF8F3; font-size: 14px; font-weight: 500;">Start drafting</a>
+    </nav>
+  </header>
+
+  <section style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 88px 64px 0;">
+    <span style="font-size: 11.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #6A665D;">Pricing</span>
+    <h1 style="margin: 18px 0 0; font-family: %%SERIF%%; font-size: 68px; line-height: 1; font-weight: 400; letter-spacing: -0.032em;">Free to draft.<br><em style="font-style: italic; color: #2743C4;">$5</em> when you need more.</h1>
+    <p style="margin: 24px 0 0; max-width: 540px; font-size: 18px; line-height: 1.55; color: #57544C; text-wrap: pretty;">Every plan uses the same eleven Common Paper agreements. Pro adds unlimited documents and Word files.</p>
+    <a href="Main.dc.html" class="pl-link" style="margin-top: 20px; display: flex; align-items: center; gap: 6px; font-size: 14px; color: #57544C;">No account? Start a draft now: 1 draft, 20 messages a day.%%I:arrowright:14%%</a>
+  </section>
+
+  <section aria-label="Plans" style="display: grid; grid-template-columns: repeat(2, 440px); gap: 24px; justify-content: center; margin-top: 56px;">
+    <div style="box-sizing: border-box; padding: 34px 34px 36px; background: #FFFFFF; border: 1px solid #E3DED3; border-radius: 24px; display: flex; flex-direction: column;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Free</h2>
+        <p style="margin: 0; font-size: 14px; color: #57544C;">For the occasional agreement.</p>
+      </div>
+      <div style="margin-top: 26px; display: flex; align-items: baseline; gap: 8px;"><span style="font-family: %%SERIF%%; font-size: 60px; line-height: 1; font-weight: 400; letter-spacing: -0.03em;">$0</span><span style="font-size: 14px; color: #6A665D;">forever</span></div>
+      <a href="SignIn.dc.html" class="pl-press pl-outline" style="margin-top: 28px; height: 46px; display: flex; align-items: center; justify-content: center; border: 1px solid #D5CFC2; border-radius: 12px; background: #FFFFFF; font-size: 14.5px; font-weight: 500; color: #1B1A17;">Create a free account</a>
+      <ul style="list-style: none; margin: 28px 0 0; padding: 26px 0 0; border-top: 1px solid #ECE7DC; display: flex; flex-direction: column; gap: 14px; font-size: 14.5px; line-height: 1.45;">
+        <li style="display: flex; gap: 12px;"><span style="color: #2743C4; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>3 finished documents a month</li>
+        <li style="display: flex; gap: 12px;"><span style="color: #2743C4; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>PDF download</li>
+        <li style="display: flex; gap: 12px;"><span style="color: #2743C4; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>100 AI messages a day</li>
+        <li style="display: flex; gap: 12px;"><span style="color: #2743C4; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>Saved drafts, search and share links</li>
+      </ul>
+    </div>
+
+    <div style="box-sizing: border-box; padding: 34px 34px 36px; background: #1B1A17; color: #FAF8F3; border-radius: 24px; box-shadow: 0 2px 4px rgba(27,26,23,0.08), 0 30px 60px -28px rgba(27,26,23,0.45); display: flex; flex-direction: column;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600;">Pro</h2>
+        <p style="margin: 0; font-size: 14px; color: #B8B3A9;">For people who draft every week.</p>
+      </div>
+      <div style="margin-top: 26px; display: flex; align-items: baseline; gap: 8px;"><span style="font-family: %%SERIF%%; font-size: 60px; line-height: 1; font-weight: 400; letter-spacing: -0.03em;">$5</span><span style="font-size: 14px; color: #B8B3A9;">a month</span></div>
+      <a href="SignIn.dc.html" class="pl-press" style="margin-top: 28px; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #FAF8F3; font-size: 14.5px; font-weight: 600; color: #1B1A17;">Upgrade to Pro</a>
+      <ul style="list-style: none; margin: 28px 0 0; padding: 26px 0 0; border-top: 1px solid #3D3B35; display: flex; flex-direction: column; gap: 14px; font-size: 14.5px; line-height: 1.45;">
+        <li style="display: flex; gap: 12px;"><span style="color: #9DAEFF; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>Unlimited documents</li>
+        <li style="display: flex; gap: 12px;"><span style="color: #9DAEFF; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>PDF and Word (DOCX)</li>
+        <li style="display: flex; gap: 12px;"><span style="color: #9DAEFF; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>500 AI messages a day</li>
+        <li style="display: flex; gap: 12px;"><span style="color: #9DAEFF; display: flex; padding-top: 1px;">%%I:check:18:2%%</span>Everything in Free</li>
+      </ul>
+    </div>
+  </section>
+
+  <p style="margin: 28px 0 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: #6A665D;">%%I:lock:14%%Checkout runs in Polar’s sandbox for this demo. No real card is charged.</p>
+
+  <section aria-labelledby="faq" style="width: 904px; margin: 120px auto 0; display: grid; grid-template-columns: 280px minmax(0, 1fr); column-gap: 48px;">
+    <h2 id="faq" style="margin: 0; font-family: %%SERIF%%; font-size: 38px; line-height: 1.05; font-weight: 400; letter-spacing: -0.02em;">Questions</h2>
+    <dl style="margin: 0; display: flex; flex-direction: column;">
+      <div style="padding: 0 0 26px; border-bottom: 1px solid #E3DED3;">
+        <dt style="font-family: %%SERIF%%; font-size: 21px; line-height: 1.3; font-weight: 500; letter-spacing: -0.01em;">What counts as a document?</dt>
+        <dd style="margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: #57544C;">A document counts the first time you download it. Downloading it again is always free, and drafts you never download don’t count.</dd>
+      </div>
+      <div style="padding: 26px 0; border-bottom: 1px solid #E3DED3;">
+        <dt style="font-family: %%SERIF%%; font-size: 21px; line-height: 1.3; font-weight: 500; letter-spacing: -0.01em;">Is this legal advice?</dt>
+        <dd style="margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: #57544C;">No. Parley fills in Common Paper’s standard agreements and explains them in plain words. For anything important, ask a lawyer to review it.</dd>
+      </div>
+      <div style="padding: 26px 0 0;">
+        <dt style="font-family: %%SERIF%%; font-size: 21px; line-height: 1.3; font-weight: 500; letter-spacing: -0.01em;">Where do the agreements come from?</dt>
+        <dd style="margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: #57544C;">From Common Paper, used under CC BY 4.0. Their standard terms are never changed. Cover pages for documents other than the NDA are written by Parley and labeled that way.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <footer style="margin: auto 64px 0; padding: 22px 0 36px; border-top: 1px solid #E3DED3; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: #6A665D;">
+    <span style="display: flex; align-items: center; gap: 8px; color: #1B1A17;">%%MARK:18%%<span style="font-family: %%SERIF%%; font-size: 16px; font-weight: 500; letter-spacing: -0.02em;">Parley</span></span>
+    <span>Standard terms © Common Paper, CC BY 4.0 · Not legal advice</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
