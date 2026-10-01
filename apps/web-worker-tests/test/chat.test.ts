@@ -633,6 +633,45 @@ describe("a chat turn", () => {
     expect(model.doStreamCalls).toHaveLength(0)
   })
 
+  it("refuses a message in more than one part, so 4,000 characters is the whole message", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([[{ text: "Hi." }]])
+    const { client } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const part = { type: "text" as const, text: "x".repeat(3000) }
+
+    const { error } = await safe(
+      client.chat.send({
+        id: draft.id,
+        message: { ...say("unused"), parts: [part, part] },
+        today,
+      })
+    )
+
+    expect(error).toMatchObject({ code: "BAD_REQUEST" })
+    expect(model.doStreamCalls).toHaveLength(0)
+  })
+
+  it("caps what each model call may write (ADR-0012)", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([[{ text: "Hi." }]])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+
+    await read(
+      await client.chat.send({ id: draft.id, message: say("Hello"), today })
+    )
+    await settle()
+
+    expect(model.doStreamCalls[0]?.maxOutputTokens).toBe(4096)
+  })
+
   it("sends only the recent chat to the model once it grows long", async () => {
     const { cookie } = await signInGuest()
     const model = scriptedModel([[{ text: "Noted." }]])

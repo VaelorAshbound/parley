@@ -241,3 +241,6 @@ T39 built, not yet pushed (9 local commits be67060..cf24c17): ADRs 0010-0012; lo
 
 ### 2026-10-01T19:36:54Z
 T39 done (PR #3, CI green: Workers Builds, component, e2e chromium). README checked on GitHub in light and dark. PR #3 is open, waiting for the owner's OK to merge (merging deploys production). Next: merge PR #3, then T40 (/ship).
+
+### 2026-10-01T19:53:05Z
+PR #3 merged (494e33f). Production serves 494e33f, scripted AI off, smoke green. Next: T40 (/ship).
