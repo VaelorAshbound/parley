@@ -53,7 +53,7 @@ Plus: Turnstile before a guest's first message (ADR-0011), and the Previews' scr
 
 ## Consequences
 
-- Worst case for one day of abuse: the OpenRouter cap ($10). Normal case: each finished NDA costs $0.0037 (evals, 2026-09-25), so the cap is about 2,700 NDAs.
+- Worst case for one day of abuse: the OpenRouter cap ($10). Normal case: each finished NDA costs $0.0033 (evals, 2026-10-01), so the cap is about 3,000 NDAs.
 - When the cap is reached, the demo's chat stops until the owner adds credit. Everything else (drafts, export, share) keeps working.
 - The limits are in two places on purpose: wrangler.jsonc for the bindings and `src/server/limits.ts` for tests and messages. A test keeps them equal.
 - The load test (`k6`, spec §6) checks that the rate limits and daily limits hold under burst traffic.
