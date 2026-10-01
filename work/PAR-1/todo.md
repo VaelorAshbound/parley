@@ -1005,7 +1005,9 @@
   - Files: `apps/web/src/routes/index.tsx`, `src/features/empty-state/*`
   - Deps: T30
 
-- [ ] **T38: Production environment on `parley.runtimedrift.dev`** (M)
+- [x] **T38: Production environment on `parley.runtimedrift.dev`** (M)
+  - Done 2026-10-01 (plan and outcomes: [t38-plan.md](t38-plan.md)). Live on 043768e; smoke green; securityheaders.com "Wow, amazing grade!" (A+); a forged Turnstile token gets 403; owner ran real chat turns (4 chat_turn done, 0 errors) and a GitHub sign-in. Owner checked a Google sign-in on production (2026-10-01). Version URLs stay on (one switch with the CI Previews); Preview data copies skipped (owner); alerts skipped (owner).
+  - Found on the way: Previews skip the test gate, so the first production build stopped at it (documents coverage 99.82% after PAR-40, a Worker test timing out under coverage); fixed. Workers Builds deployed with plain `wrangler deploy`, so the commit was never stamped; now `scripts/ci-deploy.sh`. The production smoke chat turn is skipped there (real Turnstile stops headless browsers); Previews still run it.
   - Check (T14 review): `preview_urls: true` keeps a workers.dev URL for every production version, with production bindings. Auth already refuses those hosts in production (`allowedHosts`); decide whether to turn version URLs off for production.
   - Accept:
     - A Custom Domain on the Worker, the production Neon branch and Hyperdrive, all secrets set, the Polar sandbox production config, and a Resend sending domain.
@@ -1015,9 +1017,11 @@
   - Files: `apps/web/wrangler.jsonc`, `src/server/headers.ts`
   - Deps: T33 · Skills: `cloudflare:wrangler`, `security-and-hardening`
 
-- [ ] **T39: README + ADRs** (M)
+- [x] **T39: README + ADRs** (M)
+  - Done 2026-10-01 (PR #3). Skills: documentation-and-adrs, test-driven-development (keyless scripted AI), artifact-diagramming, git-workflow-and-versioning; agent-browser for the GitHub check. Checked: fresh clone in a clean podman container (no keys, no login): `pnpm install` + `pnpm dev`, a guest message fills a live NDA; `pnpm check` clean; `pnpm test` 1306 passed / 1 skipped; `pnpm test:workers` 448 passed; README on GitHub right in light and dark; CI green on PR #3 (Workers Builds, component 2m09s, e2e 6m40s).
+  - Owner, 2026-10-01: the GIF is dropped (a recording showed PAR-48; not worth a re-record).
   - Accept:
-    - README: a 30-second GIF, the architecture diagram, "how it works", the eval score, the cost per document, the test pyramid, and a local setup in 3 commands or fewer.
+    - README: ~~a 30-second GIF~~, the architecture diagram, "how it works", the eval score, the cost per document, the test pyramid, and a local setup in 3 commands or fewer.
     - ADRs 001–00N for every decision made (Worker entry, document engine, PDF through Browser Run, guest auth, cost limits, CI).
   - Verify: A fresh clone → local setup in 3 or fewer commands works (tested in a clean container).
   - Files: `README.md`, `docs/adr/*.md`, `docs/architecture.svg`

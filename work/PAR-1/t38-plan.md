@@ -49,12 +49,12 @@ Each task is checked before the next one starts. Production changes (marked
    (`customer.state_changed`), then `wrangler secret put` for
    `POLAR_ACCESS_TOKEN` and `POLAR_WEBHOOK_SECRET`. Check `RESEND_API_KEY` in
    production is the sending-only key (T21 note); swap it if not.
-7. **Custom domain.** **OK.** `routes: [{ pattern: "parley.runtimedrift.dev",
+7. ✅ (f75b61b) **Custom domain.** **OK.** `routes: [{ pattern: "parley.runtimedrift.dev",
    custom_domain: true }]` in `wrangler.jsonc`; takes effect on the deploy.
    Set GitHub var `PRODUCTION_URL` (turns on `smoke.yml`) and `NIGHTLY_URL`.
-8. **Merge PR #1 into `main`.** **OK.** Workers Builds runs the gate and
+8. ✅ (2da8287, 8422335) **Merge PR #1 into `main`.** **OK.** Workers Builds runs the gate and
    deploys; `smoke.yml` runs on the live domain.
-9. **Live checks.** Smoke green; securityheaders.com A or better; a forged
+9. ✅ except Google sign-in (owner) **Live checks.** Smoke green; securityheaders.com A or better; a forged
    Turnstile token gets 403 (T21 note); one Pro checkout with the test card
    on production turns Pro on (real sandbox); owner: Google sign-in once.
 
