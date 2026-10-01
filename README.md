@@ -33,17 +33,17 @@ Free accounts get 3 documents a month. Pro ($5 a month, Polar sandbox, [ADR-0008
 
 ### AI evals
 
-`pnpm evals` runs 36 scripted conversations through the real chat procedure, tools, engine and database, with a simulated user answering from each case's facts. Latest run ([full report](evals/report.md)):
+`pnpm evals` runs 36 scripted conversations through the real chat procedure, tools, engine and database, with a simulated user answering from each case's facts. Latest run, 2026-10-01 ([full report](evals/report.md)):
 
 | Measure                   | Result      | Bar     |
 | ------------------------- | ----------- | ------- |
 | Right agreement           | 100%        | ≥ 90%   |
-| Right field values        | 99%         | ≥ 95%   |
+| Right field values        | 100%        | ≥ 95%   |
 | Invalid writes            | 0           | 0       |
 | Drafts finished           | 100%        | 100%    |
-| **Cost per finished NDA** | **$0.0037** | < $0.02 |
+| **Cost per finished NDA** | **$0.0033** | < $0.02 |
 
-The most expensive agreement, the Cloud Service Agreement, costs $0.015 per finished draft.
+The most expensive agreement, the Cloud Service Agreement, costs $0.014 per finished draft.
 
 ### Tests
 
