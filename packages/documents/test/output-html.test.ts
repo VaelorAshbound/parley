@@ -6,6 +6,7 @@ import { parseStandardTerms } from "../src/parse/parse.ts"
 import { DISCLAIMER } from "../src/disclaimer.ts"
 import { printFrame, toPrintHtml } from "../src/output/html.ts"
 import { render } from "../src/render.ts"
+import type { RenderedDocument, RenderedSection } from "../src/render/model.ts"
 import { examples, registered } from "./examples.ts"
 import { annexDocument } from "./fixtures.ts"
 
@@ -26,6 +27,17 @@ function wordsOf(html: string) {
 }
 
 describe("toPrintHtml", () => {
+  it("prints None. inline when a line mixes a filled and an empty optional value", () => {
+    const html = toPrintHtml(withMixedLines(filled))
+
+    expect(html).toContain(
+      'Notices go to <span class="value">1 Main St</span>, copy to <span class="value">None.</span>'
+    )
+    // A checklist line with no label and nothing chosen: just its box.
+    expect(html).toMatch(
+      /<p class="line unchosen"><svg class="box"[^>]*>.*?<\/svg> <\/p>/
+    )
+  })
   it("is a complete page named after the document", () => {
     const html = toPrintHtml(filled)
 
@@ -343,3 +355,46 @@ describe("printFrame", () => {
     expect(footer).toContain("font:8pt Arial")
   })
 })
+
+/**
+ * The filled NDA with one hand-made section: a line that mixes a filled
+ * value with an empty optional one, and a checklist line with no label and
+ * nothing chosen. No catalog document has either today (PAR-40 kept them).
+ */
+function withMixedLines(document: RenderedDocument): RenderedDocument {
+  const empty = {
+    type: "value",
+    field: "extra",
+    label: "Extra",
+    text: null,
+    placeholder: "[Extra]",
+    optional: true,
+  } as const
+  const section: RenderedSection = {
+    heading: "Mixed",
+    lines: [
+      {
+        parts: [
+          { type: "text", text: "Notices go to " },
+          {
+            type: "value",
+            field: "address",
+            label: "Address",
+            text: "1 Main St",
+            placeholder: "[Address]",
+          },
+          { type: "text", text: ", copy to " },
+          empty,
+        ],
+      },
+      { checked: false, parts: [empty] },
+    ],
+  }
+  return {
+    ...document,
+    coverPage: {
+      ...document.coverPage,
+      sections: [...document.coverPage.sections, section],
+    },
+  }
+}
