@@ -34,6 +34,9 @@ export default defineConfig({
     cloudflare({
       viteEnvironment: { name: "ssr" },
       remoteBindings: signedInToCloudflare(),
+      // The Worker debugger's port (9229) is shared too: a second dev server
+      // on its own PORT runs without one.
+      ...(process.env.PORT && { inspectorPort: false as const }),
     }),
     tailwindcss(),
     tanstackStart(),
