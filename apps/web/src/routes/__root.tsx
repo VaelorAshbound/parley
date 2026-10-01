@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import {
   HeadContent,
+  ScriptOnce,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
@@ -57,6 +58,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Zod's global config, before any module runs: jitless, so it
+            never tries `new Function`, which the CSP blocks (T38). Zod
+            keeps an existing globalThis.__zod_globalConfig; src/lib/zod.ts
+            alone came too late in the production bundle. */}
+        <ScriptOnce>
+          {"globalThis.__zod_globalConfig={jitless:true}"}
+        </ScriptOnce>
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="theme">
