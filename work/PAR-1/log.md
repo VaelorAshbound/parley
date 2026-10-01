@@ -250,3 +250,9 @@ T40 done: /ship GO (work/PAR-1/ship.md). Fixed before the tag: output cap 4096 p
 
 ### 2026-10-01T20:34:33Z
 Session end (2026-10-01). Finished: T39 (README, ADRs 0010-0012, 3-command local setup checked in a clean container, architecture diagram; GIF dropped by the owner) and T40 (/ship GO: output cap + one-part messages fixed in PR #4; evals green with the cap; CHANGELOG). Released v1.0.0 (tag on 6075421, GitHub release). Production serves 6075421, smoke green. All 42 plan tasks done. Filed PAR-48 (panel shift), PAR-49..53 (review follow-ups). Next: Checkpoint Complete (tick every spec §8 criterion with evidence; the GIF line is dropped), then the open wi items by priority (PAR-49 tests first); nightly still off (NIGHTLY_URL unset).
+
+### 2026-10-01T21:17:11Z
+phase: build -> done
+
+### 2026-10-01T21:17:11Z
+PAR-1 done (2026-10-01). Final checkpoint passed with four recorded exceptions (work/PAR-1/checkpoint-complete.md). PR #7 merged: export test uses the printer's None rule, DPA page 7 re-approved (44/44 real exports). Nightly back on (NIGHTLY_URL = live site; scheduled e2e tests the Preview). PAR-54 cancelled (no Mac). Open follow-ups: PAR-48, 49, 55, 56 first; then 53, 13, 14 and the low polish items.
