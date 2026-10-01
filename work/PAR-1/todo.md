@@ -1034,4 +1034,4 @@
   - Deps: T39
 
 ### Checkpoint: Complete
-- [ ] Every success criterion in spec §8 is checked with evidence.
+- [x] Every success criterion in spec §8 is checked with evidence: work/PAR-1/checkpoint-complete.md. Passed 2026-10-01 with four recorded exceptions (first token 4.0 s, accepted in T35; live-update outliers PAR-55 and the PAR-48 shift; desktop Safari not checked, no Mac; GIF dropped).
