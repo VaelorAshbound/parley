@@ -39,3 +39,6 @@ Seen in the QA-fixes wave: (1) a fresh worktree's first 'pnpm test' fails from V
 
 ### 2026-09-30T20:42:41Z
 Visual baselines depend on .dev.vars: with GOOGLE_/GITHUB_CLIENT_* set, sign-in shows OAuth buttons and its baseline no longer matches CI (fixed in the next commit after a844490). Take visual baselines with those lines removed, or make scripts/e2e-docker.sh unset them.
+
+### 2026-10-01T16:31:33Z
+Flaky (2026-10-01): a11y.spec 'light @phone › a draft with its document closed' fails ~1 in 12 locally: axe aria-required-attr on a React useId element (#_R_…, likely a Base UI part) mid-render. Not T38. Trace: re-run with --repeat-each=6.
