@@ -244,3 +244,6 @@ T39 done (PR #3, CI green: Workers Builds, component, e2e chromium). README chec
 
 ### 2026-10-01T19:53:05Z
 PR #3 merged (494e33f). Production serves 494e33f, scripted AI off, smoke green. Next: T40 (/ship).
+
+### 2026-10-01T20:26:43Z
+T40 done: /ship GO (work/PAR-1/ship.md). Fixed before the tag: output cap 4096 per model call + one-part messages (PR #4, 42f5a7b live, smoke green); evals re-run green with the cap. Filed PAR-49..53. CHANGELOG.md for 1.0.0. Next: merge the docs PR, tag v1.0.0 on main, GitHub release.
