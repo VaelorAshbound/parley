@@ -235,3 +235,6 @@ Session end (2026-10-01). Finished: T38, Parley live on parley.runtimedrift.dev 
 
 ### 2026-10-01T18:37:31Z
 T39 in progress: plan (be67060), ADRs 0010-0012 (6858dc1), local setup in 3 commands checked on a fresh clone in a clean podman container with no keys or login (39db62c, 7b417ee). Next: architecture diagram, 30 s GIF from production, README.
+
+### 2026-10-01T19:28:10Z
+T39 built, not yet pushed (9 local commits be67060..cf24c17): ADRs 0010-0012; local setup in 3 commands (pnpm dev writes .dev.vars, starts Postgres; scripted AI with no key; no remote bindings without a Cloudflare login) checked on a fresh clone in a clean podman container; architecture diagram light+dark; README with evals, cost, test pyramid (pnpm test 1306 passed/1 skipped, test:workers 448 passed). GIF dropped by the owner (the take showed PAR-48, filed). Next: push + PR to main, check README on GitHub in light and dark, then T39 done -> T40 /ship.
