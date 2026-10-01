@@ -17,4 +17,4 @@ Seen while recording the README GIF (T39), 1280x800, Chromium, local dev, real m
 - Likely cause to check first: scrolling the changed field into view scrolls an ancestor that should never scroll (an overflow-hidden wrapper of the panel), not only the document's own scroller.
 - Screenshot: work/PAR-1/qa/panel-shift.png.
 
-Done when: an e2e test fills a field at the end of the document and the panel's header stays at y=0; the README GIF is recorded again (`node scripts/demo/record.ts && node scripts/demo/gif.ts`).
+Done when: an e2e test fills a field at the end of the document and the panel's header stays at y=0.

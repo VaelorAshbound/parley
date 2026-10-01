@@ -1018,8 +1018,9 @@
   - Deps: T33 · Skills: `cloudflare:wrangler`, `security-and-hardening`
 
 - [ ] **T39: README + ADRs** (M)
+  - Owner, 2026-10-01: the GIF is dropped (a recording showed PAR-48; not worth a re-record).
   - Accept:
-    - README: a 30-second GIF, the architecture diagram, "how it works", the eval score, the cost per document, the test pyramid, and a local setup in 3 commands or fewer.
+    - README: ~~a 30-second GIF~~, the architecture diagram, "how it works", the eval score, the cost per document, the test pyramid, and a local setup in 3 commands or fewer.
     - ADRs 001–00N for every decision made (Worker entry, document engine, PDF through Browser Run, guest auth, cost limits, CI).
   - Verify: A fresh clone → local setup in 3 or fewer commands works (tested in a clean container).
   - Files: `README.md`, `docs/adr/*.md`, `docs/architecture.svg`
