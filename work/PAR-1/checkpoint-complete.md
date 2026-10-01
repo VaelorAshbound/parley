@@ -13,7 +13,7 @@ Verdict for each criterion: ✅ met, ⚠️ met with a recorded exception, ❌ n
 | A field changes in the preview within 100 ms of the tool call arriving. No layout shift, no flash. | ⚠️ | Measured on the Preview (production build, scripted AI, 10 runs), from the tool-result chunk reaching the browser to the value in the live document: **median 15 ms**. 7 runs were under 25 ms; 3 took 244–386 ms (cause not yet found; filed). T17: no long tasks while streaming. **Layout shift:** PAR-48 is open (the document panel moves up about 28 px while the AI fills the last fields). Lighthouse CLS on the public pages is 0–0.009. |
 | First AI token in under 1.5 s (p50) and under 3 s (p95). | ⚠️ | T35: the real `gpt-6-luna` on the Preview took p50 4.0 s and p95 4.8 s. The Worker, database and stream part takes p50 0.8 s; the rest is the model thinking. **The owner accepted this on 2026-09-29** (todo.md T35). |
 | Landing page: LCP under 2.0 s on 4G, CLS under 0.05, Lighthouse 95 or more in every category. | ✅ | Production Lighthouse 2026-10-01 (phone, 4G, median of 3): `/` scored performance 98, accessibility 100, best practices 100, SEO 100, with LCP 1.67 s and CLS 0.009. `/pricing` and `/sign-in` scored the same (98/100/100/100, LCP 1.7–1.8 s, CLS 0). The sign-in LCP miss from T35 (2.4–3.3 s on a Preview) doesn't show on production. |
-| Works in the latest Chrome, Firefox and Safari, and at 375 px wide. | ⚠️ | The e2e suite (2026-10-01, run 36924266491) in 6 projects against the Preview: **Chromium, Firefox, Chromium phone, Firefox phone and WebKit phone (375 px) all passed in full.** Desktop WebKit had 1 failed and 3 flaky tests, all "Page crashed": the WebKit process dies on draft pages with the panel open, both in CI and in a local container, on a different test each time. Real Safari on a Mac is not checked (filed). The axe checks pass in every project. |
+| Works in the latest Chrome, Firefox and Safari, and at 375 px wide. | ⚠️ | The e2e suite (2026-10-01, run 36924266491) in 6 projects against the Preview: **Chromium, Firefox, Chromium phone, Firefox phone and WebKit phone (375 px) all passed in full.** Desktop WebKit had 1 failed and 3 flaky tests, all "Page crashed": the WebKit process dies on draft pages with the panel open, both in CI and in a local container, on a different test each time. Real Safari on a Mac is not checked: the owner has no Mac and dropped the check (PAR-54 cancelled). The axe checks pass in every project. |
 
 ## Engineer (repo)
 
@@ -34,11 +34,11 @@ Verdict for each criterion: ✅ met, ⚠️ met with a recorded exception, ❌ n
 
 ## Result
 
-**Checkpoint passed with four recorded exceptions.** 8 criteria are met in full. The other four:
+**Checkpoint passed with four recorded exceptions** (owner, 2026-10-01). 8 criteria are met in full. The other four:
 
 1. **First AI token** is 4.0 s against 1.5 s. The owner accepted this in T35.
 2. **Live update within 100 ms:** median 15 ms, with occasional runs at 250–390 ms, and the PAR-48 shift is still open.
-3. **Desktop Safari:** WebKit crashes on Linux and real Safari isn't checked yet. The WebKit phone project passes.
+3. **Desktop Safari:** WebKit crashes on Linux, and real Safari can't be checked here (no Mac, owner dropped it). The WebKit phone project passes.
 4. **The GIF** was dropped by the owner.
 
 None of these blocks v1.0.0, which is live.
@@ -49,4 +49,4 @@ None of these blocks v1.0.0, which is live.
 - **evals:** 36/36 conversations passed, but there was 1 invalid write (the model sent questionnaire input that didn't validate, then recovered). The bar is 0, and the same suite gave 0 locally that day. It wasn't the output cap: the call ended on a tool call at 1,453 tokens.
 - **performance:** failed. Time to first token with the scripted AI was p50 1,504 ms against a 1,500 ms budget, measured from GitHub's US runner while 6 e2e browsers loaded the same Preview. Lighthouse showed warnings only. This is the US-runner effect PAR-27 described.
 
-**Follow-ups filed:** PAR-54 (desktop WebKit crashes; a check in real Safari), PAR-55 (slow live-update outliers), PAR-56 (a nightly that stays green: performance budgets from the US runner, and the eval bar of 0 against model variance). PAR-48 covers the panel shift.
+**Follow-ups filed:** PAR-54 (desktop WebKit crashes; cancelled, no Mac), PAR-55 (slow live-update outliers), PAR-56 (a nightly that stays green: performance budgets from the US runner, and the eval bar of 0 against model variance). PAR-48 covers the panel shift.
