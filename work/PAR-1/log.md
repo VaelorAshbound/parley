@@ -226,3 +226,6 @@ Session end (2026-09-30, paused by owner before the merge). Done: PAR-18 cancell
 
 ### 2026-10-01T18:07:24Z
 T38 done (2026-10-01): parley.runtimedrift.dev live on 043768e, smoke green, A+ headers, forged Turnstile 403, owner chat turns OK. Fixed: Zod probe (8818e02), date-dependent visual baselines, production gate (documents coverage, Worker test timeout), deploy command now ci-deploy.sh, smoke chat turn skipped on production. Open: owner Google sign-in on production; delete old full-access Resend key. Next: T39 (README + ADRs), T40 (/ship).
+
+### 2026-10-01T18:09:39Z
+Google sign-in on production checked (owner; 1 google account). Resend: deleted the unused old production key (parley-production-sending, 2026-09-25); kept 'email' (full access, used locally), parley-ci, priced-ci, and the new production key. T38 has nothing open.
