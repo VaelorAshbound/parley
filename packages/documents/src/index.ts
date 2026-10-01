@@ -41,6 +41,7 @@ export type {
   Unit,
 } from "./fields.ts"
 export { render } from "./render.ts"
+export { NONE, isNone, isNoneLine } from "./render/model.ts"
 export type {
   Part,
   RenderedClause,
