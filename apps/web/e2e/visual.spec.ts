@@ -18,7 +18,10 @@ fresh.beforeEach(({ browserName }) => {
 const steady = (page: Page) => ({
   mask: [
     page.locator("[data-slot=sidebar]"),
-    page.getByText(/^[A-Z][a-z]+ \d{1,2}, \d{4}$/),
+    // The date's whole line (its grandparent, the field's flex row), not the
+    // text: "October 1" is narrower than "September 30", and a mask the
+    // size of the text changed the screenshot from day to day.
+    page.getByText(/^[A-Z][a-z]+ \d{1,2}, \d{4}$/).locator("xpath=../.."),
   ],
   fullPage: false,
 })
