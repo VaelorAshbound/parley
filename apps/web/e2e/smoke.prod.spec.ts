@@ -34,7 +34,14 @@ test("the start page and sign-in page render", async ({ page }) => {
   await expect(page.getByLabel("Email")).toBeVisible()
 })
 
-test("one real chat turn fills in the document", async ({ page }) => {
+test("one real chat turn fills in the document", async ({ page, baseURL }) => {
+  // Production's real Turnstile shows a headless browser "Verify you are
+  // human", so a robot can't start a draft there (T38, 2026-10-01). The
+  // Previews (test keys) still run this turn on every PR (real.yml).
+  test.skip(
+    new URL(baseURL ?? "").hostname === "parley.runtimedrift.dev",
+    "real Turnstile stops robots on production"
+  )
   await open(page, "/")
   await page
     .getByRole("textbox", { name: "Describe your deal" })
