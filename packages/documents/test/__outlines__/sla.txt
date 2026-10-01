@@ -1,0 +1,22 @@
+# Service Level Agreement
+1 Uptime
+  1.1 Target Uptime. [orderform:Target Uptime, coverpage:Provider]
+  1.2 Calculating Uptime. [coverpage:Provider, coverpage:Customer, orderform:Subscription Period]
+2 Response Time
+  2.1 Target Response Time. [orderform:Target Response Time, coverpage:Provider, orderform:Support Channel]
+  2.2 Calculating Response Time. [coverpage:Provider, coverpage:Customer, orderform:Support Channel]
+3 Remedies
+  3.1 Service Credit. [orderform:Target Uptime, coverpage:Customer, orderform:Uptime Credit, orderform:Target Response Time, coverpage:Provider, orderform:Support Channel, orderform:Response Time Credit]
+  3.2 Requesting A Service Credit. [coverpage:Customer, coverpage:Provider]
+    3.2.a [orderform:Uptime Credit, coverpage:Customer, coverpage:Provider, orderform:Scheduled Downtime]
+    3.2.b [orderform:Response Time Credit, coverpage:Customer, coverpage:Provider, orderform:Target Response Time]
+  3.3 Service Credit Limitations. [orderform:Subscription Period]
+  3.4 Termination. [orderform:Target Uptime, coverpage:Customer, coverpage:Provider, orderform:Subscription Period]
+  3.5 Exclusive Remedy. [coverpage:Customer, coverpage:Provider, orderform:Target Uptime, orderform:Target Response Time]
+4 Definitions
+  4.1 defines "Available Minutes" [orderform:Scheduled Downtime]
+  4.2 defines "Downtime Minutes" [coverpage:Customer, coverpage:Provider, orderform:Scheduled Downtime]
+  4.3 defines "Excluded Minutes" [coverpage:Provider, coverpage:Customer]
+  4.4 defines "Service Credit" [orderform:Uptime Credit, orderform:Response Time Credit]
+  4.5 defines "SLA"
+  4.6 defines "SLA Standard Terms"

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone chat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+%%FONTS%%
+<style>
+%%CSS%%
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; overflow: hidden; display: flex; flex-direction: column; background: #F6F4EE; color: #1B1A17; font-family: %%SANS%%;">
+
+  <header style="height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 4px;">
+    <button class="pl-press pl-hover" aria-label="Open drafts" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; color: #1B1A17; cursor: pointer;">%%I:menu:21%%</button>
+    <button class="pl-press pl-hover" style="height: 40px; display: flex; align-items: center; gap: 5px; padding: 0 10px; border: 0; background: transparent; border-radius: 10px; font-size: 15.5px; font-weight: 600; color: #1B1A17; cursor: pointer;">Northwind NDA<span style="color: #6A665D; display: flex;">%%I:chevdown:15%%</span></button>
+    <button class="pl-press pl-hover" aria-label="More" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; color: #1B1A17; cursor: pointer;">%%I:more:21%%</button>
+  </header>
+
+  <div role="tablist" aria-label="View" style="margin: 2px 16px 0; height: 40px; box-sizing: border-box; padding: 3px; border-radius: 12px; background: #ECE8DF; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; flex-shrink: 0;">
+    <button role="tab" aria-selected="true" style="border: 0; border-radius: 9px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(27,26,23,0.08), 0 1px 1px rgba(27,26,23,0.04); font-size: 14px; font-weight: 600; color: #1B1A17; cursor: pointer;">Chat</button>
+    <a href="MobileDocument.dc.html" role="tab" aria-selected="false" style="border-radius: 9px; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 14px; font-weight: 500; color: #57544C;">Document<span style="width: 7px; height: 7px; border-radius: 999px; background: #2743C4;"></span><span class="pl-sr">, updated</span></a>
+  </div>
+
+  <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column-reverse; -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 36px); mask-image: linear-gradient(to bottom, transparent 0, black 36px);">
+    <div style="display: flex; flex-direction: column; gap: 16px; padding: 28px 16px 14px;">
+      <div style="align-self: flex-end; max-width: 300px; background: #ECE8DF; border-radius: 20px 20px 6px 20px; padding: 10px 15px; font-size: 15px; line-height: 1.5;">We’re Acme Robotics, sharing our roadmap with Northwind Labs. Need an NDA?</div>
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; text-wrap: pretty;">A <strong style="font-weight: 600;">Mutual NDA</strong> fits. You’re both sharing, so it protects each side the same way.</p>
+
+      <div style="display: flex; flex-direction: column; border: 1px solid #E3DED3; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 4px 0 12px; font-size: 13px;"><span style="color: #57544C;">Purpose</span><span style="color: #A29D92;">→</span><span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: %%SERIF%%; font-size: 14.5px; color: #2743C4;">Evaluating a partnership</span><button class="pl-press pl-hover" style="height: 36px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #57544C; cursor: pointer;">Undo</button></div>
+        <div style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 4px 0 12px; font-size: 13px; border-top: 1px solid #ECE7DC;"><span style="color: #57544C;">Parties</span><span style="color: #A29D92;">→</span><span style="flex-grow: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: %%SERIF%%; font-size: 14.5px; color: #2743C4;">Acme Robotics · Northwind Labs</span><button class="pl-press pl-hover" style="height: 36px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #57544C; cursor: pointer;">Undo</button></div>
+      </div>
+
+      <section aria-label="Key terms" style="background: #FFFFFF; border: 1px solid #E3DED3; border-radius: 18px; box-shadow: 0 1px 2px rgba(27,26,23,0.04), 0 10px 28px -14px rgba(27,26,23,0.16); padding: 14px 12px 10px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 0 4px;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6A665D;">Key terms</span>
+          <span style="flex-grow: 1;"></span>
+          <span style="font-size: 12.5px; color: #6A665D;">1 of 2</span>
+          <div style="width: 52px; height: 4px; border-radius: 4px; background: #ECE7DC; overflow: hidden;"><div style="width: 50%; height: 4px; border-radius: 4px; background: #2743C4;"></div></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 0 4px;">
+          <h3 style="margin: 0; font-family: %%SERIF%%; font-size: 20px; line-height: 1.25; font-weight: 500; letter-spacing: -0.01em;">How long should the NDA last?</h3>
+          <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #57544C;">How long either side can share new information under it.</p>
+        </div>
+        <div role="radiogroup" aria-label="How long should the NDA last?" style="display: flex; flex-direction: column; gap: 6px;">
+          <button role="radio" aria-checked="false" class="pl-press" style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 10px; border-radius: 12px; border: 1px solid #E3DED3; background: #FFFFFF; text-align: left; cursor: pointer;"><span style="flex-shrink: 0; width: 24px; height: 24px; box-sizing: border-box; border-radius: 7px; border: 1px solid #D5CFC2; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; color: #57544C;">A</span><span style="display: flex; flex-direction: column;"><span style="font-size: 14.5px; font-weight: 500;">1 year</span><span style="font-size: 12.5px; color: #57544C;">Enough for a short evaluation.</span></span></button>
+          <button role="radio" aria-checked="true" class="pl-press" style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 10px; border-radius: 12px; border: 1px solid #2743C4; background: #EEF1FC; text-align: left; cursor: pointer;"><span style="flex-shrink: 0; width: 24px; height: 24px; box-sizing: border-box; border-radius: 7px; background: #2743C4; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; color: #FDFDFF;">B</span><span style="flex-grow: 1; display: flex; flex-direction: column;"><span style="font-size: 14.5px; font-weight: 500;">2 years</span><span style="font-size: 12.5px; color: #57544C;">Room to evaluate and start working.</span></span><span style="color: #2743C4; display: flex;">%%I:check:18:2%%</span></button>
+          <button role="radio" aria-checked="false" class="pl-press" style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 10px; border-radius: 12px; border: 1px solid #E3DED3; background: #FFFFFF; text-align: left; cursor: pointer;"><span style="flex-shrink: 0; width: 24px; height: 24px; box-sizing: border-box; border-radius: 7px; border: 1px solid #D5CFC2; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; color: #57544C;">C</span><span style="display: flex; flex-direction: column;"><span style="font-size: 14.5px; font-weight: 500;">Until one side ends it</span><span style="font-size: 12.5px; color: #57544C;">Stays open until someone gives notice.</span></span></button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div style="flex-shrink: 0; padding: 6px 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="pl-composer" style="display: flex; align-items: flex-end; gap: 8px; padding: 8px 8px 8px 16px; background: #FFFFFF; border: 1px solid #D5CFC2; border-radius: 24px; box-shadow: 0 6px 18px -12px rgba(27,26,23,0.16);">
+      <label for="m-reply" class="pl-sr">Reply to Parley</label>
+      <textarea id="m-reply" rows="1" placeholder="Reply to Parley…" style="flex-grow: 1; border: 0; outline: none; resize: none; background: transparent; font-size: 16px; line-height: 1.5; padding: 5px 0; color: #1B1A17;"></textarea>
+      <button class="pl-press" aria-label="Send" style="flex-shrink: 0; width: 36px; height: 36px; border: 0; border-radius: 999px; background: #1B1A17; color: #FAF8F3; display: grid; place-items: center; cursor: pointer;">%%I:arrowup:17:2%%</button>
+    </div>
+    <p style="margin: 0; text-align: center; font-size: 11.5px; color: #6A665D;">Parley fills in standard agreements. It isn’t legal advice.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

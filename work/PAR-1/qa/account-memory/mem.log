@@ -1,0 +1,25 @@
+{"label":"after 0 msgs","usedHeapMB":39.7,"totalHeapMB":41.25,"domNodes":2768,"documents":7,"jsEventListeners":2902,"layoutCount":0,"recalcStyleCount":58,"elements":460,"items":2,"slowEvents":0,"maxEvent":0,"longTasks":1,"maxLong":77,"scroll":{"frames":60,"p50":16.69999999999709,"p95":16.80000000000291,"max":16.80000000000291},"typeLagMs":[31,34,33,34,33]}
+sent 5 (753 ms)
+sent 10 (754 ms)
+sent 15 (756 ms)
+sent 20 (753 ms)
+{"label":"after 24 msgs","usedHeapMB":40.75,"totalHeapMB":42.25,"domNodes":3161,"documents":7,"jsEventListeners":2902,"layoutCount":331,"recalcStyleCount":2147,"elements":759,"items":48,"slowEvents":117,"maxEvent":96,"longTasks":1,"maxLong":77,"scroll":{"frames":60,"p50":16.699999999982538,"p95":16.70000000001164,"max":16.79999999998836},"typeLagMs":[33,33,34,33,33]}
+sent 25 (755 ms)
+sent 30 (754 ms)
+sent 35 (753 ms)
+sent 40 (753 ms)
+sent 45 (757 ms)
+{"label":"after 49 msgs","usedHeapMB":41.37,"totalHeapMB":42.5,"domNodes":3588,"documents":7,"jsEventListeners":2902,"layoutCount":734,"recalcStyleCount":4671,"elements":1084,"items":98,"slowEvents":239,"maxEvent":96,"longTasks":1,"maxLong":77,"scroll":{"frames":60,"p50":16.699999999982538,"p95":16.79999999998836,"max":16.800000000017462},"typeLagMs":[32,34,33,33,34]}
+sent 50 (755 ms)
+sent 55 (1006 ms)
+sent 60 (754 ms)
+sent 65 (755 ms)
+sent 70 (753 ms)
+{"label":"after 74 msgs","usedHeapMB":42,"totalHeapMB":43.75,"domNodes":4015,"documents":7,"jsEventListeners":2902,"layoutCount":1175,"recalcStyleCount":7253,"elements":1409,"items":148,"slowEvents":361,"maxEvent":96,"longTasks":1,"maxLong":77,"scroll":{"frames":60,"p50":16.699999999982538,"p95":16.70000000001164,"max":16.800000000017462},"typeLagMs":[33,33,33,33,34]}
+sent 75 (754 ms)
+sent 80 (754 ms)
+sent 85 (1005 ms)
+sent 90 (754 ms)
+sent 95 (755 ms)
+{"label":"after 99 msgs","usedHeapMB":42.21,"totalHeapMB":43.75,"domNodes":4442,"documents":7,"jsEventListeners":2902,"layoutCount":1624,"recalcStyleCount":9814,"elements":1734,"items":198,"slowEvents":483,"maxEvent":96,"longTasks":1,"maxLong":77,"scroll":{"frames":60,"p50":16.699999999982538,"p95":16.70000000001164,"max":16.800000000017462},"typeLagMs":[31,52,30,33,33]}
+{"stoppedAt":100,"ok":false,"alert":"You’ve used today’s 100 messages. More come at 12:00 AM, or get 500 a day with Pro.Get Pro","items":199}

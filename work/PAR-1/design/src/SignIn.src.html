@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+%%FONTS%%
+<style>
+%%CSS%%
+.pl-field{transition:border-color 160ms ease,box-shadow 160ms ease}
+.pl-field:focus{border-color:#2743C4 !important;box-shadow:0 0 0 4px #EEF1FC;outline:none}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; overflow: hidden; display: flex; background: #F6F4EE; color: #1B1A17; font-family: %%SANS%%;">
+
+  <main style="width: 620px; flex-shrink: 0; box-sizing: border-box; padding: 36px 72px 40px; display: flex; flex-direction: column;">
+    <a href="Main.dc.html" aria-label="Parley home" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; color: #1B1A17;">%%MARK:24%%<span style="font-family: %%SERIF%%; font-size: 22px; font-weight: 500; letter-spacing: -0.02em;">Parley</span></a>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+      <form style="width: 392px; display: flex; flex-direction: column;">
+        <h1 style="margin: 0; font-family: %%SERIF%%; font-size: 40px; line-height: 1.06; font-weight: 400; letter-spacing: -0.024em;">Sign in to save your draft</h1>
+        <p style="margin: 14px 0 0; font-size: 15.5px; line-height: 1.55; color: #57544C;">Your chat and your document come with you. Nothing is lost.</p>
+
+        <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="pl-press pl-outline" style="height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 14px 0 16px; border: 1px solid #D5CFC2; border-radius: 12px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #1B1A17; cursor: pointer;">%%GG:19%%<span style="flex-grow: 1; text-align: left;">Continue with Google</span><span style="height: 22px; display: inline-flex; align-items: center; padding: 0 9px; border-radius: 999px; background: #EEF1FC; color: #2743C4; font-size: 11.5px; font-weight: 600;">Last used</span></button>
+          <button type="button" class="pl-press pl-outline" style="height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border: 1px solid #D5CFC2; border-radius: 12px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #1B1A17; cursor: pointer;">%%GH:19%%<span style="flex-grow: 1; text-align: left;">Continue with GitHub</span></button>
+        </div>
+
+        <div role="separator" style="margin: 26px 0; display: flex; align-items: center; gap: 14px; font-size: 12.5px; color: #6A665D;"><span style="flex-grow: 1; height: 1px; background: #E3DED3;"></span>or with email<span style="flex-grow: 1; height: 1px; background: #E3DED3;"></span></div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <label for="email" style="font-size: 13.5px; font-weight: 500;">Email</label>
+            <input id="email" type="email" placeholder="you@company.com" class="pl-field" style="height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #D5CFC2; border-radius: 12px; background: #FFFFFF; font-size: 15px; color: #1B1A17;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;"><label for="password" style="font-size: 13.5px; font-weight: 500;">Password</label><a href="#" style="font-size: 13px; font-weight: 500;">Forgot password?</a></div>
+            <input id="password" type="password" class="pl-field" style="height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #D5CFC2; border-radius: 12px; background: #FFFFFF; font-size: 15px; color: #1B1A17;">
+          </div>
+        </div>
+
+        <button type="submit" class="pl-press pl-ink-btn" style="margin-top: 22px; height: 48px; border: 0; border-radius: 12px; background: #1B1A17; color: #FAF8F3; font-size: 15px; font-weight: 600; cursor: pointer;">Sign in</button>
+        <p style="margin: 20px 0 0; text-align: center; font-size: 14px; color: #57544C;">New to Parley? <a href="#" style="font-weight: 500;">Create an account</a></p>
+      </form>
+    </div>
+  </main>
+
+  <aside aria-label="Your draft" style="flex-grow: 1; position: relative; background: #EDEAE2; border-left: 1px solid #E3DED3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px;">
+    <div aria-hidden="true" style="width: 440px; box-sizing: border-box; padding: 38px 40px 34px; background: #FFFDF9; border-radius: 4px; transform: rotate(-2deg); box-shadow: 0 0 0 1px rgba(27,26,23,0.04), 0 2px 4px rgba(27,26,23,0.04), 0 30px 60px -24px rgba(27,26,23,0.26); font-family: %%SERIF%%;">
+      <div style="display: flex; justify-content: space-between; font-family: %%SANS%%; font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6A665D;"><span>Cover Page</span><span>Common Paper · v1.0</span></div>
+      <div style="margin-top: 12px; font-size: 22px; line-height: 1.15; font-weight: 500; letter-spacing: -0.012em;">Mutual Non-Disclosure Agreement</div>
+      <div style="margin-top: 18px; border-top: 1.5px solid #1B1A17; font-size: 13px; line-height: 1.5;">
+        <div style="display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; padding: 11px 0; border-bottom: 1px solid #ECE7DC;"><span style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; padding-top: 2px;">Purpose</span><span style="color: #2743C4;">Evaluating whether to enter into a manufacturing partnership with the other party.</span></div>
+        <div style="display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; padding: 11px 0; border-bottom: 1px solid #ECE7DC;"><span style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; padding-top: 2px;">Effective Date</span><span style="color: #2743C4;">September 23, 2026</span></div>
+        <div style="display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; padding: 11px 0; border-bottom: 1px solid #ECE7DC;"><span style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; padding-top: 2px;">MNDA Term</span><span>Expires <span style="color: #2743C4;">2 years</span> from Effective Date.</span></div>
+        <div style="display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; padding: 11px 0; border-bottom: 1px solid #ECE7DC;"><span style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; padding-top: 2px;">Confidentiality</span><span><span style="color: #2743C4;">3 years</span> from Effective Date.</span></div>
+        <div style="display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; padding: 11px 0;"><span style="font-family: %%SANS%%; font-size: 11px; font-weight: 600; padding-top: 2px;">Governing Law</span><span><span style="font-family: %%SANS%%; font-size: 11.5px; color: #6A665D; background: #F2EFE8; border: 1px dashed #CFC8B9; border-radius: 5px; padding: 1px 7px;">State</span></span></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;">
+      <span style="font-size: 15px; font-weight: 600;">Northwind NDA</span>
+      <span style="font-size: 13.5px; color: #57544C;">Waiting for you, exactly as you left it.</span>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

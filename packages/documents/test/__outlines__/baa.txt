@@ -1,0 +1,52 @@
+# Business Associate Agreement
+1 Business Associate Obligations
+  1.1 Obligations and Restrictions. [keyterms:Provider]
+  1.2 Permitted Uses and Disclosures. [keyterms:Provider]
+  1.3 Privacy and Information Security Program. [keyterms:Provider]
+  1.4 Safeguards. [keyterms:Provider, keyterms:Company]
+  1.5 Assessments. [keyterms:Provider, keyterms:Company]
+  1.6 Mitigation of Risks. [keyterms:Provider, keyterms:Company]
+  1.7 Subcontractors. [keyterms:Limitations, keyterms:Provider]
+  1.8 Books and Records to HHS. [keyterms:Provider, keyterms:Company]
+  1.9 Audit of Books and Records. [keyterms:Provider, keyterms:Company]
+  1.10 Individual Requests. [keyterms:Provider, keyterms:Company]
+  1.11 Compliance with Covered Entity’s Obligations. [keyterms:Provider, keyterms:Company]
+2 Company Obligations
+  2.1 Notice of Privacy Practices. [keyterms:Company, keyterms:Provider]
+  2.2 Notice of Changes. [keyterms:Company, keyterms:Provider]
+  2.3 Notice of Restrictions. [keyterms:Company, keyterms:Provider]
+  2.4 Compliance with Laws. [keyterms:Company, keyterms:Provider]
+3 Data Rights & Restrictions
+  3.1 Offshoring PHI. [keyterms:Limitations, keyterms:Provider]
+  3.2 De-Identification. [keyterms:Limitations, keyterms:Provider]
+  3.3 Aggregation. [keyterms:Limitations, keyterms:Provider]
+4 Breach Notification
+  4.1 Breach Reporting. [keyterms:Provider, keyterms:Company, keyterms:Breach Notification Period]
+  4.2 Unsuccessful Attempts. [keyterms:Company, keyterms:Provider]
+  4.3 Security Incident Reimbursement. [keyterms:Provider, keyterms:Company]
+  4.4 Confidentiality. [keyterms:Provider]
+5 Term & Termination
+  5.1 Term. [keyterms:BAA Effective Date, keyterms:Agreement]
+  5.2 Termination. [keyterms:Agreement]
+  5.3 Effect of Termination.
+    5.3.a [keyterms:Company, keyterms:Provider]
+    5.3.b [keyterms:Provider, keyterms:Company]
+6 Definitions
+  6.1 Defining Variables.
+  6.2 defines "BAA" [keyterms:Provider, keyterms:Company]
+  6.3 defines "BAA Standard Terms"
+  6.4 defines "Breach"
+  6.5 defines "Business Associate"
+  6.6 defines "Covered Entity"
+  6.7 defines "Cover Page" [keyterms:Provider, keyterms:Company]
+  6.8 defines "Designated Record Set"
+  6.9 defines "HHS"
+  6.10 defines "HIPAA"
+  6.11 defines "Privacy and Security Officials"
+  6.12 defines "Privacy Rule"
+  6.13 defines "Protected Health Information", "PHI"
+  6.14 defines "Security Incident"
+  6.15 defines "Security Rule"
+  6.16 defines "Services" [keyterms:Provider, keyterms:Agreement]
+  6.17 defines "Subcontractor" [keyterms:Provider]
+  6.18 defines "Variable" [keyterms:Limitations]

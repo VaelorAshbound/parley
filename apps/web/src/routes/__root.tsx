@@ -1,0 +1,80 @@
+import type { QueryClient } from "@tanstack/react-query"
+import {
+  HeadContent,
+  ScriptOnce,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router"
+import { Toaster } from "@workspace/ui/components/toast"
+import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import appCss from "@workspace/ui/globals.css?url"
+import { useEffect } from "react"
+import { fontPreloads } from "@workspace/ui/lib/fonts"
+
+import {
+  NotFound,
+  notFoundTitle,
+  RouteError,
+  showsNotFound,
+} from "./-components/states"
+
+import { ThemeProvider } from "@/components/theme-provider"
+import type { Orpc } from "@/lib/orpc"
+
+export type RouterContext = { queryClient: QueryClient; orpc: Orpc }
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  head: ({ match }) => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: showsNotFound(match) ? notFoundTitle : "Parley" },
+      // Search results show it under the title (Lighthouse SEO, T35).
+      {
+        name: "description",
+        content:
+          "Parley drafts your legal agreement with you by chat: an NDA or any of 12 Common Paper standard agreements, filled in live, ready as PDF or Word.",
+      },
+    ],
+    links: [
+      ...fontPreloads,
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+    ],
+  }),
+  notFoundComponent: NotFound,
+  errorComponent: RouteError,
+  shellComponent: RootDocument,
+})
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  // Marks the page as interactive, so browser tests act after hydration
+  // instead of clicking a button React doesn't handle yet.
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = ""
+  }, [])
+  return (
+    // The theme script sets a class on <html> before React hydrates.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+        {/* Zod's global config, before any module runs: jitless, so it
+            never tries `new Function`, which the CSP blocks (T38). Zod
+            keeps an existing globalThis.__zod_globalConfig; src/lib/zod.ts
+            alone came too late in the production bundle. */}
+        <ScriptOnce>
+          {"globalThis.__zod_globalConfig={jitless:true}"}
+        </ScriptOnce>
+      </head>
+      <body>
+        <ThemeProvider defaultTheme="system" storageKey="theme">
+          <TooltipProvider>
+            {/* Toasts (a delete's Undo, T22), in a landmark F6 jumps to. */}
+            <Toaster>{children}</Toaster>
+          </TooltipProvider>
+        </ThemeProvider>
+        <Scripts />
+      </body>
+    </html>
+  )
+}

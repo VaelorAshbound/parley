@@ -1,0 +1,44 @@
+### 2026-09-25T13:00:28Z
+Created.
+
+### 2026-09-25T19:12:13Z
+More e2e tests that break on shared test data (wave B1): shell.spec 'the new draft is in the sidebar's history' and 'a draft can be started with the keyboard alone' depend on how many drafts the shared per-worker guest already has (T22's sidebar history adds tab stops and opens the sidebar). editing.spec 'a whole NDA...' needs test.slow() (31-42 s on a busy machine, limit 30 s). All pass alone. Also a real a11y gap: keyboard users tab through the whole history before the main content; add a 'Skip to content' link (T32 a11y pass).
+
+### 2026-09-25T22:36:00Z
+Wave B2 saw two more cold-dev-server timeouts (30 s): export.spec 'a guest who wants the PDF' (23 s alone, times out next to share.spec) and drafts.spec 'a signed-out visitor keeps the browser's own Ctrl+K' in Chromium (passes 6/6 alone). Same kind of problem: the first compile of a route eats the test's time.
+
+### 2026-09-26T02:44:15Z
+2026-09-26 after wave B2: drafts.spec 'renames a draft' and editing.spec 'a whole NDA' fail about half the time locally in Chromium, even alone (repeat-each=3). Same rate on the pre-wave commit 630a811 (3/6), so not a B2 regression. Trace: on a cold dev server the draft page stays on its skeleton; some module requests (chat-panel.tsx, field-editor.tsx, download.tsx, definitions/psa.ts, sla.ts) end with status -1, and the page never finishes loading. Later repeats pass. Also: a memory-killed e2e run left 12 orphaned workerd processes (2.7 GB) behind; they made a full run fail 10 tests until killed.
+
+### 2026-09-27T17:49:21Z
+2026-09-27 (T37 merge): limits.spec 'a guest with a draft is asked to make an account for a second' fails in Firefox 3/3 with NS_BINDING_ABORTED on the second page.goto('/') from the draft page. Same 2/2 on the pre-T37 commit b7def71, so not T37. Same symptom as shell.spec:120.
+
+### 2026-09-27T20:20:16Z
+More flaky tests seen in CI on 2026-09-27 (PAR-1-parley): (1) e2e drafts.spec 'a signed-out visitor keeps the browser's own Ctrl+K' failed first and passed on retry twice (runs for a510dd0/1dd6594 era and 417b24b; once a page.evaluate timeout at 30 s). (2) Component test src/features/drafts/search-dialog.browser.test.tsx 'arrow keys move the highlight, and Enter opens that draft' failed on 1dd6594 (expected '/d/d1' to be '/d/d2'), passed on the next run. (3) e2e drafts.spec 'renames a draft from its title menu, everywhere at once' passed only on retry on 417b24b. None touched by recent tasks.
+
+### 2026-09-28T17:58:38Z
+Fixed the race in 'a signed-out visitor keeps the browser's own Ctrl+K' (listener added before the key press). Seen locally on a full run on 2026-09-28, not in isolation: 'on a phone: search opens with ⌘K…' (Chromium) and 'signing out and back in' (Firefox); both passed on re-run.
+
+### 2026-09-29T16:11:41Z
+Seen 2026-09-29: (1) CI desktop WebKit on 56f2347: page crash in chat.spec.ts:40 ('the AI suggests an agreement', page.waitForURL: page crashed), passed on retry; --ipc=host made crashes rare but not gone. (2) Local full 'pnpm test' (chromium,firefox): search-dialog.browser.test 'asks the server once per pause, not once per key' failed once under load, 3/3 alone.
+
+### 2026-09-29T17:11:44Z
+Seen 2026-09-29 on WebKit (CI run 36596008423 and local Docker vs the Preview): tests that passed 2/2 locally but failed in CI: shell.spec:25 and :121, drafts.spec:114 (page crash), first-run.spec:151, editing.spec:114 (also 1/2 locally). webkit-phone a11y.spec:53: 'Target crashed' during axe, and drafts/get + drafts/list never answered for 10 s (chat stuck on 'Updating the document…'); 2/6 local runs. Not a code bug found; WebKit instability.
+
+### 2026-09-29T17:37:53Z
+CI run 36603240369 (0e1d808): desktop WebKit green (2 flaky), webkit-phone a11y specs time out (axe, chat reply). Preview wall time, last 2 h (Workers Observability): drafts/get p99 282 ms max 5.3 s; chat/send (scripted AI) p99 4.5 s max 17 s; GET / max 7.6 s. Previews share one Neon branch and took CI, local probes and the T35 load test at once. Owner: keep CI as is; re-check after the T33-T35 wave merges.
+
+### 2026-09-29T20:16:47Z
+CI 36622923385 (f0d2aea): WebKit again crashes/timeouts in changing tests (chat.spec:17/:57, drafts:41, editing:96, shell:42 twice; phone a11y:45/:53). Locally shell:42 3/3, chat:57 3/3 on a rerun (2/3 failed the run before, one after 4 s: a crash). No code bug found.
+
+### 2026-09-29T22:37:14Z
+CI 36637331506 (cd4e517): Chromium first-run.spec.ts:70 'the start page doesn't shift while it loads' failed once (5.4 s), passed on retry. Same test as the Firefox local flake in this item's title; now also seen on Chromium in CI.
+
+### 2026-09-30T17:40:48Z
+Seen in the QA-fixes wave: (1) a fresh worktree's first 'pnpm test' fails from Vite 'optimized dependencies changed. reloading' (import errors, sometimes real-looking failures in share-menu); adding the found deps to optimizeDeps.include in the browser project may fix it. (2) e2e a11y 'dark @phone settings is accessible' failed once in Firefox (axe aria-toggle-field-name on a Base UI toggle), then passed 6/6.
+
+### 2026-09-30T20:42:41Z
+Visual baselines depend on .dev.vars: with GOOGLE_/GITHUB_CLIENT_* set, sign-in shows OAuth buttons and its baseline no longer matches CI (fixed in the next commit after a844490). Take visual baselines with those lines removed, or make scripts/e2e-docker.sh unset them.
+
+### 2026-10-01T16:31:33Z
+Flaky (2026-10-01): a11y.spec 'light @phone › a draft with its document closed' fails ~1 in 12 locally: axe aria-required-attr on a React useId element (#_R_…, likely a Base UI part) mid-render. Not T38. Trace: re-run with --repeat-each=6.

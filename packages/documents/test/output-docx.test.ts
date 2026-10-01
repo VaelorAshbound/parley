@@ -1,0 +1,308 @@
+import JSZip from "jszip"
+import { describe, expect, it } from "vite-plus/test"
+
+import { definitions } from "../src/definitions/index.ts"
+import { readTemplate } from "../src/parse/catalog.ts"
+import { parseStandardTerms } from "../src/parse/parse.ts"
+import { DISCLAIMER } from "../src/disclaimer.ts"
+import { toDocx } from "../src/output/docx.ts"
+import { render } from "../src/render.ts"
+import { examples, registered } from "./examples.ts"
+import { annexDocument } from "./fixtures.ts"
+
+const nda = definitions["mutual-nda"]
+const filled = render(nda, nda.schema.parse(examples["mutual-nda"]))
+
+async function unzip(buffer: ArrayBuffer) {
+  const zip = await JSZip.loadAsync(buffer)
+  const read = async (name: string) =>
+    (await zip.file(name)?.async("string")) ?? ""
+  return {
+    document: await read("word/document.xml"),
+    header: await read("word/header1.xml"),
+    footer: await read("word/footer1.xml"),
+    core: await read("docProps/core.xml"),
+  }
+}
+
+/** The text of a WordprocessingML part, one paragraph per line. */
+function textOf(xml: string) {
+  return xml
+    .replaceAll(/<w:p[ >]/g, "\n$&")
+    .replaceAll(/<w:br\/>/g, "\n")
+    .replaceAll(/<w:tab\/>/g, "\t")
+    .replaceAll(/<[^>]+>/g, "")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'")
+    .replaceAll("&amp;", "&")
+}
+
+describe("toDocx", () => {
+  it("is a Word file titled after the document", async () => {
+    const { core } = await unzip(await toDocx(filled))
+
+    expect(core).toContain(
+      "<dc:title>Mutual Non-Disclosure Agreement</dc:title>"
+    )
+  })
+
+  it("prints an empty optional field as None. under its heading, never as its [placeholder]", async () => {
+    // T36: a finished NDA printed "[MNDA modifications]". The owner chose
+    // "None." over a blank (PAR-40).
+    const { modifications: _left, ...values } = examples["mutual-nda"]
+    const { document } = await unzip(
+      await toDocx(render(nda, nda.schema.parse(values)))
+    )
+
+    expect(textOf(document)).not.toContain("[MNDA modifications]")
+    expect(textOf(document)).toContain("MNDA Modifications\nNone.\n")
+  })
+
+  it("prints an empty optional field as None. without its template's words", async () => {
+    // PAR-40: "Security Policy available at None." reads as a broken link.
+    const psa = definitions.psa
+    const { securityPolicy: _left, ...values } = examples.psa
+    const { document } = await unzip(
+      await toDocx(render(psa, psa.schema.parse(values)))
+    )
+
+    expect(textOf(document)).toContain("\nSecurity Policy\nNone.\n")
+    expect(textOf(document)).not.toContain("available at None.")
+  })
+
+  it("prints an empty optional field on a labelled line as Label: None.", async () => {
+    // PAR-40 review: a labelled line that is not a checklist printed a bare
+    // "Travel and expenses" with nothing after it.
+    const psa = definitions.psa
+    const { travelExpenses: _left, ...values } = examples.psa
+    const { document } = await unzip(
+      await toDocx(render(psa, psa.schema.parse(values)))
+    )
+
+    expect(textOf(document)).toContain("\nTravel and expenses: None.\n")
+  })
+
+  it("prints an empty part of a checklist as its label alone, no dangling colon", async () => {
+    // PAR-40: "☐ Events logging: " read as a value left out.
+    const dpa = definitions.dpa
+    const { document } = await unzip(
+      await toDocx(render(dpa, dpa.schema.parse(examples.dpa)))
+    )
+
+    expect(textOf(document)).toContain("\n☐ Events logging\n")
+    expect(textOf(document)).toContain(
+      "\n☒ Protecting Customer Personal Data during transmission (in transit): All traffic uses TLS 1.2 or newer.\n"
+    )
+  })
+
+  it("uses real headings for the titles and sections", async () => {
+    const { document } = await unzip(await toDocx(filled))
+
+    expect(document).toMatch(
+      /<w:pStyle w:val="Heading1"\/>.*?<w:t[^>]*>Mutual Non-Disclosure Agreement</
+    )
+    expect(document).toMatch(
+      /<w:pStyle w:val="Heading1"\/>.*?<w:t[^>]*>Standard Terms</
+    )
+  })
+
+  it("holds every word of the standard terms, with the clause numbers", async () => {
+    const text = textOf((await unzip(await toDocx(filled))).document)
+
+    expect(text).toContain(
+      "3. Exceptions. The Receiving Party’s obligations in this MNDA do not apply"
+    )
+    expect(text).toContain(
+      "Common Paper Mutual Non-Disclosure Agreement Version 1.0 free to use under CC BY 4.0."
+    )
+  })
+
+  it("lays the cover page out in a table, and signs in another", async () => {
+    const { document } = await unzip(await toDocx(filled))
+
+    expect(document.match(/<w:tbl>/g)).toHaveLength(2)
+  })
+
+  it("prints values, placeholders and checkboxes", async () => {
+    const text = textOf((await unzip(await toDocx(filled))).document)
+    const empty = textOf((await unzip(await toDocx(render(nda, {})))).document)
+
+    expect(text).toContain("☒ Expires 2 years from Effective Date.")
+    expect(text).toContain("☐ In perpetuity.")
+    expect(text).toContain("Acme Analytics, Inc.")
+    expect(empty).toContain("[Purpose]")
+  })
+
+  it("keeps line breaks in long answers", async () => {
+    const text = textOf(
+      (
+        await unzip(
+          await toDocx(
+            render(nda, { modifications: "First change.\nSecond change." })
+          )
+        )
+      ).document
+    )
+
+    expect(text).toContain("First change.\nSecond change.")
+  })
+
+  it("escapes what people and the AI typed", async () => {
+    const { document } = await unzip(
+      await toDocx(render(nda, { purpose: "<w:t>injected</w:t> & more" }))
+    )
+
+    expect(document).toContain("&lt;w:t&gt;injected&lt;/w:t&gt; &amp; more")
+  })
+
+  it("prints US Letter by default and A4 on request", async () => {
+    const letter = (await unzip(await toDocx(filled))).document
+    const a4 = (await unzip(await toDocx(filled, { pageSize: "A4" }))).document
+
+    expect(letter).toContain('w:w="12240" w:h="15840"')
+    expect(a4).toContain('w:w="11906" w:h="16838"')
+  })
+
+  it("numbers the pages in the footer", async () => {
+    const { footer } = await unzip(await toDocx(filled))
+
+    expect(textOf(footer)).toContain("Mutual Non-Disclosure Agreement\tPage ")
+    expect(footer).toContain("PAGE")
+    expect(footer).toContain("NUMPAGES")
+  })
+
+  it("prints the page numbers as small as the words around them", async () => {
+    // A field that shares a run with text came out in the default size in
+    // LibreOffice: "Page" small, "1 of 5" large (T31). Each field gets its
+    // own run, with the footer's size.
+    const { footer } = await unzip(await toDocx(filled))
+    const runs = footer.split("<w:r>").slice(1)
+
+    for (const field of ["PAGE", "NUMPAGES"]) {
+      const run = runs.find((each) => each.includes(`>${field}<`))
+      expect(run).toContain('<w:sz w:val="15"/>')
+      expect(run).not.toContain("<w:t")
+    }
+  })
+
+  it("says on every page that it is a demo, not for real agreements", async () => {
+    const { header } = await unzip(await toDocx(filled))
+
+    expect(textOf(header)).toContain(DISCLAIMER)
+  })
+
+  it("prints sectioned terms with nested clauses, a bare cover page and no signers", async () => {
+    const csa = { ...nda, template: parseStandardTerms(readTemplate("CSA.md")) }
+    const rendered = render(csa, {})
+    const { document } = await unzip(
+      await toDocx({
+        ...rendered,
+        coverPage: {
+          ...rendered.coverPage,
+          subtitle: undefined,
+          intro: [[{ type: "hint", value: "Fill in each section." }]],
+          signatures: { parties: [], rows: [] },
+        },
+      })
+    )
+    const text = textOf(document)
+
+    expect(document).toMatch(
+      /<w:pStyle w:val="Heading2"\/>.*?<w:t[^>]*>1\. Service</
+    )
+    expect(text).toContain("5.3 Termination. Either party may terminate")
+    expect(text).toContain("a. if the other party fails to cure")
+    expect(text).toContain("Fill in each section.")
+    expect(text).not.toContain("USING THIS")
+    expect(document.match(/<w:tbl>/g)).toHaveLength(1)
+  })
+
+  it("prints a list as a table inside the cover page table", async () => {
+    const { document } = await unzip(
+      await toDocx(
+        render(annexDocument(), {
+          subprocessors: [{ name: "AWS", country: "United States" }],
+        })
+      )
+    )
+
+    expect(document.match(/<w:tbl>/g)).toHaveLength(2)
+    expect(textOf(document)).toContain("Name\nCountry\nAWS\nUnited States")
+  })
+
+  it("labels a cover page Parley wrote, and only that one", async () => {
+    const label = "Cover page by Parley, not by Common Paper"
+    const parley = {
+      ...filled,
+      coverPage: {
+        ...filled.coverPage,
+        source: "parley" as const,
+        eyebrow: label,
+      },
+    }
+
+    expect(textOf((await unzip(await toDocx(filled))).document)).not.toContain(
+      label
+    )
+    expect(textOf((await unzip(await toDocx(parley))).document)).toContain(
+      label
+    )
+  })
+})
+
+/**
+ * A WordprocessingML part, one tag per line, so a diff shows what moved.
+ * The docx package names each hyperlink with a random id: numbered here.
+ */
+function tagPerLine(xml: string) {
+  const ids = new Map<string, number>()
+  return xml
+    .replaceAll(/r:id="(rId[\w-]+)"/g, (_match, id: string) => {
+      if (!ids.has(id)) ids.set(id, ids.size + 1)
+      return `r:id="link-${ids.get(id)}"`
+    })
+    .replaceAll("><", ">\n<")
+}
+
+// The text snapshots below miss how the file looks: page size and margins,
+// fonts, bold headings, column widths, tables that don't split across pages.
+// These pin the whole Word layout of two documents that between them use
+// every part of it (cover table, list table, signers, nested clauses).
+const layoutSnapshots = registered.filter(
+  ({ id }) => id === "mutual-nda" || id === "dpa"
+)
+
+describe.each(layoutSnapshots)(
+  "$id DOCX layout",
+  ({ id, definition, example }) => {
+    it("matches the reviewed snapshot of its Word XML", async () => {
+      const values = definition.schema.parse(example)
+      const zip = await JSZip.loadAsync(
+        await toDocx(render(definition, values))
+      )
+      const parts = await Promise.all(
+        ["word/document.xml", "word/styles.xml", "word/footer1.xml"].map(
+          async (name) =>
+            `=== ${name}\n${tagPerLine((await zip.file(name)?.async("string")) ?? "")}`
+        )
+      )
+
+      await expect(parts.join("\n")).toMatchFileSnapshot(
+        `__outputs__/${id}.docx.xml`
+      )
+    })
+  }
+)
+
+describe.each(registered)("$id DOCX", ({ id, definition, example }) => {
+  it("matches the reviewed snapshot of its text", async () => {
+    const values = definition.schema.parse(example)
+    const { document } = await unzip(await toDocx(render(definition, values)))
+
+    await expect(textOf(document)).toMatchFileSnapshot(
+      `__outputs__/${id}.docx.txt`
+    )
+  })
+})

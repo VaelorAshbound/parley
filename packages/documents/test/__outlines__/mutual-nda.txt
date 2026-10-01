@@ -1,0 +1,13 @@
+# Standard Terms
+1 defines "MNDA", "Disclosing Party", "Receiving Party", "Confidential Information", "Cover Page" [coverpage:Purpose]
+2 [coverpage:Purpose]
+3
+4
+5 [coverpage:Effective Date, coverpage:MNDA Term, coverpage:Term of Confidentiality]
+6
+7
+8
+9 [coverpage:Governing Law, coverpage:Jurisdiction]
+10
+11
+(closing paragraph)
