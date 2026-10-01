@@ -7,6 +7,7 @@ import { parseStandardTerms } from "../src/parse/parse.ts"
 import { DISCLAIMER } from "../src/disclaimer.ts"
 import { toDocx } from "../src/output/docx.ts"
 import { render } from "../src/render.ts"
+import type { RenderedDocument, RenderedSection } from "../src/render/model.ts"
 import { examples, registered } from "./examples.ts"
 import { annexDocument } from "./fixtures.ts"
 
@@ -40,6 +41,13 @@ function textOf(xml: string) {
 }
 
 describe("toDocx", () => {
+  it("prints None. inline when a line mixes a filled and an empty optional value", async () => {
+    const { document } = await unzip(await toDocx(withMixedLines(filled)))
+
+    expect(textOf(document)).toContain(
+      "\nNotices go to 1 Main St, copy to None.\n"
+    )
+  })
   it("is a Word file titled after the document", async () => {
     const { core } = await unzip(await toDocx(filled))
 
@@ -306,3 +314,46 @@ describe.each(registered)("$id DOCX", ({ id, definition, example }) => {
     )
   })
 })
+
+/**
+ * The filled NDA with one hand-made section: a line that mixes a filled
+ * value with an empty optional one, and a checklist line with no label and
+ * nothing chosen. No catalog document has either today (PAR-40 kept them).
+ */
+function withMixedLines(document: RenderedDocument): RenderedDocument {
+  const empty = {
+    type: "value",
+    field: "extra",
+    label: "Extra",
+    text: null,
+    placeholder: "[Extra]",
+    optional: true,
+  } as const
+  const section: RenderedSection = {
+    heading: "Mixed",
+    lines: [
+      {
+        parts: [
+          { type: "text", text: "Notices go to " },
+          {
+            type: "value",
+            field: "address",
+            label: "Address",
+            text: "1 Main St",
+            placeholder: "[Address]",
+          },
+          { type: "text", text: ", copy to " },
+          empty,
+        ],
+      },
+      { checked: false, parts: [empty] },
+    ],
+  }
+  return {
+    ...document,
+    coverPage: {
+      ...document.coverPage,
+      sections: [...document.coverPage.sections, section],
+    },
+  }
+}

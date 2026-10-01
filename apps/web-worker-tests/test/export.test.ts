@@ -436,6 +436,8 @@ describe("export.docx", () => {
     expect((await countedFor(email)).rows).toEqual([])
   })
 
+  // A sign-up and three Word files: past 5 s under coverage on a busy machine
+  // (the production gate, 2026-10-01).
   it("is a Word file for Pro, and Pro has no monthly limit (T26)", async () => {
     const { cookie, email } = await signUpVerified()
     const { userId } = await countedFor(email)
@@ -455,7 +457,7 @@ describe("export.docx", () => {
     expect(docx.data?.type).toBe(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
-  })
+  }, 20_000)
 })
 
 describe("exportDraft when the user leaves", () => {
