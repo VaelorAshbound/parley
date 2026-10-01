@@ -71,6 +71,12 @@ type DraftKey = { id: string; userId: string }
 const HISTORY = { messages: 40, characters: 48_000 }
 /** A turn may call tools a few times (pick, fill, fix a refusal, reply). */
 const STEPS = 8
+/**
+ * What one model call may write (ADR-0012). The evals' largest is under
+ * 900 tokens a call, so a big questionnaire fits; a prompt that asks for
+ * pages of text stops here, at about $0.002 a call.
+ */
+const MAX_OUTPUT_TOKENS = 4096
 
 const userMessage = z.object({
   id: z.string().min(1).max(100),
@@ -82,8 +88,8 @@ const userMessage = z.object({
         text: z.string().trim().min(1).max(MAX_MESSAGE),
       })
     )
-    .min(1)
-    .max(4),
+    // One part, as the reply box sends: MAX_MESSAGE is the whole message.
+    .length(1),
 })
 
 /** The stored chat, checked against the current tools; unfit chats start fresh. */
@@ -332,6 +338,7 @@ async function reply({
     messages: await convertToModelMessages(messages, { tools }),
     tools,
     stopWhen: isStepCount(STEPS),
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
     // Closing the tab stops the model, and the spend with it.
     abortSignal: signal,
     // Each step sees the draft as the last tool call left it, and a newly
