@@ -238,3 +238,6 @@ T39 in progress: plan (be67060), ADRs 0010-0012 (6858dc1), local setup in 3 comm
 
 ### 2026-10-01T19:28:10Z
 T39 built, not yet pushed (9 local commits be67060..cf24c17): ADRs 0010-0012; local setup in 3 commands (pnpm dev writes .dev.vars, starts Postgres; scripted AI with no key; no remote bindings without a Cloudflare login) checked on a fresh clone in a clean podman container; architecture diagram light+dark; README with evals, cost, test pyramid (pnpm test 1306 passed/1 skipped, test:workers 448 passed). GIF dropped by the owner (the take showed PAR-48, filed). Next: push + PR to main, check README on GitHub in light and dark, then T39 done -> T40 /ship.
+
+### 2026-10-01T19:36:54Z
+T39 done (PR #3, CI green: Workers Builds, component, e2e chromium). README checked on GitHub in light and dark. PR #3 is open, waiting for the owner's OK to merge (merging deploys production). Next: merge PR #3, then T40 (/ship).
