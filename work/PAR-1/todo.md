@@ -1027,7 +1027,8 @@
   - Files: `README.md`, `docs/adr/*.md`, `docs/architecture.svg`
   - Deps: T38 · Skills: `documentation-and-adrs`
 
-- [ ] **T40: `/ship`** (S)
+- [x] **T40: `/ship`** (S)
+  - Done 2026-10-01: GO (work/PAR-1/ship.md). Skills: shipping-and-launch (/ship: code-reviewer, security-auditor, test-engineer in parallel), test-driven-development, git-workflow-and-versioning; cloudflare:wrangler, agent-browser. Fixed before the tag: output cap per model call and one-part messages (PR #4, 42f5a7b), evals re-run green. Follow-ups PAR-49..53. Tagged v1.0.0 with CHANGELOG.md.
   - Accept: The `/ship` checklist gives a GO. The launch is tagged `v1.0.0`, with a changelog entry.
   - Verify: `/ship` report.
   - Deps: T39

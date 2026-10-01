@@ -79,3 +79,10 @@ The full reports are in this session's transcript. Their findings are summarized
 - **Code review:** APPROVE. 0 Critical, 2 Important, 6 suggestions.
 - **Security:** GO. 0 Critical, 0 High, 1 Medium, 2 Low, 3 Info.
 - **Tests:** 0 Critical gaps, 6 Important, 6 nice-to-have.
+
+## After the fixes (2026-10-01)
+
+- PR #4 merged: production serves 42f5a7b, smoke green, `/api/health` 200, `scriptedAi: false`.
+- A real OpenRouter call accepts `maxOutputTokens` and stops at it (`finish: length`).
+- `pnpm evals` with the cap: 36/36, right agreement 100%, right field values 100%, 0 invalid writes, every draft finished, $0.0033 per NDA. No reply cut off. "Named a related agreement" went from 80% to 60% (no bar; it varies between runs).
+- Follow-ups filed: PAR-49 (test gaps), PAR-50 (dev script), PAR-51 (export attribution), PAR-52 (message id), PAR-53 (security follow-ups).
