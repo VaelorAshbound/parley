@@ -229,3 +229,6 @@ T38 done (2026-10-01): parley.runtimedrift.dev live on 043768e, smoke green, A+ 
 
 ### 2026-10-01T18:09:39Z
 Google sign-in on production checked (owner; 1 google account). Resend: deleted the unused old production key (parley-production-sending, 2026-09-25); kept 'email' (full access, used locally), parley-ci, priced-ci, and the new production key. T38 has nothing open.
+
+### 2026-10-01T18:10:17Z
+Session end (2026-10-01). Finished: T38, Parley live on parley.runtimedrift.dev (043768e): smoke green, A+ headers, forged Turnstile 403, owner chat turns + Google and GitHub sign-in OK. Fixed on the way: Zod eval probe vs CSP, date-dependent visual baselines, production gate (documents coverage after PAR-40, Worker test timeout), deploy command now ci-deploy.sh, smoke chat turn skipped on production. Deleted the unused old production Resend key. Flake noted on PAR-8 (a11y phone draft, ~1 in 12). 40 of 42 tasks done. Next session: T39 (README + ADRs; docs skill first), then T40 (/ship). Branch PAR-1-parley is ahead of main by docs commits only; future work goes through PRs to main (production deploys from main). Nightly still off (NIGHTLY_URL unset) until the next checkpoint.
