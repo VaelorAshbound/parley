@@ -1005,7 +1005,9 @@
   - Files: `apps/web/src/routes/index.tsx`, `src/features/empty-state/*`
   - Deps: T30
 
-- [ ] **T38: Production environment on `parley.runtimedrift.dev`** (M)
+- [x] **T38: Production environment on `parley.runtimedrift.dev`** (M)
+  - Done 2026-10-01 (plan and outcomes: [t38-plan.md](t38-plan.md)). Live on 043768e; smoke green; securityheaders.com "Wow, amazing grade!" (A+); a forged Turnstile token gets 403; owner ran real chat turns (4 chat_turn done, 0 errors) and a GitHub sign-in. Open: a Google sign-in on production (owner). Version URLs stay on (one switch with the CI Previews); Preview data copies skipped (owner); alerts skipped (owner).
+  - Found on the way: Previews skip the test gate, so the first production build stopped at it (documents coverage 99.82% after PAR-40, a Worker test timing out under coverage); fixed. Workers Builds deployed with plain `wrangler deploy`, so the commit was never stamped; now `scripts/ci-deploy.sh`. The production smoke chat turn is skipped there (real Turnstile stops headless browsers); Previews still run it.
   - Check (T14 review): `preview_urls: true` keeps a workers.dev URL for every production version, with production bindings. Auth already refuses those hosts in production (`allowedHosts`); decide whether to turn version URLs off for production.
   - Accept:
     - A Custom Domain on the Worker, the production Neon branch and Hyperdrive, all secrets set, the Polar sandbox production config, and a Resend sending domain.
