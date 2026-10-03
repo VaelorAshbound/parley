@@ -1344,6 +1344,26 @@ describe("Try again (PAR-7)", () => {
     })
   }
 
+  /**
+   * `then`'s model, with call number `held` (1-based) waiting until `open()`:
+   * a turn still running while something else is sent.
+   */
+  function held(at: number, then: MockLanguageModelV4) {
+    let open = () => {}
+    const gate = new Promise<void>((resolve) => {
+      open = resolve
+    })
+    let call = 0
+    const model = new MockLanguageModelV4({
+      doStream: async (options) => {
+        call += 1
+        if (call === at) await gate
+        return then.doStream(options)
+      },
+    })
+    return { model, open }
+  }
+
   /** What the model was sent in one call, without the instructions. */
   function heard(model: MockLanguageModelV4, call: number) {
     return (model.doStreamCalls[call]?.prompt ?? []).filter(
@@ -1513,6 +1533,66 @@ describe("Try again (PAR-7)", () => {
 
     expect(error).toMatchObject({ code: "MESSAGE_ID_TAKEN" })
     expect(await client.chat.messages({ id: draft.id })).toEqual(before)
+  })
+
+  it("won't retry a message while its turn is still running", async () => {
+    const { cookie } = await signInGuest()
+    const { model, open } = held(
+      1,
+      scriptedModel([[{ text: "A Mutual NDA fits." }]])
+    )
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const question = say("We share a roadmap with a vendor.")
+    const running = read(
+      await client.chat.send({ id: draft.id, message: question, today })
+    )
+
+    // A second tab's Try again, or a second resend, before the reply is in.
+    const again = await safe(
+      client.chat.send({ id: draft.id, message: question, today }).then(read)
+    )
+    open()
+    await running
+    await settle()
+
+    expect(again.error).toMatchObject({ code: "TURN_RUNNING" })
+    expect(model.doStreamCalls).toHaveLength(1)
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user", "assistant"])
+    expect(await usedToday(draft.userId)).toBe(1)
+  })
+
+  it("keeps only the reply of the chat's latest turn", async () => {
+    const { cookie } = await signInGuest()
+    const { model, open } = held(1, scriptedModel([[{ text: "Noted." }]]))
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const first = say("First.")
+    const running = read(
+      await client.chat.send({ id: draft.id, message: first, today })
+    )
+
+    // Another tab writes while the first turn runs: its turn is the chat's
+    // now, and the model never saw the first reply.
+    const second = say("Second.")
+    await read(await client.chat.send({ id: draft.id, message: second, today }))
+    open()
+    await running
+    await settle()
+
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map(({ id, role }) => ({ id, role }))).toEqual([
+      { id: first.id, role: "user" },
+      { id: second.id, role: "user" },
+      { id: expect.any(String), role: "assistant" },
+    ])
   })
 
   const questionnaire = {
@@ -1704,5 +1784,177 @@ describe("Try again (PAR-7)", () => {
     // The reply is there now: nothing is left to retry.
     expect((await answer("2y", true)).error).toMatchObject({ code: "NOT_OPEN" })
     expect(model.doStreamCalls).toHaveLength(3)
+  })
+
+  it("retries an answer turn that asked new questions before it was cut off, earlier answers kept", async () => {
+    const { cookie } = await signInGuest()
+    const then = scriptedModel([
+      [questionnaire],
+      [{ text: "Two years it is." }],
+    ])
+    let call = 0
+    const model = new MockLanguageModelV4({
+      doStream: async (options) => {
+        call += 1
+        if (call !== 2) return then.doStream(options)
+        // The answer turn asks more, then nothing until the page goes.
+        return {
+          stream: new ReadableStream({
+            start(controller) {
+              controller.enqueue({
+                type: "tool-call",
+                toolCallId: "call-more",
+                toolName: "askQuestions",
+                input: JSON.stringify({
+                  ...questionnaire.input,
+                  title: "More terms",
+                }),
+              })
+              options.abortSignal?.addEventListener("abort", () =>
+                controller.error(options.abortSignal?.reason)
+              )
+            },
+          }),
+        }
+      },
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Help me with the terms."),
+        today,
+      })
+    )
+    await settle()
+    const calls = [{ toolCallId: "call-1-0", answers: { term: ["2y"] } }]
+    const tab = new AbortController()
+    const stream = await client.chat.answer(
+      { id: draft.id, calls, today },
+      { signal: tab.signal }
+    )
+    const iterator = stream[Symbol.asyncIterator]()
+    for (;;) {
+      const { value, done } = await iterator.next()
+      if (done || (value as { type?: string }).type === "tool-input-available")
+        break
+    }
+    tab.abort()
+    await expect
+      .poll(
+        async () => {
+          await settle()
+          return JSON.stringify(await client.chat.messages({ id: draft.id }))
+        },
+        { timeout: 3000 }
+      )
+      .toContain("More terms")
+
+    // Try again, from the reloaded page: the answers given, not the new
+    // questions, are what is retried.
+    await read(
+      await client.chat.answer({ id: draft.id, calls, today, retry: true })
+    )
+    await settle()
+
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user", "assistant"])
+    expect(saved[1]?.parts).toContainEqual(
+      expect.objectContaining({
+        toolCallId: "call-1-0",
+        state: "output-available",
+        output: { answers: { term: ["2y"] } },
+      })
+    )
+    expect(JSON.stringify(saved)).not.toContain("More terms")
+    expect(JSON.stringify(saved[1])).toContain("Two years it is.")
+  })
+
+  it("won't retry answers while their turn is still running", async () => {
+    const { cookie } = await signInGuest()
+    const { model, open } = held(
+      2,
+      scriptedModel([[questionnaire], [{ text: "Two years it is." }]])
+    )
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Help me with the terms."),
+        today,
+      })
+    )
+    await settle()
+    const calls = [{ toolCallId: "call-1-0", answers: { term: ["2y"] } }]
+    const running = read(
+      await client.chat.answer({ id: draft.id, calls, today })
+    )
+
+    const again = await safe(
+      client.chat.answer({ id: draft.id, calls, today, retry: true }).then(read)
+    )
+    open()
+    await running
+    await settle()
+
+    expect(again.error).toMatchObject({ code: "TURN_RUNNING" })
+    expect(model.doStreamCalls).toHaveLength(2)
+    expect(await usedToday(draft.userId)).toBe(2)
+  })
+
+  it("won't retry answers whose turn finished, however its reply ends", async () => {
+    const { cookie } = await signInGuest()
+    // The answer turn ends after a tool step, with no closing text.
+    const model = scriptedModel([
+      [questionnaire],
+      [
+        {
+          tool: "updateFields",
+          input: {
+            changes: [
+              {
+                key: "purpose",
+                value: "Sharing our roadmap.",
+                explanation: "From the chat.",
+              },
+            ],
+          },
+        },
+      ],
+      [],
+    ])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    await read(
+      await client.chat.send({
+        id: draft.id,
+        message: say("Help me with the terms."),
+        today,
+      })
+    )
+    await settle()
+    const calls = [{ toolCallId: "call-1-0", answers: { term: ["2y"] } }]
+    await read(await client.chat.answer({ id: draft.id, calls, today }))
+    await settle()
+    const before = await client.chat.messages({ id: draft.id })
+
+    const { error } = await safe(
+      client.chat.answer({ id: draft.id, calls, today, retry: true }).then(read)
+    )
+
+    expect(error).toMatchObject({ code: "NOT_OPEN" })
+    expect(model.doStreamCalls).toHaveLength(3)
+    expect(await client.chat.messages({ id: draft.id })).toEqual(before)
   })
 })

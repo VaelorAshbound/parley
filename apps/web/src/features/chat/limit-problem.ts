@@ -43,6 +43,13 @@ export function limitProblem(
         "You’re sending messages quickly. Wait a few seconds, then try again.",
       retry: true,
     }
+  // Another tab's turn is still running (PAR-7): it ends soon.
+  if (chatError.code === "TURN_RUNNING")
+    return {
+      message:
+        "Parley is still answering this, maybe in another tab. Wait a moment, then try again.",
+      retry: true,
+    }
   if (chatError.code !== "DAILY_LIMIT") return null
   const { limit, tier, resetsAt } = chatError.data
   const used = `You’ve used today’s ${limit} messages.`
