@@ -1,284 +1,334 @@
 # PAR-5 design: old drafts after a definition change
 
-Status: proposed (design only, no code yet). Date: 2026-10-03.
+Status: proposed, revision 2 (design only, no code yet). Date: 2026-10-03.
+Revision 2 fixes the review findings: data loss on fields with parts, the
+version stamp on new rows, the shape guard, and the tests.
 
-## 1. The problem, in one picture
+## 0. What the user sees, slice by slice
 
-A draft stores its answers in `draft.fields` (jsonb). Every read runs
-`definition.draftSchema.parse(draft.fields)`. That schema is strict.
-So if a definition changes shape, an old draft **throws on every read**:
+- **After slice 1:** an old draft opens again, and so do editing, chat,
+  export and sharing. If an answer no longer fits, it is not shown in the
+  document, but it is kept. A short line under the field says
+  "Earlier answer: Oregon. It no longer fits." The AI knows about it too,
+  and asks before it replaces it.
+- **After slice 2:** CI fails when someone changes a document in a way that
+  breaks real old drafts. Nothing changes for the user.
+- **After slice 3:** the line under the field gets two buttons,
+  **Use as a starting point** and **Discard**. Answers to removed fields are
+  listed above the document.
+- **After slice 4** (only when the first real version 2 is planned): the
+  draft stores its version, and old answers are converted to the new shape
+  the first time the draft is opened.
 
-| Where it throws today | File |
+## 1. The problem
+
+A draft stores its answers in `draft.fields`. Every read checks them against
+the document's draft rules, and the check is strict. So when a document
+definition changes shape, an old draft **fails on every read**. The user
+cannot fix it, because the edit that would fix it fails too.
+
+Places that read stored answers today:
+
+| Where | File |
 |---|---|
-| Edit a field (`updateFields`) | `apps/web/src/server/rpc/drafts.ts:229` |
-| `markComplete` | `apps/web/src/server/rpc/drafts.ts:269` |
+| Edit a field | `apps/web/src/server/rpc/drafts.ts:229` |
+| Mark complete | `apps/web/src/server/rpc/drafts.ts:269` |
 | Every chat turn | `apps/web/src/server/ai/chat.ts:470` |
 | Export (PDF/DOCX) | `apps/web/src/server/rpc/export.ts:100` |
 | Share link | `apps/web/src/server/rpc/share.ts:100` |
 | Live preview | `apps/web/src/routes/-components/shell/document-panel.tsx:159` |
-| Optimistic edit | `apps/web/src/features/field-editor/use-save-field.ts:76` |
+| Edit in the browser (before the server answers) | `apps/web/src/features/field-editor/use-save-field.ts:76` |
 | Undo | `apps/web/src/features/chat/use-undo.ts:58` |
 | Share page | `apps/web/src/features/share/share-page.tsx:90` |
+| **Old chat messages** show `change.after` with today's `format` | `apps/web/src/features/chat/message-parts.tsx:338` (`shown`) |
+| **Chat sync** writes `after` straight into the cache | `apps/web/src/features/chat/use-document-sync.ts` |
 
-The user cannot fix it: the edit that would fix it also throws.
+What we know:
 
-What exists today:
+- Every definition says `version: 1` (`packages/documents/src/define.ts:87`),
+  and the comment says drafts store it. **They don't.** The `draft` table has
+  no version column.
+- It already broke twice:
+  - **ae9f683:** a new rule "Oregon is a US state, pick it as the state" sat
+    on the draft rules. Stored drafts had
+    `governingLaw: { region: "Oregon", courtLocation: "Portland" }` and failed
+    everywhere. The fix moved the rule to edits only.
+  - **2026-09-24 (490bb80, c250b72, 6ba0a64, and others):** seven fields
+    went from `field.choice` to `field.select`: DPA `governingMemberState`,
+    `ukTransfers`, `customerRole`; the Pilot's `start` and `cadence` blanks
+    (inside the `paymentProcess` choice); BAA `providerRole`, `companyRole`.
+    Stored `{ option: "controller" }` became `"controller"`. The same commits
+    added "required when" rules for finished documents, which quietly made
+    some **complete** drafts incomplete.
 
-- Every definition has `version: 1` (`packages/documents/src/define.ts:87`).
-  The comment says "stored drafts carry it (T13)". **They don't.**
-  The `draft` table has no version column. ADR-0003 says the same.
-- It already happened once. Commit `ae9f683`: a new rule ("Oregon is a US
-  state") sat on the draft schema, so old drafts with `region: "Oregon"`
-  threw everywhere. The fix moved the rule to `changeSchema` (writes only).
-- `formatChoice` already guards a dropped option. `switchDocument` already
-  reads values one field at a time and keeps what fits. Good patterns to reuse.
+## 2. Which changes break old drafts?
 
-## 2. What is a "breaking" change?
-
-Breaking = an old stored draft no longer parses, **or** parses but means
-something else.
+Breaking = an old draft no longer passes the draft rules, **or** it passes
+but means something else.
 
 | Change | Breaking? | What to do |
 |---|---|---|
-| Add an optional field | No | Nothing. |
-| Add a required field | No (drafts are partial) | Nothing. `missingFields` asks for it. |
-| Change label, help, default | No | Nothing. Defaults only seed new drafts. |
-| Add a choice option | No | Nothing. |
-| Loosen a rule | No | Nothing. |
-| Tighten a rule (max length, regex, new cross-field rule) | Yes, if it sits on `draftSchema` | Put it on `changeSchema` only (like `ae9f683`). No bump. |
-| Rename a field or a part (`party.company`) | Yes | Bump + migration step. |
-| Remove a field | Yes (strict object refuses unknown keys) | Bump + step moves the value to "kept". |
-| Retype a field (text to choice, number to duration) | Yes | Bump + step converts, or keeps. |
-| Remove or rename a choice option | Yes | Bump + step maps the option, or keeps. |
-| Same shape, new meaning (days become months) | Yes, and **silent** | Bump + step converts. No test can catch this: reviewer checks it. |
+| Add a field (optional or required) | No | Nothing. Drafts may be partial. |
+| Change label, help text, default | No | Nothing. The shape guard ignores them (section 7). |
+| Add a choice option, loosen a rule | No | Nothing. |
+| Tighten a **single-field** rule | Yes, if on the draft rules | Put it on the edit rules only (`changeSchema`), like ae9f683. |
+| Add a **cross-field** rule | Yes, if it runs on drafts | Add it to the **complete** phase only. See owner question 4. |
+| Add or tighten a **complete-phase** rule | Not for reading. Yes for drafts already marked complete | They drop back to "drafting" on their next write (owner question 3). |
+| Rename a field or a part | Yes | Version 2 + upgrade step. |
+| Remove a field | Yes | Version 2 + step moves the value to "kept". |
+| Change a field's kind (choice to select, text to number) | Yes | Version 2 + step converts it, or keeps it. |
+| Remove or rename an option | Yes | Version 2 + step maps it, or keeps it. |
+| Same shape, new meaning (days become months) | Yes, and **silent** | Version 2 + step converts. Only a reviewer can catch this. |
 
 Rule of thumb: **if an old value could fail or mislead, bump the version.**
+Until slice 4 ships, bumping is blocked by a test (section 7, test 9).
 
-## 3. Two layers
+## 3. The safety net: one read function that never fails
 
-1. **Safety net (always on).** One function reads a stored draft and
-   **never throws**. Values that don't fit are flagged, not dropped.
-   This alone fixes the bug in PAR-5.
-2. **Migrations (per version).** When a definition bumps from N to N+1, a
-   step turns old values into new ones. Used for real shape changes.
+New in `packages/documents/src/read.ts`, used by server and browser:
+`readDraft(definition, stored)` returns
 
-### 3.1 The one read function
+- `values`: the answers that fit. **Always** the result of a successful
+  check against the draft rules, so it is safe to show, edit and export.
+- `kept`: every stored answer that does not fit, with its **path** and a
+  reason. Nothing is ever dropped.
 
-New, in `packages/documents/src/read.ts`, shared by server and client:
+Types are in the appendix.
 
-```ts
-/** A stored value that the current document can't use. Never dropped. */
-export type KeptValue = {
-  key: string        // the stored key ("region", or an old field name)
-  value: unknown     // exactly as stored
-  reason: string     // plain words: "No longer in this agreement."
-}
+### 3.1 How it reads
 
-export type ReadDraft<F extends Fields> = {
-  values: DraftValues<F>  // only what fits: safe to render, edit, export
-  kept: KeptValue[]       // everything else
-}
+1. Not an object: everything goes to `kept`.
+2. (Slice 4 only) Run the upgrade step if the stored version is older.
+3. Check the whole object. If it passes: done, `kept` is empty. This is the
+   normal case.
+4. Otherwise, a loop of at most 5 rounds:
+   - For each problem, find the **smallest** path to take out:
+     - Unknown keys (Zod `unrecognized_keys`, reported at the top level with
+       a `keys` list): each key goes to `kept`.
+     - A problem inside a field with parts (party, jurisdiction, group) or
+       inside a choice's blank: **only that part** goes to `kept`, for
+       example `governingLaw.region` or `paymentProcess.value.start`. The
+       other parts stay in `values`.
+     - A cross-field rule problem names a whole field: that field goes to
+       `kept`.
+   - Check again. Stop when it passes.
+   - After 5 rounds without passing: every field that still has a problem
+     goes to `kept` whole, and the check is run one last time. If even that
+     fails, `values` is `{}` and everything is kept.
 
-/** Reads stored fields. Never throws, never loses a value. */
-export function readDraft<F extends Fields>(
-  definition: DocumentDefinition<F>,
-  stored: { fields: unknown; version?: number }
-): ReadDraft<F>
-```
+So `values` always passes. A property test proves it (test 2).
 
-How it reads (same idea as `switchDocument`):
+### 3.2 Reasons in plain words
 
-1. If `stored.fields` is not an object: everything goes to `kept`.
-2. Run migration steps from `stored.version` (absent = 1) up to
-   `definition.version` (section 4).
-3. Try `draftSchema` on the whole object. Success: done, `kept = []`
-   (the fast, normal path).
-4. Else, field by field: unknown key goes to `kept` ("No longer in this
-   agreement."). A value that fails its field schema goes to `kept` with the
-   Zod message. A cross-field rule issue names a field: that field goes to
-   `kept`.
+Common Zod codes get plain text: wrong kind of value becomes "This answer
+has an older format.", an unknown option becomes "This option is no longer
+offered.", too long becomes "This answer is too long now.", an unknown key
+becomes "This question is no longer in the agreement." Messages from our own
+rules ("That's a US state: pick it as the state.") are shown as they are.
+Raw Zod messages are never shown to the user.
 
-All 9 call sites in the table above switch to `readDraft`.
-
-### 3.2 Writing back
+### 3.3 Writing back
 
 - A **read** (get, chat turn, export, share, preview) never writes.
-  Reads stay side-effect free; the share page is anonymous and must not write.
 - A **write** (`updateFields`, `markComplete`, `chooseDocument`) already
-  locks the row. It saves the new `values` **plus the kept values**, so the
-  next read sees them again.
-- In slice 1 (still version 1), kept values stay **in place** under their
-  own key in `fields`. Same version means same meaning, so leaving
-  `region: "Oregon"` there is safe. A new edit to that field replaces it:
-  that is the user's own choice, not a silent loss.
-- From the first real bump on, kept values need their own place (a migrated
-  key would otherwise be read again with a new meaning). See section 5.
+  locks the row. It saves the new values **plus every kept part, back at its
+  own path**. A kept entry is removed only when the edit targets that exact
+  path, or replaces the whole field it sits in (a "whole" field like a
+  choice). That is visible: the user or the AI saw the earlier answer
+  (section 6) before replacing it.
+- The Oregon case after the fix: stored
+  `{ governingLaw: { region: "Oregon", courtLocation: "Portland" } }`, and
+  `region` fails. `values` has `governingLaw: { courtLocation: "Portland" }`,
+  `kept` has `governingLaw.region`. The AI sets `governingLaw.state = "OR"`.
+  The merge starts from `{ courtLocation: "Portland" }`, so the saved row is
+  `{ state: "OR", courtLocation: "Portland", region: "Oregon" }`. Courts
+  survive; the region stays kept until it is cleared or discarded.
+- In the browser, `use-save-field.ts`, `use-undo.ts` and
+  `use-document-sync.ts` put the kept parts back into the cached
+  `fields` after an edit, so the next render still knows them.
+- In slices 1 to 3 the version stays 1, so kept values stay in place inside
+  `fields`. Same version means same meaning, so this is safe.
 
-## 4. Migration steps
+### 3.4 Showing old chat messages
 
-### 4.1 How a step is written
+`shown` in `message-parts.tsx` formats `change.after` with today's field.
+It first checks the value against today's field. If it does not pass, it
+shows "changed" instead of crashing.
 
-Each definition gets an optional `migrations` list. Step `to: 2` turns
-version 1 into version 2.
+### 3.5 Logs
+
+- On read: `draft_read_kept` at **info**, with `documentId`, version, count
+  and paths. Never the values (user data). Browser reads do not log.
+- On write: `draft_kept_saved` at **warn**, only when the set of kept paths
+  changes. That happens once per stale draft, not once per chat turn.
+- Discard (slice 3): `draft_kept_discarded`, path only.
+
+## 4. Upgrade steps (slice 4, built with the first real version 2)
+
+No document needs version 2 today. So the step code is built **in the same
+change as the first real version 2**, against a real case. Until then only
+the rules below and the guards in section 7 exist.
+
+Each definition gets one function:
+`upgrade(stored, fromVersion) => { values, kept }`. It must not throw, does
+no I/O, and touches every key it changes. A value it cannot convert goes to
+`kept` with a reason. If it throws anyway, `readDraft` catches it, logs
+`draft_upgrade_failed` (error), and reads the old values with the safety
+net. A read never writes over the stored draft.
+
+Helpers shipped with it: `choiceToSelect(path)` and `mapOption(path, map)`.
+
+### 4.1 Worked example: the real choice to select change
+
+If 2026-09-24 had happened after launch, the DPA and Pilot would go to
+version 2 with:
 
 ```ts
-export type Migration = {
-  /** The version this step produces. It reads version `to - 1`. */
-  to: number
-  /** One line, plain words. Shown to the AI and in logs. */
-  note: string
-  /** Input is raw stored JSON: treat it as unknown. Must not throw. */
-  up(old: Readonly<Record<string, unknown>>): {
-    values: Record<string, unknown>
-    kept: KeptValue[]
-  }
-}
+upgrade: (stored, from) =>
+  from < 2
+    ? applySteps(stored, [
+        choiceToSelect("governingMemberState"),   // { option: "ie" } -> "ie"
+        choiceToSelect("ukTransfers"),
+        choiceToSelect("customerRole"),
+        // nested inside another choice's blanks:
+        choiceToSelect("paymentProcess.value.start"),
+        choiceToSelect("paymentProcess.value.cadence"),
+      ])
+    : { values: stored, kept: [] },
 ```
 
-Example (made up): the NDA renames `purpose` to `businessPurpose` and drops
-the `modifications` field.
+`choiceToSelect` turns `{ option: "x" }` into `"x"`, leaves a value that is
+already a plain string alone, and keeps anything else (with the path, as in
+section 3.1). The nested blanks are why `kept` works on paths, not on fields.
 
-```ts
-// packages/documents/src/definitions/mutual-nda.ts
-migrations: [
-  {
-    to: 2,
-    note: "Purpose is now Business Purpose; Modifications was removed.",
-    up: ({ purpose, modifications, ...rest }) => ({
-      values: { ...rest, ...(purpose !== undefined && { businessPurpose: purpose }) },
-      kept: modifications === undefined ? [] : [
-        { key: "modifications", value: modifications,
-          reason: "Modifications is no longer a field of this agreement." },
-      ],
-    }),
-  },
-],
-```
-
-Rules for a step:
-
-- Touch every key it changes **explicitly**. Never leave an old value under
-  a key whose meaning changed.
-- Can't convert a value? Put it in `kept` with a reason. Never drop it.
-- Pure function. No I/O, no dates from the clock.
-- Small helpers can come later (`renameField`, `mapOption`) once two steps
-  need them. Not before.
-
-`defineDocument` checks at build time: steps are `to: 2, 3, … version`, with
-no gaps (`version === 1 + migrations.length`). A gap fails at startup, like
-`checkLayout` does today.
-
-If a step throws anyway (a bug): `readDraft` catches it, logs
-`draft_migration_failed` (error), and falls back to the field-by-field read
-of the old values. Nothing is written over the stored draft by a read.
-
-### 4.2 When it runs, and why
+### 4.2 When it runs
 
 | Option | Verdict |
 |---|---|
-| **On read, in memory** | **Yes.** Pure and cheap (microseconds). Always right, whatever the deploy timing. |
-| **Saved on the next write** | **Yes.** Inside the existing row lock. No extra writes. |
-| One-off job over all drafts | Not now. Code and data disagree while it runs; it needs a script on the protected production branch; most drafts are never opened again (guests are purged). Can be added later: it would call the same `readDraft`. |
+| **On read, in memory** | **Yes.** Pure and cheap. Right whatever the deploy timing. |
+| **Saved on the next write** | **Yes.** Inside the existing row lock. |
+| One-off job over all drafts | Not now. It would call the same `readDraft`. |
 
-A newer draft read by older code (a rollback, or a gradual deploy): if
-`stored.version > definition.version`, `readDraft` returns the values it can
-read, and **writes refuse** with "Parley was updated. Reload the page."
-Older code never writes over newer data.
+A newer draft read by older code (rollback): if the stored version is higher
+than the definition's, `readDraft` returns what it can, and **writes refuse**
+with "Parley was updated. Reload the page."
 
-## 5. Where the version is stored
+## 5. Where the version is stored (slice 4)
 
-Today: nowhere. Absent means 1. All definitions are at 1, so **slice 1 and
-slice 2 need no storage change and no DB migration.**
+Two new columns, `fields_version smallint` and `kept_fields jsonb`
+(recommended; owner question 1). The rules that keep upgrades from running
+twice:
 
-The first real bump (some later wave) needs two things stored per draft:
-the version, and the kept values. Two ways:
+- **No database default for new rows.** The DB migration fills old rows with
+  1, then every insert must set the version. (Or: nullable, where empty
+  means "before versions". Either way, a forgotten insert cannot be stamped
+  1 silently.)
+- **Every write sets the version and the answers together:**
+  - `createDraft` and `updateDraft` write `fields_version = definition.version`.
+  - `duplicateDraft` copies `fields`, `fields_version` and `kept_fields`.
+  - `chooseDocument` first reads with the **old** definition (`readDraft`),
+    then runs `switchDocument`, then stamps the **new** definition's version.
+- A test inserts through each path and checks the stamp (test 8).
 
-| | A. New columns (recommended) | B. Keys inside `fields` |
+## 6. What the user and the AI see
+
+Slice 1 has the minimal version; slice 3 adds the buttons.
+
+| Who | Slice 1 | Slice 3 |
 |---|---|---|
-| Shape | `fields_version smallint not null default 1`, `kept_fields jsonb not null default '[]'` | `fields.$version`, `fields.$kept` |
-| DB migration | Yes (additive, safe, `default` fills old rows) | No |
-| Rollback-safe | Yes: old code ignores new columns | No: old code's strict parse throws on `$version` |
-| Clean | Yes | Mixes metadata with answers; search column indexes `$kept` too |
+| Editor, under a field | Read-only line: "Earlier answer: *Oregon*. It no longer fits: That's a US state." | Adds **Use as a starting point** and **Discard**. |
+| Editor, removed questions | One line above the document: "Some older answers are kept." | A list with Copy and Discard. |
+| AI (system prompt) | One line per kept value: "Kept, not in the document: governingLaw.region = 'Oregon' (no longer fits). Ask the user before replacing it." | Plus the upgrade note for the draft's version. |
+| AI tools | Unchanged. An old key gets today's refusal ("There is no field …"). | Same. |
+| Old Undo buttons | An undo that no longer fits is refused with today's message. Nothing is overwritten. | Same. |
+| Share page, export | Fitting values only. Export still asks for missing fields. | Same. |
 
-This wave allows no DB migration, so this is **an owner question** (below).
-Nothing in slices 1 and 2 depends on the answer.
-
-## 6. What the AI and the editor see
-
-| Who | Sees |
-|---|---|
-| Editor (document panel) | Values that fit, as normal. Under a field with a kept value: a small note, "Your earlier answer: *Oregon*. It doesn't fit anymore: That's a US state." Actions: **Use as a starting point** (opens the field with it) and **Discard** (explicit). |
-| Editor, removed fields | One note above the document: "Some answers from an older version of this agreement are kept here." Each one with Copy and Discard. |
-| AI (system prompt) | The current values, plus a short section: "Kept from an older version, not in the document: modifications = '…' (no longer a field). Ask the user before using them." Plus each migration `note` since the draft's stored version. |
-| AI tool results | Unchanged. `updateFields` only accepts current keys, so an old key gets today's clear refusal ("There is no field …"). |
-| Old Undo buttons in the chat | An undo of an edit made before a migration may not fit. It is refused with today's message ("This field changed after that edit, so it was not undone."). Nothing is overwritten. |
-| Share page | Current values only. No kept values: the viewer is not the owner. |
-| Export | Current values only. `missingFields` still blocks an incomplete document. |
-
-Discard is the only way a kept value is deleted. It is a user action and is
-logged (`draft_kept_discarded`, key only, never the value).
-
-A stale browser tab (old bundle, new server data): the client calls
-`readDraft` too, so it shows what it can and never crashes.
+Discard is the only way a kept value is deleted.
 
 ## 7. Tests that prove it
 
-All in Vitest. The DB ones run on real Postgres (ADR-0004).
+All in Vitest; DB tests on real Postgres (ADR-0004).
 
-| # | Test | Proves |
-|---|---|---|
-| 1 | `readDraft` with the `ae9f683` case: `{ region: "Oregon" }` | No throw; value lands in `kept` with the Zod reason. |
-| 2 | `readDraft` with an unknown key, a wrong type, a broken cross-field rule, `null`, an array, a string | Never throws; every input field is in `values` or `kept`. |
-| 3 | `readDraft` on each `examples.ts` draft | Fast path: `kept` is empty, values unchanged. |
-| 4 | **Shape guard** (per definition): `z.toJSONSchema(draftSchema)` equals the committed snapshot `test/__versions__/<id>/v<N>.json` | A shape change without a bump fails CI with: "Bump `version` and add a migration, or update the snapshot if old drafts still parse." (`prompt.ts` already uses `toJSONSchema` on these schemas.) |
-| 5 | **Old fixtures**: for each stored `test/__versions__/<id>/v<K>.example.json`, `readDraft` to the current version | Every old version still reads and renders. |
-| 6 | **Nothing lost** (generic, every step): each filled key of the old draft ends up in `values` or `kept` | Steps can't drop data. |
-| 7 | Step chain check: `to` runs 2..version with no gaps | Caught at build time. |
-| 8 | DB + router: insert a raw stale row with SQL, call `updateFields` on another field | Edit succeeds; the kept value is still stored after the write. |
-| 9 | Router: `stored.version > definition.version` | Read works; write refuses with the reload message. |
-| 10 | Playwright: open a seeded stale draft | Preview renders, note shows, editing a field works, chat turn works. |
+| # | Test | Proves | Slice |
+|---|---|---|---|
+| 1 | A small **test definition** with the Oregon rule on its draft rules. Stored `{ governingLaw: { region: "Oregon", courtLocation: "Portland" } }` | No throw. `kept` = `governingLaw.region` only, with the plain reason; `courtLocation` is in `values`. | 1 |
+| 2 | **Property test**, every definition, random input (wrong types, unknown keys, `null`, arrays, strings, broken cross-field rules) | Never throws. `draftSchema.safeParse(values).success` is always true. Every stored path is in `values` or `kept`. | 1 |
+| 3 | DB + router, the Oregon row inserted with raw SQL, then `updateFields governingLaw.state = "OR"` | Saved row has `state`, `courtLocation: "Portland"` and the kept `region`. | 1 |
+| 4 | DB + router, a stale row, edit **another** field | Edit works; the kept value is still stored. | 1 |
+| 5 | **Frozen fixtures** (main guard): real stored-draft examples per definition in `test/__fixtures__/<id>/`, written once and never regenerated. Includes the Oregon case (expected kept list) and normal drafts | Normal fixtures: `kept` is empty and `values` deep-equal the expected values. Catches tightened rules and `.refine`s, which the snapshot cannot see. | 2 |
+| 6 | **Shape snapshot** per definition: `z.toJSONSchema(draftSchema)` with titles and descriptions removed (reuse `clean` from `prompt.ts`) | Catches a renamed, removed or retyped field. Label and help edits do not trip it. | 2 |
+| 7 | Old chat message with `after: { option: "x" }` on a select field | `shown` prints "changed", no crash. | 1 |
+| 8 | DB: create, duplicate, choose document, update | Each one stamps `fields_version` with the right definition's version. | 4 |
+| 9 | Every definition has `version === 1` | Blocks a bump before storage exists. Deleted in slice 4. | 2 |
+| 10 | After the first version 2: the v1 fixtures upgraded | `values` deep-equal an expected v2 result, `kept` equals an expected list. | 4 |
+| 11 | Router: stored version higher than the definition | Read works; write refuses with the reload message. | 4 |
+| 12 | Playwright: open a seeded stale draft, with an old-shape chat message | Preview renders, the "Earlier answer" line shows, edits and a chat turn work. | 1 |
 
-Tests 4 to 7 come with slice 2. Test 4 is the one that stops the next
-`ae9f683` before it ships.
+## 8. Slices
 
-## 8. First slice (small, no DB migration, no version bump)
+**Slice 1: the safety net, visible.** Fixes the reported bug.
 
-**Slice 1: the safety net.** Fixes the reported bug.
+- [ ] `readDraft` with the loop, path-level kept values and plain reasons
+  (section 3). Tests 1, 2.
+- [ ] Switch the 5 server call sites. Writes keep kept parts at their paths.
+  Tests 3, 4.
+- [ ] Switch the browser call sites; put kept parts back into the cache
+  after edits, undo and chat sync. Guard `shown`. Test 7.
+- [ ] The read-only "Earlier answer" line and the AI prompt line (section 6).
+- [ ] Logs (section 3.5). Test 12.
 
-- [ ] `readDraft` in `packages/documents` (section 3.1), exported.
-  Tests 1, 2, 3.
-- [ ] Replace the 5 server call sites with `readDraft`. Writes keep the
-  in-place kept values (section 3.2). Test 8.
-- [ ] Replace the 4 client call sites with `readDraft`.
-- [ ] Log `draft_read_kept` (warn) with `documentId`, `version`, count and
-  keys. Never the values (they are user data).
+About 14 small files. No API change: the browser runs the same pure function
+on the same row.
 
-Files: about 10, all small. No API shape change: the client runs the same
-pure function on the same row.
+**Slice 2: guards.** Frozen fixtures, the cleaned snapshot, and the
+"version is still 1" test (tests 5, 6, 9). Package tests only.
 
-Later slices:
+**Slice 3: the editor buttons** (Use as a starting point, Discard, the
+removed-answers list).
 
-- **Slice 2:** `migrations` on `defineDocument`, the step runner, the shape
-  guard and fixtures (tests 4 to 7). Pure package code, still no DB change.
-- **Slice 3:** the editor notes, Discard, and the AI prompt section (section 6).
-- **Slice 4** (needs the owner's answer on section 5): store version and
-  kept values, the "newer draft" write refusal (test 9), then the first
-  real version 2.
+**Slice 4: the first real version 2.** Storage (section 5), the `upgrade`
+function and helpers (section 4), the newer-draft refusal, tests 8, 10, 11,
+all in one change, against a real definition change.
 
-Not covered: a draft whose `documentId` is removed from the registry.
-That is a different problem (a new work item if it ever happens).
+Not covered: a draft whose document type is removed from the registry.
+That would be a new work item.
 
 ## 9. Owner questions
 
-1. **Storage for the first real bump** (section 5): add two columns
-   (`fields_version`, `kept_fields`; one additive DB migration in a later
-   wave), or keys inside `fields` (no migration, not rollback-safe)?
-   Recommended: columns.
-2. **Kept values lifetime:** keep them until the user discards them or
-   deletes the draft? (Recommended: yes, no expiry.)
-3. **A completed draft that a migration makes incomplete:** it drops back to
+1. **Storage for the first version 2:** two new columns (one additive DB
+   migration, later) or hidden keys inside `fields` (no migration, but old
+   code would fail on them after a rollback)? Recommended: columns.
+2. **How long kept values live:** until the user discards them or deletes
+   the draft, with no expiry? Recommended: yes.
+3. **A complete draft that a new rule makes incomplete:** it drops back to
    "drafting" on its next write, and export asks for the missing fields.
-   Already-counted exports stay free. OK?
-4. **Order:** build slice 1 now, and slices 2 to 4 only when a real
-   definition change is planned? (Recommended: slices 1 and 2 now, because
-   the shape guard prevents the next silent break.)
+   Exports already paid for stay free. OK?
+4. **New cross-field rules:** (a) only in the "complete" phase (no code
+   change, simple), or (b) add a third phase, "edit", that checks only the
+   edited field and never blocks a read? Recommended: (a) now, (b) when a
+   rule really needs to block edits.
+5. **Slice 1 visibility:** is the read-only "Earlier answer" line enough
+   until slice 3, or should Discard ship in slice 1 too? Without the line,
+   an old answer would vanish from view and be replaced by the next edit.
+   Recommended: the line in slice 1, buttons in slice 3.
+
+## Appendix: types
+
+```ts
+/** A stored answer the current document can't use. Never dropped. */
+export type KeptValue = {
+  path: string      // "governingLaw.region", "paymentProcess.value.start", "modifications"
+  value: unknown    // exactly as stored
+  reason: string    // plain words (section 3.2)
+}
+
+export type ReadDraft<F extends Fields> = {
+  values: DraftValues<F>  // always passes draftSchema
+  kept: KeptValue[]
+}
+
+export function readDraft<F extends Fields>(
+  definition: DocumentDefinition<F>,
+  stored: { fields: unknown; version?: number | null }
+): ReadDraft<F>
+```
