@@ -3,6 +3,7 @@
 import { spawn, type ChildProcess, type StdioOptions } from "node:child_process"
 import { randomBytes } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { parseEnv } from "node:util"
 
 /**
  * Copies .dev.vars.example to `vars` with a new BETTER_AUTH_SECRET, unless
@@ -35,8 +36,11 @@ export function setUpDevVars(vars: string): "created" | "kept" {
   return "created"
 }
 
+// Read as wrangler reads .dev.vars (dotenv, which node:util parseEnv
+// follows): quotes and comments are not part of the value, and the last
+// line for a key wins. A look at the raw text would let `=""` through.
 function hasSecret(dotenv: string) {
-  return /^BETTER_AUTH_SECRET=\S/m.test(dotenv)
+  return !!parseEnv(dotenv).BETTER_AUTH_SECRET?.trim()
 }
 
 /**
