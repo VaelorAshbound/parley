@@ -3,6 +3,7 @@ import { Polar } from "@polar-sh/sdk"
 import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate"
 import { ResourceNotFound } from "@polar-sh/sdk/models/errors/resourcenotfound"
 import {
+  polarCustomerOf,
   schema,
   setPlan,
   userOfPolarCustomer,
@@ -210,16 +211,23 @@ function emailToPolar({ db, env }: { db: Db; env: BillingEnv }) {
 }
 
 /** Sends the user's email to their Polar customer, if Polar has one. */
-export async function syncEmail(
+async function syncEmail(
   { db, env }: { db: Db; env: BillingEnv },
+  user: { userId: string; email: string }
+) {
+  // Never bought: Polar learns the email at checkout.
+  if ((await polarCustomerOf(db, user.userId)) === undefined) return
+  await sendEmailToPolar(env, user)
+}
+
+/**
+ * Gives the user's Polar customer (by our user id) this email. Logs, never
+ * throws: the change in Parley stands either way.
+ */
+export async function sendEmailToPolar(
+  env: BillingEnv,
   { userId, email }: { userId: string; email: string }
 ) {
-  const [row] = await db
-    .select({ customerId: schema.user.polarCustomerId })
-    .from(schema.user)
-    .where(eq(schema.user.id, userId))
-  // Never bought: Polar learns the email at checkout.
-  if (!row?.customerId) return
   try {
     await polarApi(env).customers.updateExternal({
       externalId: userId,
@@ -248,20 +256,29 @@ function portalWithoutCustomer(env: BillingEnv) {
     if (!isAPIError(returned) || returned.statusCode !== 500) return
     const session = await getSessionFromCtx(ctx)
     if (!session) return
-    try {
-      await polarApi(env).customers.getExternal({
-        externalId: session.user.id,
-      })
-      return
-    } catch (error) {
-      if (!(error instanceof ResourceNotFound)) return
-    }
-    log("warn", "polar_portal_no_customer", { userId: session.user.id })
-    // A Response, not a throw: Better Auth keeps the handler's 500 status
-    // for an APIError thrown in an after hook (better-auth 1.7.5,
-    // api/dispatch.mjs), and only a Response's own status survives.
-    return Response.json(noBilling, { status: 404 })
+    return portalWithoutCustomerAnswer(env, session.user.id)
   }
+}
+
+/**
+ * NO_BILLING (404) when Polar has no customer for this user; undefined
+ * when it has one, or can't say (the portal's 500 stands).
+ */
+export async function portalWithoutCustomerAnswer(
+  env: BillingEnv,
+  userId: string
+) {
+  try {
+    await polarApi(env).customers.getExternal({ externalId: userId })
+    return undefined
+  } catch (error) {
+    if (!(error instanceof ResourceNotFound)) return undefined
+  }
+  log("warn", "polar_portal_no_customer", { userId })
+  // A Response, not a throw: Better Auth keeps the handler's 500 status
+  // for an APIError thrown in an after hook (better-auth 1.7.5,
+  // api/dispatch.mjs), and only a Response's own status survives.
+  return Response.json(noBilling, { status: 404 })
 }
 
 /** Someone Polar has no customer for. */
@@ -503,11 +520,8 @@ export async function portalAllowed(ctx: HookContext, env: BillingEnv, db: Db) {
     })
   const account = await accountOf(ctx)
   await withinLimit(env, account.id)
-  const [row] = await db
-    .select({ customerId: schema.user.polarCustomerId })
-    .from(schema.user)
-    .where(eq(schema.user.id, account.id))
-  if (!row?.customerId) throw APIError.from("NOT_FOUND", noBilling)
+  if ((await polarCustomerOf(db, account.id)) === undefined)
+    throw APIError.from("NOT_FOUND", noBilling)
 }
 
 /**
