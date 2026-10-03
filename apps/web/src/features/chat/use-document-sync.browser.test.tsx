@@ -223,7 +223,7 @@ test("the chosen agreement and the next field show before the draft load answers
 test("choosing the agreement the draft already has keeps its values", async () => {
   // The draft already is a Mutual NDA, with a purpose of its own.
   const own = { documentId: "mutual-nda", fields: { purpose: roadmap } }
-  const { server, rerender, shown, loading, draft } = await renderPage(own)
+  const { server, rerender, loading, draft } = await renderPage(own)
   Object.assign(server.saved, own)
 
   // The AI picks the same agreement again: nothing on screen changes while
