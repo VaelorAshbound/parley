@@ -698,6 +698,16 @@ describe("a reply cut short (PAR-47)", () => {
     expect(screen.getByText("Stopped").query()).toBeNull()
   })
 
+  test("Try again leaves the cursor in the reply box, not at the page's top", async () => {
+    const { screen } = await show({ initialMessages: [question, stopped] })
+
+    await screen.getByRole("button", { name: "Try again" }).click()
+
+    await expect
+      .element(screen.getByRole("textbox", { name: "Message" }))
+      .toHaveFocus()
+  })
+
   test("is only a label on an earlier reply: Try again is the latest turn's", async () => {
     const later: ChatMessage[] = [
       {

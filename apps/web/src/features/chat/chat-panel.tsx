@@ -125,8 +125,13 @@ export function ChatPanel({
   // Try again: a failed answer turn sends the answers again; any other turn
   // sends the user's last message again, which the server takes as a retry
   // of it (PAR-7).
+  const reply = useRef<HTMLTextAreaElement>(null)
   const retry = () => {
     setUnfinished(null)
+    // Try again goes with the turn it ends, and focus with it: the reply
+    // box is next, as after answers (T36), not the top of the page.
+    if (!matchMedia("(pointer: coarse)").matches)
+      reply.current?.focus({ preventScroll: true })
     const last = messages.at(-1)
     const answered = last ? answersToRetry(last) : null
     if (!answered) {
@@ -141,7 +146,6 @@ export function ChatPanel({
   const pending = useUiStore((state) => state.pending)
   const setPending = useUiStore((state) => state.setPending)
   const settle = useUiStore((state) => state.settle)
-  const reply = useRef<HTMLTextAreaElement>(null)
   // A new message settles the last turn's highlights in the document.
   const send = (text: string) => {
     settle()
