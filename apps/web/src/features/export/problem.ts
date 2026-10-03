@@ -70,6 +70,12 @@ export function exportProblem(
     }
     case "NO_DOCUMENT":
       return { message: "Pick an agreement first." }
+    // The agreement was switched while the file was made (PAR-51).
+    case "DOCUMENT_CHANGED":
+      return {
+        message:
+          "The agreement changed while we made the file. Download it again to get the new one.",
+      }
     case "NOT_FOUND":
       return { message: "We couldn't find that draft." }
     // The per-user download limit (T27: 10 a minute).
