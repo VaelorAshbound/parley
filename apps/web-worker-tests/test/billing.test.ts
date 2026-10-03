@@ -679,6 +679,113 @@ describe("the billing portal", () => {
   })
 })
 
+describe("a new email", () => {
+  /**
+   * The token in the link Better Auth sends to the new address: an HS256
+   * JWT with its secret, as its createEmailVerificationToken makes it (an
+   * account on a test domain gets no email to read it from).
+   */
+  async function changeEmailToken(email: string, updateTo: string) {
+    const base64url = (bytes: Uint8Array) =>
+      btoa(String.fromCharCode(...bytes))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "")
+    const part = (value: object) =>
+      base64url(new TextEncoder().encode(JSON.stringify(value)))
+    const now = Math.floor(Date.now() / 1000)
+    const unsigned = `${part({ alg: "HS256" })}.${part({
+      email,
+      updateTo,
+      requestType: "change-email-verification",
+      iat: now,
+      exp: now + 3600,
+    })}`
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(env.BETTER_AUTH_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    )
+    const mac = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(unsigned)
+    )
+    return `${unsigned}.${base64url(new Uint8Array(mac))}`
+  }
+
+  /**
+   * Opens the link Better Auth sends to the new address (the last step of
+   * a change), signed in as the user: the email changes then.
+   */
+  async function confirmNewEmail(
+    account: { email: string; cookie: string },
+    newEmail: string
+  ) {
+    const token = await changeEmailToken(account.email, newEmail)
+    const response = await call(
+      `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
+      { headers: { cookie: account.cookie } }
+    )
+    expect(response.status).toBe(200)
+    expect(await userIdOf(newEmail)).toBeTruthy()
+  }
+
+  const updates = () => polar.calls.filter(({ method }) => method === "PATCH")
+
+  it("reaches Polar, so receipts go to the address Parley knows", async () => {
+    const account = await accountWith(active)
+    const newEmail = `ana-${crypto.randomUUID()}@example.test`
+    polar.answer(({ method }) =>
+      method === "PATCH"
+        ? Response.json({ ...active.data, email: newEmail })
+        : undefined
+    )
+
+    await confirmNewEmail(account, newEmail)
+
+    expect(updates()).toEqual([
+      {
+        method: "PATCH",
+        path: `/v1/customers/external/${account.userId}`,
+        body: { email: newEmail },
+      },
+    ])
+  })
+
+  it("doesn't call Polar for someone who never bought", async () => {
+    const account = await newAccount()
+
+    await confirmNewEmail(account, `ana-${crypto.randomUUID()}@example.test`)
+
+    expect(polar.calls).toHaveLength(0)
+  })
+
+  it("still changes when Polar can't take it, and says so", async () => {
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const account = await accountWith(active)
+    const newEmail = `ana-${crypto.randomUUID()}@example.test`
+    polar.answer(({ method }) =>
+      method === "PATCH"
+        ? Response.json({ detail: "down" }, { status: 503 })
+        : undefined
+    )
+
+    await confirmNewEmail(account, newEmail)
+
+    expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+      expect.objectContaining({
+        event: "polar_email_not_synced",
+        userId: account.userId,
+        polarStatus: 503,
+      })
+    )
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(newEmail)
+  })
+})
+
 describe("deleting the account", () => {
   function deleteUser(cookie: string) {
     return post(

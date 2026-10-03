@@ -9,7 +9,7 @@ import {
   type Db,
   type Plan,
 } from "@workspace/db"
-import type { BetterAuthPlugin } from "better-auth"
+import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth"
 import {
   APIError,
   createAuthEndpoint,
@@ -176,7 +176,61 @@ export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
         },
       ],
     },
+    init: () => ({ options: { databaseHooks: emailToPolar({ db, env }) } }),
   } satisfies BetterAuthPlugin
+}
+
+/**
+ * Better Auth's hook on a changed email (the user row's update, as
+ * server/audit.ts sees it): a Polar customer gets the new address too, so
+ * receipts and the portal's sign-in go where Parley's do. After the
+ * response, like the emails: a slow Polar never holds up the link. A
+ * failure is logged and the email stays changed; the next checkout sends
+ * the email again anyway (makeCustomer).
+ */
+function emailToPolar({ db, env }: { db: Db; env: BillingEnv }) {
+  // The before hook sees which fields change; the after hook gets the same
+  // endpoint context and the saved row.
+  const changingEmail = new WeakSet<object>()
+  return {
+    user: {
+      update: {
+        before: async (data, ctx) => {
+          if (ctx && typeof data.email === "string") changingEmail.add(ctx)
+        },
+        after: async (user, ctx) => {
+          if (!ctx || !changingEmail.has(ctx)) return
+          await ctx.context.runInBackgroundOrAwait(
+            syncEmail({ db, env }, { userId: user.id, email: user.email })
+          )
+        },
+      },
+    },
+  } satisfies NonNullable<BetterAuthOptions["databaseHooks"]>
+}
+
+/** Sends the user's email to their Polar customer, if Polar has one. */
+export async function syncEmail(
+  { db, env }: { db: Db; env: BillingEnv },
+  { userId, email }: { userId: string; email: string }
+) {
+  const [row] = await db
+    .select({ customerId: schema.user.polarCustomerId })
+    .from(schema.user)
+    .where(eq(schema.user.id, userId))
+  // Never bought: Polar learns the email at checkout.
+  if (!row?.customerId) return
+  try {
+    await polarApi(env).customers.updateExternal({
+      externalId: userId,
+      customerUpdateExternalID: { email },
+    })
+    logInfo("polar_email_synced", { userId })
+  } catch (error) {
+    // 404: deleted in Polar. 422: another customer has this email
+    // (PAR-17). Neither stops the change in Parley.
+    log("warn", "polar_email_not_synced", { userId, ...statusOf(error) }, error)
+  }
 }
 
 /**
