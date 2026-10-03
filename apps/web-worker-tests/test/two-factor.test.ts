@@ -681,3 +681,25 @@ function maxAge(response: Response, name: string) {
     .find((each) => each.includes(`${name}=`))
   return Number(/max-age=(\d+)/i.exec(cookie ?? "")?.[1])
 }
+
+describe("signing the other devices out after turning it on (PAR-20)", () => {
+  it("reaches a device within its 5-minute cookie cache, as the page says", async () => {
+    const ana = await signUp()
+    const phone = cookiesFrom(await signIn(ana.email))
+    const { cookie } = await turnOn(ana)
+    const cached = () =>
+      call("/api/auth/get-session", { headers: { cookie: phone } }).then(
+        (each) => each.json<{ user: { id: string } } | null>()
+      )
+    expect(await cached()).toMatchObject({ user: { id: ana.userId } })
+
+    const revoked = await post("/api/auth/revoke-other-sessions", {}, cookie)
+
+    expect(revoked.status).toBe(200)
+    // The phone's session row is gone, but its signed cookie cache still
+    // answers for up to 5 minutes: sign-out-others.tsx says "within 5
+    // minutes", not "are signed out".
+    expect(await sessionUser(phone)).toBeNull()
+    expect(await cached()).toMatchObject({ user: { id: ana.userId } })
+  })
+})
