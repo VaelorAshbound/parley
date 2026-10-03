@@ -36,6 +36,13 @@
       "when": 1790534243275,
       "tag": "0004_user_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791004768757,
+      "tag": "0005_purge_indexes",
+      "breakpoints": true
     }
   ]
 }
