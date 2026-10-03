@@ -1,4 +1,5 @@
 import { schema } from "@workspace/db"
+import type { BetterAuthOptions } from "better-auth"
 import { getSchema } from "better-auth/db"
 import { DrizzleQueryError, getTableColumns, is } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/node-postgres"
@@ -6,6 +7,7 @@ import { PgTable } from "drizzle-orm/pg-core"
 import { describe, expect, it, vi } from "vite-plus/test"
 
 import { allowedHosts, createAuth } from "./auth"
+import { RATE_LIMIT_KEEP_HOURS } from "./cron"
 
 const auth = createAuth({
   db: drizzle.mock({ schema }),
@@ -44,6 +46,46 @@ describe("the auth config", () => {
       "*-parley.vaelorashbound.workers.dev",
       "localhost:*",
     ])
+  })
+})
+
+describe("the nightly purge of rate_limit rows", () => {
+  /** Every window (seconds) Better Auth counts in, as it reads the config. */
+  function windows(options: BetterAuthOptions) {
+    const rateLimit = options.rateLimit ?? {}
+    const custom = Object.entries(rateLimit.customRules ?? {}).flatMap(
+      ([path, rule]) => {
+        // A function rule picks its window per request, so no test can read
+        // it here. Don't skip it quietly: change this check when one is added.
+        expect(typeof rule, `customRules["${path}"]`).not.toBe("function")
+        return rule && typeof rule === "object" ? [rule.window] : []
+      }
+    )
+    const fromPlugins = (options.plugins ?? []).flatMap((plugin) =>
+      (plugin.rateLimit ?? []).map((rule) => rule.window)
+    )
+    // Better Auth's built-in rules (sign-in, sign-up, password reset and the
+    // like) are 10 and 60 seconds, and its default window is 10. They are
+    // copied from getDefaultSpecialRules in better-auth 1.7.5's
+    // dist/api/rate-limiter, which is not exported: check them on upgrade.
+    return [rateLimit.window ?? 10, 60, ...custom, ...fromPlugins]
+  }
+
+  it("keeps a row many times longer than the longest window, in production too", () => {
+    // Production has the real Turnstile secret, and the 1-hour guest rule.
+    const production = createAuth({
+      db: drizzle.mock({ schema }),
+      env: {
+        BETTER_AUTH_SECRET: "x".repeat(32),
+        STAGE: "production",
+        TURNSTILE_SECRET_KEY: "0x4AAAAAAA-not-a-test-secret",
+      } as Env,
+      waitUntil: () => {},
+    })
+    const longest = Math.max(...windows(production.options))
+
+    expect(longest).toBe(60 * 60)
+    expect(RATE_LIMIT_KEEP_HOURS * 60 * 60).toBeGreaterThanOrEqual(10 * longest)
   })
 })
 
