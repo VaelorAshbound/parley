@@ -12,8 +12,11 @@ export function authErrorMessage(error: AuthError) {
   // Also a 429, but for 15 minutes (Better Auth's twoFactor lockout).
   if (error.code === "ACCOUNT_TEMPORARILY_LOCKED")
     return "Too many wrong codes. Please try again in 15 minutes."
+  // Better Auth's limits on these routes all last 10 s: 3 tries per network
+  // for sign-in, sign-up, password and email changes and each two-factor
+  // step, 100 for the rest.
   if (error.status === 429)
-    return "Too many tries. Please wait a minute, then try again."
+    return "Too many tries. Please wait 10 seconds, then try again."
   switch (error.code) {
     case "INVALID_EMAIL_OR_PASSWORD":
       return "That email and password don’t match."
@@ -49,19 +52,26 @@ export function authErrorMessage(error: AuthError) {
       return "Your sign-in timed out. Please sign in again."
     case "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE":
       return "Too many wrong codes. Please sign in again."
+    // A code sent from a session with no two-factor: a guest's, on
+    // /two-factor without a password step first (PAR-20).
+    case "TOTP_NOT_ENABLED":
+    case "BACKUP_CODES_NOT_ENABLED":
+      return "No sign-in is waiting for a code. Please sign in again."
     default:
       return "Something went wrong. Please try again."
   }
 }
 
 /**
- * The code step is over (it lasts 10 minutes and takes 5 wrong codes): the
- * next try starts again from the password.
+ * The code step is over (it lasts 10 minutes and takes 5 wrong codes), or
+ * never began: the next try starts again from the password.
  */
 export function needsNewSignIn(code: string | undefined) {
   return (
     code === "INVALID_TWO_FACTOR_COOKIE" ||
-    code === "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE"
+    code === "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE" ||
+    code === "TOTP_NOT_ENABLED" ||
+    code === "BACKUP_CODES_NOT_ENABLED"
   )
 }
 
