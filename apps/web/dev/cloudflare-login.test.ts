@@ -105,13 +105,16 @@ describe("signedInToCloudflare", () => {
 })
 
 describe("whoami, the real wrangler", () => {
-  test("an empty home is signed out", { timeout: 20_000 }, () => {
-    // No network needed: with no credentials wrangler answers at once.
+  test("an empty home is signed out", { timeout: 60_000 }, () => {
+    // No network needed: with no credentials wrangler answers in about 2 s.
+    // The long timeout is for a busy CI machine, where starting wrangler
+    // alone can take more than the dev server's 10 s.
     const home = mkdtempSync(join(tmpdir(), "parley-home-"))
 
     const result = whoami({
       env: { PATH: process.env.PATH, HOME: home },
       cwd: home,
+      timeout: 50_000,
     })
 
     expect(readWhoami(result)).toEqual({ state: "signed-out" })
