@@ -3,7 +3,12 @@ import { describe, expect, inject } from "vite-plus/test"
 
 import { user } from "../src/auth-schema.ts"
 import { connect } from "../src/client.ts"
-import { createDraft, deleteDraft, getDraft } from "../src/queries/drafts.ts"
+import {
+  createDraft,
+  deleteDraft,
+  getDraft,
+  updateDraft,
+} from "../src/queries/drafts.ts"
 import {
   countedAt,
   countExportsSince,
@@ -15,6 +20,8 @@ import { makeUser, test } from "./db.ts"
 
 const nda = { documentId: "mutual-nda", title: "NDA with Bolt" } as const
 const september = new Date("2026-09-01T00:00:00Z")
+/** The agreement the file was printed as. */
+const printed = { documentId: "mutual-nda" } as const
 
 describe("recordExport", () => {
   test("marks the draft exported and counts it for its owner", async ({
@@ -24,7 +31,7 @@ describe("recordExport", () => {
     const draft = await createDraft(db, { userId: owner.id, ...nda })
     const at = new Date("2026-09-10T12:00:00Z")
 
-    await recordExport(db, { id: draft.id, userId: owner.id }, at)
+    await recordExport(db, { id: draft.id, userId: owner.id }, at, printed)
 
     expect(
       (await getDraft(db, { id: draft.id, userId: owner.id }))?.firstExportedAt
@@ -41,7 +48,8 @@ describe("recordExport", () => {
     await recordExport(
       db,
       { id: draft.id, userId: owner.id },
-      new Date("2026-09-10T12:00:00Z")
+      new Date("2026-09-10T12:00:00Z"),
+      printed
     )
 
     expect(
@@ -59,32 +67,58 @@ describe("recordExport", () => {
     const first = new Date("2026-09-10T12:00:00Z")
 
     // True only for the export that counted.
-    expect(await recordExport(db, key, first)).toBe(true)
-    expect(await recordExport(db, key, new Date("2026-09-11T12:00:00Z"))).toBe(
-      false
-    )
+    expect(await recordExport(db, key, first, printed)).toBe(true)
+    expect(
+      await recordExport(db, key, new Date("2026-09-11T12:00:00Z"), printed)
+    ).toBe(false)
 
     expect((await getDraft(db, key))?.firstExportedAt).toEqual(first)
   })
 
-  test("counts nothing when the draft is no longer on the agreement given", async ({
+  // PAR-51 (c): the user keeps the file printed before an agreement switch,
+  // so the count goes to the agreement in the file, not the one the draft
+  // is on now.
+  test("counts the agreement printed even after the draft moved to another", async ({
     db,
   }) => {
     const owner = await makeUser(db)
     const draft = await createDraft(db, { userId: owner.id, ...nda })
     const key = { id: draft.id, userId: owner.id }
     const at = new Date("2026-09-10T12:00:00Z")
+    await updateDraft(db, key, { documentId: "pilot-agreement" })
+
+    expect(await recordExport(db, key, at, printed)).toBe(true)
 
     expect(
-      await recordExport(db, key, at, { documentId: "pilot-agreement" })
-    ).toBe(false)
+      await countedAt(db, { draftId: draft.id, documentId: "mutual-nda" })
+    ).toEqual(at)
+    // The draft is on the Pilot Agreement, which was never downloaded.
     expect((await getDraft(db, key))?.firstExportedAt).toBeNull()
     expect(
       await countExportsSince(db, { userId: owner.id, since: september })
-    ).toBe(0)
-    expect(await recordExport(db, key, at, { documentId: "mutual-nda" })).toBe(
-      true
-    )
+    ).toBe(1)
+  })
+
+  test("counts an agreement printed before a switch only once", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await updateDraft(db, key, { documentId: "pilot-agreement" })
+    const first = new Date("2026-09-10T12:00:00Z")
+
+    expect(await recordExport(db, key, first, printed)).toBe(true)
+    expect(
+      await recordExport(db, key, new Date("2026-09-11T12:00:00Z"), printed)
+    ).toBe(false)
+
+    expect(
+      await countedAt(db, { draftId: draft.id, documentId: "mutual-nda" })
+    ).toEqual(first)
+    expect(
+      await countExportsSince(db, { userId: owner.id, since: september })
+    ).toBe(1)
   })
 
   test("leaves the draft's place in the sidebar alone", async ({ db }) => {
@@ -92,7 +126,7 @@ describe("recordExport", () => {
     const draft = await createDraft(db, { userId: owner.id, ...nda })
     const key = { id: draft.id, userId: owner.id }
 
-    await recordExport(db, key, new Date("2026-09-10T12:00:00Z"))
+    await recordExport(db, key, new Date("2026-09-10T12:00:00Z"), printed)
 
     expect((await getDraft(db, key))?.updatedAt).toEqual(draft.updatedAt)
   })
@@ -105,7 +139,8 @@ describe("recordExport", () => {
     const recorded = await recordExport(
       db,
       { id: draft.id, userId: other.id },
-      new Date("2026-09-10T12:00:00Z")
+      new Date("2026-09-10T12:00:00Z"),
+      printed
     )
 
     expect(recorded).toBe(false)
@@ -118,6 +153,58 @@ describe("recordExport", () => {
   })
 })
 
+describe("recordExport under the draft's row lock", () => {
+  // Why the export counts while holding the draft's row (PAR-51): a switch
+  // back to the agreement printed (chooseDocument) reads countedAt under
+  // that lock to set firstExportedAt. Holding it until the count commits
+  // means the switch can only read the count after it, never "not counted"
+  // just before it. Two connections, as two requests would have.
+  test("makes a switch back to the agreement printed see the count", async () => {
+    const setup = await connect(inject("databaseUrl"))
+    const first = await connect(inject("databaseUrl"))
+    const second = await connect(inject("databaseUrl"))
+    // Committed rows, so a unique id that no other test uses.
+    const userId = `user-lock-${crypto.randomUUID()}`
+    try {
+      await setup
+        .insert(user)
+        .values({ id: userId, name: "Lock", email: `${userId}@example.test` })
+      const draft = await createDraft(setup, { userId, ...nda })
+      const key = { id: draft.id, userId }
+      // Switched away while the Mutual NDA printed.
+      await updateDraft(setup, key, { documentId: "pilot-agreement" })
+      const at = new Date("2026-09-10T12:00:00Z")
+      let release = () => {}
+      const held = new Promise<void>((resolve) => (release = resolve))
+      let counted = () => {}
+      const isCounted = new Promise<void>((resolve) => (counted = resolve))
+
+      const exporting = first.transaction(async (tx) => {
+        await getDraft(tx, key, { lock: true })
+        await recordExport(tx, key, at, printed)
+        counted()
+        await held
+      })
+      await isCounted
+      const switching = second.transaction(async (tx) => {
+        await getDraft(tx, key, { lock: true })
+        return countedAt(tx, { draftId: draft.id, documentId: "mutual-nda" })
+      })
+      // Give the switch a moment to (wrongly) read before the commit.
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      release()
+      const [, seen] = await Promise.all([exporting, switching])
+
+      expect(seen).toEqual(at)
+    } finally {
+      await setup.delete(user).where(eq(user.id, userId))
+      await setup.$client.end()
+      await first.$client.end()
+      await second.$client.end()
+    }
+  })
+})
+
 describe("countedAt", () => {
   test("gives when a draft's agreement was counted, or null", async ({
     db,
@@ -125,7 +212,7 @@ describe("countedAt", () => {
     const owner = await makeUser(db)
     const draft = await createDraft(db, { userId: owner.id, ...nda })
     const at = new Date("2026-09-10T12:00:00Z")
-    await recordExport(db, { id: draft.id, userId: owner.id }, at)
+    await recordExport(db, { id: draft.id, userId: owner.id }, at, printed)
 
     expect(
       await countedAt(db, { draftId: draft.id, documentId: "mutual-nda" })
@@ -145,7 +232,12 @@ describe("countExportsSince", () => {
       "2026-09-30T23:59:59Z",
     ]) {
       const draft = await createDraft(db, { userId: owner.id, ...nda })
-      await recordExport(db, { id: draft.id, userId: owner.id }, new Date(at))
+      await recordExport(
+        db,
+        { id: draft.id, userId: owner.id },
+        new Date(at),
+        printed
+      )
     }
 
     expect(
@@ -160,7 +252,8 @@ describe("countExportsSince", () => {
     await recordExport(
       db,
       { id: draft.id, userId: other.id },
-      new Date("2026-09-10T12:00:00Z")
+      new Date("2026-09-10T12:00:00Z"),
+      printed
     )
 
     expect(
@@ -172,7 +265,7 @@ describe("countExportsSince", () => {
     const owner = await makeUser(db)
     const draft = await createDraft(db, { userId: owner.id, ...nda })
     const key = { id: draft.id, userId: owner.id }
-    await recordExport(db, key, new Date("2026-09-10T12:00:00Z"))
+    await recordExport(db, key, new Date("2026-09-10T12:00:00Z"), printed)
 
     await deleteDraft(db, key)
 
@@ -187,7 +280,8 @@ describe("countExportsSince", () => {
     await recordExport(
       db,
       { id: draft.id, userId: owner.id },
-      new Date("2026-09-10T12:00:00Z")
+      new Date("2026-09-10T12:00:00Z"),
+      printed
     )
 
     await db.delete(user).where(eq(user.id, owner.id))

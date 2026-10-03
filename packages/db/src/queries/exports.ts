@@ -1,5 +1,5 @@
 import type { DocumentId } from "@workspace/documents"
-import { and, count, eq, gte, isNotNull, isNull, sql } from "drizzle-orm"
+import { and, count, eq, gte, isNull, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
 import { countedExport, draft } from "../schema.ts"
@@ -55,21 +55,37 @@ export async function countedAt(
 }
 
 /**
- * Counts the draft's first export as its current agreement: sets
- * `firstExportedAt` and adds a counted row. Does nothing (false) when the
- * draft was counted already, has no agreement or isn't the user's. Run it in
- * a transaction with `lockExports`.
+ * Counts the draft's first export as `documentId`, the agreement the file
+ * was printed as: adds a counted row and, while the draft is still on that
+ * agreement, sets its `firstExportedAt`. Does nothing (false) when that
+ * agreement of the draft was counted already, or the draft isn't the
+ * user's. Run it in a transaction with `lockExports`, holding the draft's
+ * row lock.
  *
- * `documentId`, when given, is the agreement the file was made of: the draft
- * is counted only while it is still on it, never as another one (PAR-51).
+ * The count follows the file, not the draft: a draft switched to another
+ * agreement while the file printed is counted as the one in the file, and
+ * keeps that count if it switches back (PAR-51, spec §2 Quota).
  */
 export async function recordExport(
   db: Db,
   key: DraftKey,
   at: Date,
-  { documentId: expected }: { documentId?: DocumentId } = {}
+  { documentId }: { documentId: DocumentId }
 ) {
-  const marked = await db
+  const [owned] = await db
+    .select({ id: draft.id })
+    .from(draft)
+    .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))
+  if (!owned) return false
+  const counted = await db
+    .insert(countedExport)
+    .values({ userId: key.userId, draftId: key.id, documentId, countedAt: at })
+    .onConflictDoNothing({
+      target: [countedExport.draftId, countedExport.documentId],
+    })
+    .returning({ id: countedExport.id })
+  if (counted.length === 0) return false
+  await db
     .update(draft)
     // A download isn't an edit: the draft keeps its place in the sidebar.
     .set({ firstExportedAt: at, updatedAt: sql`${draft.updatedAt}` })
@@ -77,16 +93,9 @@ export async function recordExport(
       and(
         eq(draft.id, key.id),
         eq(draft.userId, key.userId),
-        isNull(draft.firstExportedAt),
-        isNotNull(draft.documentId),
-        expected === undefined ? undefined : eq(draft.documentId, expected)
+        eq(draft.documentId, documentId),
+        isNull(draft.firstExportedAt)
       )
     )
-    .returning({ documentId: draft.documentId })
-  const documentId = marked[0]?.documentId
-  if (!documentId) return false
-  await db
-    .insert(countedExport)
-    .values({ userId: key.userId, draftId: key.id, documentId, countedAt: at })
   return true
 }
