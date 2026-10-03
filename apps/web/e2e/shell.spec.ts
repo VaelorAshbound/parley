@@ -204,6 +204,44 @@ test("loading a draft doesn't shift the layout", async ({ page }) => {
   expect(shift).toBeLessThanOrEqual(0.02)
 })
 
+test("the panel stays put when the AI fills the signature table at the end", async ({
+  page,
+}) => {
+  // PAR-48: scrolling to a change near the end moved the whole panel up
+  // 28 px (its header half cut, a gap at the bottom) until a reload.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await startNda(page)
+  const doc = page.getByRole("region", { name: "Live document" })
+  const header = doc.locator("header").first()
+  await expect.poll(async () => (await header.boundingBox())?.y).toBe(0)
+
+  await page
+    .getByRole("textbox", { name: "Message" })
+    .fill("Fill in the signing parties.")
+  await page.keyboard.press("Enter")
+  const company = doc.getByText("Bolt Retail LLC").first()
+  await expect(company).toBeInViewport()
+  // The panel scrolls smoothly to the change: wait until nothing scrolls.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        let timer = setTimeout(resolve, 600)
+        document.addEventListener(
+          "scroll",
+          () => {
+            clearTimeout(timer)
+            timer = setTimeout(resolve, 600)
+          },
+          { capture: true }
+        )
+      })
+  )
+
+  expect((await header.boundingBox())?.y).toBe(0)
+  const panel = await doc.boundingBox()
+  expect(panel && panel.y + panel.height).toBe(800)
+})
+
 for (const width of [1440, 1024, 375]) {
   test(`draft page at ${width} px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 })

@@ -86,10 +86,14 @@ export function DocumentPanel({
           />
         </div>
       </div>
+      {/* relative: the document's absolutely placed parts (screen-reader
+          labels, change bars) belong to this scroller and are clipped by
+          it. Without it they hung below the panel and gave its wrapper
+          something to scroll (PAR-48). */}
       <div
         ref={panel}
         className={cn(
-          "min-h-0 flex-1 scroll-fade-y overflow-y-auto px-4 pb-12 md:px-9",
+          "relative min-h-0 flex-1 scroll-fade-y overflow-y-auto px-4 pb-12 md:px-9",
           // Room for the phone's bar, so the page's end can scroll clear.
           chosen && "max-md:pb-28"
         )}
@@ -205,8 +209,15 @@ function LiveDocument({
     // Already in full view: nothing to move.
     if (box.top >= view.top && box.bottom <= view.bottom) return
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches
-    row.scrollIntoView({
-      block: "center",
+    // The panel's own scroller only, never its ancestors: scrollIntoView
+    // also scrolled the wrapper around the panel when the change sat near
+    // the end, and the whole panel slid up (PAR-48).
+    panel.current?.scrollTo({
+      top:
+        panel.current.scrollTop +
+        box.top -
+        view.top -
+        (view.height - box.height) / 2,
       behavior: still ? "instant" : "smooth",
     })
     // Only a new change scrolls, not an edit that ends.
