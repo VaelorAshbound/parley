@@ -6,6 +6,7 @@ import {
   needsNewSignIn,
   oauthErrorMessage,
   retryAfterOf,
+  setupErrorMessage,
 } from "./messages"
 
 describe("authErrorMessage", () => {
@@ -166,6 +167,21 @@ describe("emailLinkErrorMessage", () => {
   it("says an old link no longer works", () => {
     expect(emailLinkErrorMessage("TOKEN_EXPIRED")).toBe(
       "This link has expired. Please ask for a new one."
+    )
+  })
+})
+
+describe("setupErrorMessage", () => {
+  it("asks to start the setup again, not to sign in, when it was reset (PAR-20)", () => {
+    // Settings → Turn on, while another tab turned two-factor off.
+    expect(setupErrorMessage({ code: "TOTP_NOT_ENABLED", status: 400 })).toBe(
+      "Two-factor setup was reset. Close this and start again."
+    )
+  })
+
+  it("says the rest as authErrorMessage does", () => {
+    expect(setupErrorMessage({ code: "INVALID_CODE", status: 401 })).toBe(
+      authErrorMessage({ code: "INVALID_CODE", status: 401 })
     )
   })
 })
