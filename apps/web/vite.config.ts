@@ -5,6 +5,8 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react"
 import { defineConfig, lazyPlugins } from "vite-plus"
 
+import { signedInToCloudflare } from "./dev/cloudflare-login.ts"
+
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   // Port 3000: the Google and GitHub dev OAuth apps redirect here. PORT lets
@@ -12,7 +14,14 @@ export default defineConfig({
   server: { port: Number(process.env.PORT ?? 3000), strictPort: true },
   plugins: lazyPlugins(() => [
     // https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
+    cloudflare({
+      viteEnvironment: { name: "ssr" },
+      // PDF export uses the real Browser Run (ADR-0010).
+      remoteBindings: signedInToCloudflare(),
+      // The Worker debugger's port (9229) is shared too: a second dev server
+      // on its own PORT runs without one.
+      ...(process.env.PORT && { inspectorPort: false as const }),
+    }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),

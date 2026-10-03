@@ -1,6 +1,6 @@
 import { and, eq, gte, inArray, lt, notExists, or, sql } from "drizzle-orm"
 
-import { session, user } from "../auth-schema.ts"
+import { rateLimit, session, user, verification } from "../auth-schema.ts"
 import type { Db } from "../client.ts"
 import { aiUsage, draft } from "../schema.ts"
 
@@ -98,5 +98,52 @@ export async function deleteExpiredSessions(
     .for("update", { skipLocked: true })
 
   const result = await db.delete(session).where(inArray(session.id, expired))
+  return result.rowCount ?? 0
+}
+
+/**
+ * Deletes up to `limit` verification rows (reset links, two-factor and
+ * email codes) that ran out before `now`. Better Auth refuses them already
+ * (a row counts until expiresAt < now, like a session) and deletes a row
+ * once it is used, so only the unused ones pile up here (PAR-14).
+ */
+export async function deleteExpiredVerifications(
+  db: Db,
+  { now, limit }: { now: Date; limit: number }
+): Promise<number> {
+  const expired = db
+    .select({ id: verification.id })
+    .from(verification)
+    .where(lt(verification.expiresAt, now))
+    .limit(limit)
+    .for("update", { skipLocked: true })
+
+  const result = await db
+    .delete(verification)
+    .where(inArray(verification.id, expired))
+  return result.rowCount ?? 0
+}
+
+/**
+ * Deletes up to `limit` rate_limit rows whose last request was before
+ * `before` (PAR-14). A row only counts requests inside its rule's window, so
+ * once `before` is further back than the longest window, Better Auth would
+ * start that key from zero anyway. The caller keeps a wide margin (cron.ts).
+ * Better Auth prunes this table itself too, but only when some key starts a
+ * new window, so a quiet night leaves every row in place.
+ */
+export async function deleteOldRateLimits(
+  db: Db,
+  { before, limit }: { before: Date; limit: number }
+): Promise<number> {
+  // last_request is epoch milliseconds (Better Auth's bigint column).
+  const old = db
+    .select({ id: rateLimit.id })
+    .from(rateLimit)
+    .where(lt(rateLimit.lastRequest, before.getTime()))
+    .limit(limit)
+    .for("update", { skipLocked: true })
+
+  const result = await db.delete(rateLimit).where(inArray(rateLimit.id, old))
   return result.rowCount ?? 0
 }

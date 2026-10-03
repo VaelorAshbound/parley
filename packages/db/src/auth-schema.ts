@@ -45,7 +45,13 @@ export const session = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
+  (table) => [
+    index("session_userId_idx").on(table.userId),
+    // Added by hand for the nightly purge (PAR-14): `pnpm db:auth-schema`
+    // drops it, and test/purge.test.ts ("the schema keeps the purge's
+    // hand-written indexes") then fails. Put it back. work/PAR-14/decision.md
+    index("session_expiresAt_idx").on(table.expiresAt),
+  ],
 );
 
 export const account = pgTable(
@@ -107,12 +113,19 @@ export const twoFactor = pgTable(
   ],
 );
 
-export const rateLimit = pgTable("rate_limit", {
-  id: text("id").primaryKey(),
-  key: text("key").notNull().unique(),
-  count: integer("count").notNull(),
-  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
-});
+export const rateLimit = pgTable(
+  "rate_limit",
+  {
+    id: text("id").primaryKey(),
+    key: text("key").notNull().unique(),
+    count: integer("count").notNull(),
+    lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+  },
+  // Added by hand for the nightly purge and Better Auth's own prune
+  // (PAR-14): `pnpm db:auth-schema` drops it, and test/purge.test.ts ("the
+  // schema keeps the purge's hand-written indexes") then fails. Put it back.
+  (table) => [index("rateLimit_lastRequest_idx").on(table.lastRequest)],
+);
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),

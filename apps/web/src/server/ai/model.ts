@@ -19,7 +19,8 @@ export const SCRIPTED_AI_COOKIE = "parley-scripted-ai"
 /**
  * The model for one request. Where SCRIPTED_AI is on (Previews, local dev;
  * never production), a browser with the scripted-AI cookie gets the scripted
- * AI of the fast e2e tests (T32).
+ * AI of the fast e2e tests (T32), and so does everyone when there is no
+ * OpenRouter key: a fresh clone runs with no keys at all (README).
  */
 export async function requestModel(
   env: Pick<Env, "OPENROUTER_API_KEY"> & { SCRIPTED_AI: string },
@@ -27,8 +28,9 @@ export async function requestModel(
 ): Promise<LanguageModel> {
   if (
     env.SCRIPTED_AI === "on" &&
-    cookieHeader &&
-    parse(cookieHeader, SCRIPTED_AI_COOKIE)[SCRIPTED_AI_COOKIE] === "1"
+    (!env.OPENROUTER_API_KEY ||
+      (cookieHeader &&
+        parse(cookieHeader, SCRIPTED_AI_COOKIE)[SCRIPTED_AI_COOKIE] === "1"))
   ) {
     // Loaded only when used, so production never runs its code.
     const { scriptedModel } = await import("./scripted-model")

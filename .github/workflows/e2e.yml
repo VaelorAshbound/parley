@@ -31,7 +31,10 @@ env:
   # Values from the event go through env, never straight into scripts.
   EVENT: ${{ github.event_name }}
   HEAD_REF: ${{ github.head_ref }}
-  NIGHTLY_URL: ${{ vars.NIGHTLY_URL }}
+  # The nightly and manual runs test the PAR-1-parley Preview: the suite needs
+  # the scripted AI and makes a guest per test, so it can't run on production
+  # (NIGHTLY_URL, the live site, is for nightly.yml's production job).
+  E2E_URL: ${{ vars.PERF_URL }}
 
 jobs:
   component:
@@ -69,9 +72,8 @@ jobs:
         run: pnpm test:browser
 
   e2e:
-    # Nightly needs a live URL; until production exists (T38) it doesn't start,
-    # so it costs no minutes.
-    if: github.event_name != 'schedule' || vars.NIGHTLY_URL != ''
+    # The nightly run needs the Preview's URL; without it, it doesn't start.
+    if: github.event_name != 'schedule' || vars.PERF_URL != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
@@ -88,8 +90,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # A push runs Chromium; the nightly run all six (owner, 2026-09-29).
-        project: ${{ fromJSON(github.event_name == 'schedule' && '["chromium","firefox","webkit","chromium-phone","firefox-phone","webkit-phone"]' || '["chromium"]') }}
+        # A PR runs Chromium; the nightly and manual runs all six (owner,
+        # 2026-09-29).
+        project: ${{ fromJSON(github.event_name != 'pull_request' && '["chromium","firefox","webkit","chromium-phone","firefox-phone","webkit-phone"]' || '["chromium"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -131,7 +134,7 @@ jobs:
             slug="$(printf '%s' "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-')"
             url="https://${slug}-${WORKER}.${ACCOUNT_SUBDOMAIN}.workers.dev"
           else
-            url="$NIGHTLY_URL"
+            url="$E2E_URL"
           fi
           echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
           echo "Testing $url"

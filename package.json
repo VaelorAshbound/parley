@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "prepare": "vp config",
-    "dev": "vp -C apps/web dev",
+    "dev": "node scripts/dev.ts",
     "build": "vp run -r build",
     "documents:build": "vp run --filter @workspace/documents build",
     "db:dev": "vp run --filter @workspace/db dev",

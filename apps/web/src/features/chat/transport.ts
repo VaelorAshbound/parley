@@ -5,6 +5,7 @@ import {
 } from "ai"
 import { Temporal } from "temporal-polyfill"
 
+import { answeredStep } from "@/lib/answered-step"
 import type { Orpc } from "@/lib/orpc"
 import type { ChatMessage } from "@/server/ai/chat"
 
@@ -15,14 +16,21 @@ import type { ChatMessage } from "@/server/ai/chat"
 // https://orpc.dev/docs/integrations/ai-sdk
 export function chatTransport(orpc: Orpc): ChatTransport<ChatMessage> {
   return {
-    async sendMessages({ chatId, messages, abortSignal }) {
+    async sendMessages({ chatId, messages, abortSignal, body }) {
       const message = messages.at(-1)
       const today = Temporal.Now.plainDateISO().toString()
       const stream =
         message?.role === "assistant"
-          ? // Sent by sendAutomaticallyWhen once the questions are answered.
+          ? // Sent by sendAutomaticallyWhen once the questions are answered,
+            // or by Try again after that turn failed (`retry`, PAR-7).
             await orpc.chat.answer.call(
-              { id: chatId, today, calls: answeredCalls(message) },
+              {
+                id: chatId,
+                today,
+                calls: answeredCalls(message),
+                retry:
+                  body !== undefined && "retry" in body && body.retry === true,
+              },
               { signal: abortSignal }
             )
           : await orpc.chat.send.call(
@@ -59,6 +67,19 @@ export function answeredCalls(message: ChatMessage) {
       ? [{ toolCallId: part.toolCallId, answers: part.output.answers }]
       : []
   )
+}
+
+/**
+ * The reply as it was when its last questions were answered, for Try again
+ * after that answer turn failed (PAR-7): what the failed turn wrote after
+ * them goes, new questions too, and the answers are sent again. Null when
+ * the reply has no answered questions: then the turn to retry is the user's
+ * message.
+ */
+export function answersToRetry(message: ChatMessage): ChatMessage | null {
+  if (message.role !== "assistant") return null
+  const step = answeredStep(message.parts)
+  return step && { ...message, parts: message.parts.slice(0, step.end) }
 }
 
 function lastStep(message: ChatMessage) {

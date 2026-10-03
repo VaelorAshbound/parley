@@ -1,4 +1,5 @@
 import {
+  countedAt,
   countExportsSince,
   getDraft,
   lockExports,
@@ -32,6 +33,23 @@ import { draftOwner, perUser, verified } from "./base"
 // free document, and the lock means two downloads at once can't both take
 // the last one. A file built but then refused (the other request won) costs
 // one Browser Run print, a fraction of a cent.
+//
+// The file is built from the draft as it was before the ~4 s print, and the
+// draft can change meanwhile (the AI's chooseDocument or updateFields run
+// while the PDF prints). The user always gets the file they clicked, and the
+// count follows that file: it goes to the agreement printed, whatever the
+// draft is on or says afterwards (PAR-51, owner decision). So a switch
+// during the print delivers and counts the agreement in the file, and an
+// edit delivers the file as printed, counted once as its agreement.
+//
+// The claim still reads the draft under its row lock, the same lock
+// chooseDocument and updateFields take. Counting writes both a counted row
+// and the draft's firstExportedAt, and chooseDocument copies a counted row
+// into firstExportedAt when it switches back to an agreement; without the
+// row lock a switch back during the count could read "not counted" just
+// before the count lands, and leave a counted agreement looking new.
+// Holding a lock over the print instead would make every other export of
+// the user wait seconds for Browser Run.
 
 type Missing = { key: string; label: string }
 
@@ -75,8 +93,10 @@ export async function exportDraft({
 
   const early = await decide(db, draft.firstExportedAt !== null)
   if (!early.ok) return early
-  if (draft.documentId === null) return { ok: false, error: "NO_DOCUMENT" }
-  const definition = definitionOf(draft.documentId)
+  // The agreement printed, and the one counted.
+  const { documentId } = draft
+  if (documentId === null) return { ok: false, error: "NO_DOCUMENT" }
+  const definition = definitionOf(documentId)
   const values = definition.draftSchema.parse(draft.fields)
   const missing = missingFields(definition, values)
   if (missing.length > 0)
@@ -101,12 +121,30 @@ export async function exportDraft({
   const key = { id: draft.id, userId }
   const claimed = await db.transaction(async (tx) => {
     await lockExports(tx, userId)
-    const fresh = await getDraft(tx, key)
+    // Locked: an edit in flight finishes first, and none starts until the
+    // count is in. Lock order is the advisory lock, then the row; the
+    // draft procedures take only the row, so they can't deadlock with this.
+    const fresh = await getDraft(tx, key, { lock: true })
     if (!fresh) return { ok: false as const, error: "NOT_FOUND" as const }
-    const decision = await decide(tx, fresh.firstExportedAt !== null)
+    // Was the agreement printed counted already? The draft's own mark says
+    // so only while it is still on that agreement; after a switch, its
+    // counted row does.
+    const counted =
+      fresh.documentId === documentId
+        ? fresh.firstExportedAt !== null
+        : (await countedAt(tx, { draftId: draft.id, documentId })) !== null
+    const decision = await decide(tx, counted)
     if (!decision.ok) return decision
-    if (decision.counts)
-      await recordExport(tx, key, new Date(now.epochMilliseconds))
+    // Under both locks nothing else can count it first, so a count that was
+    // due but didn't happen is a bug: fail rather than hand over a file
+    // that was never counted.
+    if (
+      decision.counts &&
+      !(await recordExport(tx, key, new Date(now.epochMilliseconds), {
+        documentId,
+      }))
+    )
+      throw new Error("The export was due to count but was not counted")
     return decision
   })
   if (!claimed.ok) return claimed

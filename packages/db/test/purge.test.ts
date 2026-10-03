@@ -1,14 +1,18 @@
-import { eq, inArray } from "drizzle-orm"
-import { describe, expect, inject } from "vite-plus/test"
+import { eq, inArray, sql } from "drizzle-orm"
+import { getTableConfig } from "drizzle-orm/pg-core"
+import { Client } from "pg"
+import { describe, expect, inject, vi } from "vite-plus/test"
 
-import { session, user } from "../src/auth-schema.ts"
+import { rateLimit, session, user, verification } from "../src/auth-schema.ts"
 import { connect, type Db } from "../src/client.ts"
 import { createDraft } from "../src/queries/drafts.ts"
 import { moveGuestData } from "../src/queries/guests.ts"
 import { saveMessages } from "../src/queries/messages.ts"
 import {
   deleteExpiredSessions,
+  deleteExpiredVerifications,
   deleteIdleGuests,
+  deleteOldRateLimits,
 } from "../src/queries/purge.ts"
 import { aiUsage, draft, message } from "../src/schema.ts"
 import { makeUser, test } from "./db.ts"
@@ -380,5 +384,191 @@ describe("deleteExpiredSessions", () => {
     expect(await deleteExpiredSessions(db, { now, limit: 2 })).toBe(2)
     expect(await deleteExpiredSessions(db, { now, limit: 2 })).toBe(1)
     expect(await deleteExpiredSessions(db, { now, limit: 2 })).toBe(0)
+  })
+})
+
+let verifications = 0
+
+/** A verification row (a reset link, a two-factor code), as Better Auth makes it. */
+async function makeVerification(db: Db, expiresAt: Date) {
+  verifications += 1
+  const id = `purge-verification-${verifications}`
+  await db.insert(verification).values({
+    id,
+    identifier: `reset-password:${id}`,
+    value: id,
+    expiresAt,
+    createdAt: daysAgo(1),
+    updatedAt: daysAgo(1),
+  })
+  return id
+}
+
+async function verificationIds(db: Db) {
+  const rows = await db
+    .select({ id: verification.id })
+    .from(verification)
+    .orderBy(verification.id)
+  return rows.map((row) => row.id)
+}
+
+describe("deleteExpiredVerifications", () => {
+  test("deletes the verification rows that ran out", async ({ db }) => {
+    await makeVerification(db, daysAgo(2))
+    await makeVerification(db, new Date(now.getTime() - 1))
+
+    expect(await deleteExpiredVerifications(db, { now, limit: 100 })).toBe(2)
+    expect(await verificationIds(db)).toEqual([])
+  })
+
+  test("keeps a row that is still valid, also one that runs out right now", async ({
+    db,
+  }) => {
+    // Better Auth accepts a code until expiresAt < now, like a session.
+    const later = await makeVerification(db, new Date(now.getTime() + 60_000))
+    const exactlyNow = await makeVerification(db, now)
+
+    expect(await deleteExpiredVerifications(db, { now, limit: 100 })).toBe(0)
+    expect(await verificationIds(db)).toEqual([later, exactlyNow].toSorted())
+  })
+
+  test("deletes at most `limit` rows a call", async ({ db }) => {
+    for (const days of [1, 2, 3]) await makeVerification(db, daysAgo(days))
+
+    expect(await deleteExpiredVerifications(db, { now, limit: 2 })).toBe(2)
+    expect(await deleteExpiredVerifications(db, { now, limit: 2 })).toBe(1)
+    expect(await deleteExpiredVerifications(db, { now, limit: 2 })).toBe(0)
+  })
+})
+
+let rateLimits = 0
+
+/** A rate_limit row, as Better Auth keeps it: last request in epoch ms. */
+async function makeRateLimit(db: Db, lastRequest: Date) {
+  rateLimits += 1
+  const id = `purge-rate-limit-${rateLimits}`
+  await db.insert(rateLimit).values({
+    id,
+    key: `203.0.113.${rateLimits}/sign-in/anonymous`,
+    count: 10,
+    lastRequest: lastRequest.getTime(),
+  })
+  return id
+}
+
+async function rateLimitIds(db: Db) {
+  const rows = await db
+    .select({ id: rateLimit.id })
+    .from(rateLimit)
+    .orderBy(rateLimit.id)
+  return rows.map((row) => row.id)
+}
+
+describe("deleteOldRateLimits", () => {
+  /** The cron's cutoff: far past the longest window (cron.ts). */
+  const before = daysAgo(1)
+
+  test("deletes the rows whose last request is before the cutoff", async ({
+    db,
+  }) => {
+    await makeRateLimit(db, daysAgo(2))
+    await makeRateLimit(db, new Date(before.getTime() - 1))
+
+    expect(await deleteOldRateLimits(db, { before, limit: 100 })).toBe(2)
+    expect(await rateLimitIds(db)).toEqual([])
+  })
+
+  test("keeps a row whose last request is on or after the cutoff", async ({
+    db,
+  }) => {
+    // A guest blocked an hour ago is still blocked: its row must stay.
+    const blocked = await makeRateLimit(db, new Date(now.getTime() - 3_600_000))
+    const onCutoff = await makeRateLimit(db, before)
+
+    expect(await deleteOldRateLimits(db, { before, limit: 100 })).toBe(0)
+    expect(await rateLimitIds(db)).toEqual([blocked, onCutoff].toSorted())
+  })
+
+  test("deletes at most `limit` rows a call", async ({ db }) => {
+    for (const days of [2, 3, 4]) await makeRateLimit(db, daysAgo(days))
+
+    expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(2)
+    expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(1)
+    expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(0)
+  })
+})
+
+// auth-schema.ts is generated (`pnpm db:auth-schema`), and Better Auth can't
+// declare these two indexes, so they are written there by hand. A
+// regeneration drops them from the schema, while the test database (built
+// from the migrations) still has them; only this test sees it then (PAR-14).
+describe("the schema keeps the purge's hand-written indexes", () => {
+  const indexes = (table: Parameters<typeof getTableConfig>[0]) =>
+    getTableConfig(table).indexes.map((index) => index.config.name)
+
+  test("session.expires_at", () => {
+    expect(indexes(session)).toContain("session_expiresAt_idx")
+  })
+
+  test("rate_limit.last_request", () => {
+    expect(indexes(rateLimit)).toContain("rateLimit_lastRequest_idx")
+  })
+})
+
+// Each purge scans for rows past a time. Without an index on that column the
+// scan reads the whole table every night, and Better Auth's own prune of
+// rate_limit (on each new window) does too (PAR-14). Each test plans the
+// DELETE the purge function really sends, so a later change to its WHERE
+// clause can't lose the index unnoticed. Sequential scans are turned off so
+// the plan shows whether an index can serve the query at all; on a few test
+// rows the planner would pick a scan either way.
+describe("the purge queries use an index", () => {
+  /** EXPLAIN of the DELETE that `run` sends, with the same parameters. */
+  async function planOf(db: Db, run: () => Promise<unknown>) {
+    await db.execute(sql`SET LOCAL enable_seqscan = off`)
+    // The transaction's own pg client (Drizzle keeps it on its session).
+    const { client } = (db as unknown as { session: { client: Client } })
+      .session
+    const query = vi.spyOn(client, "query")
+    let calls: typeof query.mock.calls
+    try {
+      await run()
+    } finally {
+      // Restoring the spy clears its calls, so keep them first.
+      calls = [...query.mock.calls]
+      query.mockRestore()
+    }
+    const sent = calls.flatMap((call) => {
+      // Drizzle sends (config, params); pg's overloads don't type it so.
+      const [config, params] = call as unknown as [
+        string | { text?: string },
+        unknown[],
+      ]
+      const text = typeof config === "string" ? config : config?.text
+      return typeof text === "string" && /^delete /i.test(text)
+        ? [{ text, params }]
+        : []
+    })
+    expect(sent).toHaveLength(1)
+    const [{ text, params }] = sent as [(typeof sent)[number]]
+    const result = await client.query<{ "QUERY PLAN": string }>(
+      `EXPLAIN ${text}`,
+      params
+    )
+    return result.rows.map((row) => row["QUERY PLAN"]).join("\n")
+  }
+
+  test("expired sessions, by session.expires_at", async ({ db }) => {
+    const explained = await planOf(db, () =>
+      deleteExpiredSessions(db, { now, limit: 500 })
+    )
+    expect(explained).toContain("session_expiresAt_idx")
+  })
+
+  test("old rate_limit rows, by rate_limit.last_request", async ({ db }) => {
+    const explained = await planOf(db, () =>
+      deleteOldRateLimits(db, { before: daysAgo(1), limit: 500 })
+    )
+    expect(explained).toContain("rateLimit_lastRequest_idx")
   })
 })

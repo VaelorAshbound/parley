@@ -223,3 +223,36 @@ T38 step 6: Polar sandbox webhook for parley.runtimedrift.dev (c9ebdb66); produc
 
 ### 2026-09-30T22:31:30Z
 Session end (2026-09-30, paused by owner before the merge). Done: PAR-18 cancelled (sandbox billing); T38 steps 1 security headers (d9f26db, 15e42ad), 2 PAR-43 (ea0bd5e), 3 not possible (preview_urls also drives CI Previews), 4 skipped (owner), 5 production migrations 0002-0004 applied, 6 Polar production webhook c9ebdb66 + POLAR_* secrets + sending-only Resend key, 7 custom domain route (f75b61b, live on deploy). Branch pushed; PRODUCTION_URL set, NIGHTLY_URL removed (nightly stays off until the next checkpoint). OPEN: CI e2e red on f75b61b: security-headers.spec sees 4 'script-src blocked eval' on the Preview build (assets/schemas-*.js): a Zod schema is built before router.tsx's jitless import runs. Fix idea: set globalThis.__zod_globalConfig = { jitless: true } in a nonce'd inline head script before any module. Local full e2e (dev) was 210 passed / 1 failed (a11y dark @phone draft closed, retry pending) at pause. Next: fix Zod probe, CI green, then step 8 merge PR #1 (owner already OK'd) and step 9 live checks. Owner: delete the old full-access Resend key after launch.
+
+### 2026-10-01T18:07:24Z
+T38 done (2026-10-01): parley.runtimedrift.dev live on 043768e, smoke green, A+ headers, forged Turnstile 403, owner chat turns OK. Fixed: Zod probe (8818e02), date-dependent visual baselines, production gate (documents coverage, Worker test timeout), deploy command now ci-deploy.sh, smoke chat turn skipped on production. Open: owner Google sign-in on production; delete old full-access Resend key. Next: T39 (README + ADRs), T40 (/ship).
+
+### 2026-10-01T18:09:39Z
+Google sign-in on production checked (owner; 1 google account). Resend: deleted the unused old production key (parley-production-sending, 2026-09-25); kept 'email' (full access, used locally), parley-ci, priced-ci, and the new production key. T38 has nothing open.
+
+### 2026-10-01T18:10:17Z
+Session end (2026-10-01). Finished: T38, Parley live on parley.runtimedrift.dev (043768e): smoke green, A+ headers, forged Turnstile 403, owner chat turns + Google and GitHub sign-in OK. Fixed on the way: Zod eval probe vs CSP, date-dependent visual baselines, production gate (documents coverage after PAR-40, Worker test timeout), deploy command now ci-deploy.sh, smoke chat turn skipped on production. Deleted the unused old production Resend key. Flake noted on PAR-8 (a11y phone draft, ~1 in 12). 40 of 42 tasks done. Next session: T39 (README + ADRs; docs skill first), then T40 (/ship). Branch PAR-1-parley is ahead of main by docs commits only; future work goes through PRs to main (production deploys from main). Nightly still off (NIGHTLY_URL unset) until the next checkpoint.
+
+### 2026-10-01T18:37:31Z
+T39 in progress: plan (be67060), ADRs 0010-0012 (6858dc1), local setup in 3 commands checked on a fresh clone in a clean podman container with no keys or login (39db62c, 7b417ee). Next: architecture diagram, 30 s GIF from production, README.
+
+### 2026-10-01T19:28:10Z
+T39 built, not yet pushed (9 local commits be67060..cf24c17): ADRs 0010-0012; local setup in 3 commands (pnpm dev writes .dev.vars, starts Postgres; scripted AI with no key; no remote bindings without a Cloudflare login) checked on a fresh clone in a clean podman container; architecture diagram light+dark; README with evals, cost, test pyramid (pnpm test 1306 passed/1 skipped, test:workers 448 passed). GIF dropped by the owner (the take showed PAR-48, filed). Next: push + PR to main, check README on GitHub in light and dark, then T39 done -> T40 /ship.
+
+### 2026-10-01T19:36:54Z
+T39 done (PR #3, CI green: Workers Builds, component, e2e chromium). README checked on GitHub in light and dark. PR #3 is open, waiting for the owner's OK to merge (merging deploys production). Next: merge PR #3, then T40 (/ship).
+
+### 2026-10-01T19:53:05Z
+PR #3 merged (494e33f). Production serves 494e33f, scripted AI off, smoke green. Next: T40 (/ship).
+
+### 2026-10-01T20:26:43Z
+T40 done: /ship GO (work/PAR-1/ship.md). Fixed before the tag: output cap 4096 per model call + one-part messages (PR #4, 42f5a7b live, smoke green); evals re-run green with the cap. Filed PAR-49..53. CHANGELOG.md for 1.0.0. Next: merge the docs PR, tag v1.0.0 on main, GitHub release.
+
+### 2026-10-01T20:34:33Z
+Session end (2026-10-01). Finished: T39 (README, ADRs 0010-0012, 3-command local setup checked in a clean container, architecture diagram; GIF dropped by the owner) and T40 (/ship GO: output cap + one-part messages fixed in PR #4; evals green with the cap; CHANGELOG). Released v1.0.0 (tag on 6075421, GitHub release). Production serves 6075421, smoke green. All 42 plan tasks done. Filed PAR-48 (panel shift), PAR-49..53 (review follow-ups). Next: Checkpoint Complete (tick every spec §8 criterion with evidence; the GIF line is dropped), then the open wi items by priority (PAR-49 tests first); nightly still off (NIGHTLY_URL unset).
+
+### 2026-10-01T21:17:11Z
+phase: build -> done
+
+### 2026-10-01T21:17:11Z
+PAR-1 done (2026-10-01). Final checkpoint passed with four recorded exceptions (work/PAR-1/checkpoint-complete.md). PR #7 merged: export test uses the printer's None rule, DPA page 7 re-approved (44/44 real exports). Nightly back on (NIGHTLY_URL = live site; scheduled e2e tests the Preview). PAR-54 cancelled (no Mac). Open follow-ups: PAR-48, 49, 55, 56 first; then 53, 13, 14 and the low polish items.
