@@ -16,6 +16,7 @@ import {
   FileTextIcon,
   ListChecksIcon,
   PenLineIcon,
+  SquareIcon,
   Undo2Icon,
 } from "lucide-react"
 import type { ReactNode } from "react"
@@ -40,6 +41,7 @@ export function MessageParts({
   onAnswer,
   download,
   last = false,
+  stopped = false,
 }: {
   parts: Part[]
   /** The draft's agreement, to name the fields a change touched. */
@@ -52,6 +54,8 @@ export function MessageParts({
   download?: ReactNode
   /** The newest message: its open questions are still coming, not closed. */
   last?: boolean
+  /** Cut short (PAR-47): what it was working on won't finish. */
+  stopped?: boolean
 }) {
   return parts.map((part, index) => {
     switch (part.type) {
@@ -77,7 +81,9 @@ export function MessageParts({
             </p>
           </div>
         ) : part.state === "output-error" ? null : (
-          <Working key={index}>Choosing the agreement…</Working>
+          <Working key={index} stopped={stopped}>
+            Choosing the agreement…
+          </Working>
         )
       case "tool-updateFields":
         if (part.state === "output-available")
@@ -92,10 +98,18 @@ export function MessageParts({
             />
           ) : null
         if (part.state === "output-error") return null
-        return <Working key={index}>Updating the document…</Working>
+        return (
+          <Working key={index} stopped={stopped}>
+            Updating the document…
+          </Working>
+        )
       case "tool-askQuestions":
         if (part.state === "input-streaming")
-          return <Working key={index}>Writing questions…</Working>
+          return (
+            <Working key={index} stopped={stopped}>
+              Writing questions…
+            </Working>
+          )
         if (part.state === "output-available")
           return <Answered key={index} set={part.input} answers={part.output} />
         if (part.state === "input-available" && onAnswer)
@@ -110,7 +124,11 @@ export function MessageParts({
             />
           )
         if (part.state === "input-available" && last)
-          return <Working key={index}>Writing questions…</Working>
+          return (
+            <Working key={index} stopped={stopped}>
+              Writing questions…
+            </Working>
+          )
         // Replied to in the chat instead, or a set the model got wrong.
         return part.input?.title ? (
           <Marker key={index} className="text-ink-3">
@@ -128,7 +146,11 @@ export function MessageParts({
             <Complete key={index} definition={definition} download={download} />
           ) : null
         if (part.state === "output-error") return null
-        return <Working key={index}>Checking the document…</Working>
+        return (
+          <Working key={index} stopped={stopped}>
+            Checking the document…
+          </Working>
+        )
       default:
         return null
     }
@@ -206,7 +228,14 @@ function Complete({
 }
 
 /** A tool at work: a status that screen readers announce, with the shimmer. */
-function Working({ children }: { children: ReactNode }) {
+function Working({
+  children,
+  stopped,
+}: {
+  children: ReactNode
+  stopped: boolean
+}) {
+  if (stopped) return null
   return (
     // <output> is a live status: screen readers hear the work in progress.
     <Marker render={<output />}>
@@ -215,6 +244,50 @@ function Working({ children }: { children: ReactNode }) {
       </MarkerIcon>
       <MarkerContent className="shimmer">{children}</MarkerContent>
     </Marker>
+  )
+}
+
+/** Whether a reply was cut short by Stop or a reload (PAR-47). */
+export function isStopped(parts: readonly Part[]) {
+  return parts.some((part) => part.type === "data-interrupted")
+}
+
+/**
+ * Under a reply cut short by Stop or a reload (PAR-47): a quiet line, and
+ * Try again on the latest turn. No Continue (owner, 2026-10-03).
+ */
+export function StoppedNote({
+  onRetry,
+  className,
+}: {
+  /** The latest turn's Try again (PAR-7's real retry); none on older ones. */
+  onRetry?: () => void
+  className?: string
+}) {
+  return (
+    <p
+      className={cn(
+        "-mt-1.5 flex min-h-6 items-center gap-1.5 text-small text-muted-foreground",
+        className
+      )}
+    >
+      <SquareIcon aria-hidden="true" className="size-2.5 fill-current" />
+      <span>Stopped</span>
+      {onRetry ? (
+        <>
+          <span aria-hidden="true">·</span>
+          <Button
+            type="button"
+            variant="link"
+            size="xs"
+            onClick={onRetry}
+            className="-mx-1 h-6 px-1 text-small font-medium text-blue-ink underline-offset-3"
+          >
+            Try again
+          </Button>
+        </>
+      ) : null}
+    </p>
   )
 }
 

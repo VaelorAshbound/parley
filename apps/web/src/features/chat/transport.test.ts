@@ -140,6 +140,18 @@ describe("trying an answer turn again (PAR-7)", () => {
     expect(message && answersToRetry(message)).toEqual(message)
   })
 
+  test("leaves out the Stopped mark of a reply stopped right after the answers (PAR-47)", () => {
+    const [message] = reply({ type: "step-start" }, answered, {
+      type: "data-interrupted",
+      data: {},
+    }).messages
+
+    expect(message && answersToRetry(message)?.parts).toEqual([
+      { type: "step-start" },
+      answered,
+    ])
+  })
+
   test("isn't one when no questions were answered", () => {
     const [plain] = reply({ type: "text", text: "Hi.", state: "done" }).messages
     const [onlyOpen] = reply({

@@ -29,7 +29,12 @@ import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
 import { limitProblem } from "./limit-problem"
-import { MessageParts, PlainText } from "./message-parts"
+import {
+  isStopped,
+  MessageParts,
+  PlainText,
+  StoppedNote,
+} from "./message-parts"
 import { forgetSettledQuestions } from "./ai-questionnaire"
 import { answersToRetry, questionsAnswered } from "./transport"
 import { useDocumentSync } from "./use-document-sync"
@@ -73,8 +78,12 @@ export function ChatPanel({
     // The next visit to this draft starts from the whole chat, and the
     // sidebar's order from this turn. Answers the server took no longer
     // need keeping for a reload.
-    onFinish: ({ messages: all, isError }) => {
-      if (!isError) forgetSettledQuestions(all.at(-1))
+    onFinish: ({ messages: finished, isError, isAbort }) => {
+      if (!isError) forgetSettledQuestions(finished.at(-1))
+      // Stopped here: marked as the server saves it, so it reads the same
+      // now as after a reload (PAR-47).
+      const all = isAbort ? markStopped(finished) : finished
+      if (all !== finished) setMessages(all)
       queryClient.setQueryData(
         orpc.chat.messages.queryKey({ input: { id: draftId } }),
         all
@@ -230,7 +239,23 @@ export function ChatPanel({
                               ? answer
                               : undefined
                           }
+                          stopped={isStopped(message.parts)}
                         />
+                        {isStopped(message.parts) &&
+                        !(busy && index === messages.length - 1) ? (
+                          <StoppedNote
+                            className={cn(!loaded.has(message.id) && "enter")}
+                            // Only the latest turn can be tried again, and
+                            // not twice: a failed retry says so itself.
+                            onRetry={
+                              index === messages.length - 1 &&
+                              !error &&
+                              unfinished !== "lost"
+                                ? retry
+                                : undefined
+                            }
+                          />
+                        ) : null}
                       </MessageContent>
                     </Message>
                   )}
@@ -277,4 +302,27 @@ export function ChatPanel({
       </div>
     </div>
   )
+}
+
+/**
+ * The chat with its last reply marked stopped (PAR-47), as the server saves
+ * one cut short: only a reply with something in it, since a reply stopped
+ * before its first word isn't kept. The same chat when there's none.
+ */
+function markStopped(messages: ChatMessage[]): ChatMessage[] {
+  const last = messages.at(-1)
+  if (last?.role !== "assistant" || isStopped(last.parts)) return messages
+  const said = last.parts.some(
+    (part) =>
+      part.type !== "step-start" &&
+      !(
+        (part.type === "text" || part.type === "reasoning") &&
+        part.text.trim() === ""
+      )
+  )
+  if (!said) return messages
+  return [
+    ...messages.slice(0, -1),
+    { ...last, parts: [...last.parts, { type: "data-interrupted", data: {} }] },
+  ]
 }

@@ -121,3 +121,51 @@ test("a reload while Parley answers shows the reply so far once it is saved, wit
     page.getByText("Parley couldn’t answer.", { exact: false })
   ).toBeHidden()
 })
+
+test("a stopped reply says Stopped, after a reload too, and Try again answers it whole (PAR-47)", async ({
+  page,
+}) => {
+  // Two slow replies, each a few seconds long.
+  test.setTimeout(90_000)
+  await open(page, "/")
+  await page.getByRole("button", { name: /Mutual NDA/ }).click()
+  await draftOpened(page)
+  const box = page.getByRole("textbox", { name: "Message" })
+  await box.fill("Give me the slow reply.")
+  await page.keyboard.press("Enter")
+  const first = page.getByText("Here is the slow reply", { exact: false })
+  await expect(first).toBeVisible()
+
+  // Enter while Parley answers keeps the text and says why (PAR-46).
+  await box.fill("And the term?")
+  await page.keyboard.press("Enter")
+  await expect(
+    page.getByText("Parley is still answering. Send when it’s done.")
+  ).toBeVisible()
+  await expect(box).toHaveValue("And the term?")
+
+  await page.getByRole("button", { name: "Stop" }).click()
+  const stopped = page.getByText("Stopped", { exact: true })
+  await expect(stopped).toBeVisible()
+  await expect(
+    page.getByText("Parley is still answering.", { exact: false })
+  ).toBeHidden()
+
+  // The server saved it marked: a later visit says so too.
+  await page.reload()
+  await expect(first).toBeVisible()
+  await expect(stopped).toBeVisible()
+
+  await page.getByRole("button", { name: "Try again" }).click()
+
+  await expect(page.getByText("It goes on after the reload.")).toBeVisible({
+    timeout: 20_000,
+  })
+  await expect(stopped).toBeHidden()
+  // The turn ends a moment after its last words; a reload before that
+  // would stop it again.
+  await expect(page.getByRole("button", { name: "Stop" })).toBeHidden()
+  await page.reload()
+  await expect(page.getByText("It goes on after the reload.")).toBeVisible()
+  await expect(stopped).toBeHidden()
+})
