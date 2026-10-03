@@ -1,11 +1,11 @@
 ---
 id: PAR-21
 title: Billing polish from the Checkpoint 6 review
-phase: backlog
+phase: done
 priority: low
 origin: PAR-1
 created: 2026-09-28T17:21:40Z
-updated: 2026-09-28T17:21:40Z
+updated: 2026-10-03T12:52:29Z
 ---
 
 - Log a warning when a customer.state_changed payload fails parsing (today: 200 and no trace); consider external_id nullish.
