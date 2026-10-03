@@ -1,6 +1,7 @@
 import { describe, expect } from "vite-plus/test"
 
 import {
+  forgetPolarCustomer,
   polarCustomerOf,
   setPlan,
   userOfPolarCustomer,
@@ -83,6 +84,33 @@ describe("setPlan", () => {
 
     expect(await userOfPolarCustomer(db, "polar-customer-1")).toBe(owner.id)
   })
+
+  test("leaves the customer alone when the state names none", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const customerId = `polar-${crypto.randomUUID()}`
+    await setPlan(db, { userId: owner.id, plan: "pro", at: monday, customerId })
+
+    await setPlan(db, { userId: owner.id, plan: "free", at: tuesday })
+
+    expect(await polarCustomerOf(db, owner.id)).toBe(customerId)
+  })
+
+  test("forgets the customer on null", async ({ db }) => {
+    const owner = await makeUser(db)
+    const customerId = `polar-${crypto.randomUUID()}`
+    await setPlan(db, { userId: owner.id, plan: "pro", at: monday, customerId })
+
+    await setPlan(db, {
+      userId: owner.id,
+      plan: "free",
+      at: tuesday,
+      customerId: null,
+    })
+
+    expect(await polarCustomerOf(db, owner.id)).toBeUndefined()
+  })
 })
 
 describe("userOfPolarCustomer", () => {
@@ -98,7 +126,7 @@ describe("polarCustomerOf", () => {
     expect(await polarCustomerOf(db, owner.id)).toBeUndefined()
   })
 
-  test("is the customer id from Polar's last state", async ({ db }) => {
+  test("is the customer id Parley kept", async ({ db }) => {
     const owner = await makeUser(db)
     await setPlan(db, {
       userId: owner.id,
@@ -108,5 +136,23 @@ describe("polarCustomerOf", () => {
     })
 
     expect(await polarCustomerOf(db, owner.id)).toBe("polar-customer-2")
+  })
+})
+
+describe("forgetPolarCustomer", () => {
+  test("drops the customer, so the user has no billing", async ({ db }) => {
+    const owner = await makeUser(db)
+    const customerId = `polar-${crypto.randomUUID()}`
+    await setPlan(db, {
+      userId: owner.id,
+      plan: "free",
+      at: monday,
+      customerId,
+    })
+
+    await forgetPolarCustomer(db, owner.id)
+
+    expect(await polarCustomerOf(db, owner.id)).toBeUndefined()
+    expect(await userOfPolarCustomer(db, customerId)).toBeUndefined()
   })
 })
