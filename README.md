@@ -109,6 +109,7 @@ With no keys, the chat uses the scripted AI of the e2e tests, which fills a Mutu
 | [0010](docs/adr/0010-pdf-through-browser-run-docx-in-the-worker.md) | PDF through Browser Run, Word files built in the Worker                  |
 | [0011](docs/adr/0011-guests-are-anonymous-better-auth-users.md)     | Guests are anonymous Better Auth users, linked on sign-in                |
 | [0012](docs/adr/0012-cost-limits-in-four-layers.md)                 | Cost limits in four layers, with a hard cap on the OpenRouter key last   |
+| [0013](docs/adr/0013-two-factor-through-better-auth.md)             | Two-factor through Better Auth; a reused code is an accepted risk        |
 
 ## Stack
 
