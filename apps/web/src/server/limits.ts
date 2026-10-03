@@ -59,7 +59,7 @@ export function limitersFrom(
  * home or server usually gets a whole /64 (2^64 addresses), so per address
  * it could use a new one for every request and never be limited (PAR-13).
  */
-export function clientAddress(headers: Headers | undefined) {
+export function clientAddress(headers: Headers | undefined): string {
   const address = headers?.get("cf-connecting-ip")
   if (!address) return "no-address"
   return address.includes(":") ? ipv6Network(address) : address
@@ -72,9 +72,9 @@ const MAPPED_IPV4 = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i
  * The /64 an IPv6 address is in ("2001:db8:1:2::/64"), the IPv4 address in
  * an IPv4-mapped one, or the address as it came when it can't be read.
  */
-function ipv6Network(address: string) {
-  const mapped = MAPPED_IPV4.exec(address)
-  if (mapped) return mapped[1]
+function ipv6Network(address: string): string {
+  const mapped = MAPPED_IPV4.exec(address)?.[1]
+  if (mapped) return mapped
   const halves = address.split("::")
   if (halves.length > 2) return address
   const parts = (half: string | undefined) =>
