@@ -49,6 +49,18 @@ export async function setPlan(
   return current && { ...current, applied: false }
 }
 
+/**
+ * The user's Polar customer id, from Polar's last state; undefined for
+ * someone Polar never reported (never started a checkout).
+ */
+export async function polarCustomerOf(db: Db, userId: string) {
+  const [row] = await db
+    .select({ customerId: user.polarCustomerId })
+    .from(user)
+    .where(eq(user.id, userId))
+  return row?.customerId ?? undefined
+}
+
 /** The user a Polar customer belongs to, from an earlier state. */
 export async function userOfPolarCustomer(db: Db, customerId: string) {
   const [row] = await db

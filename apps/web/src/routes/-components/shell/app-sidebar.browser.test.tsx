@@ -35,6 +35,7 @@ const account: Viewer = {
   emailVerified: true,
   isAnonymous: false,
   plan: "free",
+  hasBilling: false,
 }
 
 // The left sidebar (T21). On a phone it is a drawer: a link in it that opens
