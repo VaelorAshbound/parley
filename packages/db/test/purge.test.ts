@@ -1,4 +1,5 @@
 import { eq, inArray, sql } from "drizzle-orm"
+import { getTableConfig } from "drizzle-orm/pg-core"
 import { describe, expect, inject } from "vite-plus/test"
 
 import { rateLimit, session, user, verification } from "../src/auth-schema.ts"
@@ -493,6 +494,23 @@ describe("deleteOldRateLimits", () => {
     expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(2)
     expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(1)
     expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(0)
+  })
+})
+
+// auth-schema.ts is generated (`pnpm db:auth-schema`), and Better Auth can't
+// declare these two indexes, so they are written there by hand. A
+// regeneration drops them from the schema, while the test database (built
+// from the migrations) still has them; only this test sees it then (PAR-14).
+describe("the schema keeps the purge's hand-written indexes", () => {
+  const indexes = (table: Parameters<typeof getTableConfig>[0]) =>
+    getTableConfig(table).indexes.map((index) => index.config.name)
+
+  test("session.expires_at", () => {
+    expect(indexes(session)).toContain("session_expiresAt_idx")
+  })
+
+  test("rate_limit.last_request", () => {
+    expect(indexes(rateLimit)).toContain("rateLimit_lastRequest_idx")
   })
 })
 
