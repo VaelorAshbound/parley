@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm"
+import { eq, inArray, sql } from "drizzle-orm"
 import { describe, expect, inject } from "vite-plus/test"
 
 import { rateLimit, session, user, verification } from "../src/auth-schema.ts"
@@ -493,5 +493,36 @@ describe("deleteOldRateLimits", () => {
     expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(2)
     expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(1)
     expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(0)
+  })
+})
+
+// Each purge scans for rows past a time. Without an index on that column the
+// scan reads the whole table every night, and Better Auth's own prune of
+// rate_limit (on each new window) does too (PAR-14). Sequential scans are
+// turned off so the plan shows whether an index can serve the query at all;
+// on a few test rows the planner would pick a scan either way.
+describe("the purge queries use an index", () => {
+  async function plan(db: Db, query: ReturnType<typeof sql>) {
+    await db.execute(sql`SET LOCAL enable_seqscan = off`)
+    const result = await db.execute<{ "QUERY PLAN": string }>(
+      sql`EXPLAIN ${query}`
+    )
+    return result.rows.map((row) => row["QUERY PLAN"]).join("\n")
+  }
+
+  test("expired sessions, by session.expires_at", async ({ db }) => {
+    const explained = await plan(
+      db,
+      sql`SELECT id FROM session WHERE expires_at < ${now} LIMIT 500 FOR UPDATE SKIP LOCKED`
+    )
+    expect(explained).toContain("session_expiresAt_idx")
+  })
+
+  test("old rate_limit rows, by rate_limit.last_request", async ({ db }) => {
+    const explained = await plan(
+      db,
+      sql`SELECT id FROM rate_limit WHERE last_request < ${daysAgo(1).getTime()} LIMIT 500 FOR UPDATE SKIP LOCKED`
+    )
+    expect(explained).toContain("rateLimit_lastRequest_idx")
   })
 })

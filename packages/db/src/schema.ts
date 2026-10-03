@@ -19,7 +19,8 @@ import {
 import { user } from "./auth-schema.ts"
 
 // Parley's own tables (spec §2 Data model). The Better Auth tables are
-// generated into auth-schema.ts by `pnpm db:auth-schema`; don't edit that file.
+// generated into auth-schema.ts by `pnpm db:auth-schema`; don't edit that file,
+// except for the two purge indexes Better Auth can't declare (PAR-14).
 
 /** A JSON object whose shape the database doesn't know. */
 export type JsonObject = { [key: string]: unknown }
