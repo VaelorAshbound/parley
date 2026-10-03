@@ -1,6 +1,7 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process"
 import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
+import { stripVTControlCharacters } from "node:util"
 
 // Browser Run (PDF export) has no local simulator, so dev uses the real one
 // (ADR-0010), which needs a Cloudflare login: an API token, or
@@ -28,12 +29,25 @@ export type Login =
 
 /** What `wrangler whoami --json` says about the login. */
 export function readWhoami(
-  result: Pick<SpawnSyncReturns<string>, "status" | "stdout" | "error">
+  result: Pick<SpawnSyncReturns<string>, "status" | "stdout" | "error"> & {
+    stderr?: string
+  }
 ): Login {
   if (result.error) return { state: "unknown", reason: result.error.message }
   if (result.status === 0) return { state: "signed-in" }
   if (loggedOut(result.stdout)) return { state: "signed-out" }
-  return { state: "unknown", reason: `exit ${result.status}` }
+  // An expired login wrangler could not refresh: no JSON, only this on
+  // stderr ("Not logged in. Your auth token has expired ...").
+  const said = stripVTControlCharacters(result.stderr ?? "")
+  if (said.includes("Not logged in")) return { state: "signed-out" }
+  const firstLine = said
+    .split("\n")
+    .map((line) => line.trim())
+    .find(Boolean)
+  return {
+    state: "unknown",
+    reason: `exit ${result.status}${firstLine ? `: ${firstLine}` : ""}`,
+  }
 }
 
 function loggedOut(stdout: string) {
@@ -61,7 +75,7 @@ export function whoami({
     // types make each of the app's variables required in NodeJS.ProcessEnv.
     env: { ...env, WRANGLER_SEND_METRICS: "false" } as Env as NodeJS.ProcessEnv,
     encoding: "utf8",
-    stdio: ["ignore", "pipe", "ignore"],
+    stdio: ["ignore", "pipe", "pipe"],
     timeout,
   })
 }

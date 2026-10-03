@@ -1,4 +1,4 @@
-import { mkdtempSync } from "node:fs"
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, test } from "vite-plus/test"
@@ -36,8 +36,32 @@ describe("readWhoami", () => {
     })
   })
 
+  test("an expired login wrangler can't refresh is no login", () => {
+    const login = readWhoami({
+      status: 1,
+      stdout: "\n",
+      stderr:
+        "✘ [ERROR] Not logged in. Your auth token has expired and could not be refreshed, and the environment is non-interactive.\n",
+    })
+
+    expect(login).toEqual({ state: "signed-out" })
+  })
+
+  test("a failure without an answer says what wrangler said", () => {
+    const login = readWhoami({
+      status: 1,
+      stdout: "",
+      stderr: "\n✘ [ERROR] fetch failed\n\nmore detail\n",
+    })
+
+    expect(login).toEqual({
+      state: "unknown",
+      reason: "exit 1: ✘ [ERROR] fetch failed",
+    })
+  })
+
   test("a failure without an answer (no network) is not known either way", () => {
-    const login = readWhoami({ status: 1, stdout: "" })
+    const login = readWhoami({ status: 1, stdout: "", stderr: "" })
 
     expect(login).toEqual({ state: "unknown", reason: "exit 1" })
   })
@@ -110,6 +134,31 @@ describe("whoami, the real wrangler", () => {
     // The long timeout is for a busy CI machine, where starting wrangler
     // alone can take more than the dev server's 10 s.
     const home = mkdtempSync(join(tmpdir(), "parley-home-"))
+
+    const result = whoami({
+      env: { PATH: process.env.PATH, HOME: home },
+      cwd: home,
+      timeout: 50_000,
+    })
+
+    expect(readWhoami(result)).toEqual({ state: "signed-out" })
+  })
+
+  test("an expired login is signed out", { timeout: 60_000 }, () => {
+    // A `wrangler login` whose token expired long ago, and a refresh token
+    // Cloudflare turns down. Wrangler then says "Not logged in" on stderr.
+    const home = mkdtempSync(join(tmpdir(), "parley-home-"))
+    const config = join(home, ".config/.wrangler/config")
+    mkdirSync(config, { recursive: true })
+    writeFileSync(
+      join(config, "default.toml"),
+      [
+        'oauth_token = "expired"',
+        'expiration_time = "2020-01-01T00:00:00.000Z"',
+        'refresh_token = "not-a-real-refresh-token"',
+        'scopes = ["account:read"]',
+      ].join("\n")
+    )
 
     const result = whoami({
       env: { PATH: process.env.PATH, HOME: home },
