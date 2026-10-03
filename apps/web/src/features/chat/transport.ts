@@ -5,6 +5,7 @@ import {
 } from "ai"
 import { Temporal } from "temporal-polyfill"
 
+import { answeredStep } from "@/lib/answered-step"
 import type { Orpc } from "@/lib/orpc"
 import type { ChatMessage } from "@/server/ai/chat"
 
@@ -71,29 +72,14 @@ export function answeredCalls(message: ChatMessage) {
 /**
  * The reply as it was when its last questions were answered, for Try again
  * after that answer turn failed (PAR-7): what the failed turn wrote after
- * them goes, and the answers are sent again. Null when the reply has no
- * answered questions, or has open ones: then the turn to retry is the
- * user's message.
+ * them goes, new questions too, and the answers are sent again. Null when
+ * the reply has no answered questions: then the turn to retry is the user's
+ * message.
  */
 export function answersToRetry(message: ChatMessage): ChatMessage | null {
-  const { parts } = message
   if (message.role !== "assistant") return null
-  if (
-    parts.some(
-      (part) =>
-        part.type === "tool-askQuestions" && part.state === "input-available"
-    )
-  )
-    return null
-  const answeredAt = parts.findLastIndex(
-    (part) =>
-      part.type === "tool-askQuestions" && part.state === "output-available"
-  )
-  if (answeredAt === -1) return null
-  const next = parts.findIndex(
-    (part, index) => index > answeredAt && part.type === "step-start"
-  )
-  return next === -1 ? message : { ...message, parts: parts.slice(0, next) }
+  const step = answeredStep(message.parts)
+  return step && { ...message, parts: message.parts.slice(0, step.end) }
 }
 
 function lastStep(message: ChatMessage) {

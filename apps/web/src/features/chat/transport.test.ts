@@ -140,9 +140,22 @@ describe("trying an answer turn again (PAR-7)", () => {
     expect(message && answersToRetry(message)).toEqual(message)
   })
 
-  test("isn't one when no questions were answered, or some are still open", () => {
+  test("isn't one when no questions were answered", () => {
     const [plain] = reply({ type: "text", text: "Hi.", state: "done" }).messages
-    const [open] = reply(
+    const [onlyOpen] = reply({
+      type: "tool-askQuestions",
+      toolCallId: "q2",
+      state: "input-available",
+      input: set,
+    }).messages
+
+    expect(plain && answersToRetry(plain)).toBeNull()
+    expect(onlyOpen && answersToRetry(onlyOpen)).toBeNull()
+  })
+
+  test("keeps the answers when the failed turn had asked new questions", () => {
+    const [message] = reply(
+      { type: "step-start" },
       answered,
       { type: "step-start" },
       {
@@ -153,7 +166,10 @@ describe("trying an answer turn again (PAR-7)", () => {
       }
     ).messages
 
-    expect(plain && answersToRetry(plain)).toBeNull()
-    expect(open && answersToRetry(open)).toBeNull()
+    expect(message && answersToRetry(message)).toEqual({
+      id: "m1",
+      role: "assistant",
+      parts: [{ type: "step-start" }, answered],
+    })
   })
 })

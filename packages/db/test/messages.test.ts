@@ -3,10 +3,13 @@ import { describe, expect } from "vite-plus/test"
 import { createDraft, getDraft } from "../src/queries/drafts.ts"
 import {
   deleteMessages,
+  endTurn,
   listMessages,
   listSavedMessages,
   MessageIdTaken,
   saveMessages,
+  startTurn,
+  turnOf,
 } from "../src/queries/messages.ts"
 import { makeUser, test } from "./db.ts"
 
@@ -225,5 +228,41 @@ describe("chat messages", () => {
     await deleteMessages(db, key, [reply.id])
 
     expect(await listMessages(db, key)).toEqual([hello])
+  })
+
+  test("keeps the draft's latest turn, out of the chat (PAR-7)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const stranger = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await saveMessages(db, key, [hello])
+    expect(await turnOf(db, key)).toBeNull()
+
+    expect(await startTurn(db, key, { id: "t1", startedAt: 1 })).toBe(true)
+    expect(await turnOf(db, key)).toEqual({
+      id: "t1",
+      startedAt: 1,
+      outcome: null,
+    })
+    expect(await listMessages(db, key)).toEqual([hello])
+
+    // A later turn takes its place: the first can't end any more.
+    await startTurn(db, key, { id: "t2", startedAt: 2 })
+    expect(await endTurn(db, key, "t1", "done")).toBe(false)
+    expect(await endTurn(db, key, "t2", "failed")).toBe(true)
+    expect(await turnOf(db, key)).toEqual({
+      id: "t2",
+      startedAt: 2,
+      outcome: "failed",
+    })
+
+    // Not the stranger's to read, start or end.
+    const theirs = { id: draft.id, userId: stranger.id }
+    expect(await turnOf(db, theirs)).toBeNull()
+    expect(await startTurn(db, theirs, { id: "t3", startedAt: 3 })).toBe(false)
+    expect(await endTurn(db, theirs, "t2", "done")).toBe(false)
+    expect((await turnOf(db, key))?.outcome).toBe("failed")
   })
 })
