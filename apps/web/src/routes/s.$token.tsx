@@ -32,6 +32,19 @@ const answerTooManyViews = createIsomorphicFn()
   })
   .client(() => {})
 
+type ShareLoaderData = { limited: true } | { limited: false; title: string }
+
+/** The tab title: what the page shows, never the token. */
+function titleFor(
+  match: Parameters<typeof showsNotFound>[0],
+  loaderData: ShareLoaderData | undefined
+) {
+  if (showsNotFound(match)) return "Link not found · Parley"
+  if (!loaderData) return "Parley"
+  if (loaderData.limited) return "Give it a minute · Parley"
+  return `${loaderData.title} · Parley`
+}
+
 export const Route = createFileRoute("/s/$token")({
   loader: async ({ context, params }) => {
     try {
@@ -57,15 +70,7 @@ export const Route = createFileRoute("/s/$token")({
   headers: () => sharePageHeaders,
   head: ({ loaderData, match }) => ({
     meta: [
-      {
-        title: showsNotFound(match)
-          ? "Link not found · Parley"
-          : loaderData?.limited
-            ? "Give it a minute · Parley"
-            : loaderData
-              ? `${loaderData.title} · Parley`
-              : "Parley",
-      },
+      { title: titleFor(match, loaderData) },
       { name: "robots", content: "noindex, nofollow" },
       // Links out of the page never carry the token (Referer).
       { name: "referrer", content: "no-referrer" },
