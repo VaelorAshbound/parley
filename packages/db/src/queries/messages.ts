@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, eq, exists, inArray, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
 import { draft, message } from "../schema.ts"
@@ -104,6 +104,31 @@ export async function saveMessages(
   // message would be lost with no word (PAR-52).
   if (saved.length !== messages.length) throw new MessageIdTaken()
   return true
+}
+
+/**
+ * Deletes these messages from a draft the user owns; ids that aren't this
+ * draft's are left alone. A retried turn takes back what the failed one
+ * left after the user's message (PAR-7).
+ */
+export async function deleteMessages(
+  db: Db,
+  key: DraftKey,
+  ids: readonly string[]
+) {
+  if (ids.length === 0) return
+  await db.delete(message).where(
+    and(
+      inArray(message.id, [...ids]),
+      eq(message.draftId, key.id),
+      exists(
+        db
+          .select({ id: draft.id })
+          .from(draft)
+          .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))
+      )
+    )
+  )
 }
 
 /**

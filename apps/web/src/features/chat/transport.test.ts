@@ -2,7 +2,7 @@ import { describe, expect, test } from "vite-plus/test"
 
 import type { ChatMessage } from "@/server/ai/chat"
 
-import { answeredCalls, questionsAnswered } from "./transport"
+import { answeredCalls, answersToRetry, questionsAnswered } from "./transport"
 
 const set = {
   title: "Key terms",
@@ -102,5 +102,58 @@ describe("sending automatically", () => {
       { toolCallId: "q1", answers: { term: ["1y"] } },
       { toolCallId: "q2", answers: { term: ["2y"] } },
     ])
+  })
+})
+
+describe("trying an answer turn again (PAR-7)", () => {
+  const answered = {
+    type: "tool-askQuestions" as const,
+    toolCallId: "q1",
+    state: "output-available" as const,
+    input: set,
+    output: { answers: { term: ["1y"] } },
+  }
+
+  test("keeps the answers and drops what the failed turn wrote after them", () => {
+    const [message] = reply(
+      { type: "step-start" },
+      { type: "text", text: "Some terms.", state: "done" },
+      answered,
+      { type: "step-start" },
+      { type: "text", text: "Half a rep", state: "streaming" }
+    ).messages
+
+    expect(message && answersToRetry(message)).toEqual({
+      id: "m1",
+      role: "assistant",
+      parts: [
+        { type: "step-start" },
+        { type: "text", text: "Some terms.", state: "done" },
+        answered,
+      ],
+    })
+  })
+
+  test("is the whole reply when the turn failed before a word", () => {
+    const [message] = reply({ type: "step-start" }, answered).messages
+
+    expect(message && answersToRetry(message)).toEqual(message)
+  })
+
+  test("isn't one when no questions were answered, or some are still open", () => {
+    const [plain] = reply({ type: "text", text: "Hi.", state: "done" }).messages
+    const [open] = reply(
+      answered,
+      { type: "step-start" },
+      {
+        type: "tool-askQuestions",
+        toolCallId: "q2",
+        state: "input-available",
+        input: set,
+      }
+    ).messages
+
+    expect(plain && answersToRetry(plain)).toBeNull()
+    expect(open && answersToRetry(open)).toBeNull()
   })
 })

@@ -31,7 +31,7 @@ import { Composer } from "./composer"
 import { limitProblem } from "./limit-problem"
 import { MessageParts, PlainText } from "./message-parts"
 import { forgetSettledQuestions } from "./ai-questionnaire"
-import { questionsAnswered } from "./transport"
+import { answersToRetry, questionsAnswered } from "./transport"
 import { useDocumentSync } from "./use-document-sync"
 import { useUnfinishedTurn } from "./use-unfinished-turn"
 import { useUndo } from "./use-undo"
@@ -113,9 +113,19 @@ export function ChatPanel({
   })
   const waiting = unfinished === "waiting"
   const busy = status === "submitted" || status === "streaming" || waiting
+  // Try again: a failed answer turn sends the answers again; any other turn
+  // sends the user's last message again, which the server takes as a retry
+  // of it (PAR-7).
   const retry = () => {
     setUnfinished(null)
-    void regenerate()
+    const last = messages.at(-1)
+    const answered = last ? answersToRetry(last) : null
+    if (!answered) {
+      void regenerate()
+      return
+    }
+    setMessages([...messages.slice(0, -1), answered])
+    void sendMessage(undefined, { body: { retry: true } })
   }
   // A limit reached (spec §2 Limits) says so, with the way past it.
   const limit = error ? limitProblem(error, `/d/${draftId}`) : null
@@ -234,7 +244,7 @@ export function ChatPanel({
               {limit ? (
                 <ProblemNote
                   problem={limit}
-                  onRetry={limit.retry ? () => void regenerate() : undefined}
+                  onRetry={limit.retry ? retry : undefined}
                 />
               ) : error || unfinished === "lost" ? (
                 <Alert variant="destructive">

@@ -2,6 +2,7 @@ import { streamToEventIterator } from "@orpc/server"
 import {
   addAiUsage,
   claimMessage,
+  deleteMessages,
   getDraft,
   listSavedMessages,
   MessageIdTaken,
@@ -42,7 +43,7 @@ import { z } from "../zod"
 import { recent } from "./history"
 import { turnMetrics, type TurnStep } from "./metrics"
 import { instructions } from "./prompt"
-import { answersFor, answersShape } from "./questions"
+import { answersFor, answersShape, type Answers } from "./questions"
 import { chatTools, runningTools, type ChatTools } from "./tools"
 
 // One chat turn (spec §2 AI design): the user's message (or their answers to
@@ -158,7 +159,8 @@ const DAILY_LIMIT = {
  * The turn counts toward the day's messages once `change` has accepted it;
  * past the limit, `quota.refuse()` is thrown and nothing is saved or counted.
  * A message id another draft already holds throws `taken()`, and nothing is
- * saved or counted either (PAR-52).
+ * saved or counted either (PAR-52). `drop` names messages a retry takes
+ * back: what a failed turn left (PAR-7).
  */
 function lockedChat(
   context: BaseContext,
@@ -167,15 +169,17 @@ function lockedChat(
   change: (stored: ChatMessage[]) => {
     save: ChatMessage[]
     chat: ChatMessage[]
+    drop?: string[]
   },
   taken: () => Error = () => new MessageIdTaken()
 ) {
   return context.db.transaction(async (tx) => {
     await getDraft(tx, key, { lock: true })
-    const { save, chat } = change(await history(tx, key))
+    const { save, chat, drop = [] } = change(await history(tx, key))
     const { day, limit } = quota
     if (!(await claimMessage(tx, { userId: key.userId, day, limit })))
       throw quota.refuse()
+    await deleteMessages(tx, key, drop)
     try {
       await saveMessages(tx, key, save)
     } catch (error) {
@@ -183,6 +187,74 @@ function lockedChat(
     }
     return chat
   })
+}
+
+type AnsweredQuestions = Extract<
+  Part,
+  { type: "tool-askQuestions"; state: "output-available" }
+>
+
+function isAnswered(part: Part): part is AnsweredQuestions {
+  return part.type === "tool-askQuestions" && part.state === "output-available"
+}
+
+/** Answers in one order, to compare two sets of them. */
+function canonical(answers: Answers) {
+  return JSON.stringify(
+    Object.entries(answers).toSorted(([a], [b]) => (a < b ? -1 : 1))
+  )
+}
+
+/**
+ * The reply cut back to the end of the step whose questionnaires these
+ * answers closed: Try again after an answer turn failed (PAR-7). Null when
+ * they aren't all of that step's answers, as saved, or when the reply after
+ * them was finished (it ends with a whole text): nothing to retry then.
+ */
+function retriedAnswers(
+  message: ChatMessage,
+  calls: readonly { toolCallId: string; answers: Answers }[]
+): ChatMessage | null {
+  const { parts } = message
+  const last = parts.at(-1)
+  if (
+    message.role !== "assistant" ||
+    (last?.type === "text" && last.state === "done")
+  )
+    return null
+  const answeredAt = parts.findLastIndex(isAnswered)
+  if (answeredAt === -1) return null
+  const start =
+    parts.findLastIndex(
+      (part, index) => index < answeredAt && part.type === "step-start"
+    ) + 1
+  const next = parts.findIndex(
+    (part, index) => index > answeredAt && part.type === "step-start"
+  )
+  const end = next === -1 ? parts.length : next
+  const answered = parts.slice(start, end).filter(isAnswered)
+  const same =
+    answered.length === calls.length &&
+    answered.every((part) => {
+      const sent = calls.find((each) => each.toolCallId === part.toolCallId)
+      // Checked as the first time, so they compare as they were saved.
+      const checked = answersFor(part.input.questions).safeParse({
+        answers: sent?.answers,
+      })
+      return (
+        checked.success &&
+        canonical(answersShape.parse(checked.data).answers) ===
+          canonical(part.output.answers)
+      )
+    })
+  return same ? { ...message, parts: parts.slice(0, end) } : null
+}
+
+/** What a user's message says: its text parts, joined. */
+function textOf(message: { parts: readonly { type: string }[] }) {
+  return message.parts
+    .map((part) => ("text" in part && part.type === "text" ? part.text : ""))
+    .join("\n")
 }
 
 function isOpen(part: Part): part is OpenQuestions {
@@ -425,14 +497,27 @@ export const chat = {
         key,
         quota,
         (stored) => {
-          // Ids come from the browser (useChat makes them): one of Parley's
-          // own would let a message stand in for its reply.
-          if (
-            stored.some(
-              (each) => each.id === input.message.id && each.role !== "user"
+          const index = stored.findIndex((each) => each.id === input.message.id)
+          if (index !== -1) {
+            // Try again (useChat's regenerate) sends the user's last message
+            // again, same id: the turn after it failed. What it left goes,
+            // and the model answers that message again (PAR-7). Any other
+            // id the chat has is refused: ids come from the browser, and
+            // one of Parley's own would let a message stand in for its reply.
+            const sent = stored[index]
+            const later = stored.slice(index + 1)
+            if (
+              sent?.role !== "user" ||
+              later.some((each) => each.role === "user") ||
+              textOf(sent) !== textOf(input.message)
             )
-          )
-            throw errors.MESSAGE_ID_TAKEN()
+              throw errors.MESSAGE_ID_TAKEN()
+            return {
+              save: [],
+              chat: stored.slice(0, index + 1),
+              drop: later.map((each) => each.id),
+            }
+          }
           const closed = closeQuestions(stored.at(-1))
           const earlier = closed ? [...stored.slice(0, -1), closed] : stored
           return {
@@ -472,6 +557,11 @@ export const chat = {
           )
           .min(1)
           .max(5),
+        /**
+         * Try again after an answer turn failed: the same answers, sent
+         * again once the questions have closed with them (PAR-7).
+         */
+        retry: z.boolean().optional(),
       })
     )
     .errors({
@@ -486,6 +576,11 @@ export const chat = {
       const messages = await lockedChat(context, key, quota, (stored) => {
         const last = stored.at(-1)
         const open = last?.role === "assistant" ? last.parts.filter(isOpen) : []
+        if (last && open.length === 0 && input.retry) {
+          const retried = retriedAnswers(last, input.calls)
+          if (!retried) throw errors.NOT_OPEN()
+          return { save: [retried], chat: [...stored.slice(0, -1), retried] }
+        }
         const byCall = new Map(
           input.calls.map((each) => [each.toolCallId, each.answers])
         )
