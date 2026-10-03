@@ -250,8 +250,10 @@ export function createAuth({
         "/polar/webhooks": false,
       },
     },
-    // Polar's routes Parley doesn't use (T26).
-    disabledPaths: closedPaths,
+    // Polar's routes Parley doesn't use (T26), and Better Auth's session
+    // list, which answers every device's token: account.sessions lists
+    // them without (PAR-53).
+    disabledPaths: [...closedPaths, "/list-sessions"],
     advanced: {
       useSecureCookies: true,
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
