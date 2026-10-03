@@ -17,6 +17,7 @@ import {
   chatClient,
   database,
   origin,
+  roomInWindow,
   scriptedModel,
   serverClient,
   signInGuest,
@@ -43,17 +44,6 @@ const {
   EXPORT_RATE_LIMITER: exports,
   RPC_RATE_LIMITER: rpc,
 } = RATE_LIMITS
-
-/**
- * Waits for a new rate-limit window when too little of this one is left for
- * the test's burst. Miniflare's limiter counts in windows on the wall clock
- * (`period` seconds); a burst across two windows would never reach the edge.
- */
-async function roomInWindow(period: number, needMs: number) {
-  const left = period * 1000 - (Date.now() % (period * 1000))
-  if (left < needMs)
-    await new Promise((resolve) => setTimeout(resolve, left + 50))
-}
 
 function say(text: string) {
   return {

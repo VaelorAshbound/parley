@@ -6,7 +6,7 @@ import {
   type DocumentId,
 } from "@workspace/documents"
 import { Badge } from "@workspace/ui/components/badge"
-import { buttonVariants } from "@workspace/ui/components/button"
+import { Button, buttonVariants } from "@workspace/ui/components/button"
 import {
   Empty,
   EmptyContent,
@@ -121,6 +121,33 @@ export function SharePage({ shared }: { shared: Shared }) {
             <DraftYourOwn />
           </section>
         </div>
+      </main>
+    </Frame>
+  )
+}
+
+/**
+ * Too many share pages from this visitor's network in a minute (PAR-13).
+ * Says nothing about the link: it may well work.
+ */
+export function ShareLimited() {
+  return (
+    <Frame>
+      <main className="flex flex-1 items-center">
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>
+              <h1 className="text-lg">Give it a minute</h1>
+            </EmptyTitle>
+            <EmptyDescription>
+              Shared drafts were opened many times from your network just now.
+              Wait a minute, then try again.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button onClick={() => window.location.reload()}>Try again</Button>
+          </EmptyContent>
+        </Empty>
       </main>
     </Frame>
   )

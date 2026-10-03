@@ -315,7 +315,18 @@ export function scriptedModel(steps: Step[]) {
   })
 }
 
-function randomIp() {
+/**
+ * Waits for a new rate-limit window when too little of this one is left for
+ * the test's burst. Miniflare's limiter counts in windows on the wall clock
+ * (`period` seconds); a burst across two windows would never reach the edge.
+ */
+export async function roomInWindow(period: number, needMs: number) {
+  const left = period * 1000 - (Date.now() % (period * 1000))
+  if (left < needMs)
+    await new Promise((resolve) => setTimeout(resolve, left + 50))
+}
+
+export function randomIp() {
   const [a = 0, b = 0, c = 0] = crypto.getRandomValues(new Uint8Array(3))
   return `10.${a}.${b}.${c}`
 }

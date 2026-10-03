@@ -115,7 +115,12 @@ export async function openChat(databaseUrl: string, model: LanguageModel) {
     waitUntil,
     // No Rate Limiting binding outside workerd, and the evals don't test
     // limits: every call may go.
-    limiters: { rpc: unlimited, ai: unlimited, export: unlimited },
+    limiters: {
+      rpc: unlimited,
+      ai: unlimited,
+      export: unlimited,
+      share: unlimited,
+    },
     reqHeaders: new Headers({ host: "localhost:3000", cookie }),
     resHeaders: new Headers(),
   })
