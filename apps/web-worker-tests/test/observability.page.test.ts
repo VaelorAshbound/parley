@@ -80,8 +80,8 @@ describe("a share page writes nothing to the console", () => {
         open(path, "198.51.100.45")
       )
 
-      expect(page.status, path).toBe(200)
-      expect(calls, path).toEqual([])
+      expect(page.status).toBe(200)
+      expect(calls).toEqual([])
     }
   })
 
@@ -108,10 +108,17 @@ describe("a share page writes nothing to the console", () => {
     expect(calls).toEqual([])
   })
 
-  it("when it breaks", async () => {
+  it("when it breaks, and puts the error on the trace span", async () => {
     const token = await sharedLink()
-    // The Worker's own context has tracing (src/server.ts uses it).
-    const ctx = Object.assign(createExecutionContext(), { tracing })
+    // The span src/server.ts reads from the Worker's context, recorded.
+    const attributes: Record<string, unknown> = {}
+    const span = {
+      setAttributes: (values: Record<string, unknown>) =>
+        Object.assign(attributes, values),
+    }
+    const ctx = Object.assign(createExecutionContext(), {
+      tracing: { ...tracing, getActiveSpan: () => span },
+    })
 
     const { result: page, calls } = await captured(
       () =>
@@ -121,7 +128,7 @@ describe("a share page writes nothing to the console", () => {
               headers: { "cf-connecting-ip": "198.51.100.44" },
             }) as Parameters<typeof worker.fetch>[0],
             env,
-            ctx
+            ctx as unknown as ExecutionContext
           )
           await waitOnExecutionContext(ctx)
           return { status: response.status, html: await response.text() }
@@ -130,5 +137,13 @@ describe("a share page writes nothing to the console", () => {
 
     expect(page.status).toBe(500)
     expect(calls).toEqual([])
+    // On-call can see why it broke: the error's name and code, never the
+    // token (the span's URL is redacted too).
+    expect(attributes).toMatchObject({
+      "url.path": "/s/:token",
+      "request_services_failed.level": "error",
+      "request_services_failed.error.name": expect.any(String),
+    })
+    expect(JSON.stringify(attributes)).not.toContain(token)
   })
 })

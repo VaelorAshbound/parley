@@ -16,6 +16,17 @@ import { share } from "./share"
 export const router = { drafts, chat, account, export: exports, share }
 export type Router = typeof router
 
+/**
+ * Around each procedure call, where database and engine errors surface:
+ * over HTTP (rpcHandler) and in-process from SSR (lib/orpc.ts). On a share
+ * page the line goes to the trace span instead (withoutConsole).
+ */
+export function logProcedureError(error: unknown) {
+  // Expected outcomes (not signed in, not found, bad input) aren't errors.
+  if (error instanceof ORPCError && error.status < 500) return
+  logError("rpc_error", error)
+}
+
 // Built once per isolate: it holds no request state.
 export const rpcHandler = new RPCHandler(router, {
   plugins: [
@@ -26,12 +37,5 @@ export const rpcHandler = new RPCHandler(router, {
     // sent without CORS. The browser link adds it (SimpleCsrfProtectionLinkPlugin).
     new SimpleCsrfProtectionHandlerPlugin(),
   ],
-  // Around each procedure call, where database and engine errors surface.
-  clientInterceptors: [
-    onError((error) => {
-      // Expected outcomes (not signed in, not found, bad input) aren't errors.
-      if (error instanceof ORPCError && error.status < 500) return
-      logError("rpc_error", error)
-    }),
-  ],
+  clientInterceptors: [onError(logProcedureError)],
 })
