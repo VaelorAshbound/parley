@@ -67,6 +67,26 @@ describe("recordExport", () => {
     expect((await getDraft(db, key))?.firstExportedAt).toEqual(first)
   })
 
+  test("counts nothing when the draft is no longer on the agreement given", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    const at = new Date("2026-09-10T12:00:00Z")
+
+    expect(
+      await recordExport(db, key, at, { documentId: "pilot-agreement" })
+    ).toBe(false)
+    expect((await getDraft(db, key))?.firstExportedAt).toBeNull()
+    expect(
+      await countExportsSince(db, { userId: owner.id, since: september })
+    ).toBe(0)
+    expect(await recordExport(db, key, at, { documentId: "mutual-nda" })).toBe(
+      true
+    )
+  })
+
   test("leaves the draft's place in the sidebar alone", async ({ db }) => {
     const owner = await makeUser(db)
     const draft = await createDraft(db, { userId: owner.id, ...nda })
