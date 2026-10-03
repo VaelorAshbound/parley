@@ -756,6 +756,97 @@ describe("a reply cut short (PAR-47)", () => {
       .element(screen.getByRole("button", { name: "Try again" }))
       .toBeVisible()
   })
+
+  test("a stopped questionnaire, once answered, goes on and isn't Stopped", async () => {
+    // Stopped (or reloaded) after the questions came, before the turn ended.
+    const asked: ChatMessage = {
+      id: "reply-asked",
+      role: "assistant",
+      parts: [
+        { type: "step-start" },
+        {
+          type: "tool-askQuestions",
+          toolCallId: "ask-1",
+          state: "input-available",
+          input: {
+            title: "Key terms",
+            questions: [
+              {
+                name: "term",
+                prompt: "How long should the NDA last?",
+                required: true,
+                choices: [
+                  { value: "1y", label: "1 year" },
+                  { value: "2y", label: "2 years" },
+                ],
+                multiple: false,
+              },
+            ],
+          },
+        },
+        { type: "data-interrupted", data: {} },
+      ],
+    }
+    let finish = () => {}
+    const sent: (ChatMessage | undefined)[] = []
+    const { screen } = await show({
+      initialMessages: [
+        { ...question, parts: [{ type: "text", text: "The terms?" }] },
+        asked,
+      ],
+      // The same reply goes on: it updates the document, then answers.
+      transport: () => ({
+        sendMessages: async ({ messages }) => {
+          sent.push(messages.at(-1))
+          return new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "start", messageId: asked.id })
+              controller.enqueue({ type: "start-step" })
+              controller.enqueue({
+                type: "tool-input-available",
+                toolCallId: "update-1",
+                toolName: "updateFields",
+                input: {
+                  changes: [
+                    { key: "term", value: "2 years", explanation: "Asked." },
+                  ],
+                },
+              })
+              finish = () => {
+                controller.enqueue({ type: "text-start", id: "t" })
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "t",
+                  delta: "Two years it is.",
+                })
+                controller.enqueue({ type: "text-end", id: "t" })
+                controller.enqueue({ type: "finish-step" })
+                controller.enqueue({ type: "finish" })
+                controller.close()
+              }
+            },
+          })
+        },
+        reconnectToStream: async () => null,
+      }),
+    })
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    await screen.getByRole("radio", { name: "2 years" }).click()
+    await screen.getByRole("button", { name: "Send answers" }).click()
+
+    // At work again: what it does shows, as in any turn.
+    await expect
+      .element(screen.getByText("Updating the document…"))
+      .toBeVisible()
+    finish()
+
+    await expect.element(screen.getByText("Two years it is.")).toBeVisible()
+    expect(screen.getByText("Stopped").query()).toBeNull()
+    // The server is never told of the old mark either.
+    expect(sent[0]?.parts.map((part) => part.type)).not.toContain(
+      "data-interrupted"
+    )
+  })
 })
 
 describe("a long chat", () => {
