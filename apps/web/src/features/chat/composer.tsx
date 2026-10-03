@@ -202,7 +202,13 @@ export function Composer({
                   size="icon-sm"
                   variant="secondary"
                   aria-label="Stop"
-                  onClick={onStop}
+                  onClick={(event) => {
+                    // React may put Send in this same button before the
+                    // click ends, and a submit button would then send the
+                    // waiting text: the click is the Stop's alone.
+                    event.preventDefault()
+                    onStop()
+                  }}
                 >
                   <SquareIcon />
                 </InputGroupButton>

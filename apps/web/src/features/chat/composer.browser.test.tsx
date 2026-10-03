@@ -253,4 +253,27 @@ describe("Enter while Parley is still answering (PAR-46)", () => {
     expect(screen.getByText(hint).query()).toBeNull()
     expect(announced(screen.container)).toBe("")
   })
+
+  test("Stop stops, and leaves the waiting text unsent", async () => {
+    // Stop ends the turn in its own click, as useChat's stop() can: the Send
+    // button that takes its place mustn't take the click too.
+    const onSend = vi.fn<(text: string) => void>()
+    function Turn() {
+      const [busy, setBusy] = useState(true)
+      return (
+        <Composer busy={busy} onSend={onSend} onStop={() => setBusy(false)} />
+      )
+    }
+    const screen = await render(<Turn />)
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.type(box, "And the term?{Enter}")
+
+    await screen.getByRole("button", { name: "Stop" }).click()
+
+    await expect
+      .element(screen.getByRole("button", { name: "Send" }))
+      .toBeEnabled()
+    expect(onSend).not.toHaveBeenCalled()
+    await expect.element(box).toHaveValue("And the term?")
+  })
 })
