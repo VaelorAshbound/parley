@@ -237,6 +237,19 @@ test("the panel stays put when the AI fills the signature table at the end", asy
       })
   )
 
+  // The cause, pinned: the document's own scroller followed the AI, and
+  // nothing around the panel scrolled (its wrapper had moved 28 px).
+  const scrolled = await doc.evaluate((section) => {
+    const own = [...section.querySelectorAll("*")].find(
+      (el) => getComputedStyle(el).overflowY === "auto"
+    )
+    let around = 0
+    for (let el = section.parentElement; el; el = el.parentElement)
+      around += el.scrollTop
+    return { own: own?.scrollTop ?? 0, around }
+  })
+  expect(scrolled.own).toBeGreaterThan(0)
+  expect(scrolled.around).toBe(0)
   expect((await header.boundingBox())?.y).toBe(0)
   const panel = await doc.boundingBox()
   expect(panel && panel.y + panel.height).toBe(800)
