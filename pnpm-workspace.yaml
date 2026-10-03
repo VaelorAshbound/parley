@@ -23,6 +23,13 @@ overrides:
   # vite-plus, and the root build then used a different Vite than the
   # Cloudflare plugin, which broke the Worker bundle (T14).
   "@types/node": ^24.13.6
+  # Dev-only advisories (PAR-53); none of these reach the Worker bundle.
+  # Miniflare (wrangler, the Vite and Vitest plugins) pins undici 7.29.0.
+  "undici@>=7.0.0 <7.29.1": ^7.29.1
+  # @lhci/cli 0.15.1 (the latest) and its inquirer want tmp 0.1 and 0.0.33.
+  "tmp@<0.2.6": ^0.2.6
+  # drizzle-kit's TypeScript loader pins esbuild 0.18.
+  "@esbuild-kit/core-utils>esbuild": ^0.25.0
 
 peerDependencyRules:
   allowAny:
