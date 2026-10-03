@@ -79,7 +79,6 @@ export interface DevOptions {
 interface Started {
   child: ChildProcess
   exited: Promise<number>
-  stopped: boolean
 }
 
 function start(
@@ -91,24 +90,27 @@ function start(
   // kills the group: pnpm and vp don't pass a signal on to the server they
   // started.
   const child = spawn(command, args, { cwd, stdio, detached: true })
-  const started: Started = { child, exited: Promise.resolve(0), stopped: false }
-  started.exited = new Promise<number>((resolve) => {
+  const exited = new Promise<number>((resolve) => {
     child.once("exit", (code) => resolve(code ?? 1))
     child.once("error", (error) => {
       log(`Could not start ${command}: ${error.message}`)
       resolve(1)
     })
-  }).finally(() => (started.stopped = true))
-  return started
+  })
+  return { child, exited }
 }
 
-/** Stops every command still running, and waits until each has. */
+/**
+ * Stops every command, and waits until each has. The whole group is
+ * signalled even when its first process has exited: what it started
+ * (postgres, workerd) can still be running and holding a port.
+ */
 async function stopAll(running: Started[]) {
-  for (const { child, stopped } of running) {
+  for (const { child } of running) {
     try {
-      if (child.pid && !stopped) process.kill(-child.pid, "SIGTERM")
+      if (child.pid) process.kill(-child.pid, "SIGTERM")
     } catch {
-      // Already gone.
+      // ESRCH: nothing left in the group.
     }
   }
   await Promise.all(running.map(({ exited }) => exited))
@@ -161,6 +163,7 @@ export async function runDev({
     }
     if (typeof first === "number") {
       log(`pnpm db:dev stopped (exit ${first}) before the database was ready.`)
+      await stopAll(running)
       return first || 1
     }
   }
