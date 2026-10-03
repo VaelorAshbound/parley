@@ -65,6 +65,34 @@ async function countedFor(email: string) {
   return { userId: user.id, rows }
 }
 
+/**
+ * Waits until `n` sessions queue, directly or not, behind the lock that the
+ * session `pid` holds. Only those: other test files share the database.
+ */
+async function waitForWaitersBehind(
+  db: Awaited<ReturnType<typeof database>>,
+  pid: number,
+  n: number
+) {
+  for (let i = 0; i < 500; i++) {
+    const { rows } = await db.$client.query(
+      "select pid, pg_blocking_pids(pid) as blockers from pg_stat_activity where wait_event_type = 'Lock'"
+    )
+    const behind = new Set<number>([pid])
+    for (let grew = true; grew;) {
+      grew = false
+      for (const row of rows as { pid: number; blockers: number[] }[])
+        if (!behind.has(row.pid) && row.blockers.some((b) => behind.has(b))) {
+          behind.add(row.pid)
+          grew = true
+        }
+    }
+    if (behind.size - 1 >= n) return
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  throw new Error(`never saw ${n} sessions waiting behind ${pid}`)
+}
+
 function codeOf(error: unknown) {
   return error instanceof ORPCError ? error.code : error
 }
@@ -432,6 +460,85 @@ describe("export.pdf", () => {
     expect((await client.drafts.get({ id })).firstExportedAt).toBeNull()
     // and the user is told to download again, as the agreement it is now.
     expect(error).toMatchObject({ code: "DOCUMENT_CHANGED", defined: true })
+  })
+
+  // The switch commits inside the export's claim transaction, after the
+  // print: between reading the draft and counting it. Something else holds
+  // the draft's row (as any edit in flight does), the AI's chooseDocument
+  // queues on it, then the export claims (PAR-51).
+  it("refuses a download whose agreement was switched while it was being counted", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    const holder = await database()
+    const [{ pid }] = (
+      await holder.$client.query("select pg_backend_pid() as pid")
+    ).rows
+    let id = ""
+    let choose: Promise<unknown> | undefined
+    const printPdf: PrintPdf = async (html, frame) => {
+      await holder.$client.query("begin")
+      await holder.$client.query(
+        "select id from draft where id = $1 for update",
+        [id]
+      )
+      choose = other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      await waitForWaitersBehind(holder, pid, 1)
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const exporting = safe(client.export.pdf({ id }))
+    // The export now waits on the draft's row too.
+    await waitForWaitersBehind(holder, pid, 2)
+    await holder.$client.query("commit")
+    const [{ error }] = await Promise.all([exporting, choose])
+
+    expect(printer.pages[0]).toContain("Bolt Retail LLC")
+    expect((await client.drafts.get({ id })).documentId).toBe("pilot-agreement")
+    expect((await countedFor(email)).rows).toEqual([])
+    expect(error).toMatchObject({ code: "DOCUMENT_CHANGED", defined: true })
+  })
+
+  it("never counts an agreement other than the one in a file, with two downloads at once", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    let prints = 0
+    const printPdf: PrintPdf = async (html, frame) => {
+      prints++
+      if (prints === 1)
+        await other.drafts.chooseDocument({
+          id,
+          documentId: "pilot-agreement",
+          today,
+        })
+      return printer.printPdf(html, frame)
+    }
+    const first = (await chatClient(cookie, scriptedModel([]), printPdf)).client
+    const second = (await chatClient(cookie, scriptedModel([]), printPdf))
+      .client
+    id = await completeNda(first)
+
+    const results = await Promise.all([
+      safe(first.export.pdf({ id })),
+      safe(second.export.pdf({ id })),
+    ])
+
+    // Every page printed is the Mutual NDA; only it may ever be counted.
+    for (const page of printer.pages) expect(page).toContain("Bolt Retail LLC")
+    const counted = (await countedFor(email)).rows.map((row) => row.documentId)
+    expect(counted).not.toContain("pilot-agreement")
+    const files = results.flatMap(({ data }) => (data ? [data.name] : []))
+    expect(
+      files.filter((name) => name !== "Mutual Non-Disclosure Agreement.pdf")
+    ).toEqual([])
   })
 
   it("keeps a counted agreement free after switching away and back", async () => {
