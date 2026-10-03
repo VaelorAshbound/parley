@@ -2,24 +2,41 @@
 
 import { spawn, type ChildProcess } from "node:child_process"
 import { randomBytes } from "node:crypto"
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
 
 /**
  * Copies .dev.vars.example to `vars` with a new BETTER_AUTH_SECRET, unless
- * `vars` exists: an existing file is never touched.
+ * `vars` exists: an existing file is never touched. Throws when the secret
+ * would end up empty, since sessions can't be signed without one.
  */
 export function setUpDevVars(vars: string): "created" | "kept" {
-  if (existsSync(vars)) return "kept"
-  copyFileSync(`${vars}.example`, vars)
+  if (existsSync(vars)) {
+    if (!hasSecret(readFileSync(vars, "utf8")))
+      throw new Error(
+        `BETTER_AUTH_SECRET is empty in ${vars}. Set it to a random value ` +
+          "(openssl rand -base64 32), or delete the file and run `pnpm dev` " +
+          "again to get a new one."
+      )
+    return "kept"
+  }
+  const example = `${vars}.example`
   const secret = randomBytes(32).toString("base64url")
-  writeFileSync(
-    vars,
-    readFileSync(vars, "utf8").replace(
-      /^BETTER_AUTH_SECRET=$/m,
-      `BETTER_AUTH_SECRET=${secret}`
-    )
+  const filled = readFileSync(example, "utf8").replace(
+    /^BETTER_AUTH_SECRET=$/m,
+    `BETTER_AUTH_SECRET=${secret}`
   )
+  // Checked before writing, so a bad example leaves no half-made file.
+  if (!hasSecret(filled))
+    throw new Error(
+      `BETTER_AUTH_SECRET is empty: ${example} has no "BETTER_AUTH_SECRET=" ` +
+        "line for `pnpm dev` to fill."
+    )
+  writeFileSync(vars, filled)
   return "created"
+}
+
+function hasSecret(dotenv: string) {
+  return /^BETTER_AUTH_SECRET=\S/m.test(dotenv)
 }
 
 /** A command to start: what `spawn` takes. */
