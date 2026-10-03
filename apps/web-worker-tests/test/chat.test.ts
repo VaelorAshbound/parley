@@ -4,7 +4,7 @@ import { definitions } from "@workspace/documents"
 import { MockLanguageModelV4 } from "ai/test"
 import { describe, expect, it, vi } from "vitest"
 
-import { aiUsageOn, saveMessages } from "@workspace/db"
+import { aiUsageOn, listMessages, saveMessages } from "@workspace/db"
 
 import {
   chatClient,
@@ -771,6 +771,51 @@ describe("a chat turn", () => {
     expect((await aiUsageOn(db, { userId: first.userId, day }))?.messages).toBe(
       spent?.messages
     )
+  })
+
+  it("won't rewrite an earlier message, even in a chat the tools no longer fit (PAR-52)", async () => {
+    const { cookie } = await signInGuest()
+    const model = scriptedModel([[{ text: "Noted." }]])
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const first = say("First.")
+    for (const message of [first, say("Second.")]) {
+      await read(await client.chat.send({ id: draft.id, message, today }))
+      await settle()
+    }
+    // A tool a deploy took away: the stored chat no longer validates, so
+    // the model and the page see it as empty.
+    const db = await database()
+    const key = { id: draft.id, userId: draft.userId }
+    await saveMessages(db, key, [
+      {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        parts: [
+          {
+            type: "tool-retiredTool",
+            toolCallId: "call-retired",
+            state: "input-available",
+            input: {},
+          },
+        ],
+      },
+    ])
+    const before = await listMessages(db, key)
+
+    const { error } = await safe(
+      client.chat.send({
+        id: draft.id,
+        message: { ...first, parts: [{ type: "text", text: "REWRITTEN." }] },
+        today,
+      })
+    )
+
+    expect(error).toMatchObject({ code: "MESSAGE_ID_TAKEN" })
+    expect(await listMessages(db, key)).toEqual(before)
   })
 
   it("won't take a message written as the assistant", async () => {

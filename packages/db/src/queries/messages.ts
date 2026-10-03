@@ -1,4 +1,4 @@
-import { and, asc, eq, exists, inArray, sql } from "drizzle-orm"
+import { and, asc, eq, exists, inArray, ne, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
 import { draft, message } from "../schema.ts"
@@ -45,10 +45,11 @@ export async function listSavedMessages(
 }
 
 /**
- * A message id that is already another draft's, or the other speaker's
- * (PAR-52). The rest of that save may have gone through, so call
- * saveMessages in a transaction when it must be all or nothing: thrown
- * there, it undoes the whole transaction, a counted message too.
+ * A message id that is already another draft's, the other speaker's, or a
+ * user's message already saved (PAR-52). The rest of that save may have gone
+ * through, so call saveMessages in a transaction when it must be all or
+ * nothing: thrown there, it undoes the whole transaction, a counted message
+ * too.
  */
 export class MessageIdTaken extends Error {
   override name = "MessageIdTaken"
@@ -58,10 +59,11 @@ export class MessageIdTaken extends Error {
 }
 
 /**
- * Saves messages to a draft the user owns: new ones are added, ones saved
- * before (same id, same draft) are replaced, like a reply that grew. It also
- * marks the draft as just changed. False when the draft isn't the user's;
- * throws MessageIdTaken when an id belongs to another draft or speaker.
+ * Saves messages to a draft the user owns: new ones are added, and an
+ * assistant's message saved before (same id, same draft) is replaced, like a
+ * reply that grew. A user's message is never replaced. It also marks the
+ * draft as just changed. False when the draft isn't the user's; throws
+ * MessageIdTaken for an id it won't take.
  */
 export async function saveMessages(
   db: Db,
@@ -94,9 +96,13 @@ export async function saveMessages(
       set: { parts: sql`excluded.parts` },
       // An id from another draft is never taken over, and a message never
       // changes speaker: a user's message can't rewrite the assistant's.
+      // Only a reply grows: what the user said stays as said, whatever the
+      // chat looks like to the caller (one the tools no longer fit reads as
+      // empty, so no id check before this one can see it).
       setWhere: and(
         eq(message.draftId, key.id),
-        eq(message.role, sql`excluded.role`)
+        eq(message.role, sql`excluded.role`),
+        ne(message.role, "user")
       ),
     })
     .returning({ id: message.id })
