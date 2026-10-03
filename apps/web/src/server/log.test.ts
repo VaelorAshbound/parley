@@ -10,7 +10,7 @@ describe("withoutConsole (PAR-31)", () => {
   it("puts events on the span, named after the event, and none on the console", () => {
     using info = vi.spyOn(console, "log").mockImplementation(() => {})
     using error = vi.spyOn(console, "error").mockImplementation(() => {})
-    const setAttributes = vi.fn()
+    const setAttributes = vi.fn<(attributes: Record<string, unknown>) => void>()
 
     withoutConsole({ setAttributes }, () => {
       logInfo("share_viewed", { outcome: "found", missing: undefined })
