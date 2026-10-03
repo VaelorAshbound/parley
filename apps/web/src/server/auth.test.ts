@@ -53,14 +53,21 @@ describe("the nightly purge of rate_limit rows", () => {
   /** Every window (seconds) Better Auth counts in, as it reads the config. */
   function windows(options: BetterAuthOptions) {
     const rateLimit = options.rateLimit ?? {}
-    const custom = Object.values(rateLimit.customRules ?? {}).flatMap((rule) =>
-      rule && typeof rule === "object" ? [rule.window] : []
+    const custom = Object.entries(rateLimit.customRules ?? {}).flatMap(
+      ([path, rule]) => {
+        // A function rule picks its window per request, so no test can read
+        // it here. Don't skip it quietly: change this check when one is added.
+        expect(typeof rule, `customRules["${path}"]`).not.toBe("function")
+        return rule && typeof rule === "object" ? [rule.window] : []
+      }
     )
     const fromPlugins = (options.plugins ?? []).flatMap((plugin) =>
       (plugin.rateLimit ?? []).map((rule) => rule.window)
     )
-    // Better Auth's own rules for sign-in, sign-up and the like are 10 and
-    // 60 seconds; its default window is 10.
+    // Better Auth's built-in rules (sign-in, sign-up, password reset and the
+    // like) are 10 and 60 seconds, and its default window is 10. They are
+    // copied from getDefaultSpecialRules in better-auth 1.7.5's
+    // dist/api/rate-limiter, which is not exported: check them on upgrade.
     return [rateLimit.window ?? 10, 60, ...custom, ...fromPlugins]
   }
 
