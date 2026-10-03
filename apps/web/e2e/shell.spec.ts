@@ -242,6 +242,38 @@ test("the panel stays put when the AI fills the signature table at the end", asy
   expect(panel && panel.y + panel.height).toBe(800)
 })
 
+test("the AI switches the panel from one agreement to another", async ({
+  page,
+}) => {
+  // PAR-55: the new agreement went into the cache at once, but the panel
+  // still drew the old agreement's deferred values against the new one's
+  // schema, and the page fell to the error screen.
+  await startNda(page)
+  const doc = page.getByRole("region", { name: "Live document" })
+  const ndaTitle = doc.getByRole("heading", {
+    level: 2,
+    name: "Mutual Non-Disclosure Agreement",
+    exact: true,
+  })
+  await expect(ndaTitle).toBeVisible()
+
+  await page
+    .getByRole("textbox", { name: "Message" })
+    .fill("We sell cloud software to hospitals.")
+  await page.keyboard.press("Enter")
+
+  await expect(
+    page.getByText("I picked the Cloud Service Agreement.")
+  ).toBeVisible()
+  await expect(
+    doc
+      .getByRole("heading", { level: 2, name: "Cloud Service Agreement" })
+      // The panel's title; the cover page and the terms repeat it.
+      .first()
+  ).toBeVisible()
+  await expect(ndaTitle).toHaveCount(0)
+})
+
 for (const width of [1440, 1024, 375]) {
   test(`draft page at ${width} px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 })
