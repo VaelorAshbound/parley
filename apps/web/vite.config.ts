@@ -3,26 +3,9 @@ import babel from "@rolldown/plugin-babel"
 import tailwindcss from "@tailwindcss/vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react"
-import { existsSync } from "node:fs"
-import { homedir } from "node:os"
-import { join } from "node:path"
 import { defineConfig, lazyPlugins } from "vite-plus"
 
-/**
- * Browser Run (PDF export) has no local simulator, so dev uses the real one
- * (ADR-0010), which needs a Cloudflare login: an API token, or
- * `wrangler login`. A fresh clone has neither and runs without remote
- * bindings: everything works except the PDF.
- */
-function signedInToCloudflare() {
-  if (process.env.CLOUDFLARE_API_TOKEN) return true
-  const config = process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config")
-  if (existsSync(join(config, ".wrangler/config/default.toml"))) return true
-  console.warn(
-    "No Cloudflare login: PDF export is off. Run `pnpm exec wrangler login` to turn it on."
-  )
-  return false
-}
+import { signedInToCloudflare } from "./dev/cloudflare-login.ts"
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
@@ -33,6 +16,7 @@ export default defineConfig({
     // https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
     cloudflare({
       viteEnvironment: { name: "ssr" },
+      // PDF export uses the real Browser Run (ADR-0010).
       remoteBindings: signedInToCloudflare(),
       // The Worker debugger's port (9229) is shared too: a second dev server
       // on its own PORT runs without one.
