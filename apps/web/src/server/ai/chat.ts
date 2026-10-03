@@ -4,6 +4,7 @@ import {
   claimMessage,
   getDraft,
   listSavedMessages,
+  MessageIdTaken,
   saveMessages,
   type Db,
 } from "@workspace/db"
@@ -156,6 +157,8 @@ const DAILY_LIMIT = {
  *
  * The turn counts toward the day's messages once `change` has accepted it;
  * past the limit, `quota.refuse()` is thrown and nothing is saved or counted.
+ * A message id another draft already holds throws `taken()`, and nothing is
+ * saved or counted either (PAR-52).
  */
 function lockedChat(
   context: BaseContext,
@@ -164,7 +167,8 @@ function lockedChat(
   change: (stored: ChatMessage[]) => {
     save: ChatMessage[]
     chat: ChatMessage[]
-  }
+  },
+  taken: () => Error = () => new MessageIdTaken()
 ) {
   return context.db.transaction(async (tx) => {
     await getDraft(tx, key, { lock: true })
@@ -172,7 +176,11 @@ function lockedChat(
     const { day, limit } = quota
     if (!(await claimMessage(tx, { userId: key.userId, day, limit })))
       throw quota.refuse()
-    await saveMessages(tx, key, save)
+    try {
+      await saveMessages(tx, key, save)
+    } catch (error) {
+      throw error instanceof MessageIdTaken ? taken() : error
+    }
     return chat
   })
 }
@@ -405,29 +413,35 @@ export const chat = {
     .use(perUser("ai"))
     .input(turn.extend({ message: userMessage }))
     .errors({
-      MESSAGE_ID_TAKEN: { message: "That message id belongs to Parley." },
+      MESSAGE_ID_TAKEN: { message: "That message id is already used." },
       DAILY_LIMIT,
     })
     .use(draftOwner, (input) => input.id)
     .handler(async ({ context, input, errors, signal }) => {
       const key = { id: input.id, userId: context.user.id }
       const quota = quotaOf(context.user, errors.DAILY_LIMIT)
-      const messages = await lockedChat(context, key, quota, (stored) => {
-        // Ids come from the browser (useChat makes them): one of Parley's
-        // own would let a message stand in for its reply.
-        if (
-          stored.some(
-            (each) => each.id === input.message.id && each.role !== "user"
+      const messages = await lockedChat(
+        context,
+        key,
+        quota,
+        (stored) => {
+          // Ids come from the browser (useChat makes them): one of Parley's
+          // own would let a message stand in for its reply.
+          if (
+            stored.some(
+              (each) => each.id === input.message.id && each.role !== "user"
+            )
           )
-        )
-          throw errors.MESSAGE_ID_TAKEN()
-        const closed = closeQuestions(stored.at(-1))
-        const earlier = closed ? [...stored.slice(0, -1), closed] : stored
-        return {
-          save: closed ? [closed, input.message] : [input.message],
-          chat: [...earlier, input.message],
-        }
-      })
+            throw errors.MESSAGE_ID_TAKEN()
+          const closed = closeQuestions(stored.at(-1))
+          const earlier = closed ? [...stored.slice(0, -1), closed] : stored
+          return {
+            save: closed ? [closed, input.message] : [input.message],
+            chat: [...earlier, input.message],
+          }
+        },
+        errors.MESSAGE_ID_TAKEN
+      )
       return reply({
         context,
         key,

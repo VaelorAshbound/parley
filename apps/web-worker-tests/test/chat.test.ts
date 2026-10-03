@@ -4,7 +4,7 @@ import { definitions } from "@workspace/documents"
 import { MockLanguageModelV4 } from "ai/test"
 import { describe, expect, it, vi } from "vitest"
 
-import { saveMessages } from "@workspace/db"
+import { aiUsageOn, saveMessages } from "@workspace/db"
 
 import {
   chatClient,
@@ -12,6 +12,7 @@ import {
   scriptedModel,
   serverClient,
   signInGuest,
+  signUpUser,
 } from "./helpers"
 
 // The chat (T17) with a scripted model: the real procedure, tools, engine and
@@ -734,6 +735,42 @@ describe("a chat turn", () => {
 
     expect(error).toMatchObject({ code: "MESSAGE_ID_TAKEN" })
     expect((await client.chat.messages({ id: draft.id }))[1]).toEqual(reply)
+  })
+
+  it("refuses a message whose id is taken in another draft, with nothing spent (PAR-52)", async () => {
+    // An account: a guest keeps only one draft.
+    const { cookie } = await signUpUser()
+    const model = scriptedModel([[{ text: "Noted." }]])
+    const { client, settle } = await chatClient(cookie, model)
+    const first = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const second = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const hello = say("Hi.")
+    await read(await client.chat.send({ id: first.id, message: hello, today }))
+    await settle()
+    const db = await database()
+    const day = new Date().toISOString().slice(0, 10)
+    const spent = await aiUsageOn(db, { userId: first.userId, day })
+
+    const { error } = await safe(
+      client.chat.send({
+        id: second.id,
+        message: { ...hello, parts: [{ type: "text", text: "Again." }] },
+        today,
+      })
+    )
+
+    expect(error).toMatchObject({ code: "MESSAGE_ID_TAKEN" })
+    expect(model.doStreamCalls).toHaveLength(1)
+    expect(await client.chat.messages({ id: second.id })).toEqual([])
+    expect((await aiUsageOn(db, { userId: first.userId, day }))?.messages).toBe(
+      spent?.messages
+    )
   })
 
   it("won't take a message written as the assistant", async () => {

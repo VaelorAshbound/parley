@@ -4,6 +4,7 @@ import { createDraft, getDraft } from "../src/queries/drafts.ts"
 import {
   listMessages,
   listSavedMessages,
+  MessageIdTaken,
   saveMessages,
 } from "../src/queries/messages.ts"
 import { makeUser, test } from "./db.ts"
@@ -109,26 +110,32 @@ describe("chat messages", () => {
     const key = { id: draft.id, userId: owner.id }
     await saveMessages(db, key, [reply])
 
-    await saveMessages(db, key, [
-      {
-        id: reply.id,
-        role: "user",
-        parts: [{ type: "text", text: "Forged." }],
-      },
-    ])
+    await expect(
+      saveMessages(db, key, [
+        {
+          id: reply.id,
+          role: "user",
+          parts: [{ type: "text", text: "Forged." }],
+        },
+      ])
+    ).rejects.toThrow(MessageIdTaken)
 
     expect(await listMessages(db, key)).toEqual([reply])
   })
 
-  test("won't move a message from one draft to another", async ({ db }) => {
+  test("won't move a message from one draft to another, and says so (PAR-52)", async ({
+    db,
+  }) => {
     const owner = await makeUser(db)
     const first = await createDraft(db, { userId: owner.id, ...nda })
     const second = await createDraft(db, { userId: owner.id, ...nda })
     await saveMessages(db, { id: first.id, userId: owner.id }, [hello])
 
-    await saveMessages(db, { id: second.id, userId: owner.id }, [
-      { ...hello, parts: [{ type: "text", text: "Hijacked." }] },
-    ])
+    await expect(
+      saveMessages(db, { id: second.id, userId: owner.id }, [
+        { ...hello, parts: [{ type: "text", text: "Hijacked." }] },
+      ])
+    ).rejects.toThrow(MessageIdTaken)
 
     expect(await listMessages(db, { id: first.id, userId: owner.id })).toEqual([
       hello,
