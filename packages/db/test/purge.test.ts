@@ -1,6 +1,7 @@
 import { eq, inArray, sql } from "drizzle-orm"
 import { getTableConfig } from "drizzle-orm/pg-core"
-import { describe, expect, inject } from "vite-plus/test"
+import { Client } from "pg"
+import { describe, expect, inject, vi } from "vite-plus/test"
 
 import { rateLimit, session, user, verification } from "../src/auth-schema.ts"
 import { connect, type Db } from "../src/client.ts"
@@ -516,30 +517,57 @@ describe("the schema keeps the purge's hand-written indexes", () => {
 
 // Each purge scans for rows past a time. Without an index on that column the
 // scan reads the whole table every night, and Better Auth's own prune of
-// rate_limit (on each new window) does too (PAR-14). Sequential scans are
-// turned off so the plan shows whether an index can serve the query at all;
-// on a few test rows the planner would pick a scan either way.
+// rate_limit (on each new window) does too (PAR-14). Each test plans the
+// DELETE the purge function really sends, so a later change to its WHERE
+// clause can't lose the index unnoticed. Sequential scans are turned off so
+// the plan shows whether an index can serve the query at all; on a few test
+// rows the planner would pick a scan either way.
 describe("the purge queries use an index", () => {
-  async function plan(db: Db, query: ReturnType<typeof sql>) {
+  /** EXPLAIN of the DELETE that `run` sends, with the same parameters. */
+  async function planOf(db: Db, run: () => Promise<unknown>) {
     await db.execute(sql`SET LOCAL enable_seqscan = off`)
-    const result = await db.execute<{ "QUERY PLAN": string }>(
-      sql`EXPLAIN ${query}`
+    // The transaction's own pg client (Drizzle keeps it on its session).
+    const { client } = (db as unknown as { session: { client: Client } })
+      .session
+    const query = vi.spyOn(client, "query")
+    let calls: typeof query.mock.calls
+    try {
+      await run()
+    } finally {
+      // Restoring the spy clears its calls, so keep them first.
+      calls = [...query.mock.calls]
+      query.mockRestore()
+    }
+    const sent = calls.flatMap((call) => {
+      // Drizzle sends (config, params); pg's overloads don't type it so.
+      const [config, params] = call as unknown as [
+        string | { text?: string },
+        unknown[],
+      ]
+      const text = typeof config === "string" ? config : config?.text
+      return typeof text === "string" && /^delete /i.test(text)
+        ? [{ text, params }]
+        : []
+    })
+    expect(sent).toHaveLength(1)
+    const [{ text, params }] = sent as [(typeof sent)[number]]
+    const result = await client.query<{ "QUERY PLAN": string }>(
+      `EXPLAIN ${text}`,
+      params
     )
     return result.rows.map((row) => row["QUERY PLAN"]).join("\n")
   }
 
   test("expired sessions, by session.expires_at", async ({ db }) => {
-    const explained = await plan(
-      db,
-      sql`SELECT id FROM session WHERE expires_at < ${now} LIMIT 500 FOR UPDATE SKIP LOCKED`
+    const explained = await planOf(db, () =>
+      deleteExpiredSessions(db, { now, limit: 500 })
     )
     expect(explained).toContain("session_expiresAt_idx")
   })
 
   test("old rate_limit rows, by rate_limit.last_request", async ({ db }) => {
-    const explained = await plan(
-      db,
-      sql`SELECT id FROM rate_limit WHERE last_request < ${daysAgo(1).getTime()} LIMIT 500 FOR UPDATE SKIP LOCKED`
+    const explained = await planOf(db, () =>
+      deleteOldRateLimits(db, { before: daysAgo(1), limit: 500 })
     )
     expect(explained).toContain("rateLimit_lastRequest_idx")
   })
