@@ -262,7 +262,10 @@ describe("the nightly purge", () => {
   it("deletes rate_limit rows from long ago", async () => {
     // Only the delete: Better Auth prunes this table itself on any new
     // window (by the real clock, so a row kept by this fake one could go
-    // anyway). Which rows the cutoff keeps: packages/db/test/purge.test.ts
+    // anyway). For the same reason this test can't tell the cron's delete
+    // from Better Auth's when another file's prune runs in between, and a
+    // check of the logged count would be flaky. The purge's own delete and
+    // which rows the cutoff keeps are proven in packages/db/test/purge.test.ts
     // and apps/web/src/server/cron.test.ts.
     const db = await database()
     const id = `old-${crypto.randomUUID()}`
