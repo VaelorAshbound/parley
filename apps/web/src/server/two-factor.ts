@@ -95,7 +95,13 @@ export function twoFactorGuests({
           handler: createAuthMiddleware(async (ctx) => {
             if (!isChallenge(ctx.context.returned)) return
             const guest = await getSessionFromCtx(ctx, { disableRefresh: true })
-            if (!guest?.user.isAnonymous) return
+            if (!guest?.user.isAnonymous) {
+              // Someone signing in with no guest of their own: a guest
+              // carried here earlier (someone else, maybe, on a shared
+              // computer) must not end up in this account (PAR-20).
+              letGuestGo(ctx)
+              return
+            }
             const cookie = ctx.context.createAuthCookie(guestCookie, {
               maxAge: challengeMaxAge,
             })
@@ -137,6 +143,34 @@ export function twoFactorGuests({
           }),
         },
         {
+          // Any other new session ends the code step the guest was carried
+          // through: the next code step is someone's new sign-in (PAR-20).
+          matcher: (ctx) => !codeSteps.has(ctx.path ?? ""),
+          handler: createAuthMiddleware(async (ctx) => {
+            if (!ctx.context.newSession) return
+            if (isChallenge(ctx.context.returned)) return
+            letGuestGo(ctx)
+          }),
+        },
+        {
+          // Changing the password and signing the other devices out (the
+          // safe choice after a leak) also forgets the devices trusted to
+          // skip the code, this one too: whoever knew the old password may
+          // have trusted their own (PAR-20).
+          matcher: (ctx) => ctx.path === "/change-password",
+          handler: createAuthMiddleware(async (ctx) => {
+            const body: unknown = ctx.body
+            const signedOthersOut =
+              typeof body === "object" &&
+              body !== null &&
+              "revokeOtherSessions" in body &&
+              body.revokeOtherSessions === true
+            // Set only when it worked: the session is new.
+            const user = ctx.context.newSession?.user
+            if (signedOthersOut && user) await forgetTrustedDevices(db, user.id)
+          }),
+        },
+        {
           matcher: (ctx) => ctx.path === "/two-factor/disable",
           handler: createAuthMiddleware(async (ctx) => {
             // Set only when it worked: the session is renewed with the
@@ -150,6 +184,15 @@ export function twoFactorGuests({
     },
   } satisfies BetterAuthPlugin
 }
+
+/** Expires the carried guest's cookie, if the browser sent one. */
+function letGuestGo(ctx: HookContext) {
+  const cookie = ctx.context.createAuthCookie(guestCookie)
+  if (ctx.getCookie(cookie.name) !== null) expireCookie(ctx, cookie)
+}
+
+/** What a Better Auth hook gets. */
+type HookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0]
 
 /** The password step's answer when a code is needed next. */
 function isChallenge(returned: unknown) {

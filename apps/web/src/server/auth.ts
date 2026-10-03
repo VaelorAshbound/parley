@@ -1,6 +1,7 @@
 import {
   billingFields,
   claimUnconfirmedAccount,
+  forgetTrustedDevices,
   moveGuestData,
   schema,
   type Db,
@@ -139,8 +140,11 @@ export function createAuth({
         // another person signed up with and never confirmed: the reset ends
         // that person's sessions, replaces the password they chose, and
         // drops any two-factor sign-in they set up. (`user` is as it was
-        // before the reset.)
+        // before the reset.) A confirmed account keeps two-factor, but no
+        // device stays trusted to skip the code: whoever knew the old
+        // password may have trusted their own (PAR-20).
         if (!user.emailVerified) await claimUnconfirmedAccount(db, user.id)
+        else await forgetTrustedDevices(db, user.id)
         logInfo("password_reset", { userId: user.id })
       },
     },
@@ -246,8 +250,10 @@ export function createAuth({
         "/polar/webhooks": false,
       },
     },
-    // Polar's routes Parley doesn't use (T26).
-    disabledPaths: closedPaths,
+    // Polar's routes Parley doesn't use (T26), and Better Auth's session
+    // list, which answers every device's token: account.sessions lists
+    // them without (PAR-53).
+    disabledPaths: [...closedPaths, "/list-sessions"],
     advanced: {
       useSecureCookies: true,
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },

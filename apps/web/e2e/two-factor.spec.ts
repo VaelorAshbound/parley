@@ -1,4 +1,4 @@
-import { test, type Page } from "@playwright/test"
+import { test, type APIRequestContext, type Page } from "@playwright/test"
 
 import { totp } from "../src/test/totp"
 import { expect, open } from "./helpers"
@@ -178,6 +178,90 @@ test("two-factor sign-in: on, a code, a backup code once, off", async ({
   ).toBeVisible()
   await signInWithPassword(page, email)
   await signedIn(page)
+})
+
+/**
+ * Posts to Better Auth from `request` (a browser context's cookies), waiting
+ * out the per-IP limit.
+ */
+async function authPost(
+  request: APIRequestContext,
+  origin: string,
+  path: string,
+  data: object
+) {
+  for (let attempt = 1; ; attempt++) {
+    const response = await request.post(`/api/auth${path}`, {
+      headers: { origin, ...captcha },
+      data,
+    })
+    if (response.ok()) return
+    if (response.status() !== 429 || attempt === 5)
+      throw new Error(`${path} failed: ${response.status()}`)
+    const wait = Number(response.headers()["x-retry-after"] ?? 1)
+    await new Promise((resolve) => setTimeout(resolve, wait * 1000))
+  }
+}
+
+test("turning it on can sign the other devices out (PAR-20)", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(120_000)
+  const email = await signUp(page)
+  const origin = new URL(page.url()).origin
+  // The same account, already signed in on a phone.
+  const phone = await browser.newContext({ baseURL })
+  await authPost(phone.request, origin, "/sign-in/email", { email, password })
+
+  await open(page, "/settings")
+  await page.getByRole("button", { name: "Turn on", exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByLabel("Your password").fill(password)
+  await dialog.getByRole("button", { name: "Continue" }).click()
+  const key = (await dialog.locator("code").innerText()).replaceAll(" ", "")
+  const app = `otpauth://totp/Parley?secret=${key}`
+  const on = dialog.getByRole("heading", { name: "Two-factor sign-in is on" })
+  await enterCode(page, "6-digit code", await totp(app), () => on.waitFor())
+
+  await dialog.getByRole("button", { name: "Sign out other devices" }).click()
+
+  await expect(
+    dialog
+      .getByRole("status")
+      .getByText("Other devices will be signed out within 5 minutes.")
+  ).toBeVisible()
+  // Asked past the 5-minute cookie cache, the phone has no session now.
+  const session = await phone.request.get(
+    "/api/auth/get-session?disableCookieCache=true"
+  )
+  expect(await session.json()).toBeNull()
+  await phone.close()
+  // This device stays signed in.
+  await dialog.getByRole("button", { name: "Done" }).click()
+  await expect(page.getByText("On", { exact: true })).toBeVisible()
+})
+
+test("the code step on a guest's session (PAR-20)", async ({ page }) => {
+  await open(page, "/")
+  const origin = new URL(page.url()).origin
+  await authPost(page.request, origin, "/sign-in/anonymous", {})
+  await open(page, "/two-factor")
+  const nothingWaiting = page.getByText(
+    "No sign-in is waiting for a code. Please sign in again."
+  )
+
+  // The two-factor steps share a limit per IP with the tests before.
+  await enterCode(page, "6-digit code", "000000", () =>
+    nothingWaiting.waitFor()
+  )
+
+  // A guest has no sign-in waiting for a code: back to the password.
+  await expect(nothingWaiting).toBeVisible()
+  await expect(
+    page.getByRole("alert").getByRole("link", { name: "Sign in" })
+  ).toBeVisible()
 })
 
 test("the code step without a password first", async ({ page }) => {
