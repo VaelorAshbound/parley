@@ -16,8 +16,29 @@ describe("redactShareToken", () => {
     expect(url?.href).toBe("https://parley.app/s/:token/more")
   })
 
+  it("redacts every spelling the router still sends to /s/$token", () => {
+    // The router matches paths case-insensitively and decodes them.
+    for (const path of [
+      "/S/abc123",
+      "/%73/abc123",
+      "/%53/abc123",
+      "/s%2Fabc123",
+    ]) {
+      const url = redactShareToken(new URL(path, "https://parley.app"))
+      expect(url?.href, path).toBe("https://parley.app/s/:token")
+    }
+  })
+
   it("leaves other paths alone", () => {
-    for (const path of ["/", "/s", "/s/", "/d/d1", "/api/rpc/share/view"]) {
+    for (const path of [
+      "/",
+      "/s",
+      "/s/",
+      "/d/d1",
+      "/settings",
+      "/%E0%A4%A",
+      "/api/rpc/share/view",
+    ]) {
       expect(
         redactShareToken(new URL(path, "https://parley.app"))
       ).toBeUndefined()
