@@ -1,10 +1,5 @@
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router"
-import {
-  definitionOf,
-  render,
-  type DocumentDefinition,
-  type DocumentId,
-} from "@workspace/documents"
+import { definitionOf, render, type DocumentId } from "@workspace/documents"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { FileTextIcon, XIcon } from "lucide-react"
@@ -32,6 +27,11 @@ type Draft = {
   documentId: DocumentId | null
   fields: Record<string, unknown>
 }
+
+type ChosenDraft = Draft & { documentId: DocumentId }
+
+const isChosen = (draft: Draft): draft is ChosenDraft =>
+  draft.documentId !== null
 
 export function DocumentPanel({
   name,
@@ -99,17 +99,15 @@ export function DocumentPanel({
         )}
       >
         <div className="mx-auto max-w-[552px] rounded-sm bg-sheet px-6 py-10 shadow-sheet md:px-13 md:py-12">
-          {draft.documentId === null ? (
-            <ChooseDocument orpc={orpc} draftId={draft.id} />
-          ) : (
+          {isChosen(draft) ? (
             <LiveDocument
               orpc={orpc}
-              draftId={draft.id}
-              definition={definitionOf(draft.documentId)}
-              fields={draft.fields}
+              draft={draft}
               editing={editing}
               panel={panel}
             />
+          ) : (
+            <ChooseDocument orpc={orpc} draftId={draft.id} />
           )}
         </div>
       </div>
@@ -135,19 +133,16 @@ export function DocumentPanel({
 /** The document, where any value can be clicked and edited in place. */
 function LiveDocument({
   orpc,
-  draftId,
-  definition,
-  fields,
+  draft,
   editing,
   panel,
 }: {
   orpc: Orpc
-  draftId: string
-  definition: DocumentDefinition
-  fields: Record<string, unknown>
+  draft: ChosenDraft
   editing: string | undefined
   panel: RefObject<HTMLDivElement | null>
 }) {
+  const draftId = draft.id
   const navigate = useNavigate()
   const save = useSaveField(orpc, draftId)
   const refused = useUiStore((state) => state.refused)
@@ -155,12 +150,15 @@ function LiveDocument({
   const changed = useUiStore((state) => state.changed)
   const focus = useUiStore((state) => state.focus)
   // A change (or a newly picked agreement) is drawn from a deferred copy of
-  // the fields, in time slices, so it never blocks the chat's streaming
-  // (T18: no long tasks while the AI answers).
-  const shownFields = useDeferredValue(fields)
+  // the draft, in time slices, so it never blocks the chat's streaming
+  // (T18: no long tasks while the AI answers). The agreement and its values
+  // are deferred together: a new agreement's schema never meets the old
+  // agreement's values (PAR-55).
+  const shown = useDeferredValue(draft)
+  const definition = definitionOf(shown.documentId)
   // Stored values are checked on the way in: a draft is only ever shown in
   // the shape its document defines.
-  const values = definition.draftSchema.parse(shownFields)
+  const values = definition.draftSchema.parse(shown.fields)
   const document = render(definition, values)
   const editingKey = editing?.split(".")[0]
   const known = editingKey !== undefined && editingKey in definition.fields
