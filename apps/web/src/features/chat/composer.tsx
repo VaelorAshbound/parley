@@ -91,9 +91,10 @@ export function Composer({
     ) : null
   const ready = text.trim() !== "" && !busy && !tooLong
   // Enter while Parley answers keeps the text and says why (PAR-46), until
-  // the turn ends: the next turn starts with nothing said.
+  // the turn ends (the next turn starts with nothing said), or the box is
+  // emptied (nothing is left to send).
   const [waiting, setWaiting] = useState(false)
-  if (waiting && !busy) setWaiting(false)
+  if (waiting && (!busy || text.trim() === "")) setWaiting(false)
   const send = () => {
     // "Start drafting" with nothing typed shows where to type.
     if (text.trim() === "") input.current?.focus()
