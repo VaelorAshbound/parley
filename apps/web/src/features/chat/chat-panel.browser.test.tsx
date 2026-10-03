@@ -656,6 +656,244 @@ describe("a page loaded while Parley answers (PAR-33)", () => {
   })
 })
 
+describe("a reply cut short (PAR-47)", () => {
+  const question: ChatMessage = {
+    id: "user-stopped",
+    role: "user",
+    parts: [{ type: "text", text: "We share a roadmap with a vendor." }],
+    metadata: { savedAt: Date.now() - 60_000 },
+  }
+  // As the server saved it: the words so far, then its mark.
+  const stopped: ChatMessage = {
+    id: "reply-stopped",
+    role: "assistant",
+    parts: [
+      { type: "step-start" },
+      { type: "text", text: "A Mutual NDA fits, as you", state: "done" },
+      { type: "data-interrupted", data: {} },
+    ],
+    metadata: { savedAt: Date.now() - 59_000 },
+  }
+
+  test("says Stopped after a reload, and Try again asks for the whole reply", async () => {
+    const sent: (ChatMessage | undefined)[] = []
+    const { screen } = await show({
+      initialMessages: [question, stopped],
+      transport: (base) => ({
+        ...base,
+        sendMessages: async (options) => {
+          sent.push(options.messages.at(-1))
+          return base.sendMessages(options)
+        },
+      }),
+    })
+
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    await screen.getByRole("button", { name: "Try again" }).click()
+
+    await expect.element(screen.getByText("Mutual NDA selected")).toBeVisible()
+    // useChat's regenerate: the same question again, the cut reply gone.
+    expect(sent.map((message) => message?.id)).toEqual([question.id])
+    expect(screen.getByText("A Mutual NDA fits, as you").query()).toBeNull()
+    expect(screen.getByText("Stopped").query()).toBeNull()
+  })
+
+  test("Try again leaves the cursor in the reply box, not at the page's top", async () => {
+    const { screen } = await show({ initialMessages: [question, stopped] })
+
+    await screen.getByRole("button", { name: "Try again" }).click()
+
+    await expect
+      .element(screen.getByRole("textbox", { name: "Message" }))
+      .toHaveFocus()
+  })
+
+  test("is only a label on an earlier reply: Try again is the latest turn's", async () => {
+    const later: ChatMessage[] = [
+      {
+        ...question,
+        id: "user-later",
+        parts: [{ type: "text", text: "Go on." }],
+      },
+      {
+        id: "reply-later",
+        role: "assistant",
+        parts: [{ type: "text", text: "Here is the rest.", state: "done" }],
+      },
+    ]
+    const { screen } = await show({
+      initialMessages: [question, stopped, ...later],
+    })
+
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    expect(screen.getByRole("button", { name: "Try again" }).query()).toBeNull()
+  })
+
+  test("says Stopped at once when the reply is stopped here", async () => {
+    // A reply that writes a few words, then waits until it is stopped.
+    const { screen } = await show({
+      transport: () => ({
+        sendMessages: async ({ abortSignal }) =>
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "start", messageId: "reply-live" })
+              controller.enqueue({ type: "start-step" })
+              controller.enqueue({ type: "text-start", id: "t" })
+              controller.enqueue({
+                type: "text-delta",
+                id: "t",
+                delta: "A Mutual NDA fits",
+              })
+              abortSignal?.addEventListener("abort", () =>
+                controller.error(abortSignal.reason)
+              )
+            },
+          }),
+        reconnectToStream: async () => null,
+      }),
+    })
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "We share a roadmap with a vendor.{Enter}"
+    )
+    await expect.element(screen.getByText("A Mutual NDA fits")).toBeVisible()
+    expect(screen.getByText("Stopped").query()).toBeNull()
+
+    await screen.getByRole("button", { name: "Stop" }).click()
+
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    await expect
+      .element(screen.getByRole("button", { name: "Try again" }))
+      .toBeVisible()
+  })
+
+  test("says Stopped, with Try again, when stopped before Parley's first word", async () => {
+    // The request has begun, but no word has come yet when Stop is pressed.
+    let calls = 0
+    const { screen } = await show({
+      transport: (base) => ({
+        ...base,
+        sendMessages: async (options) => {
+          calls += 1
+          if (calls > 1) return base.sendMessages(options)
+          return new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "start", messageId: "reply-early" })
+              controller.enqueue({ type: "start-step" })
+              options.abortSignal?.addEventListener("abort", () =>
+                controller.error(options.abortSignal?.reason)
+              )
+            },
+          })
+        },
+      }),
+    })
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "We share a roadmap with a vendor.{Enter}"
+    )
+    await expect.element(screen.getByText("Thinking…")).toBeVisible()
+
+    await screen.getByRole("button", { name: "Stop" }).click()
+
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    await screen.getByRole("button", { name: "Try again" }).click()
+    await expect.element(screen.getByText("Mutual NDA selected")).toBeVisible()
+    expect(screen.getByText("Stopped").query()).toBeNull()
+  })
+
+  test("a stopped questionnaire, once answered, goes on and isn't Stopped", async () => {
+    // Stopped (or reloaded) after the questions came, before the turn ended.
+    const asked: ChatMessage = {
+      id: "reply-asked",
+      role: "assistant",
+      parts: [
+        { type: "step-start" },
+        {
+          type: "tool-askQuestions",
+          toolCallId: "ask-1",
+          state: "input-available",
+          input: {
+            title: "Key terms",
+            questions: [
+              {
+                name: "term",
+                prompt: "How long should the NDA last?",
+                required: true,
+                choices: [
+                  { value: "1y", label: "1 year" },
+                  { value: "2y", label: "2 years" },
+                ],
+                multiple: false,
+              },
+            ],
+          },
+        },
+        { type: "data-interrupted", data: {} },
+      ],
+    }
+    let finish = () => {}
+    const sent: (ChatMessage | undefined)[] = []
+    const { screen } = await show({
+      initialMessages: [
+        { ...question, parts: [{ type: "text", text: "The terms?" }] },
+        asked,
+      ],
+      // The same reply goes on: it updates the document, then answers.
+      transport: () => ({
+        sendMessages: async ({ messages }) => {
+          sent.push(messages.at(-1))
+          return new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "start", messageId: asked.id })
+              controller.enqueue({ type: "start-step" })
+              controller.enqueue({
+                type: "tool-input-available",
+                toolCallId: "update-1",
+                toolName: "updateFields",
+                input: {
+                  changes: [
+                    { key: "term", value: "2 years", explanation: "Asked." },
+                  ],
+                },
+              })
+              finish = () => {
+                controller.enqueue({ type: "text-start", id: "t" })
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "t",
+                  delta: "Two years it is.",
+                })
+                controller.enqueue({ type: "text-end", id: "t" })
+                controller.enqueue({ type: "finish-step" })
+                controller.enqueue({ type: "finish" })
+                controller.close()
+              }
+            },
+          })
+        },
+        reconnectToStream: async () => null,
+      }),
+    })
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    await screen.getByRole("radio", { name: "2 years" }).click()
+    await screen.getByRole("button", { name: "Send answers" }).click()
+
+    // At work again: what it does shows, as in any turn.
+    await expect
+      .element(screen.getByText("Updating the document…"))
+      .toBeVisible()
+    finish()
+
+    await expect.element(screen.getByText("Two years it is.")).toBeVisible()
+    expect(screen.getByText("Stopped").query()).toBeNull()
+    // The server is never told of the old mark either.
+    expect(sent[0]?.parts.map((part) => part.type)).not.toContain(
+      "data-interrupted"
+    )
+  })
+})
+
 describe("a long chat", () => {
   /** Twenty turns saved before this visit. */
   const history = (): ChatMessage[] =>

@@ -11,8 +11,9 @@ import type { ChatMessage } from "@/server/ai/chat"
 // that never ends (the server stopped) is said so, with Try again.
 //
 // Only a turn young enough to still be running is waited for: a chat can
-// end with the user's message for good (a provider error or a Stop before
-// Parley's first word), and a later visit must not sit on "Thinking…". A
+// end with the user's message for good (a provider error before Parley's
+// first word; a Stop then saves a Stopped reply, PAR-47), and a later visit
+// must not sit on "Thinking…". A
 // message with no save time (the page's own copy, not the server's) can't
 // be proven young, so it isn't waited for either.
 
