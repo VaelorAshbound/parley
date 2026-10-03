@@ -25,7 +25,6 @@ function polar(path: string, init: RequestInit = {}) {
     headers: {
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
-      ...init.headers,
     },
   })
 }
@@ -57,7 +56,8 @@ afterAll(async () => {
   // Only the customers this run made. One deleted by the test answers 404.
   for (const id of made) {
     const response = await polar(`/customers/${id}`, { method: "DELETE" })
-    expect([204, 404]).toContain(response.status)
+    if (response.status !== 204 && response.status !== 404)
+      throw new Error(`Sandbox customer ${id} left: ${response.status}`)
   }
 })
 
