@@ -247,9 +247,12 @@ function Working({
   )
 }
 
-/** Whether a reply was cut short by Stop or a reload (PAR-47). */
+/**
+ * Whether a reply was cut short by Stop or a reload (PAR-47): it ends with
+ * the mark, as the server saves it. A reply its answers carried on doesn't.
+ */
 export function isStopped(parts: readonly Part[]) {
-  return parts.some((part) => part.type === "data-interrupted")
+  return parts.at(-1)?.type === "data-interrupted"
 }
 
 /**

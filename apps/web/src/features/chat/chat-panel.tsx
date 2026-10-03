@@ -155,6 +155,13 @@ export function ChatPanel({
     answers: Answers
   }) => {
     settle()
+    // Answers to a stopped reply carry it on: it isn't stopped any more.
+    const last = messages.at(-1)
+    if (last && isStopped(last.parts))
+      setMessages([
+        ...messages.slice(0, -1),
+        { ...last, parts: unmarked(last) },
+      ])
     void addToolOutput({
       tool: "askQuestions",
       toolCallId,
@@ -325,4 +332,9 @@ function markStopped(messages: ChatMessage[]): ChatMessage[] {
     ...messages.slice(0, -1),
     { ...last, parts: [...last.parts, { type: "data-interrupted", data: {} }] },
   ]
+}
+
+/** The reply's parts without a Stopped mark. */
+function unmarked(message: ChatMessage) {
+  return message.parts.filter((part) => part.type !== "data-interrupted")
 }
