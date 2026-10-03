@@ -5,6 +5,7 @@ import {
   emailLinkErrorMessage,
   needsNewSignIn,
   oauthErrorMessage,
+  retryAfterOf,
 } from "./messages"
 
 describe("authErrorMessage", () => {
@@ -19,6 +20,31 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage({ code: "INVALID_CODE", status: 429 })).toBe(
       "Too many tries. Please wait 10 seconds, then try again."
     )
+  })
+
+  it("says the wait the server gave: a minute for reset and confirmation emails (PAR-20)", () => {
+    // /request-password-reset and /send-verification-email: 3 per 60 s.
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 60 })).toBe(
+      "Too many tries. Please wait a minute, then try again."
+    )
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 37 })).toBe(
+      "Too many tries. Please wait a minute, then try again."
+    )
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 7 })).toBe(
+      "Too many tries. Please wait 10 seconds, then try again."
+    )
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 600 })).toBe(
+      "Too many tries. Please wait 10 minutes, then try again."
+    )
+  })
+
+  it("reads the wait from X-Retry-After", () => {
+    const limited = (value: string) =>
+      new Response(null, { status: 429, headers: { "X-Retry-After": value } })
+
+    expect(retryAfterOf(limited("60"))).toBe(60)
+    expect(retryAfterOf(limited("soon"))).toBeUndefined()
+    expect(retryAfterOf(new Response(null, { status: 429 }))).toBeUndefined()
   })
 
   it("never says which half of the sign-in was wrong", () => {

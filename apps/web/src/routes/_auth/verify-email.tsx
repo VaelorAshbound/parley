@@ -10,6 +10,7 @@ import { authConfigQuery } from "@/features/auth/auth-config"
 import {
   authErrorMessage,
   humanCheckFailed,
+  retryAfterOf,
   verifyLinkErrorMessage,
 } from "@/features/auth/messages"
 import { authSearch } from "@/features/auth/redirect"
@@ -117,16 +118,23 @@ function ResendLink({
       return
     }
     const here = `/verify-email?${new URLSearchParams({ redirect: returnTo })}`
+    // 3 per 60 s (Better Auth): say the wait the server gives.
+    let retryAfter: number | undefined
     const { error } = await authClient.sendVerificationEmail(
       {
         email: account.email,
         callbackURL: new URL(here, window.location.origin).href,
       },
-      { headers }
+      {
+        headers,
+        onError: ({ response }) => {
+          retryAfter = retryAfterOf(response)
+        },
+      }
     )
     setState(
       error
-        ? { kind: "error", message: authErrorMessage(error) }
+        ? { kind: "error", message: authErrorMessage(error, { retryAfter }) }
         : { kind: "sent" }
     )
   }

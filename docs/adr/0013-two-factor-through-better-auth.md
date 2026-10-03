@@ -33,5 +33,5 @@ The Checkpoint 6 review (PAR-20) found gaps around the plugin's defaults: device
 ## Consequences
 
 - A Worker test (`apps/web-worker-tests/test/two-factor.test.ts`, "takes the same app code twice in its window") pins the accepted risk. When Better Auth adds a used-code check, that test fails: turn the check on and update this ADR.
-- The rate limit message says "wait 10 seconds", matching the plugin's 3 per 10 s (`src/features/auth/messages.ts`).
+- The rate limit message says how long to wait (`src/features/auth/messages.ts`): "10 seconds" for the routes limited to 3 per 10 s (sign-in, sign-up, password and email changes, each two-factor step), and "a minute" on the reset and confirmation email pages, which read X-Retry-After because Better Auth limits those to 3 per 60 s.
 - Trusted devices are kept by the plugin as `trust-device-…` rows in `verification`; `forgetTrustedDevices` (`packages/db/src/queries/accounts.ts`) deletes them by user.
