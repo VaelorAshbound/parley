@@ -1,4 +1,5 @@
 import {
+  countedAt,
   countExportsSince,
   getDraft,
   lockExports,
@@ -7,7 +8,6 @@ import {
   type Draft,
 } from "@workspace/db"
 import { definitionOf, missingFields } from "@workspace/documents"
-import { dequal } from "dequal"
 import { Temporal } from "temporal-polyfill"
 
 import { buildFile, PrintFailed, type PrintPdf } from "../files"
@@ -34,19 +34,20 @@ import { draftOwner, perUser, verified } from "./base"
 // the last one. A file built but then refused (the other request won) costs
 // one Browser Run print, a fraction of a cent.
 //
-// The file is built from the draft as it was before the print; the count is
-// taken from the draft as it is after it. If the draft was switched to
-// another agreement in between (the AI's chooseDocument can run while the
-// PDF prints), the file and the count would name different agreements, so
-// the download is refused with DOCUMENT_CHANGED and nothing is counted
-// (PAR-51). The claim reads the draft under its row lock, the same lock
-// chooseDocument and updateFields take, so no switch can land between that
-// check and the count; recordExport is also pinned to the printed agreement.
-// An edit to the same agreement during the print (a value changed or
-// cleared, the title renamed) is refused too, with its own DRAFT_CHANGED:
-// the file would hold what the draft no longer says, and a draft made
-// unfinished would be marked as downloaded. Only what goes into the file is
-// compared, so a chat turn that just touches updatedAt doesn't refuse it.
+// The file is built from the draft as it was before the ~4 s print, and the
+// draft can change meanwhile (the AI's chooseDocument or updateFields run
+// while the PDF prints). The user always gets the file they clicked, and the
+// count follows that file: it goes to the agreement printed, whatever the
+// draft is on or says afterwards (PAR-51, owner decision). So a switch
+// during the print delivers and counts the agreement in the file, and an
+// edit delivers the file as printed, counted once as its agreement.
+//
+// The claim still reads the draft under its row lock, the same lock
+// chooseDocument and updateFields take. Counting writes both a counted row
+// and the draft's firstExportedAt, and chooseDocument copies a counted row
+// into firstExportedAt when it switches back to an agreement; without the
+// row lock a switch back during the count could read "not counted" just
+// before the count lands, and leave a counted agreement looking new.
 // Holding a lock over the print instead would make every other export of
 // the user wait seconds for Browser Run.
 
@@ -56,13 +57,7 @@ export type ExportOutcome =
   | { ok: true; file: File; counted: boolean; browserMs: number | undefined }
   | {
       ok: false
-      error:
-        | "PRO_REQUIRED"
-        | "QUOTA_EXCEEDED"
-        | "NOT_FOUND"
-        | "NO_DOCUMENT"
-        | "DOCUMENT_CHANGED"
-        | "DRAFT_CHANGED"
+      error: "PRO_REQUIRED" | "QUOTA_EXCEEDED" | "NOT_FOUND" | "NO_DOCUMENT"
     }
   | { ok: false; error: "INCOMPLETE"; missing: Missing[] }
 
@@ -98,8 +93,10 @@ export async function exportDraft({
 
   const early = await decide(db, draft.firstExportedAt !== null)
   if (!early.ok) return early
-  if (draft.documentId === null) return { ok: false, error: "NO_DOCUMENT" }
-  const definition = definitionOf(draft.documentId)
+  // The agreement printed, and the one counted.
+  const { documentId } = draft
+  if (documentId === null) return { ok: false, error: "NO_DOCUMENT" }
+  const definition = definitionOf(documentId)
   const values = definition.draftSchema.parse(draft.fields)
   const missing = missingFields(definition, values)
   if (missing.length > 0)
@@ -129,24 +126,25 @@ export async function exportDraft({
     // draft procedures take only the row, so they can't deadlock with this.
     const fresh = await getDraft(tx, key, { lock: true })
     if (!fresh) return { ok: false as const, error: "NOT_FOUND" as const }
-    // The count goes to the agreement the draft is on now; the file is of
-    // the one it was on before the print. They must be the same.
-    const documentId = draft.documentId
-    if (documentId === null || fresh.documentId !== documentId)
-      return { ok: false as const, error: "DOCUMENT_CHANGED" as const }
-    // Same agreement, but is the file still what the draft says?
-    if (fresh.title !== draft.title || !dequal(fresh.fields, draft.fields))
-      return { ok: false as const, error: "DRAFT_CHANGED" as const }
-    const decision = await decide(tx, fresh.firstExportedAt !== null)
+    // Was the agreement printed counted already? The draft's own mark says
+    // so only while it is still on that agreement; after a switch, its
+    // counted row does.
+    const counted =
+      fresh.documentId === documentId
+        ? fresh.firstExportedAt !== null
+        : (await countedAt(tx, { draftId: draft.id, documentId })) !== null
+    const decision = await decide(tx, counted)
     if (!decision.ok) return decision
-    // Never hand over a file that was meant to count but wasn't.
+    // Under both locks nothing else can count it first, so a count that was
+    // due but didn't happen is a bug: fail rather than hand over a file
+    // that was never counted.
     if (
       decision.counts &&
       !(await recordExport(tx, key, new Date(now.epochMilliseconds), {
         documentId,
       }))
     )
-      return { ok: false as const, error: "DOCUMENT_CHANGED" as const }
+      throw new Error("The export was due to count but was not counted")
     return decision
   })
   if (!claimed.ok) return claimed
@@ -163,16 +161,6 @@ const errors = {
     data: z.object({
       missing: z.array(z.object({ key: z.string(), label: z.string() })),
     }),
-  },
-  DOCUMENT_CHANGED: {
-    status: 409,
-    message:
-      "The agreement changed while we made the file. Download it again to get the new one.",
-  },
-  DRAFT_CHANGED: {
-    status: 409,
-    message:
-      "The draft was edited while we made the file. Download it again to get the latest version.",
   },
   PRO_REQUIRED: { status: 402, message: "Word files come with Pro." },
   QUOTA_EXCEEDED: {
