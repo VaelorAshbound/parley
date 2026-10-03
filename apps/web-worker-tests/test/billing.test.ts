@@ -501,11 +501,37 @@ describe("checkout", () => {
     })
   })
 
-  it("still opens checkout when Polar already has this customer", async () => {
-    const { cookie } = await newAccount()
+  it.each([409, 422])(
+    "still opens checkout, quietly, when Polar already has this customer (%i)",
+    async (status) => {
+      // A second checkout: Polar already made the customer the first time
+      // (422), or has its email (409). Nothing for on-call.
+      using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const { cookie } = await newAccount()
+      polar.answer(({ method, path }) =>
+        path === "/v1/customers/"
+          ? Response.json({ detail: "exists" }, { status })
+          : method === "POST" && path === "/v1/checkouts/"
+            ? Response.json(checkoutCreated, { status: 201 })
+            : undefined
+      )
+
+      const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+      expect(response.status).toBe(200)
+      expect(checkouts()).toHaveLength(1)
+      expect(warn.mock.calls.map(([line]) => line)).not.toContainEqual(
+        expect.objectContaining({ event: "polar_customer_not_made" })
+      )
+    }
+  )
+
+  it("warns when Polar couldn't make the customer for another reason", async () => {
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { cookie, userId } = await newAccount()
     polar.answer(({ method, path }) =>
       path === "/v1/customers/"
-        ? Response.json({ detail: "exists" }, { status: 422 })
+        ? Response.json({ detail: "down" }, { status: 503 })
         : method === "POST" && path === "/v1/checkouts/"
           ? Response.json(checkoutCreated, { status: 201 })
           : undefined
@@ -514,7 +540,13 @@ describe("checkout", () => {
     const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
 
     expect(response.status).toBe(200)
-    expect(checkouts()).toHaveLength(1)
+    expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+      expect.objectContaining({
+        event: "polar_customer_not_made",
+        userId,
+        polarStatus: 503,
+      })
+    )
   })
 
   it.each([

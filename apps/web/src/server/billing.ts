@@ -375,10 +375,14 @@ async function makeCustomer(
       name: user.name,
     })
   } catch (error) {
+    // 422 (this external id) and 409 (this email) mean Polar has the
+    // customer: every second checkout. Only another answer is news.
+    const { polarStatus } = statusOf(error)
+    if (polarStatus === 409 || polarStatus === 422) return
     log(
       "warn",
       "polar_customer_not_made",
-      { userId: user.id, ...statusOf(error) },
+      { userId: user.id, polarStatus },
       error
     )
   }
