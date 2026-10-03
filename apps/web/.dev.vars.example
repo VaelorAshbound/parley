@@ -1,0 +1,30 @@
+# Local secrets for `pnpm dev`. The first `pnpm dev` copies this file to
+# .dev.vars (git ignores it) with a new BETTER_AUTH_SECRET. Everything else
+# can stay empty: the app runs, and the parts that need a key say so.
+
+# Signs sessions and cookies. Filled in by `pnpm dev` on the first run.
+BETTER_AUTH_SECRET=
+
+# The real AI (https://openrouter.ai/keys). Empty: the chat uses the scripted
+# AI of the e2e tests, which fills a Mutual NDA from canned replies.
+OPENROUTER_API_KEY=
+SCRIPTED_AI=on
+
+# Cloudflare Turnstile's test keys: the widget always passes.
+# https://developers.cloudflare.com/turnstile/troubleshooting/testing/
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
+# Optional. Empty: no Google or GitHub button.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# Optional. Empty: no email is sent (the log says email_not_configured), so
+# no address gets confirmed, and export and share need a confirmed one.
+RESEND_API_KEY=
+
+# Optional, Polar sandbox (https://sandbox.polar.sh). Empty: upgrading fails.
+POLAR_ACCESS_TOKEN=
+POLAR_WEBHOOK_SECRET=

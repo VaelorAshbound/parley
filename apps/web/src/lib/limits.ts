@@ -15,6 +15,14 @@ export type LimitTier = keyof typeof DAILY_MESSAGES
 export const MAX_MESSAGE = 4000
 
 /**
+ * How long a chat turn may still be running after it began. A page waits
+ * this long for a reply it didn't see start (use-unfinished-turn.ts), and
+ * the server refuses a retry of a turn this young that hasn't ended
+ * (server/ai/chat.ts, PAR-7): both sides agree on when Try again is real.
+ */
+export const TURN_LIFETIME_MS = 60_000
+
+/**
  * Drafts a guest may keep (spec §2 Limits). An account has no limit; signing
  * up keeps the guest's draft.
  */

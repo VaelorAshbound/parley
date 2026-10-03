@@ -9,7 +9,7 @@ import type {
 
 import type { Auth, Session } from "../auth"
 import type { PrintPdf } from "../files"
-import type { LimitTier, Limiters } from "../limits"
+import { clientAddress, type LimitTier, type Limiters } from "../limits"
 import { annotate } from "../log"
 import { planOf } from "../quota"
 
@@ -27,7 +27,7 @@ export type BaseContext = RequestHeadersPluginContext &
     printPdf: PrintPdf
     /** Keeps the Worker alive for work after the response (saving a reply). */
     waitUntil: (promise: Promise<unknown>) => void
-    /** Per-user rate limits (the Rate Limiting bindings, spec §2 Limits). */
+    /** Rate limits (the Rate Limiting bindings, spec §2 Limits). */
     limiters: Limiters
   }
 type AuthedContext = BaseContext & Session
@@ -70,6 +70,17 @@ export function perUser(limiter: keyof Limiters) {
   return createRatelimitMiddleware<AuthedContext>({
     limiter: ({ context }) => context.limiters[limiter],
     key: ({ context }) => context.user.id,
+  })
+}
+
+/**
+ * A per-address limit, for public procedures where there may be no user
+ * (PAR-13): the key is the caller's IP address (clientAddress).
+ */
+export function perAddress(limiter: keyof Limiters) {
+  return createRatelimitMiddleware<BaseContext>({
+    limiter: ({ context }) => context.limiters[limiter],
+    key: ({ context }) => clientAddress(context.reqHeaders),
   })
 }
 

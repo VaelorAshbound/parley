@@ -405,6 +405,12 @@ importers:
       '@orpc/server':
         specifier: 1.15.4
         version: 1.15.4(ws@8.21.3)
+      '@tanstack/react-start':
+        specifier: ^1.168.0
+        version: 1.168.57(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(esbuild@0.28.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.9)(supports-color@10.2.2)
+      '@vitejs/plugin-react':
+        specifier: ^6.1.1
+        version: 6.1.1(@rolldown/plugin-babel@0.2.4(@babel/core@8.0.6)(@babel/runtime@7.29.7)(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(rolldown@1.2.9))(@voidzero-dev/vite-plus-core@1.0.0-rc.0(@types/node@24.13.6)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(typescript@6.0.3))(babel-plugin-react-compiler@1.0.0)
       '@vitest/coverage-istanbul':
         specifier: 4.1.11
         version: 4.1.11(supports-color@10.2.2)(vitest@4.1.11)

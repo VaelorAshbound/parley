@@ -1,11 +1,18 @@
+import { eq } from "drizzle-orm"
 import { describe, expect } from "vite-plus/test"
 
-import { createDraft, getDraft } from "../src/queries/drafts.ts"
+import { createDraft, deleteDraft, getDraft } from "../src/queries/drafts.ts"
 import {
+  deleteMessages,
+  endTurn,
   listMessages,
   listSavedMessages,
+  MessageIdTaken,
   saveMessages,
+  startTurn,
+  turnOf,
 } from "../src/queries/messages.ts"
+import { chatTurn, message } from "../src/schema.ts"
 import { makeUser, test } from "./db.ts"
 
 const nda = { documentId: "mutual-nda", title: "NDA" } as const
@@ -109,26 +116,49 @@ describe("chat messages", () => {
     const key = { id: draft.id, userId: owner.id }
     await saveMessages(db, key, [reply])
 
-    await saveMessages(db, key, [
-      {
-        id: reply.id,
-        role: "user",
-        parts: [{ type: "text", text: "Forged." }],
-      },
-    ])
+    await expect(
+      saveMessages(db, key, [
+        {
+          id: reply.id,
+          role: "user",
+          parts: [{ type: "text", text: "Forged." }],
+        },
+      ])
+    ).rejects.toThrow(MessageIdTaken)
 
     expect(await listMessages(db, key)).toEqual([reply])
   })
 
-  test("won't move a message from one draft to another", async ({ db }) => {
+  test("never rewrites what the user said, and says so (PAR-52)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await saveMessages(db, key, [hello, reply])
+
+    await expect(
+      saveMessages(db, key, [
+        { ...hello, parts: [{ type: "text", text: "REWRITTEN." }] },
+      ])
+    ).rejects.toThrow(MessageIdTaken)
+
+    expect(await listMessages(db, key)).toEqual([hello, reply])
+  })
+
+  test("won't move a message from one draft to another, and says so (PAR-52)", async ({
+    db,
+  }) => {
     const owner = await makeUser(db)
     const first = await createDraft(db, { userId: owner.id, ...nda })
     const second = await createDraft(db, { userId: owner.id, ...nda })
     await saveMessages(db, { id: first.id, userId: owner.id }, [hello])
 
-    await saveMessages(db, { id: second.id, userId: owner.id }, [
-      { ...hello, parts: [{ type: "text", text: "Hijacked." }] },
-    ])
+    await expect(
+      saveMessages(db, { id: second.id, userId: owner.id }, [
+        { ...hello, parts: [{ type: "text", text: "Hijacked." }] },
+      ])
+    ).rejects.toThrow(MessageIdTaken)
 
     expect(await listMessages(db, { id: first.id, userId: owner.id })).toEqual([
       hello,
@@ -175,5 +205,101 @@ describe("chat messages", () => {
     expect(await saveMessages(db, { id: draft.id, userId: owner.id }, [])).toBe(
       true
     )
+  })
+
+  test("deletes the given messages of a draft the user owns, nothing else (PAR-7)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const stranger = await makeUser(db)
+    const first = await createDraft(db, { userId: owner.id, ...nda })
+    const second = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: first.id, userId: owner.id }
+    const other = { ...reply, id: "m-assistant-other" }
+    await saveMessages(db, key, [hello, reply])
+    await saveMessages(db, { id: second.id, userId: owner.id }, [other])
+
+    // Not the stranger's to delete, nor another draft's through this one.
+    await deleteMessages(db, { id: first.id, userId: stranger.id }, [reply.id])
+    await deleteMessages(db, key, [other.id])
+    expect(await listMessages(db, key)).toEqual([hello, reply])
+    expect(await listMessages(db, { id: second.id, userId: owner.id })).toEqual(
+      [other]
+    )
+
+    await deleteMessages(db, key, [reply.id])
+
+    expect(await listMessages(db, key)).toEqual([hello])
+  })
+
+  test("keeps the draft's latest turn, out of the chat (PAR-7)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const stranger = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await saveMessages(db, key, [hello])
+    expect(await turnOf(db, key)).toBeNull()
+
+    expect(await startTurn(db, key, { id: "t1", startedAt: 1 })).toBe(true)
+    expect(await turnOf(db, key)).toEqual({
+      id: "t1",
+      startedAt: 1,
+      outcome: null,
+    })
+    expect(await listMessages(db, key)).toEqual([hello])
+
+    // A later turn takes its place: the first can't end any more.
+    await startTurn(db, key, { id: "t2", startedAt: 2 })
+    expect(await endTurn(db, key, "t1", "done")).toBe(false)
+    expect(await endTurn(db, key, "t2", "failed")).toBe(true)
+    expect(await turnOf(db, key)).toEqual({
+      id: "t2",
+      startedAt: 2,
+      outcome: "failed",
+    })
+
+    // Not the stranger's to read, start or end.
+    const theirs = { id: draft.id, userId: stranger.id }
+    expect(await turnOf(db, theirs)).toBeNull()
+    expect(await startTurn(db, theirs, { id: "t3", startedAt: 3 })).toBe(false)
+    expect(await endTurn(db, theirs, "t2", "done")).toBe(false)
+    expect((await turnOf(db, key))?.outcome).toBe("failed")
+  })
+
+  test("keeps the turn in chat_turn, one row a draft, gone with the draft (PAR-7)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await saveMessages(db, key, [hello])
+
+    await startTurn(db, key, { id: "t1", startedAt: 1_700_000_000_123 })
+    await startTurn(db, key, { id: "t2", startedAt: 1_700_000_000_456 })
+    await endTurn(db, key, "t2", "done")
+
+    expect(
+      await db.select().from(chatTurn).where(eq(chatTurn.draftId, draft.id))
+    ).toEqual([
+      {
+        draftId: draft.id,
+        turnId: "t2",
+        startedAt: new Date(1_700_000_000_456),
+        outcome: "done",
+      },
+    ])
+    // The chat holds only what was said.
+    expect(
+      (
+        await db.select().from(message).where(eq(message.draftId, draft.id))
+      ).map((row) => row.role)
+    ).toEqual(["user"])
+
+    expect(await deleteDraft(db, key)).toBe(true)
+    expect(
+      await db.select().from(chatTurn).where(eq(chatTurn.draftId, draft.id))
+    ).toEqual([])
   })
 })

@@ -613,7 +613,7 @@ These use a separate test OpenRouter key with its own hard limit ($5, `OPENROUTE
 
 - [ ] Types are strict from the DB to the UI (no `any`). `pnpm check` is clean.
 - [ ] Unit, integration and e2e tests are green in CI. The eval score is shown in the README.
-- [ ] README: a 30-second GIF, an architecture diagram, "how it works", and a local setup in 3 or fewer commands.
+- [ ] README: ~~a 30-second GIF~~ (dropped by the owner, 2026-10-01), an architecture diagram, "how it works", and a local setup in 3 or fewer commands.
 - [ ] ADRs exist for these decisions: server entry, the document engine, PDF through Browser Run, guest auth, and cost limits.
 
 **Exec (cost)**

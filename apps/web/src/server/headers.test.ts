@@ -85,6 +85,21 @@ describe("withPageHeaders", () => {
     expect(response.headers.get("Referrer-Policy")).toBe("no-referrer")
   })
 
+  it("answers a page that says to retry later with 429 (PAR-13)", async () => {
+    const page = new Response("<h1>Give it a minute</h1>", {
+      headers: { "Retry-After": "60" },
+    })
+
+    const response = withPageHeaders(page, "abc")
+
+    expect(response.status).toBe(429)
+    expect(response.headers.get("Retry-After")).toBe("60")
+    expect(response.headers.get("Content-Security-Policy")).toContain(
+      "'nonce-abc'"
+    )
+    expect(await response.text()).toBe("<h1>Give it a minute</h1>")
+  })
+
   it("works on a redirect, whose headers can't be changed in place", () => {
     const redirect = Response.redirect("https://parley.app/sign-in", 307)
     const response = withPageHeaders(redirect, "abc")

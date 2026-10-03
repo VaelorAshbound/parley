@@ -237,7 +237,7 @@ export default defineConfig({
         test: {
           name: "web",
           root: "apps/web",
-          include: ["src/**/*.test.{ts,tsx}"],
+          include: ["src/**/*.test.{ts,tsx}", "dev/**/*.test.ts"],
           exclude: ["src/**/*.browser.test.tsx"],
           typecheck: {
             enabled: true,

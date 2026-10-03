@@ -19,7 +19,9 @@ import {
 import { user } from "./auth-schema.ts"
 
 // Parley's own tables (spec §2 Data model). The Better Auth tables are
-// generated into auth-schema.ts by `pnpm db:auth-schema`; don't edit that file.
+// generated into auth-schema.ts by `pnpm db:auth-schema`; don't edit that file,
+// except for the two purge indexes Better Auth can't declare (PAR-14; a test
+// in test/purge.test.ts fails when a regeneration drops them).
 
 /** A JSON object whose shape the database doesn't know. */
 export type JsonObject = { [key: string]: unknown }
@@ -110,6 +112,30 @@ export const message = pgTable(
     index("message_draft_id_created_at_idx").on(table.draftId, table.createdAt),
   ]
 )
+
+export const chatTurnOutcome = pgEnum("chat_turn_outcome", ["done", "failed"])
+
+/**
+ * A draft's latest chat turn (PAR-7): one turn at a time per draft, and only
+ * the latest turn's reply is kept. One row per draft, replaced by each new
+ * turn; no row means the draft has had no turn since this table exists. Kept
+ * out of `draft` so starting a turn neither changes the draft's row (its
+ * updated_at orders the history) nor its type.
+ */
+export const chatTurn = pgTable("chat_turn", {
+  // The primary key is the lookup index.
+  draftId: uuid("draft_id")
+    .primaryKey()
+    .references(() => draft.id, { onDelete: "cascade" }),
+  turnId: text("turn_id").notNull(),
+  // Milliseconds, like the Date.now() it is set from.
+  startedAt: timestamp("started_at", {
+    withTimezone: true,
+    precision: 3,
+  }).notNull(),
+  // Null while the turn runs, or when it never got to say how it ended.
+  outcome: chatTurnOutcome("outcome"),
+})
 
 export const share = pgTable(
   "share",

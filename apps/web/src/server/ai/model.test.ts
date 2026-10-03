@@ -35,6 +35,22 @@ describe("requestModel", () => {
     }
   )
 
+  it("uses the scripted AI where it is on and there is no OpenRouter key", async () => {
+    const model = await requestModel(
+      { OPENROUTER_API_KEY: "", SCRIPTED_AI: "on" },
+      undefined
+    )
+    expect(modelId(model)).toBe("scripted")
+  })
+
+  it("never uses the scripted AI in production, even with no key", async () => {
+    const model = await requestModel(
+      { OPENROUTER_API_KEY: "", SCRIPTED_AI: "off" },
+      undefined
+    )
+    expect(modelId(model)).toBe(MODEL_ID)
+  })
+
   it("uses the real model where it is on but the browser didn't ask", async () => {
     const model = await requestModel(
       { OPENROUTER_API_KEY: "k", SCRIPTED_AI: "on" },

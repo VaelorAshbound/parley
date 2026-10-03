@@ -65,6 +65,34 @@ async function countedFor(email: string) {
   return { userId: user.id, rows }
 }
 
+/**
+ * Waits until `n` sessions queue, directly or not, behind the lock that the
+ * session `pid` holds. Only those: other test files share the database.
+ */
+async function waitForWaitersBehind(
+  db: Awaited<ReturnType<typeof database>>,
+  pid: number,
+  n: number
+) {
+  for (let i = 0; i < 500; i++) {
+    const { rows } = await db.$client.query(
+      "select pid, pg_blocking_pids(pid) as blockers from pg_stat_activity where wait_event_type = 'Lock'"
+    )
+    const behind = new Set<number>([pid])
+    for (let grew = true; grew;) {
+      grew = false
+      for (const row of rows as { pid: number; blockers: number[] }[])
+        if (!behind.has(row.pid) && row.blockers.some((b) => behind.has(b))) {
+          behind.add(row.pid)
+          grew = true
+        }
+    }
+    if (behind.size - 1 >= n) return
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  throw new Error(`never saw ${n} sessions waiting behind ${pid}`)
+}
+
 function codeOf(error: unknown) {
   return error instanceof ORPCError ? error.code : error
 }
@@ -399,6 +427,263 @@ describe("export.pdf", () => {
     expect((await countedFor(email)).rows).toMatchObject([
       { draftId: id, documentId: "mutual-nda" },
       { draftId: id, documentId: "pilot-agreement" },
+    ])
+  })
+
+  // PAR-51 (owner decision, option c): the file is built from the draft
+  // read before the ~4 s print. Whatever happens to the draft meanwhile (the
+  // AI's chooseDocument, an edit), the user gets the file they clicked, and
+  // the count goes to the agreement in that file.
+  it("delivers and counts the agreement printed when it was switched during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    const printPdf: PrintPdf = async (html, frame) => {
+      // Another request, its own connection, while the PDF is being made.
+      await other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const file = await client.export.pdf({ id })
+
+    expect(printer.pages[0]).toContain("Bolt Retail LLC")
+    expect(file.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    expect((await countedFor(email)).rows).toMatchObject([
+      { draftId: id, documentId: "mutual-nda" },
+    ])
+    // The draft is on the Pilot Agreement now, which nobody downloaded...
+    const now = await client.drafts.get({ id })
+    expect(now.documentId).toBe("pilot-agreement")
+    expect(now.firstExportedAt).toBeNull()
+    // ...and back on the Mutual NDA, it is the one counted.
+    const back = await client.drafts.chooseDocument({
+      id,
+      documentId: "mutual-nda",
+      today,
+    })
+    expect(back.firstExportedAt).toBeInstanceOf(Date)
+  })
+
+  // The switch commits inside the export's claim transaction, after the
+  // print: between reading the draft and counting it. Something else holds
+  // the draft's row (as any edit in flight does), the AI's chooseDocument
+  // queues on it, then the export claims (PAR-51).
+  it("counts the agreement printed when it was switched while being counted", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    const holder = await database()
+    const [{ pid }] = (
+      await holder.$client.query("select pg_backend_pid() as pid")
+    ).rows
+    let id = ""
+    let choose: Promise<unknown> | undefined
+    const printPdf: PrintPdf = async (html, frame) => {
+      await holder.$client.query("begin")
+      await holder.$client.query(
+        "select id from draft where id = $1 for update",
+        [id]
+      )
+      choose = other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      await waitForWaitersBehind(holder, pid, 1)
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const exporting = safe(client.export.pdf({ id }))
+    // The export now waits on the draft's row too.
+    await waitForWaitersBehind(holder, pid, 2)
+    await holder.$client.query("commit")
+    const [{ data, error }] = await Promise.all([exporting, choose])
+
+    expect(error).toBeNull()
+    expect(data?.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    const now = await client.drafts.get({ id })
+    expect(now.documentId).toBe("pilot-agreement")
+    expect(now.firstExportedAt).toBeNull()
+    expect((await countedFor(email)).rows).toMatchObject([
+      { draftId: id, documentId: "mutual-nda" },
+    ])
+  })
+
+  it("counts the agreement printed once, with two downloads at once and a switch", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    let prints = 0
+    const printPdf: PrintPdf = async (html, frame) => {
+      prints++
+      if (prints === 1)
+        await other.drafts.chooseDocument({
+          id,
+          documentId: "pilot-agreement",
+          today,
+        })
+      return printer.printPdf(html, frame)
+    }
+    const first = (await chatClient(cookie, scriptedModel([]), printPdf)).client
+    const second = (await chatClient(cookie, scriptedModel([]), printPdf))
+      .client
+    id = await completeNda(first)
+
+    const results = await Promise.all([
+      safe(first.export.pdf({ id })),
+      safe(second.export.pdf({ id })),
+    ])
+
+    // Both printed the Mutual NDA, both get it, and it counts once.
+    expect(printer.pages).toHaveLength(2)
+    for (const page of printer.pages) expect(page).toContain("Bolt Retail LLC")
+    expect(results.map(({ error }) => error)).toEqual([null, null])
+    expect(results.map(({ data }) => data?.name)).toEqual([
+      "Mutual Non-Disclosure Agreement.pdf",
+      "Mutual Non-Disclosure Agreement.pdf",
+    ])
+    expect((await countedFor(email)).rows).toMatchObject([
+      { draftId: id, documentId: "mutual-nda" },
+    ])
+  })
+
+  it("uses exactly one free document when the last one is downloaded during a switch", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    for (const _ of [1, 2])
+      await other.export.pdf({ id: await completeNda(other) })
+    let id = ""
+    const printPdf: PrintPdf = async (html, frame) => {
+      await other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      return fakePrinter().printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const file = await client.export.pdf({ id })
+
+    expect(file.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    const rows = (await countedFor(email)).rows
+    expect(rows).toHaveLength(3)
+    expect(rows.filter((row) => row.draftId === id)).toMatchObject([
+      { documentId: "mutual-nda" },
+    ])
+    // The month is used up: the Pilot Agreement the draft is on now would
+    // be a fourth document...
+    await fill(other, id, examples["pilot-agreement"])
+    const { error } = await safe(other.export.pdf({ id }))
+    expect(codeOf(error)).toBe("QUOTA_EXCEEDED")
+    // ...while the Mutual NDA it printed stays free to download again.
+    await other.drafts.chooseDocument({ id, documentId: "mutual-nda", today })
+    await fill(other, id, filled)
+    expect((await safe(other.export.pdf({ id }))).error).toBeNull()
+    expect((await countedFor(email)).rows).toHaveLength(3)
+  })
+
+  // An edit, not a switch: the user still gets the file as it was printed,
+  // counted once as its agreement.
+  it("delivers the file as printed when the draft was edited during the print, counted once", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    let prints = 0
+    const printPdf: PrintPdf = async (html, frame) => {
+      prints++
+      if (prints === 1)
+        await other.drafts.updateFields({
+          id,
+          changes: [{ key: "purpose", value: "An edited purpose." }],
+        })
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const file = await client.export.pdf({ id })
+
+    expect(file.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    // The page printed holds the values from before the edit.
+    expect(printer.pages).toHaveLength(1)
+    expect(printer.pages[0]).toContain("Bolt Retail LLC")
+    expect(printer.pages[0]).not.toContain("An edited purpose.")
+    expect((await countedFor(email)).rows).toMatchObject([
+      { draftId: id, documentId: "mutual-nda" },
+    ])
+    expect((await client.drafts.get({ id })).firstExportedAt).toBeInstanceOf(
+      Date
+    )
+    // Downloading the edited draft is free: the document was counted.
+    await client.export.pdf({ id })
+    expect(printer.pages[1]).toContain("An edited purpose.")
+    expect((await countedFor(email)).rows).toHaveLength(1)
+  })
+
+  it("delivers the file as printed when the draft lost values to a switch away and back during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    const printPdf: PrintPdf = async (html, frame) => {
+      await other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      await other.drafts.chooseDocument({ id, documentId: "mutual-nda", today })
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const file = await client.export.pdf({ id })
+
+    expect(file.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    expect(printer.pages[0]).toContain("Bolt Retail LLC")
+    expect((await countedFor(email)).rows).toMatchObject([
+      { draftId: id, documentId: "mutual-nda" },
+    ])
+    // Back on the Mutual NDA it printed: marked as downloaded.
+    expect((await client.drafts.get({ id })).firstExportedAt).toBeInstanceOf(
+      Date
+    )
+  })
+
+  it("still downloads when the draft only got a chat message during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const printer = fakePrinter()
+    let id = ""
+    const db = await database()
+    const printPdf: PrintPdf = async (html, frame) => {
+      // A bump of updatedAt alone (as a chat turn does) is not an edit.
+      await db
+        .update(schema.draft)
+        .set({ updatedAt: new Date() })
+        .where(eq(schema.draft.id, id))
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const file = await client.export.pdf({ id })
+
+    expect(file.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    expect((await countedFor(email)).rows).toMatchObject([
+      { documentId: "mutual-nda" },
     ])
   })
 

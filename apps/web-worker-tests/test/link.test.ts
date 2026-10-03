@@ -14,10 +14,13 @@ const today = "2026-09-25"
 
 let resend: ReturnType<typeof fakeResend> | undefined
 afterEach(() => resend?.restore())
-const hello = {
-  id: "m-hello",
-  role: "user" as const,
-  parts: [{ type: "text", text: "An NDA with Bolt" }],
+/** A user's message. Ids are global (PAR-52): each guest's is its own. */
+function hello() {
+  return {
+    id: crypto.randomUUID(),
+    role: "user" as const,
+    parts: [{ type: "text", text: "An NDA with Bolt" }],
+  }
 }
 
 async function database() {
@@ -32,8 +35,9 @@ async function guestWithDraft() {
   const client = await serverClient(guest.cookie)
   const draft = await client.drafts.create({ documentId: "mutual-nda", today })
   const db = await database()
-  await saveMessages(db, { id: draft.id, userId: draft.userId }, [hello])
-  return { ...guest, draft }
+  const message = hello()
+  await saveMessages(db, { id: draft.id, userId: draft.userId }, [message])
+  return { ...guest, draft, message }
 }
 
 function newEmail() {
@@ -80,7 +84,7 @@ describe("a guest who signs up", () => {
     const db = await database()
     expect(
       await listMessages(db, { id: guest.draft.id, userId: draft.userId })
-    ).toEqual([hello])
+    ).toEqual([guest.message])
   })
 
   it("leaves no guest behind", async () => {

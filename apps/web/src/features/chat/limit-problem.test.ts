@@ -59,6 +59,16 @@ describe("limitProblem", () => {
     })
   })
 
+  it("asks to wait for a turn still running, then try again (PAR-7)", () => {
+    const error = new ORPCError("TURN_RUNNING", { defined: true, status: 409 })
+
+    expect(limitProblem(error, draftPath, inUtc)).toEqual({
+      message:
+        "Parley is still answering this, maybe in another tab. Wait a moment, then try again.",
+      retry: true,
+    })
+  })
+
   it.each([
     ["another typed error", new ORPCError("NOT_FOUND", { defined: true })],
     ["an untyped 429", new ORPCError("DAILY_LIMIT", { status: 429 })],

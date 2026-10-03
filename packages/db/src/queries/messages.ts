@@ -1,7 +1,7 @@
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, eq, exists, inArray, ne, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
-import { draft, message } from "../schema.ts"
+import { chatTurn, draft, message } from "../schema.ts"
 import type { DraftKey } from "./drafts.ts"
 
 // A draft's chat, stored as AI SDK UI messages (spec §2 Data model). Like the
@@ -45,9 +45,25 @@ export async function listSavedMessages(
 }
 
 /**
- * Saves messages to a draft the user owns: new ones are added, ones saved
- * before (same id, same draft) are replaced, like a reply that grew. It also
- * marks the draft as just changed. False when the draft isn't the user's.
+ * A message id that is already another draft's, the other speaker's, or a
+ * user's message already saved (PAR-52). The rest of that save may have gone
+ * through, so call saveMessages in a transaction when it must be all or
+ * nothing: thrown there, it undoes the whole transaction, a counted message
+ * too.
+ */
+export class MessageIdTaken extends Error {
+  override name = "MessageIdTaken"
+  constructor() {
+    super("That message id is already taken.")
+  }
+}
+
+/**
+ * Saves messages to a draft the user owns: new ones are added, and an
+ * assistant's message saved before (same id, same draft) is replaced, like a
+ * reply that grew. A user's message is never replaced. It also marks the
+ * draft as just changed. False when the draft isn't the user's; throws
+ * MessageIdTaken for an id it won't take.
  */
 export async function saveMessages(
   db: Db,
@@ -61,7 +77,7 @@ export async function saveMessages(
     .returning({ id: draft.id })
   if (touched.length === 0) return false
   if (messages.length === 0) return true
-  await db
+  const saved = await db
     .insert(message)
     .values(
       messages.map((each, index) => ({
@@ -80,12 +96,42 @@ export async function saveMessages(
       set: { parts: sql`excluded.parts` },
       // An id from another draft is never taken over, and a message never
       // changes speaker: a user's message can't rewrite the assistant's.
+      // Only a reply grows: what the user said stays as said, whatever the
+      // chat looks like to the caller (one the tools no longer fit reads as
+      // empty, so no id check before this one can see it).
       setWhere: and(
         eq(message.draftId, key.id),
-        eq(message.role, sql`excluded.role`)
+        eq(message.role, sql`excluded.role`),
+        ne(message.role, "user")
       ),
     })
+    .returning({ id: message.id })
+  // A row the guard above kept from changing is left out; without this the
+  // message would be lost with no word (PAR-52).
+  if (saved.length !== messages.length) throw new MessageIdTaken()
   return true
+}
+
+/**
+ * Deletes these messages from a draft the user owns; ids that aren't this
+ * draft's are left alone. A retried turn takes back what the failed one
+ * left after the user's message (PAR-7).
+ */
+export async function deleteMessages(
+  db: Db,
+  key: DraftKey,
+  ids: readonly string[]
+) {
+  if (ids.length === 0) return
+  await db
+    .delete(message)
+    .where(
+      and(
+        inArray(message.id, [...ids]),
+        eq(message.draftId, key.id),
+        owned(db, key)
+      )
+    )
 }
 
 /**
@@ -105,4 +151,86 @@ function withoutNul(value: unknown): unknown {
     )
   }
   return value
+}
+
+/**
+ * A draft's latest chat turn (PAR-7): which one it is, when it began and how
+ * it ended (null while it runs, or when it never got to say). One turn at a
+ * time is what a draft's chat can take, and only its reply is kept. It is the
+ * draft's one chat_turn row; a draft with none has had no turn yet.
+ */
+export type Turn = {
+  id: string
+  startedAt: number
+  outcome: "done" | "failed" | null
+}
+
+function owned(db: Db, key: DraftKey) {
+  return exists(
+    db
+      .select({ id: draft.id })
+      .from(draft)
+      .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))
+  )
+}
+
+/**
+ * Makes a new turn the draft's latest, in place of the one before. False
+ * when the draft isn't the user's. Call it under the draft's row lock, with
+ * what starts the turn, so turns can't cross.
+ */
+export async function startTurn(
+  db: Db,
+  key: DraftKey,
+  turn: { id: string; startedAt: number }
+) {
+  const [mine] = await db
+    .select({ id: draft.id })
+    .from(draft)
+    .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))
+  if (!mine) return false
+  const latest = {
+    turnId: turn.id,
+    startedAt: new Date(turn.startedAt),
+    outcome: null,
+  }
+  await db
+    .insert(chatTurn)
+    .values({ draftId: key.id, ...latest })
+    .onConflictDoUpdate({ target: chatTurn.draftId, set: latest })
+  return true
+}
+
+/** The draft's latest turn; null before its first, or when not the user's. */
+export async function turnOf(db: Db, key: DraftKey): Promise<Turn | null> {
+  const [row] = await db
+    .select({
+      id: chatTurn.turnId,
+      startedAt: chatTurn.startedAt,
+      outcome: chatTurn.outcome,
+    })
+    .from(chatTurn)
+    .where(and(eq(chatTurn.draftId, key.id), owned(db, key)))
+  if (!row) return null
+  return { ...row, startedAt: row.startedAt.getTime() }
+}
+
+/**
+ * Says how a turn ended. False when it is no longer the draft's latest (a
+ * later turn took its place): its reply is then not the chat's to keep.
+ */
+export async function endTurn(
+  db: Db,
+  key: DraftKey,
+  id: string,
+  outcome: "done" | "failed"
+) {
+  const ended = await db
+    .update(chatTurn)
+    .set({ outcome })
+    .where(
+      and(eq(chatTurn.draftId, key.id), eq(chatTurn.turnId, id), owned(db, key))
+    )
+    .returning({ id: chatTurn.draftId })
+  return ended.length > 0
 }
