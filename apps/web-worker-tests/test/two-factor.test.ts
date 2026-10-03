@@ -250,6 +250,28 @@ describe("signing in with two-factor on", () => {
     expect(await again.json()).toMatchObject({ code: "INVALID_BACKUP_CODE" })
   })
 
+  it("takes the same app code twice in its window: an accepted risk (ADR-0013)", async () => {
+    // Better Auth has no option to refuse a code already used. If this
+    // fails, it got one: turn it on and update ADR-0013.
+    const ana = await signUp()
+    const { uri } = await turnOn(ana)
+    const code = await totp(uri)
+
+    const first = await post(
+      "/api/auth/two-factor/verify-totp",
+      { code },
+      cookiesFrom(await signIn(ana.email))
+    )
+    const again = await post(
+      "/api/auth/two-factor/verify-totp",
+      { code },
+      cookiesFrom(await signIn(ana.email))
+    )
+
+    expect(first.status).toBe(200)
+    expect(again.status).toBe(200)
+  })
+
   it("tells a guest's session it has no code to check (PAR-20)", async () => {
     // A guest on /two-factor: the page names TOTP_NOT_ENABLED.
     const guest = await signInGuest()

@@ -25,7 +25,7 @@ A guest still costs money: every message is a model call. So a guest needs:
 - **Linking: `onLinkAccount` moves the data.** When a guest signs up or signs in, Better Auth calls `linkGuest`, which moves the guest's drafts, chats and today's AI usage to the account in one transaction (`moveGuestData`), then Better Auth deletes the guest. If the move throws, the guest and its drafts stay, and the user can try again.
 - **Two places where linking must not happen too early:**
   - **Email links never sign in** (`autoSignInAfterVerification: false`). Otherwise a guest who opened someone else's link would be signed in as them and hand over their draft (login CSRF).
-  - **Two-factor before linking.** The two-factor plugin is listed before `anonymous`, so a password alone links nothing. The guest is carried to the code step in a signed 10-minute cookie and linked when the code signs in (`src/server/two-factor.ts`).
+  - **Two-factor before linking.** The two-factor plugin is listed before `anonymous`, so a password alone links nothing. The guest is carried to the code step in a signed 10-minute cookie and linked when the code signs in (`src/server/two-factor.ts`). Any other new session expires that cookie, so the next person to sign in on the same browser never gets the guest (PAR-20, ADR-0013).
 - **Cleanup.** A daily cron (`src/server/cron.ts`, 03:17 UTC) deletes guests with no activity for 7 days, with everything they own, in batches of 500, plus expired sessions. Once a day, because each run wakes the Neon compute.
 
 ## Alternatives considered
