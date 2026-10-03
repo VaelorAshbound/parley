@@ -71,6 +71,26 @@ describe("sign-up", () => {
     expect(resend.linkFor(email).pathname).toBe("/api/auth/verify-email")
   })
 
+  it("says a known email has an account: an accepted trade-off (ADR-0011)", async () => {
+    // Signing up gives a session at once so a guest's draft links right
+    // away; Better Auth can only answer the same for a known email with
+    // requireEmailVerification, which would take that away (PAR-53).
+    resend = fakeResend()
+    const email = newEmail()
+    await post("/api/auth/sign-up/email", { name: "Ana", email, password })
+
+    const again = await post("/api/auth/sign-up/email", {
+      name: "Someone else",
+      email,
+      password,
+    })
+
+    expect(again.status).toBe(422)
+    expect(await again.json()).toMatchObject({
+      code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+    })
+  })
+
   it("refuses a password shorter than 10 characters", async () => {
     resend = fakeResend()
 
