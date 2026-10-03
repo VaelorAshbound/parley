@@ -7,7 +7,9 @@ import { SignOutOthers } from "./sign-out-others"
 // device keeps its 5-minute session cookie cache (server/auth.ts), so the
 // page must not say it is already done.
 
-const revokeOtherSessions = vi.hoisted(() => vi.fn())
+const revokeOtherSessions = vi.hoisted(() =>
+  vi.fn<() => Promise<{ data: unknown; error: unknown }>>()
+)
 vi.mock("@/lib/auth-client", () => ({ authClient: { revokeOtherSessions } }))
 
 afterEach(() => revokeOtherSessions.mockReset())
