@@ -45,9 +45,23 @@ export async function listSavedMessages(
 }
 
 /**
+ * A message id that is already another draft's, or the other speaker's
+ * (PAR-52). The rest of that save may have gone through, so call
+ * saveMessages in a transaction when it must be all or nothing: thrown
+ * there, it undoes the whole transaction, a counted message too.
+ */
+export class MessageIdTaken extends Error {
+  override name = "MessageIdTaken"
+  constructor() {
+    super("That message id is already taken.")
+  }
+}
+
+/**
  * Saves messages to a draft the user owns: new ones are added, ones saved
  * before (same id, same draft) are replaced, like a reply that grew. It also
- * marks the draft as just changed. False when the draft isn't the user's.
+ * marks the draft as just changed. False when the draft isn't the user's;
+ * throws MessageIdTaken when an id belongs to another draft or speaker.
  */
 export async function saveMessages(
   db: Db,
@@ -61,7 +75,7 @@ export async function saveMessages(
     .returning({ id: draft.id })
   if (touched.length === 0) return false
   if (messages.length === 0) return true
-  await db
+  const saved = await db
     .insert(message)
     .values(
       messages.map((each, index) => ({
@@ -85,6 +99,10 @@ export async function saveMessages(
         eq(message.role, sql`excluded.role`)
       ),
     })
+    .returning({ id: message.id })
+  // A row the guard above kept from changing is left out; without this the
+  // message would be lost with no word (PAR-52).
+  if (saved.length !== messages.length) throw new MessageIdTaken()
   return true
 }
 
