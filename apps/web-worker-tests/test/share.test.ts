@@ -4,11 +4,13 @@ import { schema } from "@workspace/db"
 import { eq } from "drizzle-orm"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { RATE_LIMITS } from "../../web/src/server/limits"
 import type { Router } from "../../web/src/server/rpc/router"
 import {
   browserClient,
   call,
   database,
+  roomInWindow,
   signInGuest,
   signUpVerified,
 } from "./helpers"
@@ -38,11 +40,18 @@ async function ownerWithDraft() {
   return { ...account, client, draftId: draft.id }
 }
 
-/** share.view as a stranger's browser sends it: no cookie. */
-function viewOverHttp(token: string) {
+/**
+ * share.view as a stranger's browser sends it: no cookie. From `ip` when
+ * given (Cloudflare's CF-Connecting-IP), else from a new address each time.
+ */
+function viewOverHttp(token: string, ip?: string) {
   return call("/api/rpc/share/view", {
     method: "POST",
-    headers: { "content-type": "application/json", "x-csrf-token": "orpc" },
+    headers: {
+      "content-type": "application/json",
+      "x-csrf-token": "orpc",
+      ...(ip && { "cf-connecting-ip": ip }),
+    },
     body: JSON.stringify({ json: { token } }),
   })
 }
@@ -211,6 +220,109 @@ describe("share.view", () => {
       purpose: "A changed purpose",
     })
   })
+})
+
+// PAR-13: share.view is public, so the per-user limit can't count it. Each
+// test has its own addresses.
+describe("the share limit, per address", () => {
+  const { limit, period } = RATE_LIMITS.SHARE_RATE_LIMITER
+  const unknown = "AAAAAAAAAAAAAAAAAAAAAA"
+  const timeout = (period + 30) * 1000
+
+  /** `limit` misses from `ip`, inside one window. */
+  async function useUpLimit(ip: string) {
+    await roomInWindow(period, 20_000)
+    for (let view = 0; view < limit; view += 1) {
+      const response = await viewOverHttp(unknown, ip)
+      expect(response.status).toBe(404)
+    }
+  }
+
+  it(
+    `takes ${limit} views in ${period} s from one address, then says to wait`,
+    {
+      timeout,
+    },
+    async () => {
+      await useUpLimit("198.51.100.21")
+
+      const response = await viewOverHttp(unknown, "198.51.100.21")
+
+      expect(response.status).toBe(429)
+      const body = await response.json<{ json: { code: string } }>()
+      expect(body.json.code).toBe("TOO_MANY_REQUESTS")
+    }
+  )
+
+  it("doesn't count other addresses", { timeout }, async () => {
+    const { client, draftId } = await ownerWithDraft()
+    const { token } = await client.share.create({ id: draftId })
+    await useUpLimit("198.51.100.22")
+
+    const response = await viewOverHttp(token, "198.51.100.23")
+
+    expect(response.status).toBe(200)
+  })
+
+  it("still opens a working link under the limit", { timeout }, async () => {
+    const { client, draftId } = await ownerWithDraft()
+    const { token } = await client.share.create({ id: draftId })
+    await roomInWindow(period, 20_000)
+    for (let view = 0; view < limit - 1; view += 1)
+      await viewOverHttp(unknown, "198.51.100.24")
+
+    const response = await viewOverHttp(token, "198.51.100.24")
+
+    expect(response.status).toBe(200)
+  })
+
+  it(
+    "goes by Cloudflare's address, not one the client claims",
+    {
+      timeout,
+    },
+    async () => {
+      await useUpLimit("198.51.100.25")
+
+      const response = await call("/api/rpc/share/view", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-csrf-token": "orpc",
+          "cf-connecting-ip": "198.51.100.25",
+          "x-forwarded-for": "203.0.113.50",
+          "x-real-ip": "203.0.113.51",
+          "true-client-ip": "203.0.113.52",
+        },
+        body: JSON.stringify({ json: { token: unknown } }),
+      })
+
+      expect(response.status).toBe(429)
+    }
+  )
+
+  it(
+    "counts a whole IPv6 /64 as one address",
+    {
+      timeout,
+    },
+    async () => {
+      // Anyone with IPv6 gets a /64 (2^64 addresses): a new address per
+      // view must not mean a fresh limit.
+      await roomInWindow(period, 20_000)
+      for (let view = 1; view <= limit; view += 1) {
+        const response = await viewOverHttp(
+          unknown,
+          `2001:db8:1:2::${view.toString(16)}`
+        )
+        expect(response.status).toBe(404)
+      }
+
+      const response = await viewOverHttp(unknown, "2001:db8:1:2:ffff::1")
+
+      expect(response.status).toBe(429)
+    }
+  )
 })
 
 describe("share.revoke", () => {

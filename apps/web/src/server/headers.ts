@@ -57,9 +57,16 @@ export function pageHeaders(nonce: string) {
  * The response with the page headers added. A header the route set itself
  * wins (a share page's `no-referrer`). Copied first: a redirect's headers
  * can't be changed in place.
+ *
+ * Start answers a rendered page with 200, 404 or 500 only. A page that sets
+ * Retry-After was refused for now (the share limit, PAR-13), so it becomes
+ * a 429; a 200 never carries Retry-After.
  */
 export function withPageHeaders(response: Response, nonce: string) {
-  const copy = new Response(response.body, response)
+  const refused = response.status === 200 && response.headers.has("Retry-After")
+  const copy = refused
+    ? new Response(response.body, { status: 429, headers: response.headers })
+    : new Response(response.body, response)
   for (const [name, value] of Object.entries(pageHeaders(nonce))) {
     if (!copy.headers.has(name)) copy.headers.set(name, value)
   }
