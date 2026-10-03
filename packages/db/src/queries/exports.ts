@@ -59,8 +59,16 @@ export async function countedAt(
  * `firstExportedAt` and adds a counted row. Does nothing (false) when the
  * draft was counted already, has no agreement or isn't the user's. Run it in
  * a transaction with `lockExports`.
+ *
+ * `documentId`, when given, is the agreement the file was made of: the draft
+ * is counted only while it is still on it, never as another one (PAR-51).
  */
-export async function recordExport(db: Db, key: DraftKey, at: Date) {
+export async function recordExport(
+  db: Db,
+  key: DraftKey,
+  at: Date,
+  { documentId: expected }: { documentId?: DocumentId } = {}
+) {
   const marked = await db
     .update(draft)
     // A download isn't an edit: the draft keeps its place in the sidebar.
@@ -70,7 +78,8 @@ export async function recordExport(db: Db, key: DraftKey, at: Date) {
         eq(draft.id, key.id),
         eq(draft.userId, key.userId),
         isNull(draft.firstExportedAt),
-        isNotNull(draft.documentId)
+        isNotNull(draft.documentId),
+        expected === undefined ? undefined : eq(draft.documentId, expected)
       )
     )
     .returning({ documentId: draft.documentId })
