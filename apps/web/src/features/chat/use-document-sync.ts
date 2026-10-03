@@ -33,14 +33,15 @@ export function useDocumentSync(
       if (done.has(part.toolCallId)) continue
       done.add(part.toolCallId)
       if (part.type === "tool-chooseDocument") {
-        // The new agreement shows at once, with the values the server kept
-        // (the same switchDocument it ran). Waiting for the draft load
+        // A different agreement shows at once, with the values the server
+        // kept (the same switchDocument it ran). Waiting for the draft load
         // below held back the field the AI fills next by the load's whole
-        // round trip: 130-390 ms instead of ~30 (PAR-55).
+        // round trip: 130-400 ms instead of ~30 (PAR-55). The same one
+        // again changes nothing on screen: the load is enough.
         const { documentId } = part.output
         if (isDocumentId(documentId))
           queryClient.setQueryData(draftKey, (draft) =>
-            draft
+            draft && draft.documentId !== documentId
               ? {
                   ...draft,
                   documentId,
