@@ -51,3 +51,6 @@ Wave 1 (2026-10-03, 5 lanes in parallel, load ~60): 5 s guest sign-in timeouts i
 
 ### 2026-10-03T09:53:17Z
 2026-10-03: killed test runs leak packages/db/testing/postgres.ts servers and workerd (PAR-61); every wave killed runs with timeout. The local load-related flakes (5 s sign-in timeouts, empty main at 5 s, webServer >60 s, 'fails half the time even alone') may come partly from leaked processes. Not the Firefox NS_BINDING_ABORTED (3/3) or the CI WebKit ones. Plan: fix PAR-61, then re-measure local flake rates on a clean machine (--repeat-each).
+
+### 2026-10-03T12:52:30Z
+Wave 2: the worker-test 53300 failures were a connection leak in the harness (353 idle backends, ~6.8 GB RSS); fixed in 02fc652 (38 backends). Full worker suite then passed 501-521 without reruns. Re-measure the remaining local flakes after PAR-61.

@@ -3,11 +3,11 @@ id: PAR-48
 title: >-
   Document panel shifts up ~28 px while the AI fills fields near the end of the
   page (header cut, gap at bottom)
-phase: backlog
+phase: done
 priority: medium
 origin: PAR-1
 created: 2026-10-01T19:17:33Z
-updated: 2026-10-01T19:17:33Z
+updated: 2026-10-03T12:52:29Z
 ---
 
 Seen while recording the README GIF (T39), 1280x800, Chromium, local dev, real model.

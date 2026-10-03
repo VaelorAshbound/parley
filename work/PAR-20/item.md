@@ -1,11 +1,11 @@
 ---
 id: PAR-20
 title: Two-factor hardening and small fixes from the Checkpoint 6 review
-phase: backlog
+phase: done
 priority: low
 origin: PAR-1
 created: 2026-09-28T17:21:40Z
-updated: 2026-09-28T17:21:40Z
+updated: 2026-10-03T12:52:29Z
 ---
 
 - Turning 2FA on doesn't sign out other devices: offer "Sign out other devices" on the codes step (revokeOtherSessions).
