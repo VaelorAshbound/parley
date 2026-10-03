@@ -8,15 +8,35 @@ export type AuthError = { code?: string | undefined; status: number }
 export const humanCheckFailed =
   "We couldn’t check that you’re a person. Please try again."
 
-export function authErrorMessage(error: AuthError) {
+/**
+ * A 429's X-Retry-After in seconds (Better Auth sets it), for
+ * authErrorMessage. Read it in the call's `onError({ response })`.
+ */
+export function retryAfterOf(response: Response) {
+  const seconds = Number(response.headers.get("X-Retry-After") ?? Number.NaN)
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
+}
+
+/** How long to wait, in words, rounded up. */
+function waitFor(seconds: number) {
+  if (seconds <= 10) return "10 seconds"
+  if (seconds <= 60) return "a minute"
+  return `${Math.ceil(seconds / 60)} minutes`
+}
+
+export function authErrorMessage(
+  error: AuthError,
+  { retryAfter }: { retryAfter?: number | undefined } = {}
+) {
   // Also a 429, but for 15 minutes (Better Auth's twoFactor lockout).
   if (error.code === "ACCOUNT_TEMPORARILY_LOCKED")
     return "Too many wrong codes. Please try again in 15 minutes."
-  // Better Auth's limits on these routes all last 10 s: 3 tries per network
-  // for sign-in, sign-up, password and email changes and each two-factor
-  // step, 100 for the rest.
+  // Better Auth's windows: 3 tries per 10 s per network for sign-in,
+  // sign-up, password and email changes and each two-factor step; 3 per
+  // 60 s for a reset or confirmation email (those pages pass retryAfter);
+  // 100 per 10 s for the rest. Without retryAfter, 10 s is the window.
   if (error.status === 429)
-    return "Too many tries. Please wait 10 seconds, then try again."
+    return `Too many tries. Please wait ${waitFor(retryAfter ?? 10)}, then try again.`
   switch (error.code) {
     case "INVALID_EMAIL_OR_PASSWORD":
       return "That email and password don’t match."
