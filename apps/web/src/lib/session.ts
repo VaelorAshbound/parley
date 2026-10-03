@@ -20,8 +20,9 @@ export type Viewer = {
   /** Set by Polar's webhooks (T26). */
   plan: Plan
   /**
-   * Polar knows this account as a customer (Pro now, or once): its billing
-   * portal has the invoices, even after Pro ends (PAR-21).
+   * Pro now, or paid once (Polar's customer is kept from the first paid
+   * state): its billing portal has the invoices, even after Pro ends
+   * (PAR-21). Opening checkout without paying is not enough.
    */
   hasBilling: boolean
 } | null

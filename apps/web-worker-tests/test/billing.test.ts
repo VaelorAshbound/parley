@@ -1,4 +1,4 @@
-import { schema } from "@workspace/db"
+import { polarCustomerOf, schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -48,6 +48,11 @@ async function planOf(userId: string) {
     .from(schema.user)
     .where(eq(schema.user.id, userId))
   return row?.plan
+}
+
+/** The Polar customer id Parley keeps for the user: "this user paid once". */
+async function customerIdOf(userId: string) {
+  return polarCustomerOf(await database(), userId)
 }
 
 type State = typeof active | typeof canceledAtPeriodEnd | typeof revoked
@@ -201,6 +206,39 @@ describe("Polar's webhook", () => {
 
     expect(response.status).toBe(200)
     expect(await planOf(userId)).toBe("free")
+    // Nothing left to bill: the account menu drops Billing.
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("forgets the customer when Polar no longer has it", async () => {
+    const { userId, customerId } = await accountWith(active)
+    polar.states.delete(customerId)
+
+    await deliver(stateFor(revoked, userId))
+
+    expect(await planOf(userId)).toBe("free")
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("keeps no customer for someone who opened checkout and never paid", async () => {
+    // Polar sends a state when checkout makes the customer (state-new-customer
+    // is that state, from the sandbox): no subscription, so nothing to bill.
+    const { userId } = await newAccount()
+
+    const response = await send(polar, stateFor(newCustomer, userId))
+
+    expect(response.status).toBe(200)
+    expect(await planOf(userId)).toBe("free")
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("keeps the customer after Pro ends, for past invoices", async () => {
+    const { userId, customerId } = await accountWith(active)
+
+    await send(polar, stateFor(revoked, userId))
+
+    expect(await planOf(userId)).toBe("free")
+    expect(await customerIdOf(userId)).toBe(customerId)
   })
 
   it("cancels a paid subscription whose Parley account is gone", async () => {
@@ -595,7 +633,8 @@ describe("the billing portal", () => {
   })
 
   it("stays open after Pro ends, for past invoices", async () => {
-    const { cookie } = await accountWith(revoked)
+    const { cookie, userId } = await accountWith(active)
+    await send(polar, stateFor(revoked, userId))
 
     const response = await post("/api/auth/customer/portal", {}, cookie)
 
@@ -635,6 +674,19 @@ describe("the billing portal", () => {
     expect(((await response.json()) as { code: string }).code).toBe(
       "NO_BILLING"
     )
+    // Forgotten, so the account menu stops offering a Billing that fails.
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("says there is no billing for someone who opened checkout and never paid", async () => {
+    const { cookie, userId } = await newAccount()
+    await send(polar, stateFor(newCustomer, userId))
+    polar.forget()
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(404)
+    expect(polar.calls).toHaveLength(0)
   })
 
   it("still says Polar failed when the customer is there", async () => {

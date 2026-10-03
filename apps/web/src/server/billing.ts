@@ -3,6 +3,7 @@ import { Polar } from "@polar-sh/sdk"
 import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate"
 import { ResourceNotFound } from "@polar-sh/sdk/models/errors/resourcenotfound"
 import {
+  forgetPolarCustomer,
   polarCustomerOf,
   schema,
   setPlan,
@@ -173,7 +174,7 @@ export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
       after: [
         {
           matcher: (ctx) => ctx.path === "/customer/portal",
-          handler: createAuthMiddleware(portalWithoutCustomer(env)),
+          handler: createAuthMiddleware(portalWithoutCustomer({ db, env })),
         },
       ],
     },
@@ -245,10 +246,11 @@ export async function sendEmailToPolar(
  * After the portal failed (the plugin answers 500 for any of Polar's
  * errors): when Polar has no customer for the user any more (deleted by
  * hand in its dashboard; the portal session then answers 422), say there
- * is no billing, as for someone who never bought. One more call to Polar,
- * on failures only.
+ * is no billing, as for someone who never bought, and forget the customer,
+ * so the account menu stops offering Billing. One more call to Polar, on
+ * failures only.
  */
-function portalWithoutCustomer(env: BillingEnv) {
+function portalWithoutCustomer({ db, env }: { db: Db; env: BillingEnv }) {
   return async (ctx: HookContext) => {
     // What the endpoint answered: set on after hooks' context, which
     // createAuthMiddleware's type leaves out.
@@ -256,7 +258,9 @@ function portalWithoutCustomer(env: BillingEnv) {
     if (!isAPIError(returned) || returned.statusCode !== 500) return
     const session = await getSessionFromCtx(ctx)
     if (!session) return
-    return portalWithoutCustomerAnswer(env, session.user.id)
+    const answer = await portalWithoutCustomerAnswer(env, session.user.id)
+    if (answer) await forgetPolarCustomer(db, session.user.id)
+    return answer
   }
 }
 
@@ -330,6 +334,21 @@ function soldHere(state: CustomerState, env: BillingEnv) {
   )
 }
 
+/**
+ * What the user row keeps of the customer (setPlan): its id once it paid,
+ * so a Free user who paid before still reaches past invoices (the account
+ * menu's Billing); nothing once Polar deleted it. Not before a payment:
+ * checkout makes the customer, and Polar reports it, before anyone pays.
+ */
+function customerToKeep(
+  state: CustomerState | undefined,
+  plan: Plan,
+  customerId: string
+) {
+  if (!state || state.deletedAt) return null
+  return plan === "pro" ? customerId : undefined
+}
+
 /** The customer's state now, or undefined when Polar has no such customer. */
 async function currentState(env: BillingEnv, customerId: string) {
   try {
@@ -371,7 +390,12 @@ export async function applyCustomerState(
     const at = new Date()
     const state = await currentState(env, customerId)
     const plan = state ? planFromState(state, env.POLAR_PRO_PRODUCT_ID) : "free"
-    const result = await setPlan(db, { userId, plan, at, customerId })
+    const result = await setPlan(db, {
+      userId,
+      plan,
+      at,
+      customerId: customerToKeep(state, plan, customerId),
+    })
     if (!result && state && plan === "pro" && soldHere(state, env)) {
       // Paid for an account that is gone (checkout finished in another tab
       // after it was deleted): cancel, so nobody is charged for it. Only
