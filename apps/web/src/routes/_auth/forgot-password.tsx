@@ -10,7 +10,11 @@ import { z } from "zod"
 
 import { AuthCard, authButton, footerLink } from "@/features/auth/auth-card"
 import { authConfigQuery } from "@/features/auth/auth-config"
-import { authErrorMessage, humanCheckFailed } from "@/features/auth/messages"
+import {
+  authErrorMessage,
+  humanCheckFailed,
+  retryAfterOf,
+} from "@/features/auth/messages"
 import { redirectSearch } from "@/features/auth/redirect"
 import { useTurnstile } from "@/features/auth/turnstile"
 import { authClient } from "@/lib/auth-client"
@@ -46,12 +50,19 @@ function ForgotPassword() {
         setError(humanCheckFailed)
         return
       }
+      // 3 per 60 s (Better Auth): say the wait the server gives.
+      let retryAfter: number | undefined
       const { error } = await authClient.requestPasswordReset(
         { email: value.email },
-        { headers }
+        {
+          headers,
+          onError: ({ response }) => {
+            retryAfter = retryAfterOf(response)
+          },
+        }
       )
       if (error) {
-        setError(authErrorMessage(error))
+        setError(authErrorMessage(error, { retryAfter }))
         return
       }
       setSentTo(value.email)

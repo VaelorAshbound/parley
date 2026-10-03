@@ -10,6 +10,7 @@ import {
   cookiesFrom,
   database,
   post,
+  randomIp,
   serverClient,
   signInGuest,
 } from "./helpers"
@@ -249,6 +250,68 @@ describe("signing in with two-factor on", () => {
     expect(await again.json()).toMatchObject({ code: "INVALID_BACKUP_CODE" })
   })
 
+  it("takes the same app code twice in its window: an accepted risk (ADR-0013)", async () => {
+    // Better Auth has no option to refuse a code already used. If this
+    // fails, it got one: turn it on and update ADR-0013.
+    const ana = await signUp()
+    const { uri } = await turnOn(ana)
+    const code = await totp(uri)
+
+    const first = await post(
+      "/api/auth/two-factor/verify-totp",
+      { code },
+      cookiesFrom(await signIn(ana.email))
+    )
+    const again = await post(
+      "/api/auth/two-factor/verify-totp",
+      { code },
+      cookiesFrom(await signIn(ana.email))
+    )
+
+    expect(first.status).toBe(200)
+    expect(again.status).toBe(200)
+  })
+
+  it("tells a guest's session it has no code to check (PAR-20)", async () => {
+    // A guest on /two-factor: the page names TOTP_NOT_ENABLED.
+    const guest = await signInGuest()
+
+    const response = await post(
+      "/api/auth/two-factor/verify-totp",
+      { code: "123456" },
+      guest.cookie
+    )
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ code: "TOTP_NOT_ENABLED" })
+  })
+
+  it("allows 3 codes per 10 seconds per network, as the page says (PAR-20)", async () => {
+    const ana = await signUp()
+    await turnOn(ana)
+    const challenge = cookiesFrom(await signIn(ana.email))
+    const ip = randomIp()
+    const send = () =>
+      call("/api/auth/two-factor/verify-totp", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "cf-connecting-ip": ip,
+          cookie: challenge,
+        },
+        body: JSON.stringify({ code: "000000" }),
+      })
+
+    const statuses = []
+    for (let each = 0; each < 3; each++) statuses.push((await send()).status)
+    const limited = await send()
+
+    expect(statuses).not.toContain(429)
+    expect(limited.status).toBe(429)
+    // messages.ts: "Please wait 10 seconds".
+    expect(Number(limited.headers.get("x-retry-after"))).toBeLessThanOrEqual(10)
+  })
+
   it("skips the code on a device trusted for 30 days", async () => {
     const ana = await signUp()
     const { uri } = await turnOn(ana)
@@ -334,6 +397,160 @@ describe("turning two-factor sign-in off", () => {
         )
       )
     expect(trusted).toEqual([])
+  })
+})
+
+describe("trusted devices after a new password (PAR-20)", () => {
+  /** A laptop trusted to skip the code: its trust cookie. */
+  async function trustedLaptop(email: string, uri: string) {
+    return trustCookie(
+      await post(
+        "/api/auth/two-factor/verify-totp",
+        { code: await totp(uri), trustDevice: true },
+        cookiesFrom(await signIn(email))
+      )
+    )
+  }
+
+  /** Signing in from a device that may be trusted, with a password. */
+  function signInWith(email: string, secret: string, cookie: string) {
+    return post("/api/auth/sign-in/email", { email, password: secret }, cookie)
+  }
+
+  it("are forgotten when the password is reset", async () => {
+    const ana = await signUp()
+    const db = await database()
+    // A confirmed email: an unconfirmed one is claimed on reset, which
+    // already drops two-factor and its devices.
+    await db
+      .update(schema.user)
+      .set({ emailVerified: true })
+      .where(eq(schema.user.id, ana.userId))
+    const { uri } = await turnOn(ana)
+    const laptop = await trustedLaptop(ana.email, uri)
+    await post("/api/auth/request-password-reset", {
+      email: ana.email,
+      redirectTo: "/reset-password",
+    })
+    const [row] = await db
+      .select({ identifier: schema.verification.identifier })
+      .from(schema.verification)
+      .where(
+        and(
+          eq(schema.verification.value, ana.userId),
+          like(schema.verification.identifier, "reset-password:%")
+        )
+      )
+    const token = row?.identifier.replace("reset-password:", "") ?? ""
+
+    const reset = await post("/api/auth/reset-password", {
+      token,
+      newPassword: "battery staple 2",
+    })
+
+    expect(reset.status).toBe(200)
+    const response = await signInWith(ana.email, "battery staple 2", laptop)
+    expect(await response.json()).toMatchObject({ twoFactorRedirect: true })
+  })
+
+  it("are forgotten when a password change signs the other devices out", async () => {
+    const ana = await signUp()
+    const { uri, cookie } = await turnOn(ana)
+    const laptop = await trustedLaptop(ana.email, uri)
+
+    const change = await post(
+      "/api/auth/change-password",
+      {
+        currentPassword: password,
+        newPassword: "battery staple 2",
+        revokeOtherSessions: true,
+      },
+      cookie
+    )
+
+    expect(change.status).toBe(200)
+    const response = await signInWith(ana.email, "battery staple 2", laptop)
+    expect(await response.json()).toMatchObject({ twoFactorRedirect: true })
+  })
+
+  it("stay trusted when a password change keeps the other devices", async () => {
+    const ana = await signUp()
+    const { uri, cookie } = await turnOn(ana)
+    const laptop = await trustedLaptop(ana.email, uri)
+
+    await post(
+      "/api/auth/change-password",
+      {
+        currentPassword: password,
+        newPassword: "battery staple 2",
+        revokeOtherSessions: false,
+      },
+      cookie
+    )
+
+    const response = await signInWith(ana.email, "battery staple 2", laptop)
+    expect(await response.json()).not.toHaveProperty("twoFactorRedirect")
+  })
+})
+
+describe("the guest carried through the code step (PAR-20)", () => {
+  /** A guest with a draft starts signing in to `email`: the carried cookie. */
+  async function carriedGuest(email: string) {
+    const guest = await signInGuest()
+    const client = await serverClient(guest.cookie)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    const challenge = await signIn(email, guest.cookie)
+    const carried = cookiesFrom(challenge)
+      .split("; ")
+      .filter((cookie) => cookie.includes("guest_carried="))
+      .join("; ")
+    expect(carried).toContain("guest_carried=")
+    return { draft, carried }
+  }
+
+  async function draftOwner(id: string) {
+    const db = await database()
+    const [row] = await db
+      .select({ userId: schema.draft.userId })
+      .from(schema.draft)
+      .where(eq(schema.draft.id, id))
+    return row?.userId
+  }
+
+  it("is let go by any new session", async () => {
+    const ana = await signUp()
+    await turnOn(ana)
+    const { carried } = await carriedGuest(ana.email)
+    // Someone else signs in on this browser, to an account without a code.
+    const ben = await signUp()
+
+    const response = await signIn(ben.email, carried)
+
+    expect(response.status).toBe(200)
+    expect(maxAge(response, "guest_carried")).toBe(0)
+  })
+
+  it("never hands one person's work to the next person's account", async () => {
+    const ana = await signUp()
+    await turnOn(ana)
+    const { draft, carried } = await carriedGuest(ana.email)
+    // Ana walks away; Ben, signed out, signs in on this browser to his own
+    // account with two-factor on.
+    const ben = await signUp()
+    const benCodes = await turnOn(ben)
+    const challenge = await signIn(ben.email, carried)
+
+    const response = await post(
+      "/api/auth/two-factor/verify-totp",
+      { code: await totp(benCodes.uri) },
+      jarAfter(carried, challenge)
+    )
+
+    expect(response.status).toBe(200)
+    expect(await draftOwner(draft.id)).not.toBe(ben.userId)
   })
 })
 
@@ -437,6 +654,26 @@ function trustCookie(response: Response) {
     .join("; ")
 }
 
+/**
+ * The Cookie header a browser sends after `response`: its cookies replace
+ * those with the same name, and an expired one is dropped.
+ */
+function jarAfter(cookie: string, response: Response) {
+  const jar = new Map(
+    cookie
+      .split("; ")
+      .filter(Boolean)
+      .map((each) => [each.split("=")[0], each] as const)
+  )
+  for (const set of response.headers.getSetCookie()) {
+    const [pair = ""] = set.split(";")
+    const name = pair.split("=")[0]
+    if (/max-age=0(;|$)/i.test(set)) jar.delete(name)
+    else jar.set(name, pair)
+  }
+  return [...jar.values()].join("; ")
+}
+
 /** The Max-Age of a cookie the response set. */
 function maxAge(response: Response, name: string) {
   const cookie = response.headers
@@ -444,3 +681,25 @@ function maxAge(response: Response, name: string) {
     .find((each) => each.includes(`${name}=`))
   return Number(/max-age=(\d+)/i.exec(cookie ?? "")?.[1])
 }
+
+describe("signing the other devices out after turning it on (PAR-20)", () => {
+  it("reaches a device within its 5-minute cookie cache, as the page says", async () => {
+    const ana = await signUp()
+    const phone = cookiesFrom(await signIn(ana.email))
+    const { cookie } = await turnOn(ana)
+    const cached = () =>
+      call("/api/auth/get-session", { headers: { cookie: phone } }).then(
+        (each) => each.json<{ user: { id: string } } | null>()
+      )
+    expect(await cached()).toMatchObject({ user: { id: ana.userId } })
+
+    const revoked = await post("/api/auth/revoke-other-sessions", {}, cookie)
+
+    expect(revoked.status).toBe(200)
+    // The phone's session row is gone, but its signed cookie cache still
+    // answers for up to 5 minutes: sign-out-others.tsx says "within 5
+    // minutes", not "are signed out".
+    expect(await sessionUser(phone)).toBeNull()
+    expect(await cached()).toMatchObject({ user: { id: ana.userId } })
+  })
+})

@@ -71,7 +71,7 @@ export default defineConfig({
   },
   test: {
     globalSetup: ["./test/setup.ts"],
-    setupFiles: ["./test/siteverify.ts"],
+    setupFiles: ["./test/siteverify.ts", "./test/db-clients.ts"],
     exclude: ["**/node_modules/**", "**/*.real.test.ts"],
     // Istanbul: workerd has no V8 coverage (Cloudflare's known issues,
     // https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/#coverage).

@@ -28,9 +28,11 @@ export const billingFields = {
     returned: false,
   },
   /**
-   * Polar's id for this user as a customer, from its webhooks. A customer
-   * deleted in Polar loses its external id (our user id); this still finds
-   * the user, so the plan can go back to Free.
+   * Polar's id for this user as a customer, from its webhooks: set at the
+   * first paid state, kept after Pro ends (past invoices), cleared when
+   * Polar deletes the customer. A customer deleted in Polar loses its
+   * external id (our user id); this still finds the user, so the plan can
+   * go back to Free.
    */
   polarCustomerId: {
     type: "string",

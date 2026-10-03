@@ -97,14 +97,19 @@ const alsoFilled: ChatMessage["parts"][number] = {
 }
 
 /** The page: the document panel shows the draft, and the chat syncs it. */
-async function renderPage() {
+async function renderPage(
+  start: { documentId: string | null; fields: Record<string, unknown> } = {
+    documentId: null,
+    fields: {},
+  }
+) {
   const server = heldServer()
   const queryClient = new QueryClient()
   const key = server.orpc.drafts.get.queryKey({ input: { id: draftId } })
   queryClient.setQueryData(key, {
     id: draftId,
-    documentId: null,
-    fields: {},
+    title: "Untitled",
+    ...start,
   } as never)
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
@@ -122,9 +127,13 @@ async function renderPage() {
     },
     { wrapper, initialProps: { messages: [] as ChatMessage[] } }
   )
-  const shown = (field: string) =>
-    (queryClient.getQueryData(key) as { fields: Record<string, unknown> })
-      .fields[field]
+  const draft = () =>
+    queryClient.getQueryData(key) as {
+      title: string
+      documentId: string | null
+      fields: Record<string, unknown>
+    }
+  const shown = (field: string) => draft().fields[field]
   const loading = () => queryClient.isFetching({ queryKey: key })
   /** Lets every held read answer, until none is left. */
   const answerAll = async () => {
@@ -135,7 +144,7 @@ async function renderPage() {
       })
       .toBe(0)
   }
-  return { server, rerender, shown, loading, answerAll }
+  return { server, rerender, draft, shown, loading, answerAll }
 }
 
 test("a draft load that started before a field was saved does not undo the field", async () => {
@@ -186,4 +195,42 @@ test("a field change with no load on its way does not load the draft again", asy
 
   expect(shown("purpose")).toBe(roadmap)
   expect(loading()).toBe(0)
+})
+
+// PAR-55: the agreement the AI picks shows at once, from the tool's result,
+// not when the draft load it starts comes back. A field the AI fills right
+// after then shows within the frame, however slow that load is.
+test("the chosen agreement and the next field show before the draft load answers", async () => {
+  const { server, rerender, shown, loading, draft } = await renderPage()
+
+  server.saved.documentId = "mutual-nda"
+  await rerender({ messages: reply([chose]) })
+  expect(loading()).toBe(1)
+  expect(draft().documentId).toBe("mutual-nda")
+  // The header's title comes with the tool's result too.
+  expect(draft().title).toBe("Mutual NDA")
+  // The new agreement's defaults, as the server seeds them.
+  expect(shown("purpose")).toBe(
+    "Evaluating whether to enter into a business relationship with the other party."
+  )
+
+  await rerender({ messages: reply([chose, filled]) })
+  expect(loading()).toBe(1)
+  expect(draft().documentId).toBe("mutual-nda")
+  expect(shown("purpose")).toBe(roadmap)
+})
+
+test("choosing the agreement the draft already has keeps its values", async () => {
+  // The draft already is a Mutual NDA, with a purpose of its own.
+  const own = { documentId: "mutual-nda", fields: { purpose: roadmap } }
+  const { server, rerender, loading, draft } = await renderPage(own)
+  Object.assign(server.saved, own)
+
+  // The AI picks the same agreement again: nothing on screen changes while
+  // the load it starts is on its way, and no defaults are seeded over it.
+  await rerender({ messages: reply([chose]) })
+  expect(loading()).toBe(1)
+  expect(draft().documentId).toBe("mutual-nda")
+  // Not even the defaults of the fields it leaves empty.
+  expect(draft().fields).toEqual({ purpose: roadmap })
 })

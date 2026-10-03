@@ -196,3 +196,98 @@ test("keeps what was typed before the page hydrated, and sends it", async () => 
   expect(onSend).toHaveBeenCalledWith("We share our roadmap with a vendor.")
   container.remove()
 })
+
+describe("Enter while Parley is still answering (PAR-46)", () => {
+  const hint = "Parley is still answering. Send when it’s done."
+  /** What the form's polite live regions tell a screen reader. */
+  const announced = (container: HTMLElement) =>
+    [...container.querySelectorAll("[aria-live=polite]")]
+      .map((region) => region.textContent)
+      .join("")
+
+  test("keeps the text and says why it waits, on screen and to a screen reader", async () => {
+    const onSend = vi.fn<(text: string) => void>()
+    const screen = await render(
+      <Composer busy onSend={onSend} onStop={() => {}} />
+    )
+    const box = screen.getByRole("textbox", { name: "Message" })
+    expect(announced(screen.container)).toBe("")
+
+    await userEvent.type(box, "And the term?{Enter}")
+
+    expect(onSend).not.toHaveBeenCalled()
+    await expect.element(box).toHaveValue("And the term?")
+    await expect.element(screen.getByText(hint)).toBeVisible()
+    await expect
+      .element(screen.getByText(hint))
+      .toHaveAttribute("aria-live", "polite")
+    expect(announced(screen.container)).toBe(hint)
+  })
+
+  test("goes when the turn ends, and the kept text sends", async () => {
+    const onSend = vi.fn<(text: string) => void>()
+    const screen = await render(
+      <Composer busy onSend={onSend} onStop={() => {}} />
+    )
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.type(box, "And the term?{Enter}")
+    await expect.element(screen.getByText(hint)).toBeVisible()
+
+    await screen.rerender(<Composer busy={false} onSend={onSend} />)
+
+    expect(screen.getByText(hint).query()).toBeNull()
+    expect(announced(screen.container)).toBe("")
+    await userEvent.keyboard("{Enter}")
+    expect(onSend).toHaveBeenCalledExactlyOnceWith("And the term?")
+  })
+
+  test("goes when the box is emptied: there is nothing left to send", async () => {
+    const screen = await render(
+      <Composer busy onSend={() => {}} onStop={() => {}} />
+    )
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.type(box, "And the term?{Enter}")
+    await expect.element(screen.getByText(hint)).toBeVisible()
+
+    await userEvent.clear(box)
+
+    expect(screen.getByText(hint).query()).toBeNull()
+    expect(announced(screen.container)).toBe("")
+  })
+
+  test("never shows while Parley is idle, nor before Enter in a new turn", async () => {
+    const screen = await render(<Composer busy={false} onSend={() => {}} />)
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.type(box, "{Enter}Hello{Enter}")
+    expect(screen.getByText(hint).query()).toBeNull()
+
+    await screen.rerender(<Composer busy onSend={() => {}} onStop={() => {}} />)
+    await userEvent.type(box, "More")
+
+    expect(screen.getByText(hint).query()).toBeNull()
+    expect(announced(screen.container)).toBe("")
+  })
+
+  test("Stop stops, and leaves the waiting text unsent", async () => {
+    // Stop ends the turn in its own click, as useChat's stop() can: the Send
+    // button that takes its place mustn't take the click too.
+    const onSend = vi.fn<(text: string) => void>()
+    function Turn() {
+      const [busy, setBusy] = useState(true)
+      return (
+        <Composer busy={busy} onSend={onSend} onStop={() => setBusy(false)} />
+      )
+    }
+    const screen = await render(<Turn />)
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.type(box, "And the term?{Enter}")
+
+    await screen.getByRole("button", { name: "Stop" }).click()
+
+    await expect
+      .element(screen.getByRole("button", { name: "Send" }))
+      .toBeEnabled()
+    expect(onSend).not.toHaveBeenCalled()
+    await expect.element(box).toHaveValue("And the term?")
+  })
+})

@@ -70,6 +70,43 @@ export const scripts: {
     ],
   },
   {
+    // Fills the NDA's signature table, at the end of the cover page, so the
+    // panel scrolls down to it (PAR-48).
+    when: /\bsigning parties\b/i,
+    steps: [
+      [
+        {
+          tool: "updateFields",
+          input: {
+            changes: [
+              {
+                key: "party1",
+                value: {
+                  company: "Acme Analytics, Inc.",
+                  name: "Ana Diaz",
+                  title: "CEO",
+                  email: "legal@acme.test",
+                },
+                explanation: "Who signs for the first party.",
+              },
+              {
+                key: "party2",
+                value: {
+                  company: "Bolt Retail LLC",
+                  name: "Bo Chen",
+                  title: "COO",
+                  email: "bo@bolt.test",
+                },
+                explanation: "Who signs for the second party.",
+              },
+            ],
+          },
+        },
+      ],
+      [{ text: "I filled in both signing parties." }],
+    ],
+  },
+  {
     // Story 2: a suggestion that names the related agreements.
     when: /\bcloud software\b/i,
     steps: [

@@ -204,6 +204,89 @@ test("loading a draft doesn't shift the layout", async ({ page }) => {
   expect(shift).toBeLessThanOrEqual(0.02)
 })
 
+test("the panel stays put when the AI fills the signature table at the end", async ({
+  page,
+}) => {
+  // PAR-48: scrolling to a change near the end moved the whole panel up
+  // 28 px (its header half cut, a gap at the bottom) until a reload.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await startNda(page)
+  const doc = page.getByRole("region", { name: "Live document" })
+  const header = doc.locator("header").first()
+  await expect.poll(async () => (await header.boundingBox())?.y).toBe(0)
+
+  await page
+    .getByRole("textbox", { name: "Message" })
+    .fill("Fill in the signing parties.")
+  await page.keyboard.press("Enter")
+  const company = doc.getByText("Bolt Retail LLC").first()
+  await expect(company).toBeInViewport()
+  // The panel scrolls smoothly to the change: wait until nothing scrolls.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        let timer = setTimeout(resolve, 600)
+        document.addEventListener(
+          "scroll",
+          () => {
+            clearTimeout(timer)
+            timer = setTimeout(resolve, 600)
+          },
+          { capture: true }
+        )
+      })
+  )
+
+  // The cause, pinned: the document's own scroller followed the AI, and
+  // nothing around the panel scrolled (its wrapper had moved 28 px).
+  const scrolled = await doc.evaluate((section) => {
+    const own = [...section.querySelectorAll("*")].find(
+      (el) => getComputedStyle(el).overflowY === "auto"
+    )
+    let around = 0
+    for (let el = section.parentElement; el; el = el.parentElement)
+      around += el.scrollTop
+    return { own: own?.scrollTop ?? 0, around }
+  })
+  expect(scrolled.own).toBeGreaterThan(0)
+  expect(scrolled.around).toBe(0)
+  expect((await header.boundingBox())?.y).toBe(0)
+  const panel = await doc.boundingBox()
+  expect(panel && panel.y + panel.height).toBe(800)
+})
+
+test("the AI switches the panel from one agreement to another", async ({
+  page,
+}) => {
+  // PAR-55: the new agreement went into the cache at once, but the panel
+  // still drew the old agreement's deferred values against the new one's
+  // schema, and the page fell to the error screen.
+  await startNda(page)
+  const doc = page.getByRole("region", { name: "Live document" })
+  const ndaTitle = doc.getByRole("heading", {
+    level: 2,
+    name: "Mutual Non-Disclosure Agreement",
+    exact: true,
+  })
+  await expect(ndaTitle).toBeVisible()
+
+  await page
+    .getByRole("textbox", { name: "Message" })
+    .fill("We sell cloud software to hospitals.")
+  await page.keyboard.press("Enter")
+
+  await expect(
+    page.getByText("I picked the Cloud Service Agreement.")
+  ).toBeVisible()
+  await expect(
+    doc
+      .getByRole("heading", { level: 2, name: "Cloud Service Agreement" })
+      // The panel's title; the cover page and the terms repeat it.
+      .first()
+  ).toBeVisible()
+  await expect(ndaTitle).toHaveCount(0)
+})
+
 for (const width of [1440, 1024, 375]) {
   test(`draft page at ${width} px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 })

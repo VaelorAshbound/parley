@@ -8,12 +8,35 @@ export type AuthError = { code?: string | undefined; status: number }
 export const humanCheckFailed =
   "We couldn’t check that you’re a person. Please try again."
 
-export function authErrorMessage(error: AuthError) {
+/**
+ * A 429's X-Retry-After in seconds (Better Auth sets it), for
+ * authErrorMessage. Read it in the call's `onError({ response })`.
+ */
+export function retryAfterOf(response: Response) {
+  const seconds = Number(response.headers.get("X-Retry-After") ?? Number.NaN)
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
+}
+
+/** How long to wait, in words, rounded up. */
+function waitFor(seconds: number) {
+  if (seconds <= 10) return "10 seconds"
+  if (seconds <= 60) return "a minute"
+  return `${Math.ceil(seconds / 60)} minutes`
+}
+
+export function authErrorMessage(
+  error: AuthError,
+  { retryAfter }: { retryAfter?: number | undefined } = {}
+) {
   // Also a 429, but for 15 minutes (Better Auth's twoFactor lockout).
   if (error.code === "ACCOUNT_TEMPORARILY_LOCKED")
     return "Too many wrong codes. Please try again in 15 minutes."
+  // Better Auth's windows: 3 tries per 10 s per network for sign-in,
+  // sign-up, password and email changes and each two-factor step; 3 per
+  // 60 s for a reset or confirmation email (those pages pass retryAfter);
+  // 100 per 10 s for the rest. Without retryAfter, 10 s is the window.
   if (error.status === 429)
-    return "Too many tries. Please wait a minute, then try again."
+    return `Too many tries. Please wait ${waitFor(retryAfter ?? 10)}, then try again.`
   switch (error.code) {
     case "INVALID_EMAIL_OR_PASSWORD":
       return "That email and password don’t match."
@@ -49,19 +72,37 @@ export function authErrorMessage(error: AuthError) {
       return "Your sign-in timed out. Please sign in again."
     case "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE":
       return "Too many wrong codes. Please sign in again."
+    // A code sent from a session with no two-factor: a guest's, on
+    // /two-factor without a password step first (PAR-20).
+    case "TOTP_NOT_ENABLED":
+    case "BACKUP_CODES_NOT_ENABLED":
+      return "No sign-in is waiting for a code. Please sign in again."
     default:
       return "Something went wrong. Please try again."
   }
 }
 
 /**
- * The code step is over (it lasts 10 minutes and takes 5 wrong codes): the
- * next try starts again from the password.
+ * Settings → Two-factor → Turn on. A TOTP_NOT_ENABLED there means the
+ * setup was undone (turned off in another tab), not that a sign-in waits:
+ * signing in again wouldn't help.
+ */
+export function setupErrorMessage(error: AuthError) {
+  return error.code === "TOTP_NOT_ENABLED"
+    ? "Two-factor setup was reset. Close this and start again."
+    : authErrorMessage(error)
+}
+
+/**
+ * The code step is over (it lasts 10 minutes and takes 5 wrong codes), or
+ * never began: the next try starts again from the password.
  */
 export function needsNewSignIn(code: string | undefined) {
   return (
     code === "INVALID_TWO_FACTOR_COOKIE" ||
-    code === "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE"
+    code === "TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE" ||
+    code === "TOTP_NOT_ENABLED" ||
+    code === "BACKUP_CODES_NOT_ENABLED"
   )
 }
 
