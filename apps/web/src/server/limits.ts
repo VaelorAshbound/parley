@@ -19,15 +19,21 @@ export const RATE_LIMITS = {
   EXPORT_RATE_LIMITER: { limit: 10, period: 60 },
   /** Checkout and the billing portal: each calls Polar's API (T26). */
   BILLING_RATE_LIMITER: { limit: 5, period: 60 },
+  /**
+   * Share links (share.view and the /s/:token page), per IP address: whoever
+   * opens a link may have no session (PAR-13).
+   */
+  SHARE_RATE_LIMITER: { limit: 30, period: 60 },
 } as const
 
 type Binding = keyof typeof RATE_LIMITS
 
-/** The per-user limiters, on the procedures' context. */
+/** The limiters on the procedures' context: per user, and `share` per address. */
 export type Limiters = {
   rpc: Ratelimiter
   ai: Ratelimiter
   export: Ratelimiter
+  share: Ratelimiter
 }
 
 export function limitersFrom(
@@ -37,7 +43,20 @@ export function limitersFrom(
     rpc: new CloudflareRatelimiter(env.RPC_RATE_LIMITER),
     ai: new CloudflareRatelimiter(env.AI_RATE_LIMITER),
     export: new CloudflareRatelimiter(env.EXPORT_RATE_LIMITER),
+    share: new CloudflareRatelimiter(env.SHARE_RATE_LIMITER),
   }
+}
+
+/**
+ * The caller's IP address, for limits on public procedures. Only Cloudflare's
+ * CF-Connecting-IP: its edge sets it and overwrites one the client sends.
+ * X-Forwarded-For, X-Real-IP and True-Client-IP come from the client and
+ * would let anyone pick a fresh address per request. Without the header
+ * (never on Cloudflare) every caller shares one count, so the limit still
+ * holds.
+ */
+export function clientAddress(headers: Headers | undefined) {
+  return headers?.get("cf-connecting-ip") ?? "no-address"
 }
 
 /** AI messages a day, counted per UTC day in `ai_usage` (shared with the UI). */

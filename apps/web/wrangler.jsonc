@@ -106,6 +106,15 @@
       "namespace_id": "2704",
       "simple": { "limit": 5, "period": 60 },
     },
+    // Share links (share.view and the /s/:token page), per IP address, not
+    // per user: whoever opens a link may have no session (PAR-13). A link is
+    // one call per page load; this leaves room for a whole office behind one
+    // address, and makes a burst of guessed tokens cost nothing.
+    {
+      "name": "SHARE_RATE_LIMITER",
+      "namespace_id": "2705",
+      "simple": { "limit": 30, "period": 60 },
+    },
   ],
   // Neon through Hyperdrive with query caching OFF: a cached SELECT would
   // show a stale draft or a revoked share link (spec §5 Database). Local dev
@@ -163,6 +172,11 @@
         "name": "BILLING_RATE_LIMITER",
         "namespace_id": "2714",
         "simple": { "limit": 5, "period": 60 },
+      },
+      {
+        "name": "SHARE_RATE_LIMITER",
+        "namespace_id": "2715",
+        "simple": { "limit": 30, "period": 60 },
       },
     ],
     // Previews never touch production data. "parley-preview" → the Neon

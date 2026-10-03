@@ -8,7 +8,7 @@ import { definitionOf } from "@workspace/documents"
 
 import { logInfo } from "../log"
 import { z } from "../zod"
-import { authed, draftOwner, pub, verified } from "./base"
+import { authed, draftOwner, perAddress, pub, verified } from "./base"
 
 // Read-only share links (spec §2, user story 9; T25). A link is a token of
 // 128 random bits; whoever has it can read the draft's document at
@@ -75,8 +75,12 @@ export const share = {
   /**
    * What the share page shows anyone with the link. A link that is off,
    * unknown or deleted is the same "not found", so links can't be probed.
+   * Limited per IP address before anything else, bad tokens included, so a
+   * burst of guesses costs no database reads (PAR-13). The /s/:token page
+   * calls it too (SSR), with the visitor's own headers.
    */
   view: pub
+    .use(perAddress("share"))
     .input(z.object({ token }))
     .errors({
       NOT_FOUND: {
