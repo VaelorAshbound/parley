@@ -2,6 +2,7 @@ import { describe, expect } from "vite-plus/test"
 
 import { createDraft, getDraft } from "../src/queries/drafts.ts"
 import {
+  deleteMessages,
   listMessages,
   listSavedMessages,
   MessageIdTaken,
@@ -182,5 +183,30 @@ describe("chat messages", () => {
     expect(await saveMessages(db, { id: draft.id, userId: owner.id }, [])).toBe(
       true
     )
+  })
+
+  test("deletes the given messages of a draft the user owns, nothing else (PAR-7)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const stranger = await makeUser(db)
+    const first = await createDraft(db, { userId: owner.id, ...nda })
+    const second = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: first.id, userId: owner.id }
+    const other = { ...reply, id: "m-assistant-other" }
+    await saveMessages(db, key, [hello, reply])
+    await saveMessages(db, { id: second.id, userId: owner.id }, [other])
+
+    // Not the stranger's to delete, nor another draft's through this one.
+    await deleteMessages(db, { id: first.id, userId: stranger.id }, [reply.id])
+    await deleteMessages(db, key, [other.id])
+    expect(await listMessages(db, key)).toEqual([hello, reply])
+    expect(await listMessages(db, { id: second.id, userId: owner.id })).toEqual(
+      [other]
+    )
+
+    await deleteMessages(db, key, [reply.id])
+
+    expect(await listMessages(db, key)).toEqual([hello])
   })
 })

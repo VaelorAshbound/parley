@@ -15,14 +15,21 @@ import type { ChatMessage } from "@/server/ai/chat"
 // https://orpc.dev/docs/integrations/ai-sdk
 export function chatTransport(orpc: Orpc): ChatTransport<ChatMessage> {
   return {
-    async sendMessages({ chatId, messages, abortSignal }) {
+    async sendMessages({ chatId, messages, abortSignal, body }) {
       const message = messages.at(-1)
       const today = Temporal.Now.plainDateISO().toString()
       const stream =
         message?.role === "assistant"
-          ? // Sent by sendAutomaticallyWhen once the questions are answered.
+          ? // Sent by sendAutomaticallyWhen once the questions are answered,
+            // or by Try again after that turn failed (`retry`, PAR-7).
             await orpc.chat.answer.call(
-              { id: chatId, today, calls: answeredCalls(message) },
+              {
+                id: chatId,
+                today,
+                calls: answeredCalls(message),
+                retry:
+                  body !== undefined && "retry" in body && body.retry === true,
+              },
               { signal: abortSignal }
             )
           : await orpc.chat.send.call(
@@ -59,6 +66,34 @@ export function answeredCalls(message: ChatMessage) {
       ? [{ toolCallId: part.toolCallId, answers: part.output.answers }]
       : []
   )
+}
+
+/**
+ * The reply as it was when its last questions were answered, for Try again
+ * after that answer turn failed (PAR-7): what the failed turn wrote after
+ * them goes, and the answers are sent again. Null when the reply has no
+ * answered questions, or has open ones: then the turn to retry is the
+ * user's message.
+ */
+export function answersToRetry(message: ChatMessage): ChatMessage | null {
+  const { parts } = message
+  if (message.role !== "assistant") return null
+  if (
+    parts.some(
+      (part) =>
+        part.type === "tool-askQuestions" && part.state === "input-available"
+    )
+  )
+    return null
+  const answeredAt = parts.findLastIndex(
+    (part) =>
+      part.type === "tool-askQuestions" && part.state === "output-available"
+  )
+  if (answeredAt === -1) return null
+  const next = parts.findIndex(
+    (part, index) => index > answeredAt && part.type === "step-start"
+  )
+  return next === -1 ? message : { ...message, parts: parts.slice(0, next) }
 }
 
 function lastStep(message: ChatMessage) {
