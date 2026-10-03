@@ -91,11 +91,24 @@ export function billingPlugin({
   })
 }
 
-/** What Parley reads from a webhook: which customer's state changed. */
+/**
+ * What Parley reads from a webhook: which customer's state changed. Polar
+ * sends `external_id: null` for a customer without one; a missing field
+ * means the same.
+ */
 const stateChanged = z.object({
   type: z.literal("customer.state_changed"),
-  data: z.object({ id: z.string(), external_id: z.string().nullable() }),
+  data: z.object({ id: z.string(), external_id: z.string().nullish() }),
 })
+
+/** The webhook's event type, when it has one. */
+function typeOf(event: unknown) {
+  const type: unknown =
+    typeof event === "object" && event !== null && "type" in event
+      ? event.type
+      : undefined
+  return typeof type === "string" ? type : undefined
+}
 
 /**
  * Polar's webhooks at /api/auth/polar/webhooks (the plugin's path). The
@@ -125,13 +138,29 @@ export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
               message: "The webhook's signature doesn't match.",
             })
           }
+          // Other events are acknowledged and ignored.
+          if (typeOf(event) !== "customer.state_changed")
+            return ctx.json({ received: true })
           const state = stateChanged.safeParse(event)
-          // A throw answers 500, and Polar sends it again later.
-          if (state.success)
-            await applyCustomerState(db, env, {
-              customerId: state.data.data.id,
-              externalId: state.data.data.external_id,
+          if (!state.success) {
+            // Signed by Polar, so acknowledged (sending it again wouldn't
+            // read better), but seen: a plan that never changes must leave
+            // a trace. Field paths only: the payload holds the customer's
+            // email and name.
+            log("warn", "polar_webhook_unreadable", {
+              type: "customer.state_changed",
+              webhookId: ctx.request?.headers.get("webhook-id") ?? undefined,
+              issues: state.error.issues
+                .map((issue) => issue.path.join("."))
+                .join(","),
             })
+            return ctx.json({ received: true })
+          }
+          // A throw answers 500, and Polar sends it again later.
+          await applyCustomerState(db, env, {
+            customerId: state.data.data.id,
+            externalId: state.data.data.external_id ?? null,
+          })
           return ctx.json({ received: true })
         }
       ),

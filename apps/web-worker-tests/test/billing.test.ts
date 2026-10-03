@@ -1,7 +1,7 @@
 import { schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { cancelBilling } from "../../web/src/server/billing"
 import checkoutCreated from "./fixtures/polar/checkout-created.json"
@@ -256,6 +256,45 @@ describe("Polar's webhook", () => {
     const response = await deliver(stateFor(active, userId))
 
     expect(response.status).toBe(500)
+    expect(await planOf(userId)).toBe("free")
+  })
+
+  it("warns, without the payload, when a state change can't be read", async () => {
+    // Signed by Polar, so it is acknowledged (a retry wouldn't read better),
+    // but on-call must see it: a plan that never changes leaves no trace.
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { email, userId } = await newAccount()
+    const base = stateFor(active, userId)
+    const unreadable = { ...base, data: { ...base.data, id: 42, email } }
+
+    const response = await deliver(unreadable)
+
+    expect(response.status).toBe(200)
+    expect(await planOf(userId)).toBe("free")
+    const lines = warn.mock.calls.map(([line]) => line as object)
+    expect(lines).toContainEqual(
+      expect.objectContaining({
+        level: "warn",
+        event: "polar_webhook_unreadable",
+        type: "customer.state_changed",
+        issues: "data.id",
+      })
+    )
+    // Polar's payload holds the customer's email and name: never logged.
+    expect(JSON.stringify(lines)).not.toContain(email)
+    expect(JSON.stringify(lines)).not.toContain(userId)
+  })
+
+  it("reads a state change with no external id at all", async () => {
+    // Polar may leave the field out instead of sending null; the customer
+    // id still finds the user.
+    const { userId } = await accountWith(active)
+    const base = stateFor(revoked, userId)
+    const { external_id: _, ...data } = base.data
+
+    const response = await send(polar, { ...base, data })
+
+    expect(response.status).toBe(200)
     expect(await planOf(userId)).toBe("free")
   })
 
