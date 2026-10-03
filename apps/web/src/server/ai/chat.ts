@@ -21,7 +21,6 @@ import {
   safeValidateUIMessages,
   streamText,
   toUIMessageStream,
-  type UIDataTypes,
   type UIMessage,
 } from "ai"
 
@@ -63,7 +62,17 @@ import { chatTools, runningTools, type ChatTools } from "./tools"
  * (PAR-33). Messages the page makes have none.
  */
 export type ChatMetadata = { savedAt?: number }
-export type ChatMessage = UIMessage<ChatMetadata, UIDataTypes, ChatTools>
+/**
+ * What the server adds to a reply's parts. `interrupted` ends a reply cut
+ * short by Stop or a reload (PAR-47), so a later visit can say so. It rides
+ * in the stored parts (the message table has no metadata), and the model
+ * never sees it: data parts aren't converted for it.
+ */
+const dataSchemas = { interrupted: z.object({}) }
+export type ChatData = {
+  [name in keyof typeof dataSchemas]: z.infer<(typeof dataSchemas)[name]>
+}
+export type ChatMessage = UIMessage<ChatMetadata, ChatData, ChatTools>
 type Part = ChatMessage["parts"][number]
 type OpenQuestions = Extract<
   Part,
@@ -108,6 +117,7 @@ async function history(db: Db, key: DraftKey) {
       metadata: { savedAt: savedAt.getTime() },
     })),
     tools: chatTools,
+    dataSchemas,
   })
   return result.success ? result.data : []
 }
@@ -269,7 +279,11 @@ function retriedAnswers(
           canonical(part.output.answers)
       )
     })
-  return same ? { ...message, parts: parts.slice(0, step.end) } : null
+  // A reply stopped right after the answers ends with its mark (PAR-47):
+  // the retry is running, not stopped.
+  return same
+    ? { ...message, parts: markedParts(parts.slice(0, step.end), false) }
+    : null
 }
 
 /** What a user's message says: its text parts, joined. */
@@ -371,6 +385,8 @@ function turnLog(
     close: () => end("done"),
     /** How the turn ended, once it has: a stop counts as failed. */
     outcome: (): "done" | "failed" => (failure || stopped ? "failed" : "done"),
+    /** Whether the reader left (Stop, a reload) before the reply ended. */
+    stopped: () => stopped && !failure,
     fields,
   }
 }
@@ -409,6 +425,18 @@ function isEmptyPart(part: Part) {
   )
 }
 
+/** Marks the end of a reply cut short (PAR-47). */
+const INTERRUPTED: Part = { type: "data-interrupted", data: {} }
+
+/**
+ * The reply's parts, without a mark from an earlier save (a reply its
+ * answers carried on), and marked when this turn was stopped.
+ */
+function markedParts(parts: readonly Part[], stopped: boolean) {
+  const own = parts.filter((part) => part.type !== INTERRUPTED.type)
+  return stopped ? [...own, INTERRUPTED] : own
+}
+
 /**
  * Ends the turn and keeps its reply, under the draft's row lock: only while
  * it is still the draft's latest turn (PAR-7). A later one (a retry once
@@ -421,6 +449,7 @@ async function endTurnWith(
   turn: string,
   outcome: "done" | "failed",
   response: ChatMessage | undefined,
+  stopped: boolean,
   fields: LogFields
 ) {
   await context.db.transaction(async (tx) => {
@@ -433,7 +462,9 @@ async function endTurnWith(
     // an empty reply would show as a blank bubble, not Try again. A text
     // begun with no word in it yet is nothing too.
     if (response && !response.parts.every(isEmptyPart))
-      await saveMessages(tx, key, [response])
+      await saveMessages(tx, key, [
+        { ...response, parts: markedParts(response.parts, stopped) },
+      ])
   })
 }
 
@@ -520,7 +551,15 @@ async function reply({
         () => "failed" as const
       )
       .then((outcome) =>
-        endTurnWith(context, key, turn, outcome, response, metrics.fields)
+        endTurnWith(
+          context,
+          key,
+          turn,
+          outcome,
+          response,
+          metrics.stopped(),
+          metrics.fields
+        )
       )
       .catch((error: unknown) =>
         logError("chat_save_failed", error, { draftId: key.id })
