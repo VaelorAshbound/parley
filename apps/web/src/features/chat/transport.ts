@@ -79,7 +79,16 @@ export function answeredCalls(message: ChatMessage) {
 export function answersToRetry(message: ChatMessage): ChatMessage | null {
   if (message.role !== "assistant") return null
   const step = answeredStep(message.parts)
-  return step && { ...message, parts: message.parts.slice(0, step.end) }
+  // A reply stopped right after the answers ends with its Stopped mark
+  // (PAR-47): the retry is running, not stopped.
+  return (
+    step && {
+      ...message,
+      parts: message.parts
+        .slice(0, step.end)
+        .filter((part) => part.type !== "data-interrupted"),
+    }
+  )
 }
 
 function lastStep(message: ChatMessage) {

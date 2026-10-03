@@ -71,6 +71,26 @@ describe("sign-up", () => {
     expect(resend.linkFor(email).pathname).toBe("/api/auth/verify-email")
   })
 
+  it("says a known email has an account: an accepted trade-off (ADR-0011)", async () => {
+    // Signing up gives a session at once so a guest's draft links right
+    // away; Better Auth can only answer the same for a known email with
+    // requireEmailVerification, which would take that away (PAR-53).
+    resend = fakeResend()
+    const email = newEmail()
+    await post("/api/auth/sign-up/email", { name: "Ana", email, password })
+
+    const again = await post("/api/auth/sign-up/email", {
+      name: "Someone else",
+      email,
+      password,
+    })
+
+    expect(again.status).toBe(422)
+    expect(await again.json()).toMatchObject({
+      code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+    })
+  })
+
   it("refuses a password shorter than 10 characters", async () => {
     resend = fakeResend()
 
@@ -168,6 +188,25 @@ describe("the auth rate limits (per IP, kept in the database)", () => {
     expect(statuses).toEqual([200, 200, 200, 429])
     // The sign-up email plus the three allowed resends.
     expect(resend.sent).toHaveLength(4)
+  })
+
+  it("tells a limited password-reset request to wait a minute, not 10 s (PAR-20)", async () => {
+    resend = fakeResend()
+    const ip = { "cf-connecting-ip": "203.0.113.11" }
+    const body = { email: newEmail(), redirectTo: "/reset-password" }
+
+    const statuses = []
+    for (let attempt = 0; attempt < 3; attempt++)
+      statuses.push(
+        (await post("/api/auth/request-password-reset", body, ip)).status
+      )
+    const limited = await post("/api/auth/request-password-reset", body, ip)
+
+    expect(statuses).toEqual([200, 200, 200])
+    expect(limited.status).toBe(429)
+    // forgot-password.tsx passes this to authErrorMessage: "wait a minute".
+    expect(Number(limited.headers.get("x-retry-after"))).toBeGreaterThan(10)
+    expect(Number(limited.headers.get("x-retry-after"))).toBeLessThanOrEqual(60)
   })
 
   it("limits each IP on its own", async () => {

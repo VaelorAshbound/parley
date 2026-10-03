@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query"
+import { polarCustomerOf } from "@workspace/db"
 import { createServerFn } from "@tanstack/react-start"
 import {
   getRequestHeaders,
@@ -18,6 +19,12 @@ export type Viewer = {
   isAnonymous: boolean
   /** Set by Polar's webhooks (T26). */
   plan: Plan
+  /**
+   * Pro now, or paid once (Polar's customer is kept from the first paid
+   * state): its billing portal has the invoices, even after Pro ends
+   * (PAR-21). Opening checkout without paying is not enough.
+   */
+  hasBilling: boolean
 } | null
 
 // Read on the server, in the first page response, so the page never flashes
@@ -26,7 +33,7 @@ export type Viewer = {
 const getViewer = createServerFn({ method: "GET" })
   .validator(z.object({ fresh: z.boolean() }))
   .handler(async ({ data }): Promise<Viewer> => {
-    const { auth } = await requestServices()
+    const { auth, db } = await requestServices()
     const { headers, response } = await auth.api.getSession({
       headers: getRequestHeaders(),
       query: { disableCookieCache: data.fresh },
@@ -36,13 +43,19 @@ const getViewer = createServerFn({ method: "GET" })
     if (cookies.length > 0) setResponseHeader("set-cookie", cookies)
     if (!response) return null
     const { id, name, email, emailVerified, isAnonymous } = response.user
+    const plan = planOf(response.user)
     return {
       id,
       name,
       email,
       emailVerified,
       isAnonymous: isAnonymous === true,
-      plan: planOf(response.user),
+      plan,
+      // The customer id stays off the session (never sent to the browser):
+      // one read by primary key, for signed-up Free accounts only.
+      hasBilling:
+        plan === "pro" ||
+        (isAnonymous !== true && (await polarCustomerOf(db, id)) !== undefined),
     }
   })
 

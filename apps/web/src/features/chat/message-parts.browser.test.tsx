@@ -341,3 +341,31 @@ test("shows why the AI picked the agreement, under the pick", async () => {
     .element(screen.getByText("A CSA usually comes with an SLA and a DPA."))
     .toBeVisible()
 })
+
+test("a reply cut short doesn't keep saying what it was doing (PAR-47)", async () => {
+  const cut: ChatMessage["parts"] = [
+    { type: "text", text: "Let me set the purpose.", state: "done" },
+    {
+      type: "tool-updateFields",
+      toolCallId: "call-cut",
+      state: "input-streaming",
+      input: undefined,
+    },
+  ]
+
+  const working = await renderWithStore(
+    <MessageParts parts={cut} definition={nda} last />
+  )
+  await expect
+    .element(working.getByText("Updating the document…"))
+    .toBeVisible()
+  await working.unmount()
+
+  const stopped = await renderWithStore(
+    <MessageParts parts={cut} definition={nda} last stopped />
+  )
+  await expect
+    .element(stopped.getByText("Let me set the purpose."))
+    .toBeVisible()
+  expect(stopped.getByText("Updating the document…").query()).toBeNull()
+})

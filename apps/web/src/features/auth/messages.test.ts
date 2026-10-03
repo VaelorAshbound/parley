@@ -5,6 +5,8 @@ import {
   emailLinkErrorMessage,
   needsNewSignIn,
   oauthErrorMessage,
+  retryAfterOf,
+  setupErrorMessage,
 } from "./messages"
 
 describe("authErrorMessage", () => {
@@ -12,6 +14,38 @@ describe("authErrorMessage", () => {
     expect(
       authErrorMessage({ code: "INVALID_EMAIL_OR_PASSWORD", status: 429 })
     ).toMatch(/wait/)
+  })
+
+  it("says how long to wait: Better Auth's limits last 10 seconds (PAR-20)", () => {
+    // Sign-in, sign-up and each two-factor step: 3 tries per 10 s per IP.
+    expect(authErrorMessage({ code: "INVALID_CODE", status: 429 })).toBe(
+      "Too many tries. Please wait 10 seconds, then try again."
+    )
+  })
+
+  it("says the wait the server gave: a minute for reset and confirmation emails (PAR-20)", () => {
+    // /request-password-reset and /send-verification-email: 3 per 60 s.
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 60 })).toBe(
+      "Too many tries. Please wait a minute, then try again."
+    )
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 37 })).toBe(
+      "Too many tries. Please wait a minute, then try again."
+    )
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 7 })).toBe(
+      "Too many tries. Please wait 10 seconds, then try again."
+    )
+    expect(authErrorMessage({ status: 429 }, { retryAfter: 600 })).toBe(
+      "Too many tries. Please wait 10 minutes, then try again."
+    )
+  })
+
+  it("reads the wait from X-Retry-After", () => {
+    const limited = (value: string) =>
+      new Response(null, { status: 429, headers: { "X-Retry-After": value } })
+
+    expect(retryAfterOf(limited("60"))).toBe(60)
+    expect(retryAfterOf(limited("soon"))).toBeUndefined()
+    expect(retryAfterOf(new Response(null, { status: 429 }))).toBeUndefined()
   })
 
   it("never says which half of the sign-in was wrong", () => {
@@ -78,6 +112,17 @@ describe("authErrorMessage", () => {
     }
   )
 
+  it.each(["TOTP_NOT_ENABLED", "BACKUP_CODES_NOT_ENABLED"])(
+    "sends a code with no sign-in waiting for it back to sign-in (%s)",
+    (code) => {
+      // A guest's session on /two-factor: it has no two-factor (PAR-20).
+      expect(authErrorMessage({ code, status: 400 })).toBe(
+        "No sign-in is waiting for a code. Please sign in again."
+      )
+      expect(needsNewSignIn(code)).toBe(true)
+    }
+  )
+
   it("keeps the code step for a wrong code", () => {
     expect(needsNewSignIn("INVALID_CODE")).toBe(false)
   })
@@ -122,6 +167,21 @@ describe("emailLinkErrorMessage", () => {
   it("says an old link no longer works", () => {
     expect(emailLinkErrorMessage("TOKEN_EXPIRED")).toBe(
       "This link has expired. Please ask for a new one."
+    )
+  })
+})
+
+describe("setupErrorMessage", () => {
+  it("asks to start the setup again, not to sign in, when it was reset (PAR-20)", () => {
+    // Settings → Turn on, while another tab turned two-factor off.
+    expect(setupErrorMessage({ code: "TOTP_NOT_ENABLED", status: 400 })).toBe(
+      "Two-factor setup was reset. Close this and start again."
+    )
+  })
+
+  it("says the rest as authErrorMessage does", () => {
+    expect(setupErrorMessage({ code: "INVALID_CODE", status: 401 })).toBe(
+      authErrorMessage({ code: "INVALID_CODE", status: 401 })
     )
   })
 })

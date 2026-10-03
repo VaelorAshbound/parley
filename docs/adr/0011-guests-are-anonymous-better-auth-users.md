@@ -25,7 +25,7 @@ A guest still costs money: every message is a model call. So a guest needs:
 - **Linking: `onLinkAccount` moves the data.** When a guest signs up or signs in, Better Auth calls `linkGuest`, which moves the guest's drafts, chats and today's AI usage to the account in one transaction (`moveGuestData`), then Better Auth deletes the guest. If the move throws, the guest and its drafts stay, and the user can try again.
 - **Two places where linking must not happen too early:**
   - **Email links never sign in** (`autoSignInAfterVerification: false`). Otherwise a guest who opened someone else's link would be signed in as them and hand over their draft (login CSRF).
-  - **Two-factor before linking.** The two-factor plugin is listed before `anonymous`, so a password alone links nothing. The guest is carried to the code step in a signed 10-minute cookie and linked when the code signs in (`src/server/two-factor.ts`).
+  - **Two-factor before linking.** The two-factor plugin is listed before `anonymous`, so a password alone links nothing. The guest is carried to the code step in a signed 10-minute cookie and linked when the code signs in (`src/server/two-factor.ts`). Any other new session expires that cookie, so the next person to sign in on the same browser never gets the guest (PAR-20, ADR-0013).
 - **Cleanup.** A daily cron (`src/server/cron.ts`, 03:17 UTC) deletes guests with no activity for 7 days, with everything they own, in batches of 500, plus expired sessions. Once a day, because each run wakes the Neon compute.
 
 ## Alternatives considered
@@ -58,5 +58,6 @@ A guest still costs money: every message is a model call. So a guest needs:
 
 - Guest rows live in the `user` table until the cron removes them. The daily cleanup caps a run at 10,000 rows per kind, and the log line says when more are left.
 - A guest who signs in to an account that already has drafts keeps all of them: the guest's draft is added, not merged.
+- **Sign-up tells whether an email has an account** (accepted trade-off, PAR-53, 2026-10-03). Signing up gives a session at once so the guest's draft links right away, and Better Auth answers the same for a known email only with `requireEmailVerification`, which would hold the session (and the link) until the email is confirmed. So a known email gets `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` ("This email already has an account. Sign in instead."). Turnstile on `/sign-up/email` and 3 tries per 10 s per network make checking many addresses slow. Sign-in, password reset and change-email still answer the same for every address. A Worker test pins it (`email-password.test.ts`).
 - The guest's AI usage moves too: its messages are added to the account's row for the same day, so signing up doesn't reset today's limit, and the cost records stay complete.
 - The guest flow is tested end to end (`e2e/first-run.spec.ts`, `e2e/auth.spec.ts`), the move in the DB tests (`packages/db/test/guests.test.ts`), and the linking edge cases (two-factor, Google and GitHub, email links, Turnstile) in the Worker tests (`apps/web-worker-tests/test/link.test.ts`, `oauth.test.ts`, `turnstile.test.ts`).

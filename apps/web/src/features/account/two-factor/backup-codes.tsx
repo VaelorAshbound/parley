@@ -7,12 +7,18 @@ import { useState } from "react"
  * never shows them again), with Copy and Download so they are easy to keep.
  */
 export function BackupCodes({ codes }: { codes: string[] }) {
-  const [copied, setCopied] = useState(false)
+  const [copy, setCopy] = useState<"idle" | "copied" | "refused">("idle")
+  const copied = copy === "copied"
   const text = codes.join("\n") + "\n"
 
-  async function copy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
+  async function copyCodes() {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopy("copied")
+    } catch {
+      // No clipboard permission, or the page lost focus (PAR-20).
+      setCopy("refused")
+    }
   }
 
   function download() {
@@ -21,8 +27,9 @@ export function BackupCodes({ codes }: { codes: string[] }) {
     link.href = url
     link.download = "parley-backup-codes.txt"
     link.click()
-    // After the download has started.
-    setTimeout(() => URL.revokeObjectURL(url), 0)
+    // Safari reads the file after click() returns, and cancels the
+    // download if the URL is already gone: let go of it a second later.
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   return (
@@ -40,7 +47,7 @@ export function BackupCodes({ codes }: { codes: string[] }) {
           type="button"
           variant="outline"
           className="flex-1"
-          onClick={() => void copy()}
+          onClick={() => void copyCodes()}
         >
           {copied ? (
             <CheckIcon data-icon="inline-start" />
@@ -59,6 +66,11 @@ export function BackupCodes({ codes }: { codes: string[] }) {
           Download
         </Button>
       </div>
+      {copy === "refused" && (
+        <p role="alert" className="text-sm text-destructive">
+          Couldn’t copy. Use Download.
+        </p>
+      )}
     </div>
   )
 }
