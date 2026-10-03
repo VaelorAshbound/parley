@@ -48,3 +48,6 @@ Another timing flake (2026-10-01, PR #6 component job): search-dialog.browser.te
 
 ### 2026-10-03T07:17:52Z
 Wave 1 (2026-10-03, 5 lanes in parallel, load ~60): 5 s guest sign-in timeouts in auth/observability/email-password worker tests, browser tests in chat/draft-history/field-editor, and Playwright webServer start >60 s. All passed on rerun.
+
+### 2026-10-03T09:53:17Z
+2026-10-03: killed test runs leak packages/db/testing/postgres.ts servers and workerd (PAR-61); every wave killed runs with timeout. The local load-related flakes (5 s sign-in timeouts, empty main at 5 s, webServer >60 s, 'fails half the time even alone') may come partly from leaked processes. Not the Firefox NS_BINDING_ABORTED (3/3) or the CI WebKit ones. Plan: fix PAR-61, then re-measure local flake rates on a clean machine (--repeat-each).
