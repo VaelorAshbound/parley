@@ -35,11 +35,13 @@ import { useAppForm } from "@/lib/form"
 import { BackupCodes } from "./backup-codes"
 import { CodeField, codeLength, codeWords } from "./code-field"
 import { PasswordStep } from "./password-step"
+import { SignOutOthers } from "./sign-out-others"
 
 // Settings → Two-factor sign-in (spec §5 Auth, T23b). Turning it on takes
 // the password, then a code from the app for the QR code (it is on only
 // once that code is right), then shows the 10 backup codes once. Turning
-// it off and new backup codes take the password too.
+// it off and new backup codes take the password too. The codes step also
+// offers to sign the other devices out (PAR-20).
 
 export function TwoFactorCard({ account }: { account: Login }) {
   return (
@@ -175,6 +177,7 @@ function TurnOnDialog() {
               </DialogDescription>
             </DialogHeader>
             <BackupCodes codes={setup.backupCodes} />
+            <SignOutOthers />
             <DialogFooter>
               <Button onClick={() => openChange(false)}>Done</Button>
             </DialogFooter>
