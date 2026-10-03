@@ -48,7 +48,8 @@ export const session = pgTable(
   (table) => [
     index("session_userId_idx").on(table.userId),
     // Added by hand for the nightly purge (PAR-14): `pnpm db:auth-schema`
-    // drops it, and test/purge.test.ts then fails. Put it back.
+    // drops it, and test/purge.test.ts ("the schema keeps the purge's
+    // hand-written indexes") then fails. Put it back. work/PAR-14/decision.md
     index("session_expiresAt_idx").on(table.expiresAt),
   ],
 );
@@ -121,8 +122,8 @@ export const rateLimit = pgTable(
     lastRequest: bigint("last_request", { mode: "number" }).notNull(),
   },
   // Added by hand for the nightly purge and Better Auth's own prune
-  // (PAR-14): `pnpm db:auth-schema` drops it, and test/purge.test.ts then
-  // fails. Put it back.
+  // (PAR-14): `pnpm db:auth-schema` drops it, and test/purge.test.ts ("the
+  // schema keeps the purge's hand-written indexes") then fails. Put it back.
   (table) => [index("rateLimit_lastRequest_idx").on(table.lastRequest)],
 );
 
