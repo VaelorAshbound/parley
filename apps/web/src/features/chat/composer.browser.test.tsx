@@ -241,6 +241,20 @@ describe("Enter while Parley is still answering (PAR-46)", () => {
     expect(onSend).toHaveBeenCalledExactlyOnceWith("And the term?")
   })
 
+  test("goes when the box is emptied: there is nothing left to send", async () => {
+    const screen = await render(
+      <Composer busy onSend={() => {}} onStop={() => {}} />
+    )
+    const box = screen.getByRole("textbox", { name: "Message" })
+    await userEvent.type(box, "And the term?{Enter}")
+    await expect.element(screen.getByText(hint)).toBeVisible()
+
+    await userEvent.clear(box)
+
+    expect(screen.getByText(hint).query()).toBeNull()
+    expect(announced(screen.container)).toBe("")
+  })
+
   test("never shows while Parley is idle, nor before Enter in a new turn", async () => {
     const screen = await render(<Composer busy={false} onSend={() => {}} />)
     const box = screen.getByRole("textbox", { name: "Message" })
