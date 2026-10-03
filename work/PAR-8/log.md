@@ -45,3 +45,6 @@ Flaky (2026-10-01): a11y.spec 'light @phone › a draft with its document closed
 
 ### 2026-10-01T20:45:57Z
 Another timing flake (2026-10-01, PR #6 component job): search-dialog.browser.test.tsx 'asks the server once per pause, not once per key' got 3 calls (expected < 3) on a CI runner; passed on re-run. Likely the debounce window vs a slow runner.
+
+### 2026-10-03T07:17:52Z
+Wave 1 (2026-10-03, 5 lanes in parallel, load ~60): 5 s guest sign-in timeouts in auth/observability/email-password worker tests, browser tests in chat/draft-history/field-editor, and Playwright webServer start >60 s. All passed on rerun.
