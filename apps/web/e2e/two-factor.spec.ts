@@ -228,7 +228,9 @@ test("turning it on can sign the other devices out (PAR-20)", async ({
   await dialog.getByRole("button", { name: "Sign out other devices" }).click()
 
   await expect(
-    dialog.getByRole("status").getByText("Other devices are signed out.")
+    dialog
+      .getByRole("status")
+      .getByText("Other devices will be signed out within 5 minutes.")
   ).toBeVisible()
   // Asked past the 5-minute cookie cache, the phone has no session now.
   const session = await phone.request.get(
