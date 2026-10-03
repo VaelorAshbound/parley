@@ -454,6 +454,78 @@ describe("the chat", () => {
     ).toBeNull()
   })
 
+  test("Try again after a failed answer turn sends the answers again (PAR-7)", async () => {
+    const script = createChat<ChatMessage>()
+      .user("Help me with the terms.")
+      .assistant(({ writer }) => {
+        writer.tool("askQuestions", {
+          input: {
+            title: "Key terms",
+            questions: [
+              {
+                name: "term",
+                prompt: "How long should the NDA last?",
+                required: true,
+                choices: [
+                  { value: "1y", label: "1 year" },
+                  { value: "2y", label: "2 years" },
+                ],
+                multiple: false,
+              },
+            ],
+          },
+        })
+      })
+      .assistant(({ writer }) => {
+        writer.text("Two years it is.")
+      })
+    const sent: { last?: ChatMessage; body?: object }[] = []
+    const { screen } = await show({
+      script,
+      // The first answers fail on the way, as a provider error would.
+      transport: (base) => ({
+        ...base,
+        sendMessages: async (options) => {
+          sent.push({ last: options.messages.at(-1), body: options.body })
+          if (sent.length === 2) throw new Error("The provider went away.")
+          return base.sendMessages(options)
+        },
+      }),
+    })
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "Help me with the terms.{Enter}"
+    )
+    await expect
+      .element(
+        screen.getByRole("group", { name: "How long should the NDA last?" })
+      )
+      .toBeVisible()
+    await userEvent.keyboard("b")
+    await screen.getByRole("button", { name: "Send answers" }).click()
+    await expect
+      .element(screen.getByText("Parley couldn’t answer.", { exact: false }))
+      .toBeVisible()
+
+    await screen.getByRole("button", { name: "Try again" }).click()
+
+    await expect.element(screen.getByText("Two years it is.")).toBeVisible()
+    // The answers went again, said to be a retry, not the first message.
+    expect(sent).toHaveLength(3)
+    expect(sent[2]?.last?.role).toBe("assistant")
+    expect(sent[2]?.last?.parts).toContainEqual(
+      expect.objectContaining({
+        type: "tool-askQuestions",
+        state: "output-available",
+        output: { answers: { term: ["2y"] } },
+      })
+    )
+    expect(sent[2]?.body).toEqual({ retry: true })
+    await expect
+      .element(screen.getByText("Key terms answered ·", { exact: false }))
+      .toHaveTextContent("Key terms answered · 2 years")
+  })
+
   /** A chat whose sends the server refuses with `error`. */
   function refusing(error: ORPCError<string, unknown>) {
     return show({

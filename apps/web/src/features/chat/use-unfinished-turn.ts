@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useState } from "react"
 
+import { TURN_LIFETIME_MS } from "@/lib/limits"
 import type { ChatMessage } from "@/server/ai/chat"
 
 // A page loaded while Parley was still answering (a reload mid-reply,
@@ -16,7 +17,7 @@ import type { ChatMessage } from "@/server/ai/chat"
 // be proven young, so it isn't waited for either.
 
 /** How often the saved chat is read, and for how long. */
-export const UNFINISHED = { everyMs: 1500, giveUpAfterMs: 60_000 }
+export const UNFINISHED = { everyMs: 1500, giveUpAfterMs: TURN_LIFETIME_MS }
 
 export type UnfinishedTurn = "waiting" | "lost" | null
 
