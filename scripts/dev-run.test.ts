@@ -13,6 +13,7 @@ import { lines, runDev, type Command } from "./dev-run.ts"
 const dir = mkdtempSync(join(tmpdir(), "parley-dev-run-"))
 const dbPid = join(dir, "db.pid")
 const appPid = join(dir, "app.pid")
+const leftPid = join(dir, "left.pid")
 
 /** A Node script that writes its pid to `pidFile`, then runs `code`. */
 function node(pidFile: string, code: string): Command {
@@ -26,6 +27,14 @@ function node(pidFile: string, code: string): Command {
   }
 }
 const forever = "setInterval(() => {}, 1000)"
+
+/**
+ * Starts a process in the same group that outlives the one that started it
+ * (postgres after db:dev, workerd after vite), and writes its pid.
+ */
+const leaveOneRunning = `require("child_process").spawn(process.execPath, ["-e", ${JSON.stringify(
+  `require("fs").writeFileSync(${JSON.stringify(leftPid)}, String(process.pid)); ${forever}`
+)}], { stdio: "ignore" });`
 
 function running(pidFile: string) {
   if (!existsSync(pidFile)) return false
@@ -56,7 +65,7 @@ async function until(check: () => boolean, ms = 3000) {
 
 afterEach(async () => {
   // Never leave a stand-in running, even when a test fails.
-  for (const pidFile of [dbPid, appPid]) {
+  for (const pidFile of [dbPid, appPid, leftPid]) {
     if (running(pidFile))
       process.kill(Number(readFileSync(pidFile, "utf8")), "SIGKILL")
     await until(() => !running(pidFile))
@@ -154,6 +163,72 @@ describe("runDev", () => {
     await expect(within(result)).resolves.toBe(0)
     expect(running(dbPid)).toBe(false)
     expect(running(appPid)).toBe(false)
+  })
+
+  // A command whose first process has exited can still leave others in its
+  // group, holding a port: each group is stopped whether or not its first
+  // process is still there.
+  test("stops what the app left running when the app exits", async () => {
+    const app = node(
+      appPid,
+      `${leaveOneRunning} setTimeout(() => process.exit(5), 300)`
+    )
+
+    const code = await within(
+      runDev({
+        app,
+        signal: new AbortController().signal,
+        out: new PassThrough(),
+      })
+    )
+
+    expect(code).toBe(5)
+    expect(existsSync(leftPid)).toBe(true)
+    await until(() => !running(leftPid))
+  })
+
+  test("stops what the database left running when it stops after it was ready", async () => {
+    const db = node(
+      dbPid,
+      `${leaveOneRunning} console.log("database is ready"); setTimeout(() => process.exit(3), 300)`
+    )
+    const app = node(appPid, forever)
+
+    const code = await within(
+      runDev({
+        db,
+        app,
+        signal: new AbortController().signal,
+        out: new PassThrough(),
+      })
+    )
+
+    expect(code).toBe(3)
+    expect(running(appPid)).toBe(false)
+    expect(existsSync(leftPid)).toBe(true)
+    await until(() => !running(leftPid))
+  })
+
+  test("stops what the database left running when it stops before it was ready", async () => {
+    const db = node(
+      dbPid,
+      `${leaveOneRunning} setTimeout(() => process.exit(2), 300)`
+    )
+    const app = node(appPid, forever)
+
+    const code = await within(
+      runDev({
+        db,
+        app,
+        signal: new AbortController().signal,
+        out: new PassThrough(),
+      })
+    )
+
+    expect(code).toBe(2)
+    expect(existsSync(appPid)).toBe(false)
+    expect(existsSync(leftPid)).toBe(true)
+    await until(() => !running(leftPid))
   })
 
   test("without a database to start, runs the app alone", async () => {
