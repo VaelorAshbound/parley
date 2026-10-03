@@ -1,6 +1,7 @@
 import { checkout, polar, portal } from "@polar-sh/better-auth"
 import { Polar } from "@polar-sh/sdk"
 import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate"
+import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror"
 import { ResourceNotFound } from "@polar-sh/sdk/models/errors/resourcenotfound"
 import {
   forgetPolarCustomer,
@@ -187,8 +188,9 @@ export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
  * server/audit.ts sees it): a Polar customer gets the new address too, so
  * receipts and the portal's sign-in go where Parley's do. After the
  * response, like the emails: a slow Polar never holds up the link. A
- * failure is logged and the email stays changed; the next checkout sends
- * the email again anyway (makeCustomer).
+ * failure is logged and the email stays changed. Nothing retries it now:
+ * a Free user's next checkout sends it again (makeCustomer), but a Pro
+ * user's Polar keeps the old address until then.
  */
 function emailToPolar({ db, env }: { db: Db; env: BillingEnv }) {
   // The before hook sees which fields change; the after hook gets the same
@@ -216,7 +218,7 @@ async function syncEmail(
   { db, env }: { db: Db; env: BillingEnv },
   user: { userId: string; email: string }
 ) {
-  // Never bought: Polar learns the email at checkout.
+  // Never paid: Polar learns the email at checkout (makeCustomer).
   if ((await polarCustomerOf(db, user.userId)) === undefined) return
   await sendEmailToPolar(env, user)
 }
@@ -504,10 +506,12 @@ export async function checkoutAllowed(ctx: HookContext, env: BillingEnv) {
 /**
  * Makes the Polar customer with the confirmed email and name, so checkout
  * fills them in and the buyer is who Parley knows (the plugin sends only
- * our user id). Polar already having the customer (a second try), or the
- * email (PAR-17), is fine: checkout then asks for the email, as it would.
+ * our user id). When Polar already has it (every second checkout), it gets
+ * the email Parley knows instead: an email change that didn't reach Polar
+ * then is repaired here. Any other refusal (an email Polar won't take, or
+ * another customer's, PAR-17) is logged; checkout then asks for the email.
  */
-async function makeCustomer(
+export async function makeCustomer(
   env: BillingEnv,
   user: { id: string; email: string; name: string }
 ) {
@@ -518,17 +522,27 @@ async function makeCustomer(
       name: user.name,
     })
   } catch (error) {
-    // 422 (this external id) and 409 (this email) mean Polar has the
-    // customer: every second checkout. Only another answer is news.
-    const { polarStatus } = statusOf(error)
-    if (polarStatus === 409 || polarStatus === 422) return
+    if (customerExists(error))
+      return sendEmailToPolar(env, { userId: user.id, email: user.email })
     log(
       "warn",
       "polar_customer_not_made",
-      { userId: user.id, polarStatus },
+      { userId: user.id, ...statusOf(error) },
       error
     )
   }
+}
+
+/**
+ * Polar's answer when it has a customer with this external id: a 422 that
+ * names the field (as the sandbox answers it, PAR-21). Every other 422 is a
+ * real refusal.
+ */
+function customerExists(error: unknown) {
+  return (
+    error instanceof HTTPValidationError &&
+    (error.detail ?? []).some(({ loc }) => loc.at(-1) === "external_id")
+  )
 }
 
 /**

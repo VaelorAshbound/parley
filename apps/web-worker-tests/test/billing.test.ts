@@ -539,30 +539,100 @@ describe("checkout", () => {
     })
   })
 
-  it.each([409, 422])(
-    "still opens checkout, quietly, when Polar already has this customer (%i)",
-    async (status) => {
-      // A second checkout: Polar already made the customer the first time
-      // (422), or has its email (409). Nothing for on-call.
-      using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-      const { cookie } = await newAccount()
-      polar.answer(({ method, path }) =>
-        path === "/v1/customers/"
-          ? Response.json({ detail: "exists" }, { status })
+  /** Polar's 422 for a customer it can't make, as the sandbox answers it. */
+  const refused = (field: string, msg: string) =>
+    Response.json(
+      {
+        error: "PolarRequestValidationError",
+        detail: [{ type: "value_error", loc: ["body", field], msg, input: "" }],
+      },
+      { status: 422 }
+    )
+  const sameExternalId = () =>
+    refused("external_id", "A customer with this external ID already exists.")
+
+  it("still opens checkout, quietly, when Polar already has this customer", async () => {
+    // A second checkout: Polar made the customer the first time. Nothing
+    // for on-call.
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { cookie, email, userId } = await newAccount()
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customers/"
+        ? sameExternalId()
+        : method === "PATCH"
+          ? Response.json({ ...active.data, id: `cus-${userId}`, email })
           : method === "POST" && path === "/v1/checkouts/"
             ? Response.json(checkoutCreated, { status: 201 })
             : undefined
-      )
+    )
 
-      const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
+    const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
 
-      expect(response.status).toBe(200)
-      expect(checkouts()).toHaveLength(1)
-      expect(warn.mock.calls.map(([line]) => line)).not.toContainEqual(
-        expect.objectContaining({ event: "polar_customer_not_made" })
-      )
-    }
-  )
+    expect(response.status).toBe(200)
+    expect(checkouts()).toHaveLength(1)
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it("gives Polar's existing customer the email Parley knows", async () => {
+    // An email change that didn't reach Polar then (Polar was down) is
+    // repaired at the next checkout.
+    const { cookie, email, userId } = await newAccount()
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customers/"
+        ? sameExternalId()
+        : method === "PATCH"
+          ? Response.json({ ...active.data, id: `cus-${userId}`, email })
+          : method === "POST" && path === "/v1/checkouts/"
+            ? Response.json(checkoutCreated, { status: 201 })
+            : undefined
+    )
+
+    await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(polar.calls.filter(({ method }) => method === "PATCH")).toEqual([
+      {
+        method: "PATCH",
+        path: `/v1/customers/external/${userId}`,
+        body: { email },
+      },
+    ])
+  })
+
+  it.each([
+    [
+      "an email it won't take",
+      () => refused("email", "value is not a valid email address."),
+    ],
+    [
+      "an email another customer has",
+      () =>
+        refused("email", "A customer with this email address already exists."),
+    ],
+  ])("warns when Polar refuses the customer for %s", async (_, answer) => {
+    // Checkout still opens (it asks for the email), but on-call sees why
+    // the buyer's details weren't filled in.
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { cookie, email, userId } = await newAccount()
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customers/"
+        ? answer()
+        : method === "POST" && path === "/v1/checkouts/"
+          ? Response.json(checkoutCreated, { status: 201 })
+          : undefined
+    )
+
+    const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(response.status).toBe(200)
+    expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+      expect.objectContaining({
+        event: "polar_customer_not_made",
+        userId,
+        polarStatus: 422,
+      })
+    )
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(email)
+  })
 
   it("warns when Polar couldn't make the customer for another reason", async () => {
     using warn = vi.spyOn(console, "warn").mockImplementation(() => {})

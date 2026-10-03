@@ -1,7 +1,8 @@
 import { env } from "cloudflare:workers"
-import { afterAll, describe, expect, it } from "vitest"
+import { afterAll, describe, expect, it, vi } from "vitest"
 
 import {
+  makeCustomer as makeCheckoutCustomer,
   portalWithoutCustomerAnswer,
   sendEmailToPolar,
 } from "../../web/src/server/billing"
@@ -61,7 +62,61 @@ afterAll(async () => {
   }
 })
 
+/** The sandbox customer under this external id, as Polar stored it. */
+async function storedCustomer(externalId: string) {
+  const response = await polar(`/customers/external/${externalId}`)
+  expect(response.status).toBe(200)
+  const customer = await response.json<{ id: string; email: string }>()
+  if (!made.includes(customer.id)) made.push(customer.id)
+  return customer
+}
+
 describe.skipIf(!isRealToken)("billing in Polar's real sandbox", () => {
+  it(
+    "gives the existing customer the new email at the next checkout",
+    { timeout: 30_000 },
+    async () => {
+      // An email change that didn't reach Polar: the second checkout's
+      // create is refused (this external id exists) and repairs it, quietly.
+      using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const externalId = `wave2-${crypto.randomUUID()}`
+      const user = { id: externalId, email: inbox(externalId), name: "Wave" }
+      await makeCheckoutCustomer(env, user)
+      await storedCustomer(externalId)
+      const newEmail = inbox(externalId, "-new")
+
+      await makeCheckoutCustomer(env, { ...user, email: newEmail })
+
+      expect((await storedCustomer(externalId)).email).toBe(newEmail)
+      expect(warn).not.toHaveBeenCalled()
+    }
+  )
+
+  it(
+    "warns when Polar won't take the email at checkout",
+    { timeout: 30_000 },
+    async () => {
+      using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const externalId = `wave2-${crypto.randomUUID()}`
+
+      await makeCheckoutCustomer(env, {
+        id: externalId,
+        email: `${externalId}@example.test`,
+        name: "Wave",
+      })
+
+      expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+        expect.objectContaining({
+          event: "polar_customer_not_made",
+          polarStatus: 422,
+        })
+      )
+      expect((await polar(`/customers/external/${externalId}`)).status).toBe(
+        404
+      )
+    }
+  )
+
   it(
     "sends a changed email to the Polar customer",
     { timeout: 30_000 },
@@ -94,7 +149,7 @@ describe.skipIf(!isRealToken)("billing in Polar's real sandbox", () => {
         method: "POST",
         body: JSON.stringify({ external_customer_id: externalId }),
       })
-      expect(session.ok).toBe(false)
+      expect(session.status).toBe(422)
       // ...and Parley answers NO_BILLING instead.
       const answer = await portalWithoutCustomerAnswer(env, externalId)
       expect(answer?.status).toBe(404)
