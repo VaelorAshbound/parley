@@ -32,6 +32,14 @@ import { draftOwner, perUser, verified } from "./base"
 // free document, and the lock means two downloads at once can't both take
 // the last one. A file built but then refused (the other request won) costs
 // one Browser Run print, a fraction of a cent.
+//
+// The file is built from the draft as it was before the print; the count is
+// taken from the draft as it is after it. If the draft was switched to
+// another agreement in between (the AI's chooseDocument can run while the
+// PDF prints), the file and the count would name different agreements, so
+// the download is refused with DOCUMENT_CHANGED and nothing is counted
+// (PAR-51). Holding the lock over the print instead would make every other
+// export of the user wait seconds for Browser Run.
 
 type Missing = { key: string; label: string }
 
@@ -39,7 +47,12 @@ export type ExportOutcome =
   | { ok: true; file: File; counted: boolean; browserMs: number | undefined }
   | {
       ok: false
-      error: "PRO_REQUIRED" | "QUOTA_EXCEEDED" | "NOT_FOUND" | "NO_DOCUMENT"
+      error:
+        | "PRO_REQUIRED"
+        | "QUOTA_EXCEEDED"
+        | "NOT_FOUND"
+        | "NO_DOCUMENT"
+        | "DOCUMENT_CHANGED"
     }
   | { ok: false; error: "INCOMPLETE"; missing: Missing[] }
 
@@ -103,6 +116,10 @@ export async function exportDraft({
     await lockExports(tx, userId)
     const fresh = await getDraft(tx, key)
     if (!fresh) return { ok: false as const, error: "NOT_FOUND" as const }
+    // The count goes to the agreement the draft is on now; the file is of
+    // the one it was on before the print. They must be the same.
+    if (fresh.documentId !== draft.documentId)
+      return { ok: false as const, error: "DOCUMENT_CHANGED" as const }
     const decision = await decide(tx, fresh.firstExportedAt !== null)
     if (!decision.ok) return decision
     if (decision.counts)
@@ -123,6 +140,11 @@ const errors = {
     data: z.object({
       missing: z.array(z.object({ key: z.string(), label: z.string() })),
     }),
+  },
+  DOCUMENT_CHANGED: {
+    status: 409,
+    message:
+      "The agreement changed while we made the file. Download it again to get the new one.",
   },
   PRO_REQUIRED: { status: 402, message: "Word files come with Pro." },
   QUOTA_EXCEEDED: {

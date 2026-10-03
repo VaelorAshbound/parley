@@ -402,6 +402,38 @@ describe("export.pdf", () => {
     ])
   })
 
+  // PAR-51: the file is built from the draft read before the print; the
+  // count is taken after it. A switch in between (the AI's chooseDocument
+  // runs while Browser Run prints) must never hand over one agreement and
+  // count another.
+  it("refuses a download whose agreement was switched during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    const printPdf: PrintPdf = async (html, frame) => {
+      // Another request, its own connection, while the PDF is being made.
+      await other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const { error } = await safe(client.export.pdf({ id }))
+
+    // The file printed was the Mutual NDA...
+    expect(printer.pages[0]).toContain("Bolt Retail LLC")
+    // ...so the Pilot Agreement the draft is on now must not be counted,
+    expect((await countedFor(email)).rows).toEqual([])
+    expect((await client.drafts.get({ id })).firstExportedAt).toBeNull()
+    // and the user is told to download again, as the agreement it is now.
+    expect(error).toMatchObject({ code: "DOCUMENT_CHANGED", defined: true })
+  })
+
   it("keeps a counted agreement free after switching away and back", async () => {
     const { cookie, email } = await signUpVerified()
     const client = await serverClient(cookie)
