@@ -3,7 +3,8 @@
 // 1. apps/web/.dev.vars: copied from .dev.vars.example on the first run,
 //    with a new BETTER_AUTH_SECRET. An existing file is never touched.
 // 2. Local Postgres 18 (`pnpm db:dev`, ADR-0004), unless one already runs on
-//    its port. It stops with this script.
+//    its port. It stops with this script, and if it stops on its own, the
+//    app is stopped too.
 // 3. The app (`vp dev` in apps/web), on http://localhost:3000 or $PORT.
 
 import { connect } from "node:net"
