@@ -16,6 +16,7 @@ import type { PrintFailed, PrintPdf } from "../../web/src/server/files"
 import { limitersFrom } from "../../web/src/server/limits"
 import type { Router } from "../../web/src/server/rpc/router"
 import { createServerClient } from "../../web/src/server/rpc/server-client"
+import { closingAppClients } from "./db-clients"
 import { passingToken } from "./siteverify"
 
 export const origin = "http://localhost:3000"
@@ -39,14 +40,17 @@ export async function call(
   // A solved Turnstile challenge, as the sign-up and sign-in forms send it.
   if (!headers.has("x-captcha-response"))
     headers.set("x-captcha-response", passingToken)
-  const ctx = createExecutionContext()
-  const response = await api.fetch(
-    new Request(origin + path, { ...init, headers }),
-    bindings,
-    ctx
-  )
-  await waitOnExecutionContext(ctx)
-  return response
+  // The app's database client closes after the test (db-clients.ts).
+  return closingAppClients(async () => {
+    const ctx = createExecutionContext()
+    const response = await api.fetch(
+      new Request(origin + path, { ...init, headers }),
+      bindings,
+      ctx
+    )
+    await waitOnExecutionContext(ctx)
+    return response
+  })
 }
 
 /** The browser's client, over HTTP through the real /api app. */

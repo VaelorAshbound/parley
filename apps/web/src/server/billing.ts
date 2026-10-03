@@ -1,19 +1,24 @@
 import { checkout, polar, portal } from "@polar-sh/better-auth"
 import { Polar } from "@polar-sh/sdk"
 import type { CustomerState } from "@polar-sh/sdk/models/components/customerstate"
+import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror"
 import { ResourceNotFound } from "@polar-sh/sdk/models/errors/resourcenotfound"
 import {
+  forgetPolarCustomer,
+  polarCustomerOf,
   schema,
   setPlan,
   userOfPolarCustomer,
   type Db,
   type Plan,
 } from "@workspace/db"
-import type { BetterAuthPlugin } from "better-auth"
+import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth"
 import {
   APIError,
   createAuthEndpoint,
+  createAuthMiddleware,
   getSessionFromCtx,
+  isAPIError,
 } from "better-auth/api"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
@@ -91,16 +96,30 @@ export function billingPlugin({
   })
 }
 
-/** What Parley reads from a webhook: which customer's state changed. */
+/**
+ * What Parley reads from a webhook: which customer's state changed. Polar
+ * sends `external_id: null` for a customer without one; a missing field
+ * means the same.
+ */
 const stateChanged = z.object({
   type: z.literal("customer.state_changed"),
-  data: z.object({ id: z.string(), external_id: z.string().nullable() }),
+  data: z.object({ id: z.string(), external_id: z.string().nullish() }),
 })
+
+/** The webhook's event type, when it has one. */
+function typeOf(event: unknown) {
+  const type: unknown =
+    typeof event === "object" && event !== null && "type" in event
+      ? event.type
+      : undefined
+  return typeof type === "string" ? type : undefined
+}
 
 /**
  * Polar's webhooks at /api/auth/polar/webhooks (the plugin's path). The
  * signature is checked with both of Polar's keys (server/polar-webhook.ts);
- * other events are acknowledged and ignored.
+ * other events are acknowledged and ignored. Also the portal's answer when
+ * Polar no longer has the customer (portalWithoutCustomer).
  */
 export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
   return {
@@ -125,18 +144,153 @@ export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
               message: "The webhook's signature doesn't match.",
             })
           }
+          // Other events are acknowledged and ignored.
+          if (typeOf(event) !== "customer.state_changed")
+            return ctx.json({ received: true })
           const state = stateChanged.safeParse(event)
-          // A throw answers 500, and Polar sends it again later.
-          if (state.success)
-            await applyCustomerState(db, env, {
-              customerId: state.data.data.id,
-              externalId: state.data.data.external_id,
+          if (!state.success) {
+            // Signed by Polar, so acknowledged (sending it again wouldn't
+            // read better), but seen: a plan that never changes must leave
+            // a trace. Field paths only: the payload holds the customer's
+            // email and name.
+            log("warn", "polar_webhook_unreadable", {
+              type: "customer.state_changed",
+              webhookId: ctx.request?.headers.get("webhook-id") ?? undefined,
+              issues: state.error.issues
+                .map((issue) => issue.path.join("."))
+                .join(","),
             })
+            return ctx.json({ received: true })
+          }
+          // A throw answers 500, and Polar sends it again later.
+          await applyCustomerState(db, env, {
+            customerId: state.data.data.id,
+            externalId: state.data.data.external_id ?? null,
+          })
           return ctx.json({ received: true })
         }
       ),
     },
+    hooks: {
+      after: [
+        {
+          matcher: (ctx) => ctx.path === "/customer/portal",
+          handler: createAuthMiddleware(portalWithoutCustomer({ db, env })),
+        },
+      ],
+    },
+    init: () => ({ options: { databaseHooks: emailToPolar({ db, env }) } }),
   } satisfies BetterAuthPlugin
+}
+
+/**
+ * Better Auth's hook on a changed email (the user row's update, as
+ * server/audit.ts sees it): a Polar customer gets the new address too, so
+ * receipts and the portal's sign-in go where Parley's do. After the
+ * response, like the emails: a slow Polar never holds up the link. A
+ * failure is logged and the email stays changed. Nothing retries it now:
+ * a Free user's next checkout sends it again (makeCustomer), but a Pro
+ * user's Polar keeps the old address until then.
+ */
+function emailToPolar({ db, env }: { db: Db; env: BillingEnv }) {
+  // The before hook sees which fields change; the after hook gets the same
+  // endpoint context and the saved row.
+  const changingEmail = new WeakSet<object>()
+  return {
+    user: {
+      update: {
+        before: async (data, ctx) => {
+          if (ctx && typeof data.email === "string") changingEmail.add(ctx)
+        },
+        after: async (user, ctx) => {
+          if (!ctx || !changingEmail.has(ctx)) return
+          await ctx.context.runInBackgroundOrAwait(
+            syncEmail({ db, env }, { userId: user.id, email: user.email })
+          )
+        },
+      },
+    },
+  } satisfies NonNullable<BetterAuthOptions["databaseHooks"]>
+}
+
+/** Sends the user's email to their Polar customer, if Polar has one. */
+async function syncEmail(
+  { db, env }: { db: Db; env: BillingEnv },
+  user: { userId: string; email: string }
+) {
+  // Never paid: Polar learns the email at checkout (makeCustomer).
+  if ((await polarCustomerOf(db, user.userId)) === undefined) return
+  await sendEmailToPolar(env, user)
+}
+
+/**
+ * Gives the user's Polar customer (by our user id) this email. Logs, never
+ * throws: the change in Parley stands either way.
+ */
+export async function sendEmailToPolar(
+  env: BillingEnv,
+  { userId, email }: { userId: string; email: string }
+) {
+  try {
+    await polarApi(env).customers.updateExternal({
+      externalId: userId,
+      customerUpdateExternalID: { email },
+    })
+    logInfo("polar_email_synced", { userId })
+  } catch (error) {
+    // 404: deleted in Polar. 422: another customer has this email
+    // (PAR-17). Neither stops the change in Parley.
+    log("warn", "polar_email_not_synced", { userId, ...statusOf(error) }, error)
+  }
+}
+
+/**
+ * After the portal failed (the plugin answers 500 for any of Polar's
+ * errors): when Polar has no customer for the user any more (deleted by
+ * hand in its dashboard; the portal session then answers 422), say there
+ * is no billing, as for someone who never bought, and forget the customer,
+ * so the account menu stops offering Billing. One more call to Polar, on
+ * failures only.
+ */
+function portalWithoutCustomer({ db, env }: { db: Db; env: BillingEnv }) {
+  return async (ctx: HookContext) => {
+    // What the endpoint answered: set on after hooks' context, which
+    // createAuthMiddleware's type leaves out.
+    const { returned } = ctx.context as { returned?: unknown }
+    if (!isAPIError(returned) || returned.statusCode !== 500) return
+    const session = await getSessionFromCtx(ctx)
+    if (!session) return
+    const answer = await portalWithoutCustomerAnswer(env, session.user.id)
+    if (answer) await forgetPolarCustomer(db, session.user.id)
+    return answer
+  }
+}
+
+/**
+ * NO_BILLING (404) when Polar has no customer for this user; undefined
+ * when it has one, or can't say (the portal's 500 stands).
+ */
+export async function portalWithoutCustomerAnswer(
+  env: BillingEnv,
+  userId: string
+) {
+  try {
+    await polarApi(env).customers.getExternal({ externalId: userId })
+    return undefined
+  } catch (error) {
+    if (!(error instanceof ResourceNotFound)) return undefined
+  }
+  log("warn", "polar_portal_no_customer", { userId })
+  // A Response, not a throw: Better Auth keeps the handler's 500 status
+  // for an APIError thrown in an after hook (better-auth 1.7.5,
+  // api/dispatch.mjs), and only a Response's own status survives.
+  return Response.json(noBilling, { status: 404 })
+}
+
+/** Someone Polar has no customer for. */
+const noBilling = {
+  code: "NO_BILLING",
+  message: "There is no billing yet. Upgrade to Pro first.",
 }
 
 /**
@@ -182,6 +336,21 @@ function soldHere(state: CustomerState, env: BillingEnv) {
   )
 }
 
+/**
+ * What the user row keeps of the customer (setPlan): its id once it paid,
+ * so a Free user who paid before still reaches past invoices (the account
+ * menu's Billing); nothing once Polar deleted it. Not before a payment:
+ * checkout makes the customer, and Polar reports it, before anyone pays.
+ */
+function customerToKeep(
+  state: CustomerState | undefined,
+  plan: Plan,
+  customerId: string
+) {
+  if (!state || state.deletedAt) return null
+  return plan === "pro" ? customerId : undefined
+}
+
 /** The customer's state now, or undefined when Polar has no such customer. */
 async function currentState(env: BillingEnv, customerId: string) {
   try {
@@ -223,7 +392,12 @@ export async function applyCustomerState(
     const at = new Date()
     const state = await currentState(env, customerId)
     const plan = state ? planFromState(state, env.POLAR_PRO_PRODUCT_ID) : "free"
-    const result = await setPlan(db, { userId, plan, at, customerId })
+    const result = await setPlan(db, {
+      userId,
+      plan,
+      at,
+      customerId: customerToKeep(state, plan, customerId),
+    })
     if (!result && state && plan === "pro" && soldHere(state, env)) {
       // Paid for an account that is gone (checkout finished in another tab
       // after it was deleted): cancel, so nobody is charged for it. Only
@@ -332,10 +506,12 @@ export async function checkoutAllowed(ctx: HookContext, env: BillingEnv) {
 /**
  * Makes the Polar customer with the confirmed email and name, so checkout
  * fills them in and the buyer is who Parley knows (the plugin sends only
- * our user id). Polar already having the customer (a second try), or the
- * email (PAR-17), is fine: checkout then asks for the email, as it would.
+ * our user id). When Polar already has it (every second checkout), it gets
+ * the email Parley knows instead: an email change that didn't reach Polar
+ * then is repaired here. Any other refusal (an email Polar won't take, or
+ * another customer's, PAR-17) is logged; checkout then asks for the email.
  */
-async function makeCustomer(
+export async function makeCustomer(
   env: BillingEnv,
   user: { id: string; email: string; name: string }
 ) {
@@ -346,6 +522,8 @@ async function makeCustomer(
       name: user.name,
     })
   } catch (error) {
+    if (customerExists(error))
+      return sendEmailToPolar(env, { userId: user.id, email: user.email })
     log(
       "warn",
       "polar_customer_not_made",
@@ -353,6 +531,18 @@ async function makeCustomer(
       error
     )
   }
+}
+
+/**
+ * Polar's answer when it has a customer with this external id: a 422 that
+ * names the field (as the sandbox answers it, PAR-21). Every other 422 is a
+ * real refusal.
+ */
+function customerExists(error: unknown) {
+  return (
+    error instanceof HTTPValidationError &&
+    (error.detail ?? []).some(({ loc }) => loc.at(-1) === "external_id")
+  )
 }
 
 /**
@@ -368,15 +558,8 @@ export async function portalAllowed(ctx: HookContext, env: BillingEnv, db: Db) {
     })
   const account = await accountOf(ctx)
   await withinLimit(env, account.id)
-  const [row] = await db
-    .select({ customerId: schema.user.polarCustomerId })
-    .from(schema.user)
-    .where(eq(schema.user.id, account.id))
-  if (!row?.customerId)
-    throw APIError.from("NOT_FOUND", {
-      code: "NO_BILLING",
-      message: "There is no billing yet. Upgrade to Pro first.",
-    })
+  if ((await polarCustomerOf(db, account.id)) === undefined)
+    throw APIError.from("NOT_FOUND", noBilling)
 }
 
 /**

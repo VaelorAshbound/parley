@@ -30,7 +30,8 @@ const planNames = { free: "Free", pro: "Pro" } as const
 
 // The sidebar's account row (spec §1 Layout). Guests are asked to sign in,
 // which keeps their draft; accounts get their name, plan and a menu:
-// Settings, Billing (Pro) or Upgrade to Pro (Free), and Sign out.
+// Settings, Upgrade to Pro (Free), Billing (whoever Polar knows as a
+// customer), and Sign out.
 export function AccountMenu({ viewer }: { viewer: Viewer }) {
   const location = useLocation()
 
@@ -67,14 +68,14 @@ export function AccountMenu({ viewer }: { viewer: Viewer }) {
             <SettingsIcon />
             Settings
           </DropdownMenuItem>
-          {viewer.plan === "pro" ? (
-            <BillingItem />
-          ) : (
+          {viewer.plan !== "pro" && (
             <DropdownMenuItem render={<Link to="/pricing" />}>
               <SparklesIcon />
               Upgrade to Pro
             </DropdownMenuItem>
           )}
+          {/* Pro, or Pro once: the past invoices are in the portal (PAR-21). */}
+          {viewer.hasBilling && <BillingItem />}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

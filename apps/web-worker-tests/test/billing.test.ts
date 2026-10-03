@@ -1,7 +1,7 @@
-import { schema } from "@workspace/db"
+import { polarCustomerOf, schema } from "@workspace/db"
 import { env } from "cloudflare:workers"
 import { eq } from "drizzle-orm"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { cancelBilling } from "../../web/src/server/billing"
 import checkoutCreated from "./fixtures/polar/checkout-created.json"
@@ -48,6 +48,11 @@ async function planOf(userId: string) {
     .from(schema.user)
     .where(eq(schema.user.id, userId))
   return row?.plan
+}
+
+/** The Polar customer id Parley keeps for the user: "this user paid once". */
+async function customerIdOf(userId: string) {
+  return polarCustomerOf(await database(), userId)
 }
 
 type State = typeof active | typeof canceledAtPeriodEnd | typeof revoked
@@ -201,6 +206,39 @@ describe("Polar's webhook", () => {
 
     expect(response.status).toBe(200)
     expect(await planOf(userId)).toBe("free")
+    // Nothing left to bill: the account menu drops Billing.
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("forgets the customer when Polar no longer has it", async () => {
+    const { userId, customerId } = await accountWith(active)
+    polar.states.delete(customerId)
+
+    await deliver(stateFor(revoked, userId))
+
+    expect(await planOf(userId)).toBe("free")
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("keeps no customer for someone who opened checkout and never paid", async () => {
+    // Polar sends a state when checkout makes the customer (state-new-customer
+    // is that state, from the sandbox): no subscription, so nothing to bill.
+    const { userId } = await newAccount()
+
+    const response = await send(polar, stateFor(newCustomer, userId))
+
+    expect(response.status).toBe(200)
+    expect(await planOf(userId)).toBe("free")
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("keeps the customer after Pro ends, for past invoices", async () => {
+    const { userId, customerId } = await accountWith(active)
+
+    await send(polar, stateFor(revoked, userId))
+
+    expect(await planOf(userId)).toBe("free")
+    expect(await customerIdOf(userId)).toBe(customerId)
   })
 
   it("cancels a paid subscription whose Parley account is gone", async () => {
@@ -256,6 +294,45 @@ describe("Polar's webhook", () => {
     const response = await deliver(stateFor(active, userId))
 
     expect(response.status).toBe(500)
+    expect(await planOf(userId)).toBe("free")
+  })
+
+  it("warns, without the payload, when a state change can't be read", async () => {
+    // Signed by Polar, so it is acknowledged (a retry wouldn't read better),
+    // but on-call must see it: a plan that never changes leaves no trace.
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { email, userId } = await newAccount()
+    const base = stateFor(active, userId)
+    const unreadable = { ...base, data: { ...base.data, id: 42, email } }
+
+    const response = await deliver(unreadable)
+
+    expect(response.status).toBe(200)
+    expect(await planOf(userId)).toBe("free")
+    const lines = warn.mock.calls.map(([line]) => line as object)
+    expect(lines).toContainEqual(
+      expect.objectContaining({
+        level: "warn",
+        event: "polar_webhook_unreadable",
+        type: "customer.state_changed",
+        issues: "data.id",
+      })
+    )
+    // Polar's payload holds the customer's email and name: never logged.
+    expect(JSON.stringify(lines)).not.toContain(email)
+    expect(JSON.stringify(lines)).not.toContain(userId)
+  })
+
+  it("reads a state change with no external id at all", async () => {
+    // Polar may leave the field out instead of sending null; the customer
+    // id still finds the user.
+    const { userId } = await accountWith(active)
+    const base = stateFor(revoked, userId)
+    const { external_id: _, ...data } = base.data
+
+    const response = await send(polar, { ...base, data })
+
+    expect(response.status).toBe(200)
     expect(await planOf(userId)).toBe("free")
   })
 
@@ -462,11 +539,83 @@ describe("checkout", () => {
     })
   })
 
-  it("still opens checkout when Polar already has this customer", async () => {
-    const { cookie } = await newAccount()
+  /** Polar's 422 for a customer it can't make, as the sandbox answers it. */
+  const refused = (field: string, msg: string) =>
+    Response.json(
+      {
+        error: "PolarRequestValidationError",
+        detail: [{ type: "value_error", loc: ["body", field], msg, input: "" }],
+      },
+      { status: 422 }
+    )
+  const sameExternalId = () =>
+    refused("external_id", "A customer with this external ID already exists.")
+
+  it("still opens checkout, quietly, when Polar already has this customer", async () => {
+    // A second checkout: Polar made the customer the first time. Nothing
+    // for on-call.
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { cookie, email, userId } = await newAccount()
     polar.answer(({ method, path }) =>
-      path === "/v1/customers/"
-        ? Response.json({ detail: "exists" }, { status: 422 })
+      method === "POST" && path === "/v1/customers/"
+        ? sameExternalId()
+        : method === "PATCH"
+          ? Response.json({ ...active.data, id: `cus-${userId}`, email })
+          : method === "POST" && path === "/v1/checkouts/"
+            ? Response.json(checkoutCreated, { status: 201 })
+            : undefined
+    )
+
+    const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(response.status).toBe(200)
+    expect(checkouts()).toHaveLength(1)
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it("gives Polar's existing customer the email Parley knows", async () => {
+    // An email change that didn't reach Polar then (Polar was down) is
+    // repaired at the next checkout.
+    const { cookie, email, userId } = await newAccount()
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customers/"
+        ? sameExternalId()
+        : method === "PATCH"
+          ? Response.json({ ...active.data, id: `cus-${userId}`, email })
+          : method === "POST" && path === "/v1/checkouts/"
+            ? Response.json(checkoutCreated, { status: 201 })
+            : undefined
+    )
+
+    await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(polar.calls.filter(({ method }) => method === "PATCH")).toEqual([
+      {
+        method: "PATCH",
+        path: `/v1/customers/external/${userId}`,
+        body: { email },
+      },
+    ])
+  })
+
+  it.each([
+    [
+      "an email it won't take",
+      () => refused("email", "value is not a valid email address."),
+    ],
+    [
+      "an email another customer has",
+      () =>
+        refused("email", "A customer with this email address already exists."),
+    ],
+  ])("warns when Polar refuses the customer for %s", async (_, answer) => {
+    // Checkout still opens (it asks for the email), but on-call sees why
+    // the buyer's details weren't filled in.
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { cookie, email, userId } = await newAccount()
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customers/"
+        ? answer()
         : method === "POST" && path === "/v1/checkouts/"
           ? Response.json(checkoutCreated, { status: 201 })
           : undefined
@@ -475,7 +624,37 @@ describe("checkout", () => {
     const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
 
     expect(response.status).toBe(200)
-    expect(checkouts()).toHaveLength(1)
+    expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+      expect.objectContaining({
+        event: "polar_customer_not_made",
+        userId,
+        polarStatus: 422,
+      })
+    )
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(email)
+  })
+
+  it("warns when Polar couldn't make the customer for another reason", async () => {
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { cookie, userId } = await newAccount()
+    polar.answer(({ method, path }) =>
+      path === "/v1/customers/"
+        ? Response.json({ detail: "down" }, { status: 503 })
+        : method === "POST" && path === "/v1/checkouts/"
+          ? Response.json(checkoutCreated, { status: 201 })
+          : undefined
+    )
+
+    const response = await post("/api/auth/checkout", { slug: "pro" }, cookie)
+
+    expect(response.status).toBe(200)
+    expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+      expect.objectContaining({
+        event: "polar_customer_not_made",
+        userId,
+        polarStatus: 503,
+      })
+    )
   })
 
   it.each([
@@ -524,7 +703,8 @@ describe("the billing portal", () => {
   })
 
   it("stays open after Pro ends, for past invoices", async () => {
-    const { cookie } = await accountWith(revoked)
+    const { cookie, userId } = await accountWith(active)
+    await send(polar, stateFor(revoked, userId))
 
     const response = await post("/api/auth/customer/portal", {}, cookie)
 
@@ -541,6 +721,57 @@ describe("the billing portal", () => {
       "NO_BILLING"
     )
     expect(polar.calls).toHaveLength(0)
+  })
+
+  it("says there is no billing when the Polar customer was deleted by hand", async () => {
+    // What the sandbox answers then (PAR-21's real test): 422 for the
+    // portal session, and no customer under the user's id.
+    const { cookie, userId } = await accountWith(active)
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customer-sessions/"
+        ? Response.json({ detail: "no customer" }, { status: 422 })
+        : method === "GET" && path === `/v1/customers/external/${userId}`
+          ? Response.json(
+              { error: "ResourceNotFound", detail: "Not found" },
+              { status: 404 }
+            )
+          : undefined
+    )
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(404)
+    expect(((await response.json()) as { code: string }).code).toBe(
+      "NO_BILLING"
+    )
+    // Forgotten, so the account menu stops offering a Billing that fails.
+    expect(await customerIdOf(userId)).toBeUndefined()
+  })
+
+  it("says there is no billing for someone who opened checkout and never paid", async () => {
+    const { cookie, userId } = await newAccount()
+    await send(polar, stateFor(newCustomer, userId))
+    polar.forget()
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(404)
+    expect(polar.calls).toHaveLength(0)
+  })
+
+  it("still says Polar failed when the customer is there", async () => {
+    const { cookie, userId } = await accountWith(active)
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customer-sessions/"
+        ? Response.json({ detail: "down" }, { status: 503 })
+        : method === "GET" && path === `/v1/customers/external/${userId}`
+          ? Response.json({ id: `cus-${userId}` })
+          : undefined
+    )
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(500)
   })
 
   it("can't be opened by a link from another site", async () => {
@@ -567,6 +798,113 @@ describe("the billing portal", () => {
 
     expect(response.status).toBe(404)
     expect(polar.calls).toHaveLength(0)
+  })
+})
+
+describe("a new email", () => {
+  /**
+   * The token in the link Better Auth sends to the new address: an HS256
+   * JWT with its secret, as its createEmailVerificationToken makes it (an
+   * account on a test domain gets no email to read it from).
+   */
+  async function changeEmailToken(email: string, updateTo: string) {
+    const base64url = (bytes: Uint8Array) =>
+      btoa(String.fromCharCode(...bytes))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "")
+    const part = (value: object) =>
+      base64url(new TextEncoder().encode(JSON.stringify(value)))
+    const now = Math.floor(Date.now() / 1000)
+    const unsigned = `${part({ alg: "HS256" })}.${part({
+      email,
+      updateTo,
+      requestType: "change-email-verification",
+      iat: now,
+      exp: now + 3600,
+    })}`
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(env.BETTER_AUTH_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    )
+    const mac = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(unsigned)
+    )
+    return `${unsigned}.${base64url(new Uint8Array(mac))}`
+  }
+
+  /**
+   * Opens the link Better Auth sends to the new address (the last step of
+   * a change), signed in as the user: the email changes then.
+   */
+  async function confirmNewEmail(
+    account: { email: string; cookie: string },
+    newEmail: string
+  ) {
+    const token = await changeEmailToken(account.email, newEmail)
+    const response = await call(
+      `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
+      { headers: { cookie: account.cookie } }
+    )
+    expect(response.status).toBe(200)
+    expect(await userIdOf(newEmail)).toBeTruthy()
+  }
+
+  const updates = () => polar.calls.filter(({ method }) => method === "PATCH")
+
+  it("reaches Polar, so receipts go to the address Parley knows", async () => {
+    const account = await accountWith(active)
+    const newEmail = `ana-${crypto.randomUUID()}@example.test`
+    polar.answer(({ method }) =>
+      method === "PATCH"
+        ? Response.json({ ...active.data, email: newEmail })
+        : undefined
+    )
+
+    await confirmNewEmail(account, newEmail)
+
+    expect(updates()).toEqual([
+      {
+        method: "PATCH",
+        path: `/v1/customers/external/${account.userId}`,
+        body: { email: newEmail },
+      },
+    ])
+  })
+
+  it("doesn't call Polar for someone who never bought", async () => {
+    const account = await newAccount()
+
+    await confirmNewEmail(account, `ana-${crypto.randomUUID()}@example.test`)
+
+    expect(polar.calls).toHaveLength(0)
+  })
+
+  it("still changes when Polar can't take it, and says so", async () => {
+    using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const account = await accountWith(active)
+    const newEmail = `ana-${crypto.randomUUID()}@example.test`
+    polar.answer(({ method }) =>
+      method === "PATCH"
+        ? Response.json({ detail: "down" }, { status: 503 })
+        : undefined
+    )
+
+    await confirmNewEmail(account, newEmail)
+
+    expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+      expect.objectContaining({
+        event: "polar_email_not_synced",
+        userId: account.userId,
+        polarStatus: 503,
+      })
+    )
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(newEmail)
   })
 })
 
