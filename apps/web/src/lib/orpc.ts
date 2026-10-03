@@ -2,7 +2,7 @@ import { createORPCClient } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 import { SimpleCsrfProtectionLinkPlugin } from "@orpc/client/plugins"
 import type { RouterClient } from "@orpc/server"
-import { createRouterClient } from "@orpc/server"
+import { createRouterClient, onError } from "@orpc/server"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 import { createIsomorphicFn } from "@tanstack/react-start"
 import {
@@ -10,8 +10,9 @@ import {
   setResponseHeader,
 } from "@tanstack/react-start/server"
 
+import { logError } from "@/server/log"
 import { requestServices } from "@/server/request-services"
-import { router, type Router } from "@/server/rpc/router"
+import { logProcedureError, router, type Router } from "@/server/rpc/router"
 
 // During SSR, procedures run in this process with the page request's cookies
 // (no HTTP to our own Worker); in the browser, over /api/rpc.
@@ -22,10 +23,16 @@ const createClient = createIsomorphicFn()
     const resHeaders = new Headers()
     return createRouterClient(router, {
       context: async () => {
-        const services = await requestServices()
+        const services = await requestServices().catch((error: unknown) => {
+          // The database is down: no procedure ran, so nothing else logs it.
+          logError("request_services_failed", error)
+          throw error
+        })
         return { ...services, reqHeaders: getRequestHeaders(), resHeaders }
       },
       interceptors: [
+        // As over HTTP; a broken page would otherwise leave no trace (PAR-31).
+        onError(logProcedureError),
         async (options) => {
           try {
             return await options.next()
