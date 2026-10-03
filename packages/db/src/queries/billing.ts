@@ -26,8 +26,12 @@ export async function setPlan(
     userId: string
     plan: Plan
     at: Date
-    /** Polar's id for the user as a customer, when the state names one. */
-    customerId?: string
+    /**
+     * Polar's id for the user as a customer: kept once they paid, so they
+     * can reach past invoices. null forgets it (Polar deleted the customer);
+     * undefined leaves it as it is.
+     */
+    customerId?: string | null
   }
 ) {
   const [updated] = await db
@@ -49,6 +53,18 @@ export async function setPlan(
   return current && { ...current, applied: false }
 }
 
+/**
+ * The user's Polar customer id, kept since their first paid state; undefined
+ * for someone who never paid (or whose customer Polar deleted).
+ */
+export async function polarCustomerOf(db: Db, userId: string) {
+  const [row] = await db
+    .select({ customerId: user.polarCustomerId })
+    .from(user)
+    .where(eq(user.id, userId))
+  return row?.customerId ?? undefined
+}
+
 /** The user a Polar customer belongs to, from an earlier state. */
 export async function userOfPolarCustomer(db: Db, customerId: string) {
   const [row] = await db
@@ -56,4 +72,15 @@ export async function userOfPolarCustomer(db: Db, customerId: string) {
     .from(user)
     .where(eq(user.polarCustomerId, customerId))
   return row?.id
+}
+
+/**
+ * Forgets the user's Polar customer: Polar has none for them any more
+ * (deleted by hand in its dashboard), so there is nothing to bill.
+ */
+export async function forgetPolarCustomer(db: Db, userId: string) {
+  await db
+    .update(user)
+    .set({ polarCustomerId: null })
+    .where(eq(user.id, userId))
 }

@@ -1,0 +1,159 @@
+import { env } from "cloudflare:workers"
+import { afterAll, describe, expect, it, vi } from "vitest"
+
+import {
+  makeCustomer as makeCheckoutCustomer,
+  portalWithoutCustomerAnswer,
+  sendEmailToPolar,
+} from "../../web/src/server/billing"
+
+// Billing against Polar's real SANDBOX (PAR-21; CLAUDE.md: every outside
+// service proven in its real sandbox). Parley's own code talks to Polar;
+// the test sets up and reads back with Polar's plain REST API, so what it
+// checks is what Polar stored. Every customer it makes has an external id
+// starting "wave2-" and is deleted at the end. Run with
+// `pnpm test:workers:real`, with the sandbox token in apps/web/.dev.vars.
+// No database here, so this never touches Neon.
+
+const token = env.POLAR_ACCESS_TOKEN
+const isRealToken = Boolean(token) && !token.includes("test_only")
+const api = "https://sandbox-api.polar.sh/v1"
+
+/** Polar's REST API with the sandbox token. */
+function polar(path: string, init: RequestInit = {}) {
+  return fetch(`${api}${path}`, {
+    ...init,
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+  })
+}
+
+/** Polar refuses reserved domains (example.test); Resend's test inbox it takes. */
+const inbox = (externalId: string, tag = "") =>
+  `delivered+${externalId}${tag}@resend.dev`
+
+const made: string[] = []
+
+/** A sandbox customer as checkout makes it: our user id as its external id. */
+async function makeCustomer() {
+  const externalId = `wave2-${crypto.randomUUID()}`
+  const response = await polar("/customers/", {
+    method: "POST",
+    body: JSON.stringify({
+      external_id: externalId,
+      email: inbox(externalId),
+      name: "Wave Two",
+    }),
+  })
+  expect(response.status).toBe(201)
+  const { id } = await response.json<{ id: string }>()
+  made.push(id)
+  return { id, externalId }
+}
+
+afterAll(async () => {
+  // Only the customers this run made. One deleted by the test answers 404.
+  for (const id of made) {
+    const response = await polar(`/customers/${id}`, { method: "DELETE" })
+    if (response.status !== 204 && response.status !== 404)
+      throw new Error(`Sandbox customer ${id} left: ${response.status}`)
+  }
+})
+
+/** The sandbox customer under this external id, as Polar stored it. */
+async function storedCustomer(externalId: string) {
+  const response = await polar(`/customers/external/${externalId}`)
+  expect(response.status).toBe(200)
+  const customer = await response.json<{ id: string; email: string }>()
+  if (!made.includes(customer.id)) made.push(customer.id)
+  return customer
+}
+
+describe.skipIf(!isRealToken)("billing in Polar's real sandbox", () => {
+  it(
+    "gives the existing customer the new email at the next checkout",
+    { timeout: 30_000 },
+    async () => {
+      // An email change that didn't reach Polar: the second checkout's
+      // create is refused (this external id exists) and repairs it, quietly.
+      using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const externalId = `wave2-${crypto.randomUUID()}`
+      const user = { id: externalId, email: inbox(externalId), name: "Wave" }
+      await makeCheckoutCustomer(env, user)
+      await storedCustomer(externalId)
+      const newEmail = inbox(externalId, "-new")
+
+      await makeCheckoutCustomer(env, { ...user, email: newEmail })
+
+      expect((await storedCustomer(externalId)).email).toBe(newEmail)
+      expect(warn).not.toHaveBeenCalled()
+    }
+  )
+
+  it(
+    "warns when Polar won't take the email at checkout",
+    { timeout: 30_000 },
+    async () => {
+      using warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const externalId = `wave2-${crypto.randomUUID()}`
+
+      await makeCheckoutCustomer(env, {
+        id: externalId,
+        email: `${externalId}@example.test`,
+        name: "Wave",
+      })
+
+      expect(warn.mock.calls.map(([line]) => line)).toContainEqual(
+        expect.objectContaining({
+          event: "polar_customer_not_made",
+          polarStatus: 422,
+        })
+      )
+      expect((await polar(`/customers/external/${externalId}`)).status).toBe(
+        404
+      )
+    }
+  )
+
+  it(
+    "sends a changed email to the Polar customer",
+    { timeout: 30_000 },
+    async () => {
+      const { externalId } = await makeCustomer()
+      const newEmail = inbox(externalId, "-new")
+
+      await sendEmailToPolar(env, { userId: externalId, email: newEmail })
+
+      const stored = await polar(`/customers/external/${externalId}`)
+      expect(stored.status).toBe(200)
+      expect((await stored.json<{ email: string }>()).email).toBe(newEmail)
+    }
+  )
+
+  it(
+    "says NO_BILLING for a customer deleted by hand",
+    { timeout: 30_000 },
+    async () => {
+      const { id, externalId } = await makeCustomer()
+      // Still there: the portal works as usual.
+      expect(await portalWithoutCustomerAnswer(env, externalId)).toBeUndefined()
+
+      // Deleted in Polar's dashboard.
+      const deleted = await polar(`/customers/${id}`, { method: "DELETE" })
+      expect(deleted.status).toBe(204)
+
+      // What the portal plugin asks for then fails (it answers 500)...
+      const session = await polar("/customer-sessions/", {
+        method: "POST",
+        body: JSON.stringify({ external_customer_id: externalId }),
+      })
+      expect(session.status).toBe(422)
+      // ...and Parley answers NO_BILLING instead.
+      const answer = await portalWithoutCustomerAnswer(env, externalId)
+      expect(answer?.status).toBe(404)
+      expect(await answer?.json()).toMatchObject({ code: "NO_BILLING" })
+    }
+  )
+})
