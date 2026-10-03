@@ -232,6 +232,19 @@ describe("account.sessions", () => {
   })
 })
 
+describe("Better Auth's own session list", () => {
+  it("is closed: it answers every device's token (PAR-53)", async () => {
+    // account.sessions replaces it, without the tokens.
+    const ana = await signUp()
+
+    const response = await call("/api/auth/list-sessions", {
+      headers: { cookie: ana.cookie },
+    })
+
+    expect(response.status).toBe(404)
+  })
+})
+
 describe("account.revokeSession", () => {
   it("signs another device out, and writes an audit line", async () => {
     const ana = await signUp()
