@@ -9,7 +9,6 @@ import {
   MessageIdTaken,
   saveMessages,
   startTurn,
-  TURN_ID_PREFIX,
   turnOf,
   type Db,
   type Turn,
@@ -87,12 +86,7 @@ const STEPS = 8
 const MAX_OUTPUT_TOKENS = 4096
 
 const userMessage = z.object({
-  id: z
-    .string()
-    .min(1)
-    .max(100)
-    // The draft's turn record has these (PAR-7).
-    .refine((id) => !id.startsWith(TURN_ID_PREFIX)),
+  id: z.string().min(1).max(100),
   role: z.literal("user"),
   parts: z
     .array(

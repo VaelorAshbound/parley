@@ -1,7 +1,7 @@
 import { and, asc, eq, exists, inArray, ne, sql } from "drizzle-orm"
 
 import type { Db } from "../client.ts"
-import { draft, message } from "../schema.ts"
+import { chatTurn, draft, message } from "../schema.ts"
 import type { DraftKey } from "./drafts.ts"
 
 // A draft's chat, stored as AI SDK UI messages (spec §2 Data model). Like the
@@ -40,14 +40,7 @@ export async function listSavedMessages(
     })
     .from(message)
     .innerJoin(draft, eq(draft.id, message.draftId))
-    .where(
-      and(
-        eq(draft.id, key.id),
-        eq(draft.userId, key.userId),
-        // The draft's turn record (below) is kept with the chat, not in it.
-        ne(message.role, "system")
-      )
-    )
+    .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))
     .orderBy(asc(message.createdAt), asc(message.id))
 }
 
@@ -163,26 +156,14 @@ function withoutNul(value: unknown): unknown {
 /**
  * A draft's latest chat turn (PAR-7): which one it is, when it began and how
  * it ended (null while it runs, or when it never got to say). One turn at a
- * time is what a draft's chat can take, and only its reply is kept.
+ * time is what a draft's chat can take, and only its reply is kept. It is the
+ * draft's one chat_turn row; a draft with none has had no turn yet.
  */
 export type Turn = {
   id: string
   startedAt: number
   outcome: "done" | "failed" | null
 }
-
-/**
- * Message ids a user's message can't have: the turn record's (below). The
- * chat refuses them up front, so no one can take another draft's.
- */
-export const TURN_ID_PREFIX = "turn:"
-
-/**
- * The turn is kept as the draft's one `system` row of the message table, so
- * it needs no table of its own and goes with the draft. Chat reads never see
- * it (listSavedMessages leaves system rows out).
- */
-const turnRow = (draftId: string) => `${TURN_ID_PREFIX}${draftId}`
 
 function owned(db: Db, key: DraftKey) {
   return exists(
@@ -208,49 +189,30 @@ export async function startTurn(
     .from(draft)
     .where(and(eq(draft.id, key.id), eq(draft.userId, key.userId)))
   if (!mine) return false
-  const data: Turn = { ...turn, outcome: null }
-  const saved = await db
-    .insert(message)
-    .values({
-      id: turnRow(key.id),
-      draftId: key.id,
-      role: "system",
-      parts: [{ type: "data-turn", data }],
-    })
-    .onConflictDoUpdate({
-      target: message.id,
-      set: { parts: sql`excluded.parts` },
-      setWhere: and(eq(message.draftId, key.id), eq(message.role, "system")),
-    })
-    .returning({ id: message.id })
-  if (saved.length === 0) throw new MessageIdTaken()
+  const latest = {
+    turnId: turn.id,
+    startedAt: new Date(turn.startedAt),
+    outcome: null,
+  }
+  await db
+    .insert(chatTurn)
+    .values({ draftId: key.id, ...latest })
+    .onConflictDoUpdate({ target: chatTurn.draftId, set: latest })
   return true
 }
 
 /** The draft's latest turn; null before its first, or when not the user's. */
 export async function turnOf(db: Db, key: DraftKey): Promise<Turn | null> {
   const [row] = await db
-    .select({ parts: message.parts })
-    .from(message)
-    .where(
-      and(
-        eq(message.id, turnRow(key.id)),
-        eq(message.draftId, key.id),
-        eq(message.role, "system"),
-        owned(db, key)
-      )
-    )
-  const data = (row?.parts[0] as { data?: Partial<Turn> } | undefined)?.data
-  if (typeof data?.id !== "string" || typeof data.startedAt !== "number")
-    return null
-  return {
-    id: data.id,
-    startedAt: data.startedAt,
-    outcome:
-      data.outcome === "done" || data.outcome === "failed"
-        ? data.outcome
-        : null,
-  }
+    .select({
+      id: chatTurn.turnId,
+      startedAt: chatTurn.startedAt,
+      outcome: chatTurn.outcome,
+    })
+    .from(chatTurn)
+    .where(and(eq(chatTurn.draftId, key.id), owned(db, key)))
+  if (!row) return null
+  return { ...row, startedAt: row.startedAt.getTime() }
 }
 
 /**
@@ -264,19 +226,11 @@ export async function endTurn(
   outcome: "done" | "failed"
 ) {
   const ended = await db
-    .update(message)
-    .set({
-      parts: sql`jsonb_set(${message.parts}, '{0,data,outcome}', to_jsonb(${outcome}::text))`,
-    })
+    .update(chatTurn)
+    .set({ outcome })
     .where(
-      and(
-        eq(message.id, turnRow(key.id)),
-        eq(message.draftId, key.id),
-        eq(message.role, "system"),
-        sql`${message.parts} -> 0 -> 'data' ->> 'id' = ${id}`,
-        owned(db, key)
-      )
+      and(eq(chatTurn.draftId, key.id), eq(chatTurn.turnId, id), owned(db, key))
     )
-    .returning({ id: message.id })
+    .returning({ id: chatTurn.draftId })
   return ended.length > 0
 }
