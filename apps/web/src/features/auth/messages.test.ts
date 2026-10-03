@@ -14,6 +14,13 @@ describe("authErrorMessage", () => {
     ).toMatch(/wait/)
   })
 
+  it("says how long to wait: Better Auth's limits last 10 seconds (PAR-20)", () => {
+    // Sign-in, sign-up and each two-factor step: 3 tries per 10 s per IP.
+    expect(authErrorMessage({ code: "INVALID_CODE", status: 429 })).toBe(
+      "Too many tries. Please wait 10 seconds, then try again."
+    )
+  })
+
   it("never says which half of the sign-in was wrong", () => {
     expect(
       authErrorMessage({ code: "INVALID_EMAIL_OR_PASSWORD", status: 401 })
@@ -73,6 +80,17 @@ describe("authErrorMessage", () => {
     (code) => {
       expect(authErrorMessage({ code, status: 401 })).toMatch(
         /Please sign in again\.$/
+      )
+      expect(needsNewSignIn(code)).toBe(true)
+    }
+  )
+
+  it.each(["TOTP_NOT_ENABLED", "BACKUP_CODES_NOT_ENABLED"])(
+    "sends a code with no sign-in waiting for it back to sign-in (%s)",
+    (code) => {
+      // A guest's session on /two-factor: it has no two-factor (PAR-20).
+      expect(authErrorMessage({ code, status: 400 })).toBe(
+        "No sign-in is waiting for a code. Please sign in again."
       )
       expect(needsNewSignIn(code)).toBe(true)
     }
