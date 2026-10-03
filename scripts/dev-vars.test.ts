@@ -61,6 +61,30 @@ describe("setUpDevVars", () => {
     )
   })
 
+  // Empty to dotenv, which wrangler reads .dev.vars with, though not to a
+  // look at the raw text: quotes, a comment, only spaces, or a later empty
+  // line (the last one counts).
+  test.each([
+    'BETTER_AUTH_SECRET=""\n',
+    "BETTER_AUTH_SECRET=''\n",
+    "BETTER_AUTH_SECRET=#comment\n",
+    'BETTER_AUTH_SECRET="   "\n',
+    "BETTER_AUTH_SECRET=mine\nSCRIPTED_AI=on\nBETTER_AUTH_SECRET=\n",
+  ])("fails loudly when an existing secret is empty to dotenv: %j", (text) => {
+    const vars = appDir()
+    writeFileSync(vars, text)
+
+    expect(() => setUpDevVars(vars)).toThrow(/BETTER_AUTH_SECRET is empty/)
+    expect(readFileSync(vars, "utf8")).toBe(text)
+  })
+
+  test("a quoted secret with a trailing comment counts", () => {
+    const vars = appDir()
+    writeFileSync(vars, 'BETTER_AUTH_SECRET="mine" # local only\n')
+
+    expect(setUpDevVars(vars)).toBe("kept")
+  })
+
   test("fails loudly when the example has no BETTER_AUTH_SECRET= line to fill", () => {
     const vars = appDir()
     writeFileSync(`${vars}.example`, "SCRIPTED_AI=on\n")
