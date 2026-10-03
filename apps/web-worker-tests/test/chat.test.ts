@@ -571,7 +571,7 @@ describe("a chat turn", () => {
       })
   })
 
-  it("saves no empty bubble when the reader goes away before the first word (PAR-33)", async () => {
+  it("saves a turn stopped before the first word as Stopped, not as running (PAR-33, PAR-47)", async () => {
     const { cookie } = await signInGuest()
     const model = new MockLanguageModelV4({
       doStream: async ({ abortSignal }) => ({
@@ -607,10 +607,238 @@ describe("a chat turn", () => {
     await new Promise((resolve) => setTimeout(resolve, 200))
     await settle()
 
-    // Nothing to show: the chat ends with the question, and a later visit
-    // offers Try again instead of a blank bubble.
+    // No words to keep, no blank bubble: only the Stopped mark, so a later
+    // visit says Stopped with Try again at once, instead of waiting on a
+    // turn that already ended.
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user", "assistant"])
+    expect(saved[1]?.parts).toEqual([{ type: "data-interrupted", data: {} }])
+  })
+
+  it("keeps nothing of a turn a provider error ends before the first word", async () => {
+    const { cookie } = await signInGuest()
+    const model = new MockLanguageModelV4({
+      doStream: async () => ({
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "text-start", id: "t" })
+            controller.error(new Error("The provider went away."))
+          },
+        }),
+      }),
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    using _quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    await safe(
+      read(
+        await client.chat.send({ id: draft.id, message: say("Hello?"), today })
+      )
+    )
+    await settle()
+
+    // Not stopped: the page's error says Parley couldn't answer.
     const saved = await client.chat.messages({ id: draft.id })
     expect(saved.map((message) => message.role)).toEqual(["user"])
+  })
+
+  describe("a reply cut short (PAR-47)", () => {
+    /** One word, then nothing until the model is stopped; then `then`. */
+    function stoppable(then = scriptedModel([[{ text: "Noted." }]])) {
+      let call = 0
+      return new MockLanguageModelV4({
+        doStream: async (options) => {
+          call += 1
+          if (call > 1) return then.doStream(options)
+          return {
+            stream: new ReadableStream({
+              start(controller) {
+                controller.enqueue({ type: "text-start", id: "t" })
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "t",
+                  delta: "The term is",
+                })
+                options.abortSignal?.addEventListener("abort", () =>
+                  controller.error(options.abortSignal?.reason)
+                )
+              },
+            }),
+          }
+        },
+      })
+    }
+
+    /** Sends `text`, and leaves (Stop, or a reload) after the first word. */
+    async function sendAndLeave(
+      client: Awaited<ReturnType<typeof chatClient>>["client"],
+      settle: () => Promise<unknown>,
+      draftId: string,
+      text: string
+    ) {
+      const tab = new AbortController()
+      const stream = await client.chat.send(
+        { id: draftId, message: say(text), today },
+        { signal: tab.signal }
+      )
+      const iterator = stream[Symbol.asyncIterator]()
+      for (;;) {
+        const { value, done } = await iterator.next()
+        if (done || (value as { type?: string }).type === "text-delta") break
+      }
+      tab.abort()
+      await expect
+        .poll(
+          async () => {
+            await settle()
+            return (await client.chat.messages({ id: draftId })).at(-1)?.role
+          },
+          { timeout: 3000 }
+        )
+        .toBe("assistant")
+    }
+
+    it("marks a reply stopped when the reader left, as it is saved", async () => {
+      const { cookie } = await signInGuest()
+      const { client, settle } = await chatClient(cookie, stoppable())
+      const draft = await client.drafts.create({
+        documentId: "mutual-nda",
+        today,
+      })
+
+      await sendAndLeave(client, settle, draft.id, "How long?")
+
+      const reply = (await client.chat.messages({ id: draft.id })).at(-1)
+      expect(reply?.parts).toEqual([
+        expect.objectContaining({ type: "step-start" }),
+        expect.objectContaining({ type: "text", text: "The term is" }),
+        { type: "data-interrupted", data: {} },
+      ])
+    })
+
+    it("keeps the mark when the chat goes on, and the model never sees it", async () => {
+      const { cookie } = await signInGuest()
+      const model = stoppable()
+      const { client, settle } = await chatClient(cookie, model)
+      const draft = await client.drafts.create({
+        documentId: "mutual-nda",
+        today,
+      })
+      await sendAndLeave(client, settle, draft.id, "How long?")
+
+      await read(
+        await client.chat.send({ id: draft.id, message: say("Go on."), today })
+      )
+      await settle()
+
+      const saved = await client.chat.messages({ id: draft.id })
+      expect(saved.map((message) => message.role)).toEqual([
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+      ])
+      expect(saved[1]?.parts.at(-1)).toEqual({
+        type: "data-interrupted",
+        data: {},
+      })
+      expect(saved[3]?.parts.map((part) => part.type)).not.toContain(
+        "data-interrupted"
+      )
+      expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).not.toContain(
+        "interrupted"
+      )
+    })
+
+    it("doesn't mark a reply that finished, or one a provider error cut", async () => {
+      const { cookie } = await signInGuest()
+      let call = 0
+      const model = new MockLanguageModelV4({
+        doStream: async (options) => {
+          call += 1
+          if (call === 1)
+            return scriptedModel([[{ text: "A Mutual NDA fits." }]]).doStream(
+              options
+            )
+          return {
+            stream: new ReadableStream({
+              start(controller) {
+                controller.enqueue({ type: "text-start", id: "t" })
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "t",
+                  delta: "HALF A REPLY",
+                })
+                controller.error(new Error("The provider went away."))
+              },
+            }),
+          }
+        },
+      })
+      const { client, settle } = await chatClient(cookie, model)
+      const draft = await client.drafts.create({
+        documentId: "mutual-nda",
+        today,
+      })
+      using _quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      await read(
+        await client.chat.send({ id: draft.id, message: say("Hi"), today })
+      )
+      await settle()
+      await safe(
+        client.chat
+          .send({ id: draft.id, message: say("And?"), today })
+          .then(read)
+      )
+      await settle()
+
+      // The finished reply is plain; the error is Try again's to say.
+      const saved = await client.chat.messages({ id: draft.id })
+      expect(JSON.stringify(saved[1])).toContain("A Mutual NDA fits.")
+      expect(JSON.stringify(saved)).not.toContain("data-interrupted")
+    })
+
+    it("Try again takes the stopped reply back, mark and all", async () => {
+      const { cookie } = await signInGuest()
+      const { client, settle } = await chatClient(
+        cookie,
+        stoppable(scriptedModel([[{ text: "Two years." }]]))
+      )
+      const draft = await client.drafts.create({
+        documentId: "mutual-nda",
+        today,
+      })
+      await sendAndLeave(client, settle, draft.id, "How long?")
+      const [question] = await client.chat.messages({ id: draft.id })
+      if (question?.role !== "user") throw new Error("No question saved")
+
+      // Try again after a reload: useChat's regenerate() sends it again.
+      await read(
+        await client.chat.send({
+          id: draft.id,
+          message: {
+            id: question.id,
+            role: "user",
+            parts: [{ type: "text", text: "How long?" }],
+          },
+          today,
+        })
+      )
+      await settle()
+
+      const saved = await client.chat.messages({ id: draft.id })
+      expect(saved.map((message) => message.role)).toEqual([
+        "user",
+        "assistant",
+      ])
+      expect(JSON.stringify(saved[1])).toContain("Two years.")
+      expect(JSON.stringify(saved)).not.toContain("data-interrupted")
+    })
   })
 
   it("refuses a message over 4,000 characters without calling the model", async () => {

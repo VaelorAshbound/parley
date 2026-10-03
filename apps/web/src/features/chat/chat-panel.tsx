@@ -29,7 +29,12 @@ import type { Answers } from "@/server/ai/questions"
 
 import { Composer } from "./composer"
 import { limitProblem } from "./limit-problem"
-import { MessageParts, PlainText } from "./message-parts"
+import {
+  isStopped,
+  MessageParts,
+  PlainText,
+  StoppedNote,
+} from "./message-parts"
 import { forgetSettledQuestions } from "./ai-questionnaire"
 import { answersToRetry, questionsAnswered } from "./transport"
 import { useDocumentSync } from "./use-document-sync"
@@ -73,8 +78,12 @@ export function ChatPanel({
     // The next visit to this draft starts from the whole chat, and the
     // sidebar's order from this turn. Answers the server took no longer
     // need keeping for a reload.
-    onFinish: ({ messages: all, isError }) => {
-      if (!isError) forgetSettledQuestions(all.at(-1))
+    onFinish: ({ messages: finished, isError, isAbort }) => {
+      if (!isError) forgetSettledQuestions(finished.at(-1))
+      // Stopped here: marked as the server saves it, so it reads the same
+      // now as after a reload (PAR-47).
+      const all = isAbort ? markStopped(finished) : finished
+      if (all !== finished) setMessages(all)
       queryClient.setQueryData(
         orpc.chat.messages.queryKey({ input: { id: draftId } }),
         all
@@ -116,8 +125,13 @@ export function ChatPanel({
   // Try again: a failed answer turn sends the answers again; any other turn
   // sends the user's last message again, which the server takes as a retry
   // of it (PAR-7).
+  const reply = useRef<HTMLTextAreaElement>(null)
   const retry = () => {
     setUnfinished(null)
+    // Try again goes with the turn it ends, and focus with it: the reply
+    // box is next, as after answers (T36), not the top of the page.
+    if (!matchMedia("(pointer: coarse)").matches)
+      reply.current?.focus({ preventScroll: true })
     const last = messages.at(-1)
     const answered = last ? answersToRetry(last) : null
     if (!answered) {
@@ -132,7 +146,6 @@ export function ChatPanel({
   const pending = useUiStore((state) => state.pending)
   const setPending = useUiStore((state) => state.setPending)
   const settle = useUiStore((state) => state.settle)
-  const reply = useRef<HTMLTextAreaElement>(null)
   // A new message settles the last turn's highlights in the document.
   const send = (text: string) => {
     settle()
@@ -146,6 +159,13 @@ export function ChatPanel({
     answers: Answers
   }) => {
     settle()
+    // Answers to a stopped reply carry it on: it isn't stopped any more.
+    const last = messages.at(-1)
+    if (last && isStopped(last.parts))
+      setMessages([
+        ...messages.slice(0, -1),
+        { ...last, parts: unmarked(last) },
+      ])
     void addToolOutput({
       tool: "askQuestions",
       toolCallId,
@@ -230,7 +250,23 @@ export function ChatPanel({
                               ? answer
                               : undefined
                           }
+                          stopped={isStopped(message.parts)}
                         />
+                        {isStopped(message.parts) &&
+                        !(busy && index === messages.length - 1) ? (
+                          <StoppedNote
+                            className={cn(!loaded.has(message.id) && "enter")}
+                            // Only the latest turn can be tried again, and
+                            // not twice: a failed retry says so itself.
+                            onRetry={
+                              index === messages.length - 1 &&
+                              !error &&
+                              unfinished !== "lost"
+                                ? retry
+                                : undefined
+                            }
+                          />
+                        ) : null}
                       </MessageContent>
                     </Message>
                   )}
@@ -277,4 +313,31 @@ export function ChatPanel({
       </div>
     </div>
   )
+}
+
+/**
+ * The chat with its last reply marked stopped (PAR-47), as the server saves
+ * one cut short. Stopped before Parley's first word, there is no reply yet:
+ * the mark stands alone, so the turn says Stopped, with Try again, and
+ * doesn't look like one still being answered.
+ */
+function markStopped(messages: ChatMessage[]): ChatMessage[] {
+  const last = messages.at(-1)
+  if (last?.role === "user")
+    return [
+      ...messages,
+      { id: crypto.randomUUID(), role: "assistant", parts: [INTERRUPTED] },
+    ]
+  if (last?.role !== "assistant" || isStopped(last.parts)) return messages
+  return [
+    ...messages.slice(0, -1),
+    { ...last, parts: [...unmarked(last), INTERRUPTED] },
+  ]
+}
+
+const INTERRUPTED = { type: "data-interrupted", data: {} } as const
+
+/** The reply's parts without a Stopped mark. */
+function unmarked(message: ChatMessage) {
+  return message.parts.filter((part) => part.type !== INTERRUPTED.type)
 }
