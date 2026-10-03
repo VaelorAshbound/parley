@@ -97,14 +97,19 @@ const alsoFilled: ChatMessage["parts"][number] = {
 }
 
 /** The page: the document panel shows the draft, and the chat syncs it. */
-async function renderPage() {
+async function renderPage(
+  start: { documentId: string | null; fields: Record<string, unknown> } = {
+    documentId: null,
+    fields: {},
+  }
+) {
   const server = heldServer()
   const queryClient = new QueryClient()
   const key = server.orpc.drafts.get.queryKey({ input: { id: draftId } })
   queryClient.setQueryData(key, {
     id: draftId,
-    documentId: null,
-    fields: {},
+    title: "Untitled",
+    ...start,
   } as never)
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
@@ -124,6 +129,7 @@ async function renderPage() {
   )
   const draft = () =>
     queryClient.getQueryData(key) as {
+      title: string
       documentId: string | null
       fields: Record<string, unknown>
     }
@@ -201,6 +207,8 @@ test("the chosen agreement and the next field show before the draft load answers
   await rerender({ messages: reply([chose]) })
   expect(loading()).toBe(1)
   expect(draft().documentId).toBe("mutual-nda")
+  // The header's title comes with the tool's result too.
+  expect(draft().title).toBe("Mutual NDA")
   // The new agreement's defaults, as the server seeds them.
   expect(shown("purpose")).toBe(
     "Evaluating whether to enter into a business relationship with the other party."
@@ -210,4 +218,19 @@ test("the chosen agreement and the next field show before the draft load answers
   expect(loading()).toBe(1)
   expect(draft().documentId).toBe("mutual-nda")
   expect(shown("purpose")).toBe(roadmap)
+})
+
+test("choosing the agreement the draft already has keeps its values", async () => {
+  // The draft already is a Mutual NDA, with a purpose of its own.
+  const own = { documentId: "mutual-nda", fields: { purpose: roadmap } }
+  const { server, rerender, shown, loading, draft } = await renderPage(own)
+  Object.assign(server.saved, own)
+
+  // The AI picks the same agreement again: nothing on screen changes while
+  // the load it starts is on its way, and no defaults are seeded over it.
+  await rerender({ messages: reply([chose]) })
+  expect(loading()).toBe(1)
+  expect(draft().documentId).toBe("mutual-nda")
+  // Not even the defaults of the fields it leaves empty.
+  expect(draft().fields).toEqual({ purpose: roadmap })
 })

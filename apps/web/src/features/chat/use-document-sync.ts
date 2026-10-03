@@ -38,13 +38,16 @@ export function useDocumentSync(
         // below held back the field the AI fills next by the load's whole
         // round trip: 130-400 ms instead of ~30 (PAR-55). The same one
         // again changes nothing on screen: the load is enough.
-        const { documentId } = part.output
+        const { documentId, title } = part.output
         if (isDocumentId(documentId))
           queryClient.setQueryData(draftKey, (draft) =>
             draft && draft.documentId !== documentId
               ? {
                   ...draft,
                   documentId,
+                  // The server's title, so the header names the new
+                  // agreement as its body shows.
+                  title,
                   fields: switchDocument(
                     draft.fields,
                     definitionOf(documentId),
@@ -53,7 +56,7 @@ export function useDocumentSync(
                 }
               : draft
           )
-        // The rest of the draft (title, status) comes with a fresh load.
+        // The rest of the draft (its status) comes with a fresh load.
         void queryClient.invalidateQueries({ queryKey: draftKey })
         void queryClient.invalidateQueries({
           queryKey: orpc.drafts.list.key(),
