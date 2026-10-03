@@ -1,6 +1,10 @@
 import { describe, expect } from "vite-plus/test"
 
-import { setPlan, userOfPolarCustomer } from "../src/queries/billing.ts"
+import {
+  polarCustomerOf,
+  setPlan,
+  userOfPolarCustomer,
+} from "../src/queries/billing.ts"
 import { makeUser, test } from "./db.ts"
 
 // The plan Polar's webhooks set (spec §2 Limits, T26). Polar may send a
@@ -84,5 +88,25 @@ describe("setPlan", () => {
 describe("userOfPolarCustomer", () => {
   test("is undefined for a customer Parley never saw", async ({ db }) => {
     expect(await userOfPolarCustomer(db, "polar-customer-x")).toBeUndefined()
+  })
+})
+
+describe("polarCustomerOf", () => {
+  test("is undefined for someone who never bought", async ({ db }) => {
+    const owner = await makeUser(db)
+
+    expect(await polarCustomerOf(db, owner.id)).toBeUndefined()
+  })
+
+  test("is the customer id from Polar's last state", async ({ db }) => {
+    const owner = await makeUser(db)
+    await setPlan(db, {
+      userId: owner.id,
+      plan: "free",
+      at: monday,
+      customerId: "polar-customer-2",
+    })
+
+    expect(await polarCustomerOf(db, owner.id)).toBe("polar-customer-2")
   })
 })
