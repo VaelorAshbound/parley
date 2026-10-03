@@ -571,7 +571,7 @@ describe("a chat turn", () => {
       })
   })
 
-  it("saves no empty bubble when the reader goes away before the first word (PAR-33)", async () => {
+  it("saves a turn stopped before the first word as Stopped, not as running (PAR-33, PAR-47)", async () => {
     const { cookie } = await signInGuest()
     const model = new MockLanguageModelV4({
       doStream: async ({ abortSignal }) => ({
@@ -607,8 +607,41 @@ describe("a chat turn", () => {
     await new Promise((resolve) => setTimeout(resolve, 200))
     await settle()
 
-    // Nothing to show: the chat ends with the question, and a later visit
-    // offers Try again instead of a blank bubble.
+    // No words to keep, no blank bubble: only the Stopped mark, so a later
+    // visit says Stopped with Try again at once, instead of waiting on a
+    // turn that already ended.
+    const saved = await client.chat.messages({ id: draft.id })
+    expect(saved.map((message) => message.role)).toEqual(["user", "assistant"])
+    expect(saved[1]?.parts).toEqual([{ type: "data-interrupted", data: {} }])
+  })
+
+  it("keeps nothing of a turn a provider error ends before the first word", async () => {
+    const { cookie } = await signInGuest()
+    const model = new MockLanguageModelV4({
+      doStream: async () => ({
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "text-start", id: "t" })
+            controller.error(new Error("The provider went away."))
+          },
+        }),
+      }),
+    })
+    const { client, settle } = await chatClient(cookie, model)
+    const draft = await client.drafts.create({
+      documentId: "mutual-nda",
+      today,
+    })
+    using _quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    await safe(
+      read(
+        await client.chat.send({ id: draft.id, message: say("Hello?"), today })
+      )
+    )
+    await settle()
+
+    // Not stopped: the page's error says Parley couldn't answer.
     const saved = await client.chat.messages({ id: draft.id })
     expect(saved.map((message) => message.role)).toEqual(["user"])
   })

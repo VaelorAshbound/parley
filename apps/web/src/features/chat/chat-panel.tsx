@@ -313,28 +313,27 @@ export function ChatPanel({
 
 /**
  * The chat with its last reply marked stopped (PAR-47), as the server saves
- * one cut short: only a reply with something in it, since a reply stopped
- * before its first word isn't kept. The same chat when there's none.
+ * one cut short. Stopped before Parley's first word, there is no reply yet:
+ * the mark stands alone, so the turn says Stopped, with Try again, and
+ * doesn't look like one still being answered.
  */
 function markStopped(messages: ChatMessage[]): ChatMessage[] {
   const last = messages.at(-1)
+  if (last?.role === "user")
+    return [
+      ...messages,
+      { id: crypto.randomUUID(), role: "assistant", parts: [INTERRUPTED] },
+    ]
   if (last?.role !== "assistant" || isStopped(last.parts)) return messages
-  const said = last.parts.some(
-    (part) =>
-      part.type !== "step-start" &&
-      !(
-        (part.type === "text" || part.type === "reasoning") &&
-        part.text.trim() === ""
-      )
-  )
-  if (!said) return messages
   return [
     ...messages.slice(0, -1),
-    { ...last, parts: [...last.parts, { type: "data-interrupted", data: {} }] },
+    { ...last, parts: [...unmarked(last), INTERRUPTED] },
   ]
 }
 
+const INTERRUPTED = { type: "data-interrupted", data: {} } as const
+
 /** The reply's parts without a Stopped mark. */
 function unmarked(message: ChatMessage) {
-  return message.parts.filter((part) => part.type !== "data-interrupted")
+  return message.parts.filter((part) => part.type !== INTERRUPTED.type)
 }

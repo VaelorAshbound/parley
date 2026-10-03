@@ -458,12 +458,20 @@ async function endTurnWith(
       logWarn("chat_turn_superseded", { ...fields, outcome })
       return
     }
-    // A turn stopped before Parley wrote anything leaves nothing to keep:
-    // an empty reply would show as a blank bubble, not Try again. A text
-    // begun with no word in it yet is nothing too.
-    if (response && !response.parts.every(isEmptyPart))
+    // A turn that ends before Parley wrote anything leaves no words to keep
+    // (a text begun with no word in it yet is nothing too): an empty reply
+    // would show as a blank bubble. Stopped, it keeps only its mark, so a
+    // later visit says Stopped with Try again at once instead of waiting on
+    // a turn that already ended (PAR-47). A failed one keeps nothing: the
+    // page says Parley couldn't answer.
+    if (!response) return
+    const said = !response.parts.every(isEmptyPart)
+    if (said || stopped)
       await saveMessages(tx, key, [
-        { ...response, parts: markedParts(response.parts, stopped) },
+        {
+          ...response,
+          parts: said ? markedParts(response.parts, stopped) : [INTERRUPTED],
+        },
       ])
   })
 }
