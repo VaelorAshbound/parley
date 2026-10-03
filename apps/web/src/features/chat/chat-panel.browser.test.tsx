@@ -757,6 +757,41 @@ describe("a reply cut short (PAR-47)", () => {
       .toBeVisible()
   })
 
+  test("says Stopped, with Try again, when stopped before Parley's first word", async () => {
+    // The request has begun, but no word has come yet when Stop is pressed.
+    let calls = 0
+    const { screen } = await show({
+      transport: (base) => ({
+        ...base,
+        sendMessages: async (options) => {
+          calls += 1
+          if (calls > 1) return base.sendMessages(options)
+          return new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "start", messageId: "reply-early" })
+              controller.enqueue({ type: "start-step" })
+              options.abortSignal?.addEventListener("abort", () =>
+                controller.error(options.abortSignal?.reason)
+              )
+            },
+          })
+        },
+      }),
+    })
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Message" }),
+      "We share a roadmap with a vendor.{Enter}"
+    )
+    await expect.element(screen.getByText("Thinking…")).toBeVisible()
+
+    await screen.getByRole("button", { name: "Stop" }).click()
+
+    await expect.element(screen.getByText("Stopped")).toBeVisible()
+    await screen.getByRole("button", { name: "Try again" }).click()
+    await expect.element(screen.getByText("Mutual NDA selected")).toBeVisible()
+    expect(screen.getByText("Stopped").query()).toBeNull()
+  })
+
   test("a stopped questionnaire, once answered, goes on and isn't Stopped", async () => {
     // Stopped (or reloaded) after the questions came, before the turn ended.
     const asked: ChatMessage = {
