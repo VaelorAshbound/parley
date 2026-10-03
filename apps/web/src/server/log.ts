@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks"
+
 import { getContext } from "hono/context-storage"
 
 // Structured logs for Workers Logs (spec §5 Hono, T29): one object per line,
@@ -85,6 +87,31 @@ function errorFields(error: unknown) {
 
 const method = { info: "log", warn: "warn", error: "error" } as const
 
+/** Where a request's events go instead of the console: its trace span. */
+type SpanLike = {
+  setAttributes(attributes: Record<string, LogField>): unknown
+}
+
+const offConsole = new AsyncLocalStorage<{ span: SpanLike | undefined }>()
+
+/**
+ * Runs `run` with our events kept off the console, as attributes on the
+ * request's trace span instead ("share_viewed.outcome": "found"). For a
+ * request whose URL holds a secret: Workers Logs puts the full URL on every
+ * console line a request writes, and /s/:token's path is a bearer token
+ * (PAR-31). Its span's URL is already redacted (src/server.ts).
+ */
+export function withoutConsole<T>(span: SpanLike | undefined, run: () => T) {
+  return offConsole.run({ span }, run)
+}
+
+/** The event's fields as span attributes, each named after the event. */
+function spanAttributes(event: string, fields: LogFields) {
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [`${event}.${key}`, value])
+  )
+}
+
 /**
  * An event at a level chosen at run time (a chat turn that failed), with
  * the error behind it if there is one.
@@ -95,6 +122,18 @@ export function log(
   fields: LogFields = {},
   error?: unknown
 ) {
+  const quiet = offConsole.getStore()
+  if (quiet) {
+    const errorAttributes = Object.fromEntries(
+      Object.entries(error === undefined ? {} : errorFields(error)).map(
+        ([key, value]) => [`error.${key}`, value]
+      )
+    )
+    quiet.span?.setAttributes(
+      spanAttributes(event, { level, ...defined(fields), ...errorAttributes })
+    )
+    return
+  }
   console[method[level]]({
     ...defined({ level, event, requestId: currentRequestId(), ...fields }),
     ...(error === undefined ? {} : { error: errorFields(error) }),

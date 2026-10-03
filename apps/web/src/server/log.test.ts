@@ -1,10 +1,48 @@
 import { DrizzleQueryError } from "drizzle-orm"
 import { describe, expect, it, vi } from "vite-plus/test"
 
-import { logError, logInfo, logWarn } from "./log"
+import { logError, logInfo, logWarn, withoutConsole } from "./log"
 
 // Workers Logs indexes the keys of a logged object, so each line is one
 // object with a stable event name (spec §5 Hono, T29).
+
+describe("withoutConsole (PAR-31)", () => {
+  it("puts events on the span, named after the event, and none on the console", () => {
+    using info = vi.spyOn(console, "log").mockImplementation(() => {})
+    using error = vi.spyOn(console, "error").mockImplementation(() => {})
+    const setAttributes = vi.fn()
+
+    withoutConsole({ setAttributes }, () => {
+      logInfo("share_viewed", { outcome: "found", missing: undefined })
+      logError(
+        "share_failed",
+        Object.assign(new Error("query with secret values"), { code: "08006" })
+      )
+    })
+
+    expect(info).not.toHaveBeenCalled()
+    expect(error).not.toHaveBeenCalled()
+    expect(setAttributes.mock.calls).toEqual([
+      [{ "share_viewed.level": "info", "share_viewed.outcome": "found" }],
+      [
+        {
+          "share_failed.level": "error",
+          "share_failed.error.name": "Error",
+          "share_failed.error.code": "08006",
+        },
+      ],
+    ])
+  })
+
+  it("writes to the console again once it returns", () => {
+    using info = vi.spyOn(console, "log").mockImplementation(() => {})
+
+    withoutConsole(undefined, () => logInfo("inside"))
+    logInfo("outside")
+
+    expect(info.mock.calls).toEqual([[{ level: "info", event: "outside" }]])
+  })
+})
 
 describe("the structured logger", () => {
   it("writes one object per event, at the level's console method", () => {

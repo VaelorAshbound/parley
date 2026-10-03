@@ -115,6 +115,10 @@ export default defineConfig({
           name: "pages",
           include: ["test/**/*.page.test.ts"],
           testTimeout: 120_000,
+          // Vitest swaps CSS for empty modules by default, so the root
+          // route's stylesheet link got href="" and React warned on every
+          // page. Built as Vite would, it has a real URL.
+          css: { include: [/.+/] },
         },
       },
       // Runs no tests. Vitest 4.1 reports the files no test loaded only when
