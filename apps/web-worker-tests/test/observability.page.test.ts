@@ -71,6 +71,20 @@ describe("a share page writes nothing to the console", () => {
     expect(calls).toEqual([])
   })
 
+  it("when the path is spelled another way", async () => {
+    // TanStack Router matches /S/ and /%73/ to /s/$token too.
+    const token = await sharedLink()
+
+    for (const path of [`/S/${token}`, `/%73/${token}`]) {
+      const { result: page, calls } = await captured(() =>
+        open(path, "198.51.100.45")
+      )
+
+      expect(page.status, path).toBe(200)
+      expect(calls, path).toEqual([])
+    }
+  })
+
   it("when the link doesn't work", async () => {
     const { result: page, calls } = await captured(() =>
       open(`/s/${unknown}`, "198.51.100.42")
