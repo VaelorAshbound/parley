@@ -13,7 +13,9 @@ import type { BetterAuthPlugin } from "better-auth"
 import {
   APIError,
   createAuthEndpoint,
+  createAuthMiddleware,
   getSessionFromCtx,
+  isAPIError,
 } from "better-auth/api"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
@@ -113,7 +115,8 @@ function typeOf(event: unknown) {
 /**
  * Polar's webhooks at /api/auth/polar/webhooks (the plugin's path). The
  * signature is checked with both of Polar's keys (server/polar-webhook.ts);
- * other events are acknowledged and ignored.
+ * other events are acknowledged and ignored. Also the portal's answer when
+ * Polar no longer has the customer (portalWithoutCustomer).
  */
 export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
   return {
@@ -165,7 +168,52 @@ export function polarWebhooks({ db, env }: { db: Db; env: BillingEnv }) {
         }
       ),
     },
+    hooks: {
+      after: [
+        {
+          matcher: (ctx) => ctx.path === "/customer/portal",
+          handler: createAuthMiddleware(portalWithoutCustomer(env)),
+        },
+      ],
+    },
   } satisfies BetterAuthPlugin
+}
+
+/**
+ * After the portal failed (the plugin answers 500 for any of Polar's
+ * errors): when Polar has no customer for the user any more (deleted by
+ * hand in its dashboard; the portal session then answers 422), say there
+ * is no billing, as for someone who never bought. One more call to Polar,
+ * on failures only.
+ */
+function portalWithoutCustomer(env: BillingEnv) {
+  return async (ctx: HookContext) => {
+    // What the endpoint answered: set on after hooks' context, which
+    // createAuthMiddleware's type leaves out.
+    const { returned } = ctx.context as { returned?: unknown }
+    if (!isAPIError(returned) || returned.statusCode !== 500) return
+    const session = await getSessionFromCtx(ctx)
+    if (!session) return
+    try {
+      await polarApi(env).customers.getExternal({
+        externalId: session.user.id,
+      })
+      return
+    } catch (error) {
+      if (!(error instanceof ResourceNotFound)) return
+    }
+    log("warn", "polar_portal_no_customer", { userId: session.user.id })
+    // A Response, not a throw: Better Auth keeps the handler's 500 status
+    // for an APIError thrown in an after hook (better-auth 1.7.5,
+    // api/dispatch.mjs), and only a Response's own status survives.
+    return Response.json(noBilling, { status: 404 })
+  }
+}
+
+/** Someone Polar has no customer for. */
+const noBilling = {
+  code: "NO_BILLING",
+  message: "There is no billing yet. Upgrade to Pro first.",
 }
 
 /**
@@ -405,11 +453,7 @@ export async function portalAllowed(ctx: HookContext, env: BillingEnv, db: Db) {
     .select({ customerId: schema.user.polarCustomerId })
     .from(schema.user)
     .where(eq(schema.user.id, account.id))
-  if (!row?.customerId)
-    throw APIError.from("NOT_FOUND", {
-      code: "NO_BILLING",
-      message: "There is no billing yet. Upgrade to Pro first.",
-    })
+  if (!row?.customerId) throw APIError.from("NOT_FOUND", noBilling)
 }
 
 /**

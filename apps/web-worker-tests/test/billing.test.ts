@@ -614,6 +614,44 @@ describe("the billing portal", () => {
     expect(polar.calls).toHaveLength(0)
   })
 
+  it("says there is no billing when the Polar customer was deleted by hand", async () => {
+    // What the sandbox answers then (PAR-21's real test): 422 for the
+    // portal session, and no customer under the user's id.
+    const { cookie, userId } = await accountWith(active)
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customer-sessions/"
+        ? Response.json({ detail: "no customer" }, { status: 422 })
+        : method === "GET" && path === `/v1/customers/external/${userId}`
+          ? Response.json(
+              { error: "ResourceNotFound", detail: "Not found" },
+              { status: 404 }
+            )
+          : undefined
+    )
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(404)
+    expect(((await response.json()) as { code: string }).code).toBe(
+      "NO_BILLING"
+    )
+  })
+
+  it("still says Polar failed when the customer is there", async () => {
+    const { cookie, userId } = await accountWith(active)
+    polar.answer(({ method, path }) =>
+      method === "POST" && path === "/v1/customer-sessions/"
+        ? Response.json({ detail: "down" }, { status: 503 })
+        : method === "GET" && path === `/v1/customers/external/${userId}`
+          ? Response.json({ id: `cus-${userId}` })
+          : undefined
+    )
+
+    const response = await post("/api/auth/customer/portal", {}, cookie)
+
+    expect(response.status).toBe(500)
+  })
+
   it("can't be opened by a link from another site", async () => {
     // A GET passes the origin check, and cookies go with a link's GET.
     const { cookie } = await accountWith(active)
