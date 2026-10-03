@@ -14,8 +14,13 @@ import { runDev, setUpDevVars } from "./dev-run.ts"
 const root = join(import.meta.dirname, "..")
 const DB_PORT = 54320
 
-if (setUpDevVars(join(root, "apps/web/.dev.vars")) === "created")
-  console.log("Wrote apps/web/.dev.vars from .dev.vars.example.")
+try {
+  if (setUpDevVars(join(root, "apps/web/.dev.vars")) === "created")
+    console.log("Wrote apps/web/.dev.vars from .dev.vars.example.")
+} catch (error) {
+  console.error((error as Error).message)
+  process.exit(1)
+}
 
 /** Something already listens on the port (an earlier `pnpm db:dev`). */
 function listening(port: number) {
