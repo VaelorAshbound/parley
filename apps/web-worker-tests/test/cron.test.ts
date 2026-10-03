@@ -232,6 +232,56 @@ describe("the nightly purge", () => {
     expect(left.map((row) => row.id)).toContain(`valid-${userId}`)
   })
 
+  it("deletes verification rows that ran out and keeps valid ones", async () => {
+    const db = await database()
+    const id = crypto.randomUUID()
+    await db.insert(schema.verification).values([
+      {
+        id: `expired-${id}`,
+        identifier: `reset-password:expired-${id}`,
+        value: id,
+        expiresAt: daysAgo(1),
+      },
+      {
+        id: `valid-${id}`,
+        identifier: `reset-password:valid-${id}`,
+        value: id,
+        expiresAt: new Date(now.getTime() + 60 * 60_000),
+      },
+    ])
+
+    await runCron()
+
+    const left = await db
+      .select({ id: schema.verification.id })
+      .from(schema.verification)
+      .where(eq(schema.verification.value, id))
+    expect(left.map((row) => row.id)).toEqual([`valid-${id}`])
+  })
+
+  it("deletes rate_limit rows from long ago", async () => {
+    // Only the delete: Better Auth prunes this table itself on any new
+    // window (by the real clock, so a row kept by this fake one could go
+    // anyway). Which rows the cutoff keeps: packages/db/test/purge.test.ts
+    // and apps/web/src/server/cron.test.ts.
+    const db = await database()
+    const id = `old-${crypto.randomUUID()}`
+    await db.insert(schema.rateLimit).values({
+      id,
+      key: `${id}/sign-in/anonymous`,
+      count: 10,
+      lastRequest: daysAgo(2).getTime(),
+    })
+
+    await runCron()
+
+    const left = await db
+      .select({ id: schema.rateLimit.id })
+      .from(schema.rateLimit)
+      .where(eq(schema.rateLimit.id, id))
+    expect(left).toEqual([])
+  })
+
   it("logs what it deleted, and a second run finds nothing left", async () => {
     const first = await guestWithDraft()
     const second = await guestWithDraft()
@@ -249,12 +299,20 @@ describe("the nightly purge", () => {
         cron,
         guests: 2,
         sessions: 0,
+        verifications: 0,
+        rateLimits: 0,
         complete: true,
         durationMs: expect.any(Number),
       },
     ])
     expect(twice.lines).toEqual([
-      expect.objectContaining({ event: "purge_done", guests: 0, sessions: 0 }),
+      expect.objectContaining({
+        event: "purge_done",
+        guests: 0,
+        sessions: 0,
+        verifications: 0,
+        rateLimits: 0,
+      }),
     ])
   })
 

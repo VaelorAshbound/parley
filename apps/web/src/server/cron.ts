@@ -1,7 +1,9 @@
 import {
   connect,
   deleteExpiredSessions,
+  deleteExpiredVerifications,
   deleteIdleGuests,
+  deleteOldRateLimits,
   type Db,
 } from "@workspace/db"
 import { Temporal } from "temporal-polyfill"
@@ -9,7 +11,8 @@ import { Temporal } from "temporal-polyfill"
 import { logError, logInfo } from "./log"
 
 // The nightly cleanup (spec §2 Limits, T28): guests with no activity for 7
-// days go, with everything they own, and so do sessions that ran out.
+// days go, with everything they own, and so do sessions and verification
+// rows that ran out, and rate_limit rows a day old (PAR-14).
 //
 // Once a day, at a quiet hour (UTC; `triggers` in wrangler.jsonc): each run
 // wakes the Neon compute, which then stays up about 5 minutes before it
@@ -19,6 +22,15 @@ import { logError, logInfo } from "./log"
 
 /** Guests are deleted after this long without activity (spec §2 Limits). */
 export const GUEST_IDLE_DAYS = 7
+
+/**
+ * rate_limit rows are deleted once their last request is this old. The
+ * longest window Better Auth counts in is the 1-hour guest rule (limits.ts),
+ * so a day is 24 times that: a row that still counts requests is never
+ * deleted. A test in auth.test.ts reads the real config and fails if a new
+ * rule's window gets too close.
+ */
+export const RATE_LIMIT_KEEP_HOURS = 24
 
 /** Rows per DELETE: short locks, and a small cascade each. */
 const BATCH = 500
@@ -43,7 +55,12 @@ export async function inBatches(
 }
 
 /** What a run has deleted so far, counted batch by batch. */
-export type Purged = { guests: number; sessions: number }
+export type Purged = {
+  guests: number
+  sessions: number
+  verifications: number
+  rateLimits: number
+}
 
 /**
  * One purge at `now`. Safe to run again at any time: it deletes only what
@@ -71,7 +88,23 @@ export async function purgeOldData(
     purged.sessions += count
     return count
   })
-  return { ...purged, complete: guestsDone && sessionsDone }
+  const verificationsDone = await inBatches(async (limit) => {
+    const count = await deleteExpiredVerifications(db, { now: at, limit })
+    purged.verifications += count
+    return count
+  })
+  const before = new Date(
+    now.subtract({ hours: RATE_LIMIT_KEEP_HOURS }).epochMilliseconds
+  )
+  const rateLimitsDone = await inBatches(async (limit) => {
+    const count = await deleteOldRateLimits(db, { before, limit })
+    purged.rateLimits += count
+    return count
+  })
+  return {
+    ...purged,
+    complete: guestsDone && sessionsDone && verificationsDone && rateLimitsDone,
+  }
 }
 
 /**
@@ -87,7 +120,12 @@ export const scheduled: ExportedHandlerScheduledHandler<Env> = async (
 ) => {
   const started = Date.now()
   const now = Temporal.Instant.fromEpochMilliseconds(controller.scheduledTime)
-  const purged: Purged = { guests: 0, sessions: 0 }
+  const purged: Purged = {
+    guests: 0,
+    sessions: 0,
+    verifications: 0,
+    rateLimits: 0,
+  }
   try {
     const db = await connect(env.HYPERDRIVE.connectionString)
     try {
