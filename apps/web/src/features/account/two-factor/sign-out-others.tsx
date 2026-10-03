@@ -29,11 +29,8 @@ export function SignOutOthers() {
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
-      <p
-        role="status"
-        className="text-sm text-muted-foreground"
-        aria-live="polite"
-      >
+      {/* An <output> is a polite live region (role "status"). */}
+      <output className="text-sm text-muted-foreground">
         {state.kind === "done" ? (
           <span className="inline-flex items-center gap-1.5 text-foreground">
             <CheckIcon aria-hidden className="size-4" />
@@ -44,7 +41,7 @@ export function SignOutOthers() {
         ) : (
           "Your other devices stay signed in."
         )}
-      </p>
+      </output>
       {state.kind !== "done" && (
         <Button
           type="button"
