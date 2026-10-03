@@ -14,13 +14,16 @@ import { MAX_MESSAGE } from "@/lib/limits"
 
 // The reply box (spec §1: the reply box at the bottom, the demo note under
 // it). Enter sends, Shift+Enter starts a new line; while Parley answers, the
-// button stops it. The start page's box is bigger and says what it does:
+// button stops it, and Enter keeps the text and says why it waits (PAR-46).
+// The start page's box is bigger and says what it does:
 // "Start drafting" (brand.md canvas, Main).
 
 /** Where the reply box starts counting: 90% of the limit. */
 const COUNT_FROM = Math.round(MAX_MESSAGE * 0.9)
 /** "3,812", in the reader's own language. */
 const count = new Intl.NumberFormat()
+/** Why Enter waits while Parley answers (PAR-46). No queue: it sends after. */
+const STILL_ANSWERING = "Parley is still answering. Send when it’s done."
 
 export function Composer({
   busy,
@@ -87,9 +90,14 @@ export function Composer({
       </span>
     ) : null
   const ready = text.trim() !== "" && !busy && !tooLong
+  // Enter while Parley answers keeps the text and says why (PAR-46), until
+  // the turn ends: the next turn starts with nothing said.
+  const [waiting, setWaiting] = useState(false)
+  if (waiting && !busy) setWaiting(false)
   const send = () => {
     // "Start drafting" with nothing typed shows where to type.
     if (text.trim() === "") input.current?.focus()
+    if (busy && !start && text.trim() !== "" && !tooLong) setWaiting(true)
     if (!ready || sent.current) return
     sent.current = true
     onSend(text.trim())
@@ -177,7 +185,17 @@ export function Composer({
             </>
           ) : (
             <>
-              {counter}
+              <span className="mr-auto flex min-w-0 flex-col items-start">
+                {/* Always there, so a screen reader hears it when it fills;
+                    no motion, as it answers a key. */}
+                <span
+                  aria-live="polite"
+                  className="text-left text-[12.5px] leading-snug font-normal text-pretty text-muted-foreground"
+                >
+                  {waiting ? STILL_ANSWERING : ""}
+                </span>
+                {counter}
+              </span>
               {busy && onStop ? (
                 <InputGroupButton
                   type="button"
