@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { PassThrough } from "node:stream"
-import { afterEach, describe, expect, test } from "vite-plus/test"
+import { afterAll, afterEach, describe, expect, test } from "vite-plus/test"
 
 import { lines, runDev, type Command } from "./dev-run.ts"
 
@@ -72,6 +72,8 @@ afterEach(async () => {
     rmSync(pidFile, { force: true })
   }
 })
+
+afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
 describe("lines", () => {
   test("passes on whole lines only, across chunks and CRLF endings", () => {

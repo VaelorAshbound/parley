@@ -1,7 +1,7 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { describe, expect, test } from "vite-plus/test"
+import { afterEach, describe, expect, test } from "vite-plus/test"
 
 import {
   readWhoami,
@@ -129,11 +129,18 @@ describe("signedInToCloudflare", () => {
 })
 
 describe("whoami, the real wrangler", () => {
+  const homes: string[] = []
+  afterEach(() => {
+    for (const home of homes.splice(0))
+      rmSync(home, { recursive: true, force: true })
+  })
+
   test("an empty home is signed out", { timeout: 60_000 }, () => {
     // No network needed: with no credentials wrangler answers in about 2 s.
     // The long timeout is for a busy CI machine, where starting wrangler
     // alone can take more than the dev server's 10 s.
     const home = mkdtempSync(join(tmpdir(), "parley-home-"))
+    homes.push(home)
 
     const result = whoami({
       env: { PATH: process.env.PATH, HOME: home },
@@ -148,6 +155,7 @@ describe("whoami, the real wrangler", () => {
     // A `wrangler login` whose token expired long ago, and a refresh token
     // Cloudflare turns down. Wrangler then says "Not logged in" on stderr.
     const home = mkdtempSync(join(tmpdir(), "parley-home-"))
+    homes.push(home)
     const config = join(home, ".config/.wrangler/config")
     mkdirSync(config, { recursive: true })
     writeFileSync(

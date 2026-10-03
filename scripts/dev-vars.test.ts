@@ -1,15 +1,28 @@
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { describe, expect, test } from "vite-plus/test"
+import { afterEach, describe, expect, test } from "vite-plus/test"
 
 import { setUpDevVars } from "./dev-run.ts"
 
 const example = join(import.meta.dirname, "../apps/web/.dev.vars.example")
 
+const made: string[] = []
+afterEach(() => {
+  for (const dir of made.splice(0))
+    rmSync(dir, { recursive: true, force: true })
+})
+
 /** A temp apps/web with the real .dev.vars.example in it. */
 function appDir() {
   const dir = mkdtempSync(join(tmpdir(), "parley-dev-vars-"))
+  made.push(dir)
   writeFileSync(join(dir, ".dev.vars.example"), readFileSync(example))
   return join(dir, ".dev.vars")
 }
