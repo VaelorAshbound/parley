@@ -1,5 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query"
+import {
+  definitionOf,
+  isDocumentId,
+  switchDocument,
+} from "@workspace/documents"
 import { useEffect, useState } from "react"
+import { Temporal } from "temporal-polyfill"
 
 import type { Orpc } from "@/lib/orpc"
 import { useUiStore } from "@/lib/ui-store"
@@ -27,7 +33,30 @@ export function useDocumentSync(
       if (done.has(part.toolCallId)) continue
       done.add(part.toolCallId)
       if (part.type === "tool-chooseDocument") {
-        // A new agreement changes every field: load the draft again.
+        // A different agreement shows at once, with the values the server
+        // kept (the same switchDocument it ran). Waiting for the draft load
+        // below held back the field the AI fills next by the load's whole
+        // round trip: 130-400 ms instead of ~30 (PAR-55). The same one
+        // again changes nothing on screen: the load is enough.
+        const { documentId, title } = part.output
+        if (isDocumentId(documentId))
+          queryClient.setQueryData(draftKey, (draft) =>
+            draft && draft.documentId !== documentId
+              ? {
+                  ...draft,
+                  documentId,
+                  // The server's title, so the header names the new
+                  // agreement as its body shows.
+                  title,
+                  fields: switchDocument(
+                    draft.fields,
+                    definitionOf(documentId),
+                    { today: Temporal.Now.plainDateISO().toString() }
+                  ),
+                }
+              : draft
+          )
+        // The rest of the draft (its status) comes with a fresh load.
         void queryClient.invalidateQueries({ queryKey: draftKey })
         void queryClient.invalidateQueries({
           queryKey: orpc.drafts.list.key(),
