@@ -43,6 +43,13 @@
       "when": 1791004768757,
       "tag": "0005_purge_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791011977191,
+      "tag": "0006_chat_turn",
+      "breakpoints": true
     }
   ]
 }
