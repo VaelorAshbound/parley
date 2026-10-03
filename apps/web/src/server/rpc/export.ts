@@ -7,6 +7,7 @@ import {
   type Draft,
 } from "@workspace/db"
 import { definitionOf, missingFields } from "@workspace/documents"
+import { dequal } from "dequal"
 import { Temporal } from "temporal-polyfill"
 
 import { buildFile, PrintFailed, type PrintPdf } from "../files"
@@ -41,6 +42,11 @@ import { draftOwner, perUser, verified } from "./base"
 // (PAR-51). The claim reads the draft under its row lock, the same lock
 // chooseDocument and updateFields take, so no switch can land between that
 // check and the count; recordExport is also pinned to the printed agreement.
+// An edit to the same agreement during the print (a value changed or
+// cleared, the title renamed) is refused too, with its own DRAFT_CHANGED:
+// the file would hold what the draft no longer says, and a draft made
+// unfinished would be marked as downloaded. Only what goes into the file is
+// compared, so a chat turn that just touches updatedAt doesn't refuse it.
 // Holding a lock over the print instead would make every other export of
 // the user wait seconds for Browser Run.
 
@@ -56,6 +62,7 @@ export type ExportOutcome =
         | "NOT_FOUND"
         | "NO_DOCUMENT"
         | "DOCUMENT_CHANGED"
+        | "DRAFT_CHANGED"
     }
   | { ok: false; error: "INCOMPLETE"; missing: Missing[] }
 
@@ -127,6 +134,9 @@ export async function exportDraft({
     const documentId = draft.documentId
     if (documentId === null || fresh.documentId !== documentId)
       return { ok: false as const, error: "DOCUMENT_CHANGED" as const }
+    // Same agreement, but is the file still what the draft says?
+    if (fresh.title !== draft.title || !dequal(fresh.fields, draft.fields))
+      return { ok: false as const, error: "DRAFT_CHANGED" as const }
     const decision = await decide(tx, fresh.firstExportedAt !== null)
     if (!decision.ok) return decision
     // Never hand over a file that was meant to count but wasn't.
@@ -158,6 +168,11 @@ const errors = {
     status: 409,
     message:
       "The agreement changed while we made the file. Download it again to get the new one.",
+  },
+  DRAFT_CHANGED: {
+    status: 409,
+    message:
+      "The draft was edited while we made the file. Download it again to get the latest version.",
   },
   PRO_REQUIRED: { status: 402, message: "Word files come with Pro." },
   QUOTA_EXCEEDED: {

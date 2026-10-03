@@ -88,6 +88,13 @@ describe("exportProblem", () => {
     })
   })
 
+  it("says the draft was edited, and to download it again", () => {
+    expect(exportProblem(defined("DRAFT_CHANGED"), draftPath)).toEqual({
+      message:
+        "The draft was edited while we made the file. Download it again to get the latest version.",
+    })
+  })
+
   it("says when the draft is gone", () => {
     expect(exportProblem(defined("NOT_FOUND"), draftPath)).toEqual({
       message: "We couldn't find that draft.",

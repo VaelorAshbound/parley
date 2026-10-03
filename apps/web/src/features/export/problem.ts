@@ -76,6 +76,12 @@ export function exportProblem(
         message:
           "The agreement changed while we made the file. Download it again to get the new one.",
       }
+    // The draft was edited (not switched) while the file was made (PAR-51).
+    case "DRAFT_CHANGED":
+      return {
+        message:
+          "The draft was edited while we made the file. Download it again to get the latest version.",
+      }
     case "NOT_FOUND":
       return { message: "We couldn't find that draft." }
     // The per-user download limit (T27: 10 a minute).

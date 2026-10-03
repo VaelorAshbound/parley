@@ -541,6 +541,79 @@ describe("export.pdf", () => {
     ).toEqual([])
   })
 
+  // An edit, not a switch: the file would hold values the draft no longer
+  // has, and an unfinished draft would be marked as downloaded.
+  it("refuses a download whose draft was edited during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    const printPdf: PrintPdf = async (html, frame) => {
+      await other.drafts.updateFields({
+        id,
+        changes: [{ key: "purpose", value: null }],
+      })
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const { error } = await safe(client.export.pdf({ id }))
+
+    expect(printer.pages).toHaveLength(1)
+    expect((await countedFor(email)).rows).toEqual([])
+    expect((await client.drafts.get({ id })).firstExportedAt).toBeNull()
+    expect(error).toMatchObject({ code: "DRAFT_CHANGED", defined: true })
+  })
+
+  it("refuses a download whose draft lost values to a switch away and back during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const other = await serverClient(cookie)
+    const printer = fakePrinter()
+    let id = ""
+    const printPdf: PrintPdf = async (html, frame) => {
+      await other.drafts.chooseDocument({
+        id,
+        documentId: "pilot-agreement",
+        today,
+      })
+      await other.drafts.chooseDocument({ id, documentId: "mutual-nda", today })
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const { error } = await safe(client.export.pdf({ id }))
+
+    expect((await countedFor(email)).rows).toEqual([])
+    expect((await client.drafts.get({ id })).firstExportedAt).toBeNull()
+    expect(error).toMatchObject({ code: "DRAFT_CHANGED", defined: true })
+  })
+
+  it("still downloads when the draft only got a chat message during the print", async () => {
+    const { cookie, email } = await signUpVerified()
+    const printer = fakePrinter()
+    let id = ""
+    const db = await database()
+    const printPdf: PrintPdf = async (html, frame) => {
+      // A bump of updatedAt alone (as a chat turn does) is not an edit.
+      await db
+        .update(schema.draft)
+        .set({ updatedAt: new Date() })
+        .where(eq(schema.draft.id, id))
+      return printer.printPdf(html, frame)
+    }
+    const { client } = await chatClient(cookie, scriptedModel([]), printPdf)
+    id = await completeNda(client)
+
+    const file = await client.export.pdf({ id })
+
+    expect(file.name).toBe("Mutual Non-Disclosure Agreement.pdf")
+    expect((await countedFor(email)).rows).toMatchObject([
+      { documentId: "mutual-nda" },
+    ])
+  })
+
   it("keeps a counted agreement free after switching away and back", async () => {
     const { cookie, email } = await signUpVerified()
     const client = await serverClient(cookie)
