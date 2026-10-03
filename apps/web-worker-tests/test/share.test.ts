@@ -300,6 +300,29 @@ describe("the share limit, per address", () => {
       expect(response.status).toBe(429)
     }
   )
+
+  it(
+    "counts a whole IPv6 /64 as one address",
+    {
+      timeout,
+    },
+    async () => {
+      // Anyone with IPv6 gets a /64 (2^64 addresses): a new address per
+      // view must not mean a fresh limit.
+      await roomInWindow(period, 20_000)
+      for (let view = 1; view <= limit; view += 1) {
+        const response = await viewOverHttp(
+          unknown,
+          `2001:db8:1:2::${view.toString(16)}`
+        )
+        expect(response.status).toBe(404)
+      }
+
+      const response = await viewOverHttp(unknown, "2001:db8:1:2:ffff::1")
+
+      expect(response.status).toBe(429)
+    }
+  )
 })
 
 describe("share.revoke", () => {

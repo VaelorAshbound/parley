@@ -4,7 +4,7 @@ import { Temporal } from "temporal-polyfill"
 import { unstable_readConfig } from "wrangler"
 import { describe, expect, it } from "vite-plus/test"
 
-import { RATE_LIMITS, usageDay } from "./limits"
+import { RATE_LIMITS, clientAddress, usageDay } from "./limits"
 
 // The Rate Limiting bindings' numbers are set in wrangler.jsonc; the code
 // and tests read them from RATE_LIMITS. Both must say the same, for
@@ -65,5 +65,43 @@ describe("RATE_LIMITS", () => {
 
     expect(limitsOf(previews)).toEqual(RATE_LIMITS)
     expect(shared).toEqual([])
+  })
+})
+
+describe("clientAddress", () => {
+  const from = (ip: string) =>
+    clientAddress(new Headers({ "cf-connecting-ip": ip }))
+
+  it("is the whole IPv4 address", () => {
+    expect(from("198.51.100.7")).toBe("198.51.100.7")
+  })
+
+  it("is the /64 of an IPv6 address: one network, one count", () => {
+    expect(from("2001:db8:1:2::1")).toBe("2001:db8:1:2::/64")
+    expect(from("2001:db8:1:2:ffff:ffff:ffff:ffff")).toBe("2001:db8:1:2::/64")
+    expect(from("2001:0DB8:0001:0002:0:0:0:9")).toBe("2001:db8:1:2::/64")
+  })
+
+  it("tells IPv6 networks apart", () => {
+    expect(from("2001:db8:1:3::1")).toBe("2001:db8:1:3::/64")
+    expect(from("2001:db8::1")).toBe("2001:db8:0:0::/64")
+    expect(from("::1")).toBe("0:0:0:0::/64")
+  })
+
+  it("is the IPv4 address inside an IPv4-mapped IPv6 one", () => {
+    expect(from("::ffff:198.51.100.7")).toBe("198.51.100.7")
+  })
+
+  it("keeps an address it can't read as it is", () => {
+    expect(from("not-an-ip")).toBe("not-an-ip")
+  })
+
+  it("never reads a header the client can set", () => {
+    const headers = new Headers({
+      "x-forwarded-for": "203.0.113.50",
+      "x-real-ip": "203.0.113.51",
+      "true-client-ip": "203.0.113.52",
+    })
+    expect(clientAddress(headers)).toBe("no-address")
   })
 })
