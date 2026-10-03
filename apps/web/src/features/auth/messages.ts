@@ -83,6 +83,17 @@ export function authErrorMessage(
 }
 
 /**
+ * Settings → Two-factor → Turn on. A TOTP_NOT_ENABLED there means the
+ * setup was undone (turned off in another tab), not that a sign-in waits:
+ * signing in again wouldn't help.
+ */
+export function setupErrorMessage(error: AuthError) {
+  return error.code === "TOTP_NOT_ENABLED"
+    ? "Two-factor setup was reset. Close this and start again."
+    : authErrorMessage(error)
+}
+
+/**
  * The code step is over (it lasts 10 minutes and takes 5 wrong codes), or
  * never began: the next try starts again from the password.
  */

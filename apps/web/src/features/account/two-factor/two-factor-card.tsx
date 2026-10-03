@@ -28,7 +28,7 @@ import QRCode from "react-qr-code"
 import { z } from "zod"
 
 import type { Login } from "@/features/account/confirm-identity"
-import { authErrorMessage } from "@/features/auth/messages"
+import { setupErrorMessage } from "@/features/auth/messages"
 import { authClient } from "@/lib/auth-client"
 import { useAppForm } from "@/lib/form"
 
@@ -217,7 +217,7 @@ function ScanStep({
         code: value.code,
       })
       if (error) {
-        setError(authErrorMessage(error))
+        setError(setupErrorMessage(error))
         return
       }
       onVerified()
