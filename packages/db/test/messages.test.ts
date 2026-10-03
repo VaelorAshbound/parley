@@ -124,6 +124,23 @@ describe("chat messages", () => {
     expect(await listMessages(db, key)).toEqual([reply])
   })
 
+  test("never rewrites what the user said, and says so (PAR-52)", async ({
+    db,
+  }) => {
+    const owner = await makeUser(db)
+    const draft = await createDraft(db, { userId: owner.id, ...nda })
+    const key = { id: draft.id, userId: owner.id }
+    await saveMessages(db, key, [hello, reply])
+
+    await expect(
+      saveMessages(db, key, [
+        { ...hello, parts: [{ type: "text", text: "REWRITTEN." }] },
+      ])
+    ).rejects.toThrow(MessageIdTaken)
+
+    expect(await listMessages(db, key)).toEqual([hello, reply])
+  })
+
   test("won't move a message from one draft to another, and says so (PAR-52)", async ({
     db,
   }) => {
