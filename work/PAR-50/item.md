@@ -1,11 +1,11 @@
 ---
 id: PAR-50
 title: "pnpm dev: detect wrangler login like wrangler does; harden scripts/dev.ts"
-phase: backlog
+phase: done
 priority: low
 origin: PAR-1
 created: 2026-10-01T20:06:58Z
-updated: 2026-10-01T20:06:58Z
+updated: 2026-10-03T07:50:20Z
 ---
 
 From T40's code review:
