@@ -1,7 +1,20 @@
-import { connect, deleteExpiredSessions, deleteIdleGuests } from "@workspace/db"
-import { describe, expect, it, vi } from "vite-plus/test"
+import {
+  connect,
+  deleteExpiredSessions,
+  deleteExpiredVerifications,
+  deleteIdleGuests,
+  deleteOldRateLimits,
+  type Db,
+} from "@workspace/db"
+import { Temporal } from "temporal-polyfill"
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
-import { inBatches, scheduled } from "./cron"
+import {
+  inBatches,
+  purgeOldData,
+  RATE_LIMIT_KEEP_HOURS,
+  scheduled,
+} from "./cron"
 
 // The deletes are faked here, so a run can fail halfway on purpose. The
 // Worker tests (apps/web-worker-tests/test/cron.test.ts) run them for real.
@@ -10,7 +23,16 @@ vi.mock(import("@workspace/db"), async (original) => ({
   connect: vi.fn<typeof connect>(),
   deleteIdleGuests: vi.fn<typeof deleteIdleGuests>(),
   deleteExpiredSessions: vi.fn<typeof deleteExpiredSessions>(),
+  deleteExpiredVerifications: vi.fn<typeof deleteExpiredVerifications>(),
+  deleteOldRateLimits: vi.fn<typeof deleteOldRateLimits>(),
 }))
+
+beforeEach(() => {
+  vi.mocked(deleteIdleGuests).mockReset().mockResolvedValue(0)
+  vi.mocked(deleteExpiredSessions).mockReset().mockResolvedValue(0)
+  vi.mocked(deleteExpiredVerifications).mockReset().mockResolvedValue(0)
+  vi.mocked(deleteOldRateLimits).mockReset().mockResolvedValue(0)
+})
 
 /** A table with `rows` rows to delete; each call deletes up to its limit. */
 function table(rows: number) {
@@ -102,5 +124,41 @@ describe("scheduled", () => {
         }),
       ],
     ])
+  })
+})
+
+describe("purgeOldData", () => {
+  const now = Temporal.Instant.from("2026-03-20T03:17:00Z")
+  const db = {} as Db
+  const nothingYet = () => ({
+    guests: 0,
+    sessions: 0,
+    verifications: 0,
+    rateLimits: 0,
+  })
+
+  it("deletes verification rows that ran out before the run's time", async () => {
+    vi.mocked(deleteExpiredVerifications).mockResolvedValueOnce(3)
+
+    const result = await purgeOldData(db, now, nothingYet())
+
+    expect(deleteExpiredVerifications).toHaveBeenCalledWith(db, {
+      now: new Date("2026-03-20T03:17:00Z"),
+      limit: 500,
+    })
+    expect(result).toMatchObject({ verifications: 3, complete: true })
+  })
+
+  it("deletes rate_limit rows only once they are a day old", async () => {
+    vi.mocked(deleteOldRateLimits).mockResolvedValueOnce(7)
+
+    const result = await purgeOldData(db, now, nothingYet())
+
+    expect(deleteOldRateLimits).toHaveBeenCalledWith(db, {
+      before: new Date("2026-03-19T03:17:00Z"),
+      limit: 500,
+    })
+    expect(RATE_LIMIT_KEEP_HOURS).toBe(24)
+    expect(result).toMatchObject({ rateLimits: 7, complete: true })
   })
 })

@@ -1,14 +1,16 @@
 import { eq, inArray } from "drizzle-orm"
 import { describe, expect, inject } from "vite-plus/test"
 
-import { session, user } from "../src/auth-schema.ts"
+import { rateLimit, session, user, verification } from "../src/auth-schema.ts"
 import { connect, type Db } from "../src/client.ts"
 import { createDraft } from "../src/queries/drafts.ts"
 import { moveGuestData } from "../src/queries/guests.ts"
 import { saveMessages } from "../src/queries/messages.ts"
 import {
   deleteExpiredSessions,
+  deleteExpiredVerifications,
   deleteIdleGuests,
+  deleteOldRateLimits,
 } from "../src/queries/purge.ts"
 import { aiUsage, draft, message } from "../src/schema.ts"
 import { makeUser, test } from "./db.ts"
@@ -380,5 +382,116 @@ describe("deleteExpiredSessions", () => {
     expect(await deleteExpiredSessions(db, { now, limit: 2 })).toBe(2)
     expect(await deleteExpiredSessions(db, { now, limit: 2 })).toBe(1)
     expect(await deleteExpiredSessions(db, { now, limit: 2 })).toBe(0)
+  })
+})
+
+let verifications = 0
+
+/** A verification row (a reset link, a two-factor code), as Better Auth makes it. */
+async function makeVerification(db: Db, expiresAt: Date) {
+  verifications += 1
+  const id = `purge-verification-${verifications}`
+  await db.insert(verification).values({
+    id,
+    identifier: `reset-password:${id}`,
+    value: id,
+    expiresAt,
+    createdAt: daysAgo(1),
+    updatedAt: daysAgo(1),
+  })
+  return id
+}
+
+async function verificationIds(db: Db) {
+  const rows = await db
+    .select({ id: verification.id })
+    .from(verification)
+    .orderBy(verification.id)
+  return rows.map((row) => row.id)
+}
+
+describe("deleteExpiredVerifications", () => {
+  test("deletes the verification rows that ran out", async ({ db }) => {
+    await makeVerification(db, daysAgo(2))
+    await makeVerification(db, new Date(now.getTime() - 1))
+
+    expect(await deleteExpiredVerifications(db, { now, limit: 100 })).toBe(2)
+    expect(await verificationIds(db)).toEqual([])
+  })
+
+  test("keeps a row that is still valid, also one that runs out right now", async ({
+    db,
+  }) => {
+    // Better Auth accepts a code until expiresAt < now, like a session.
+    const later = await makeVerification(db, new Date(now.getTime() + 60_000))
+    const exactlyNow = await makeVerification(db, now)
+
+    expect(await deleteExpiredVerifications(db, { now, limit: 100 })).toBe(0)
+    expect(await verificationIds(db)).toEqual([later, exactlyNow].toSorted())
+  })
+
+  test("deletes at most `limit` rows a call", async ({ db }) => {
+    for (const days of [1, 2, 3]) await makeVerification(db, daysAgo(days))
+
+    expect(await deleteExpiredVerifications(db, { now, limit: 2 })).toBe(2)
+    expect(await deleteExpiredVerifications(db, { now, limit: 2 })).toBe(1)
+    expect(await deleteExpiredVerifications(db, { now, limit: 2 })).toBe(0)
+  })
+})
+
+let rateLimits = 0
+
+/** A rate_limit row, as Better Auth keeps it: last request in epoch ms. */
+async function makeRateLimit(db: Db, lastRequest: Date) {
+  rateLimits += 1
+  const id = `purge-rate-limit-${rateLimits}`
+  await db.insert(rateLimit).values({
+    id,
+    key: `203.0.113.${rateLimits}/sign-in/anonymous`,
+    count: 10,
+    lastRequest: lastRequest.getTime(),
+  })
+  return id
+}
+
+async function rateLimitIds(db: Db) {
+  const rows = await db
+    .select({ id: rateLimit.id })
+    .from(rateLimit)
+    .orderBy(rateLimit.id)
+  return rows.map((row) => row.id)
+}
+
+describe("deleteOldRateLimits", () => {
+  /** The cron's cutoff: far past the longest window (cron.ts). */
+  const before = daysAgo(1)
+
+  test("deletes the rows whose last request is before the cutoff", async ({
+    db,
+  }) => {
+    await makeRateLimit(db, daysAgo(2))
+    await makeRateLimit(db, new Date(before.getTime() - 1))
+
+    expect(await deleteOldRateLimits(db, { before, limit: 100 })).toBe(2)
+    expect(await rateLimitIds(db)).toEqual([])
+  })
+
+  test("keeps a row whose last request is on or after the cutoff", async ({
+    db,
+  }) => {
+    // A guest blocked an hour ago is still blocked: its row must stay.
+    const blocked = await makeRateLimit(db, new Date(now.getTime() - 3_600_000))
+    const onCutoff = await makeRateLimit(db, before)
+
+    expect(await deleteOldRateLimits(db, { before, limit: 100 })).toBe(0)
+    expect(await rateLimitIds(db)).toEqual([blocked, onCutoff].toSorted())
+  })
+
+  test("deletes at most `limit` rows a call", async ({ db }) => {
+    for (const days of [2, 3, 4]) await makeRateLimit(db, daysAgo(days))
+
+    expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(2)
+    expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(1)
+    expect(await deleteOldRateLimits(db, { before, limit: 2 })).toBe(0)
   })
 })
