@@ -7,3 +7,14 @@ origin: PAR-64
 created: 2026-11-21T10:11:20Z
 updated: 2026-11-21T10:11:20Z
 ---
+
+From the PAR-64 review, in `scripts/dev-run.test.ts` (older code):
+
+- When `until` throws in `afterEach`, the `rmSync` and the remaining pid files
+  are skipped, so one failure spreads to the next test. Put the cleanup in a
+  `try/finally`.
+- `running()` then `process.kill` can throw ESRCH if the process exits in
+  between.
+- Without `/proc` (macOS), a pid file read while it is half written gives pid
+  0, and `process.kill(0, "SIGKILL")` would kill the test runner's own process
+  group. The window is very narrow.
