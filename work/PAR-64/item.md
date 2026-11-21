@@ -1,10 +1,10 @@
 ---
 id: PAR-64
 title: "Workers Builds fails: the dev-run tests count a zombie as still running"
-phase: backlog
+phase: review
 priority: high
 created: 2026-11-21T09:43:03Z
-updated: 2026-11-21T09:43:03Z
+updated: 2026-11-21T10:11:20Z
 ---
 
 Two Workers Builds of main (e71d5a9) failed in `pnpm test:coverage`: 4 tests in

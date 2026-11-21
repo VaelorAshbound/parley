@@ -51,7 +51,8 @@ function stateOf(pid: number) {
 
 /**
  * Whether the process has not exited yet. `kill(pid, 0)` also reaches a
- * zombie, so on Linux its state decides.
+ * zombie, so on Linux its state decides. A state that can't be read counts
+ * as alive: a check that it stopped must fail when it can't tell.
  */
 function alive(pid: number) {
   try {
@@ -59,9 +60,7 @@ function alive(pid: number) {
   } catch {
     return false
   }
-  if (!existsSync("/proc/self")) return true
-  const state = stateOf(pid)
-  return state !== undefined && state !== "Z"
+  return stateOf(pid) !== "Z"
 }
 
 function running(pidFile: string) {
@@ -109,18 +108,17 @@ describe("alive", () => {
   test.runIf(process.platform === "linux")(
     "is false for a process that has exited but was never collected",
     async () => {
-      // sh starts a child, then becomes `sleep`, which never collects it.
-      const sh = spawn("sh", ["-c", "true & echo $!; exec sleep 5"], {
-        stdio: ["ignore", "pipe", "ignore"],
-      })
-      try {
-        const [chunk] = (await once(sh.stdout, "data")) as [Buffer]
-        const pid = Number(chunk.toString().trim())
-        await until(() => stateOf(pid) === "Z")
-        expect(alive(pid)).toBe(false)
-      } finally {
-        sh.kill("SIGKILL")
-      }
+      // Node collects its own child only from the event loop, so while
+      // this loop runs, without giving the event loop a turn, the child
+      // that has exited stays a zombie.
+      const child = spawn("true", { stdio: "ignore" })
+      const exited = once(child, "exit")
+      const pid = child.pid
+      if (pid === undefined) throw new Error("true did not start")
+      for (const start = Date.now(); stateOf(pid) !== "Z";)
+        if (Date.now() - start > 3000) throw new Error("no zombie appeared")
+      expect(alive(pid)).toBe(false)
+      await exited
     }
   )
 })
