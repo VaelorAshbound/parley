@@ -2,6 +2,8 @@
 // `pnpm db:dev` and the app, and write their pid so the test can tell
 // whether they are still running.
 
+import { spawn } from "node:child_process"
+import { once } from "node:events"
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -36,14 +38,33 @@ const leaveOneRunning = `require("child_process").spawn(process.execPath, ["-e",
   `require("fs").writeFileSync(${JSON.stringify(leftPid)}, String(process.pid)); ${forever}`
 )}], { stdio: "ignore" });`
 
-function running(pidFile: string) {
-  if (!existsSync(pidFile)) return false
+/** A process's state letter on Linux ("Z" for a zombie), or undefined. */
+function stateOf(pid: number) {
   try {
-    process.kill(Number(readFileSync(pidFile, "utf8")), 0)
-    return true
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8")
+    // "pid (name) state …": the name can hold spaces and brackets.
+    return stat.slice(stat.lastIndexOf(")") + 2)[0]
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Whether the process has not exited yet. `kill(pid, 0)` also reaches a
+ * zombie, so on Linux its state decides. A state that can't be read counts
+ * as alive: a check that it stopped must fail when it can't tell.
+ */
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0)
   } catch {
     return false
   }
+  return stateOf(pid) !== "Z"
+}
+
+function running(pidFile: string) {
+  return existsSync(pidFile) && alive(Number(readFileSync(pidFile, "utf8")))
 }
 
 /** Rejects instead of hanging the test when `promise` never settles. */
@@ -74,6 +95,33 @@ afterEach(async () => {
 })
 
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
+
+// The runDev tests wait for a stopped process to be gone. One whose parent
+// has exited goes to the first process on the machine, which may never
+// collect it (in a container whose first process is Node, say): it then
+// stays a zombie, which still answers `kill(pid, 0)`, though it has exited.
+describe("alive", () => {
+  test("is true for a running process", () => {
+    expect(alive(process.pid)).toBe(true)
+  })
+
+  test.runIf(process.platform === "linux")(
+    "is false for a process that has exited but was never collected",
+    async () => {
+      // Node collects its own child only from the event loop, so while
+      // this loop runs, without giving the event loop a turn, the child
+      // that has exited stays a zombie.
+      const child = spawn("true", { stdio: "ignore" })
+      const exited = once(child, "exit")
+      const pid = child.pid
+      if (pid === undefined) throw new Error("true did not start")
+      for (const start = Date.now(); stateOf(pid) !== "Z";)
+        if (Date.now() - start > 3000) throw new Error("no zombie appeared")
+      expect(alive(pid)).toBe(false)
+      await exited
+    }
+  )
+})
 
 describe("lines", () => {
   test("passes on whole lines only, across chunks and CRLF endings", () => {
